@@ -48,44 +48,46 @@
         <div id="section-my" class="setae-section">
             <!-- Advanced Control Bar -->
             <div class="setae-toolbar-container">
-                <div class="setae-toolbar-top">
+                <div class="setae-toolbar-header">
                     <div class="setae-search-wrapper">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" id="setae-spider-search" class="setae-search-input"
-                            placeholder="名前や種類で検索...">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="setae-spider-search" class="setae-search-input" placeholder="検索...">
                     </div>
 
-                    <button id="btn-sort-menu" class="setae-icon-btn">
-                        <!-- Premium Sort Icon (SVG) -->
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="21" y1="10" x2="3" y2="10"></line>
-                            <line x1="21" y1="6" x2="3" y2="6"></line>
-                            <line x1="21" y1="14" x2="3" y2="14"></line>
-                            <line x1="21" y1="18" x2="3" y2="18"></line>
-                        </svg>
-                    </button>
-
-                    <button id="btn-add-spider" class="setae-icon-btn btn-accent">
-                        +
-                    </button>
+                    <div class="setae-actions">
+                        <button id="btn-sort-menu" class="setae-icon-btn" aria-label="並び替え">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 6h16M4 12h10M4 18h7"></path>
+                            </svg>
+                        </button>
+                        <button id="btn-add-spider" class="setae-add-btn" aria-label="新規追加">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="3">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span>追加</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="setae-decks-scroll">
                     <button class="deck-pill active" data-deck="all">
                         すべて <span class="count-badge">0</span>
                     </button>
-
                     <button class="deck-pill" data-deck="hungry">
-                        🦗 空腹 <span class="count-badge">0</span>
+                        <span class="pill-icon">🦗</span> 空腹 <span class="count-badge">0</span>
                     </button>
-
                     <button class="deck-pill" data-deck="pre_molt">
-                        ⚠️ 脱皮前 <span class="count-badge">0</span>
+                        <span class="pill-icon">⚠️</span> 脱皮前 <span class="count-badge">0</span>
                     </button>
-
                     <button class="deck-pill" data-deck="sling">
-                        👶 幼体 <span class="count-badge">0</span>
+                        <span class="pill-icon">👶</span> 幼体 <span class="count-badge">0</span>
                     </button>
                 </div>
             </div>

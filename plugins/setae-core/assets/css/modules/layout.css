@@ -3,6 +3,14 @@
    ========================================= */
 
 /* 1. 全体レイアウト */
+:root {
+    --setae-primary: #2563eb;
+    --setae-bg-soft: #f8fafc;
+    --setae-border: #e2e8f0;
+    --setae-text-main: #1e293b;
+    --setae-text-muted: #64748b;
+}
+
 .setae-content {
     /* ナビゲーションバーの高さ分+余白を確保して被りを防ぐ */
     padding: 16px;
@@ -13,73 +21,110 @@
     z-index: 1;
 }
 
-/* 2. ツールバー (検索・フィルタ) */
+/* 2. ツールバー (Modern & Functional) */
 .setae-toolbar-container {
+    padding: 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--setae-border);
     position: sticky;
     top: 60px;
-    /* PCヘッダー考慮 */
+    /* PC Header offset */
     z-index: 900;
-    /* 背景色を制御して下のコンテンツが透けすぎないようにする */
-    background: rgba(245, 247, 250, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-
-    padding: 12px 16px;
     margin: -16px -16px 16px -16px;
-    /* 親のpaddingを打ち消して全幅にする */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
-    border-radius: 12px;
+    /* Reset padding from parent */
+    backdrop-filter: blur(20px);
+    /* Keep glass effect if transparency is added later */
 }
 
-/* スマホ用調整 */
-@media (max-width: 767px) {
-    .setae-toolbar-container {
-        top: 0;
-        /* スマホは最上部 */
-        padding-top: env(safe-area-inset-top);
-        /* ノッチ対応 */
-    }
+/* Header: Search & Buttons */
+.setae-toolbar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
-/* 3. 検索ボックス */
+/* 3. Search Box */
 .setae-search-wrapper {
     position: relative;
-    margin-bottom: 12px;
-    width: 100%;
+    flex-grow: 1;
+}
+
+.setae-search-wrapper .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--setae-text-muted);
+    pointer-events: none;
 }
 
 .setae-search-input {
     width: 100%;
     height: 40px;
-    background-color: #e3e3e8;
-    /* iOS Gray 5 */
-    border: none;
-    border-radius: 10px;
     padding: 0 12px 0 36px !important;
-    /* アイコン分のスペース */
-    font-size: 16px;
-    color: #1c1c1e;
-    box-sizing: border-box;
-    transition: all 0.2s;
+    border: 1px solid var(--setae-border);
+    border-radius: 10px;
+    background: var(--setae-bg-soft);
+    font-size: 14px;
+    transition: all 0.2s ease;
+    color: var(--setae-text-main);
 }
 
 .setae-search-input:focus {
-    background-color: #fff;
-    box-shadow: 0 0 0 2px #007AFF;
     outline: none;
+    background: #fff;
+    border-color: var(--setae-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0.5;
-    pointer-events: none;
+/* Actions */
+.setae-actions {
+    display: flex;
+    gap: 8px;
 }
 
-/* 4. フィルターチップ (横スクロール) */
+.setae-icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid var(--setae-border);
+    background: #fff;
+    color: var(--setae-text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.setae-icon-btn:hover {
+    background: var(--setae-bg-soft);
+}
+
+.setae-add-btn {
+    height: 40px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 10px;
+    border: none;
+    background: var(--setae-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.setae-add-btn:hover {
+    opacity: 0.9;
+}
+
+/* 4. Deck Pills (Filters) */
 .setae-decks-scroll {
     display: flex;
     gap: 8px;
@@ -87,6 +132,7 @@
     padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    /* Firefox */
 }
 
 .setae-decks-scroll::-webkit-scrollbar {
@@ -95,45 +141,51 @@
 
 .deck-pill {
     flex: 0 0 auto;
-    padding: 8px 16px;
-    border-radius: 20px;
-    /* 完全なカプセル型 */
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    font-size: 13px;
-    font-weight: 600;
-    color: #1c1c1e;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    white-space: nowrap;
     display: flex;
     align-items: center;
     gap: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--setae-border);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--setae-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .deck-pill:hover {
-    background-color: #f2f2f7;
-    transform: translateY(-1px);
+    border-color: var(--setae-text-muted);
+    background-color: var(--setae-bg-soft);
 }
 
 .deck-pill.active {
-    background-color: #1c1c1e;
-    /* 黒背景 */
+    background: var(--setae-text-main);
     color: #fff;
-    border-color: #1c1c1e;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-color: var(--setae-text-main);
 }
 
-.deck-pill .count-badge {
-    background: rgba(0, 0, 0, 0.1);
+.count-badge {
+    font-size: 11px;
     padding: 2px 6px;
     border-radius: 10px;
-    font-size: 11px;
+    background: var(--setae-bg-soft);
+    color: var(--setae-text-muted);
 }
 
 .deck-pill.active .count-badge {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
+}
+
+/* Mobile Tweaks */
+@media (max-width: 767px) {
+    .setae-toolbar-container {
+        top: 0;
+        padding-top: max(16px, env(safe-area-inset-top));
+    }
 }
 
 /* 5. ナビゲーションバー (修正版) */
