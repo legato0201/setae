@@ -121,31 +121,56 @@ class Setae_Core
         $this->loader->add_action('wp_ajax_setae_update_profile', $ajax_handler, 'update_profile');
 
         // Avatar Filter (Optional: Enable custom avatar if stored)
-        $this->loader->add_filter('pre_get_avatar', $this, 'custom_avatar_filter', 10, 3);
+        $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 10, 5);
+        $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 10, 3);
     }
 
-    public function custom_avatar_filter($avatar, $id_or_email, $args)
+    public function custom_avatar_filter($avatar, $id_or_email, $size, $default, $alt)
     {
-        $user_id = 0;
-        if (is_numeric($id_or_email)) {
-            $user_id = $id_or_email;
-        } elseif (is_string($id_or_email) && ($user = get_user_by('email', $id_or_email))) {
-            $user_id = $user->ID;
-        } elseif (is_object($id_or_email) && !empty($id_or_email->user_id)) {
-            $user_id = $id_or_email->user_id;
-        }
+        $user_id = $this->get_user_id_from_mixed($id_or_email);
 
         if ($user_id) {
-            $custom_avatar_id = get_user_meta($user_id, 'setae_user_avatar', true);
-            if ($custom_avatar_id) {
-                $img_url = wp_get_attachment_image_url($custom_avatar_id, 'thumbnail'); // or $args['size']
+            // 保存した attachment_id を取得
+            $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
+            if ($attachment_id) {
+                $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
                 if ($img_url) {
-                    return '<img alt="" src="' . esc_url($img_url) . '" class="avatar avatar-' . esc_attr($args['size']) . ' photo" height="' . esc_attr($args['size']) . '" width="' . esc_attr($args['size']) . '" />';
+                    $avatar = "<img alt='{$alt}' src='{$img_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' style='object-fit:cover; border-radius:50%;'>";
                 }
             }
         }
         return $avatar;
+    }
 
+    public function custom_avatar_url_filter($url, $id_or_email, $args)
+    {
+        $user_id = $this->get_user_id_from_mixed($id_or_email);
+        if ($user_id) {
+            $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
+            if ($attachment_id) {
+                $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
+                if ($img_url)
+                    return $img_url;
+            }
+        }
+        return $url;
+    }
+
+    private function get_user_id_from_mixed($id_or_email)
+    {
+        if (is_numeric($id_or_email))
+            return (int) $id_or_email;
+        if (is_string($id_or_email)) {
+            $user = get_user_by('email', $id_or_email);
+            return $user ? $user->ID : 0;
+        }
+        if (is_object($id_or_email)) {
+            if (!empty($id_or_email->ID))
+                return (int) $id_or_email->ID;
+            if (!empty($id_or_email->user_id))
+                return (int) $id_or_email->user_id;
+        }
+        return 0;
     }
 
     public function update_roles()

@@ -58,6 +58,15 @@ var SetaeUIProfile = (function ($) {
                 success: function (response) {
                     if (response.success) {
                         $('#header-user-name').text(newName);
+
+                        // --- 修正箇所：プレビュー画像をヘッダー等のアイコンにも反映 ---
+                        const previewSrc = $('#profile-avatar-preview-container img').attr('src');
+                        if (previewSrc) {
+                            $('.setae-profile-avatar img').attr('src', previewSrc);
+                            $('.header-user-icon').attr('src', previewSrc); // WordPress get_avatar outputs img with classes, often 'avatar' or custom. My template uses 'header-user-icon' class on the img tag.
+                        }
+                        // ---------------------------------------------------
+
                         SetaeCore.showToast('プロフィールを更新しました', 'success');
                         $('#setae-profile-modal').fadeOut(200);
                     } else {

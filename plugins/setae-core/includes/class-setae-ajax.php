@@ -54,18 +54,8 @@ class Setae_Ajax
             $attachment_id = media_handle_upload('profile_image', 0); // 0 = not attached to a post
 
             if (is_wp_error($attachment_id)) {
-                // Log error but don't fail the whole request? Or return warning?
-                // For now, let's just ignore or maybe return it in data
+                wp_send_json_error(array('message' => '画像のアップロードに失敗しました: ' . $attachment_id->get_error_message()));
             } else {
-                // Determine how to store avatar. 
-                // Since this is a custom system, we might need a plugin like WP User Avatar or Simple Local Avatars logic.
-                // However, WordPress core doesn't have a simple "user_avatar" meta natively used by get_avatar without filters.
-                // Assuming we use a standard meta key or rely on a filter.
-                // Let's assume we store it in meta and hook into get_avatar elsewhere OR the user implies standard WP behavior.
-                // I'll check how 'get_avatar' uses custom images. Usually via plugin.
-                // If there's no plugin, I should add a filter to 'pre_get_avatar'.
-                // For now, saving to meta `setae_user_avatar`.
-
                 update_user_meta($user_id, 'setae_user_avatar', $attachment_id);
             }
         }
