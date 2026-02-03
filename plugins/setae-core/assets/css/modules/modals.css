@@ -458,3 +458,20 @@
 .btn-text-only:hover {
     text-decoration: underline;
 }
+
+/* modals.css または style.css に追加 */
+.remove-image-btn {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    /* WordPressの絵文字スタイルが干渉しないようマージンをリセット */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ボタン内の絵文字画像自体の干渉も防ぐ */
+.remove-image-btn img.emoji {
+    display: inline-block !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+}
