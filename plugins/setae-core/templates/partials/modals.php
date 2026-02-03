@@ -1,7 +1,6 @@
 <?php
 // All Modals
 ?>
-<!-- Profile Modal -->
 <div id="setae-profile-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -45,7 +44,6 @@
     </div>
 </div>
 
-<!-- Edit Spider Modal -->
 <div id="modal-edit-spider" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-edit-spider">×</span>
@@ -90,7 +88,6 @@
     </div>
 </div>
 
-<!-- Add Spider Modal (Advanced) -->
 <div id="modal-add-spider" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close">×</span>
@@ -140,7 +137,6 @@
     </div>
 </div>
 
-<!-- Create Topic Modal -->
 <div id="setae-create-topic-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-topic-modal">×</span>
@@ -159,7 +155,6 @@
     </div>
 </div>
 
-<!-- QR Code Modal -->
 <div id="setae-qr-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content" style="text-align:center;">
         <span class="setae-close" id="close-qr-modal">×</span>
@@ -169,14 +164,12 @@
     </div>
 </div>
 
-<!-- Manage Feed Types Modal -->
 <div id="setae-manage-feed-modal" class="setae-modal" style="display:none; z-index:10002;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-manage-feed-modal">×</span>
         <h3>餌リストの編集</h3>
         <div id="feed-type-list"
             style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid #eee; padding:5px; border-radius:8px;">
-            <!-- JS populated -->
         </div>
         <div style="display:flex; gap:5px;">
             <input type="text" id="new-feed-type" class="setae-input" placeholder="新しい餌の名前 (例: 🪳 デュビア)">
@@ -186,7 +179,6 @@
     </div>
 </div>
 
-<!-- Add Log Modal -->
 <div id="setae-log-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-log-modal">×</span>
@@ -199,7 +191,6 @@
             </div>
             <div class="setae-form-group">
                 <label>イベントタイプ</label>
-                <!-- Hidden input store selected value -->
                 <input type="hidden" id="log-type" value="feed">
 
                 <div class="log-type-grid">
@@ -222,11 +213,9 @@
                 </div>
             </div>
 
-            <!-- Feed Options -->
             <div id="log-feed-options" class="log-option-group">
                 <label>餌の種類 (Prey Type)</label>
 
-                <!-- Hidden Input for Form Submission -->
                 <input type="hidden" id="log-feed-prey-select">
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -237,7 +226,6 @@
 
                 <div id="log-feed-prey-buttons" class="log-type-grid"
                     style="grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); margin-bottom:15px;">
-                    <!-- JS populated -->
                 </div>
 
                 <div class="setae-checkbox-group">
@@ -245,7 +233,6 @@
                 </div>
             </div>
 
-            <!-- Growth Options -->
             <div id="log-growth-options" class="log-option-group" style="display:none;">
                 <label>サイズ (cm) or Instar</label>
                 <input type="text" id="log-size" class="setae-input" placeholder="e.g. 5cm or 3LS">
@@ -275,13 +262,11 @@
     </div>
 </div>
 
-<!-- Date Detail Modal (For Calendar Interaction) -->
 <div id="setae-date-detail-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content" style="max-width:400px;">
         <span class="setae-close" id="close-date-detail-modal">×</span>
         <h3 id="date-detail-title">YYYY-MM-DD</h3>
         <div id="date-detail-list" style="margin-bottom:20px;">
-            <!-- Existing Logs will appear here -->
         </div>
         <button id="btn-add-log-from-date" class="setae-btn setae-btn-primary" style="width:100%;">
             + この日に記録を追加
