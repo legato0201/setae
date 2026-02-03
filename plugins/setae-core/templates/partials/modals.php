@@ -254,22 +254,22 @@
                 <input type="text" id="log-size" class="setae-input" placeholder="e.g. 5cm or 3LS">
             </div>
 
-            <div class="setae-form-group">
-                <label>メモ</label>
-                <textarea id="log-note" class="setae-input" rows="3"></textarea>
-            </div>
-
-            <!-- Custom File Upload -->
-            <div class="setae-form-group">
-                <label>写真 (任意)</label>
-                <div class="setae-file-upload-wrapper">
+            <div class="form-row-bottom">
+                <div class="setae-form-group memo-group">
+                    <textarea id="log-note" class="setae-input-sm" rows="1" placeholder="メモを入力..."></textarea>
+                </div>
+                <div class="setae-form-group upload-group">
                     <input type="file" id="log-image" accept="image/*" style="display:none;">
-                    <button type="button" id="btn-trigger-upload" class="setae-btn-upload">
-                        📸 写真を選択
+                    <button type="button" id="btn-trigger-upload" class="btn-icon-only">
+                        <img draggable="false" role="img" class="emoji" alt="📸"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4f8.svg">
                     </button>
-                    <div id="log-image-preview" class="image-preview-area" style="display:none;">
-                        <img id="preview-img-tag" src="" alt="Preview">
-                        <button type="button" id="btn-remove-image" class="remove-image-btn">×</button>
+                    <div id="log-image-preview" class="image-preview-area"
+                        style="display:none; position:absolute; bottom:60px; right:20px; z-index:10; background:white; padding:5px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                        <img id="preview-img-tag" src="" alt="Preview"
+                            style="max-width:100px; max-height:100px; border-radius:4px;">
+                        <button type="button" id="btn-remove-image" class="remove-image-btn"
+                            style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; border:none; cursor:pointer;">×</button>
                     </div>
                 </div>
             </div>

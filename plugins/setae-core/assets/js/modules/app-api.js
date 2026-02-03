@@ -32,12 +32,25 @@ var SetaeAPI = (function ($) {
         });
     }
 
-    function logEvent(id, type, date, data, callback) {
+    function logEvent(id, type, date, data, file, callback) {
+        // FormData オブジェクトの作成
+        const formData = new FormData();
+        formData.append('type', type);
+        formData.append('date', date);
+        formData.append('data', JSON.stringify(data));
+
+        // ファイルがある場合のみ追加 (キー名は 'image')
+        if (file) {
+            formData.append('image', file);
+        }
+
         $.ajax({
             url: root + '/spider/' + id + '/events',
             method: 'POST',
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
-            data: { type: type, date: date, data: JSON.stringify(data) },
+            data: formData,
+            processData: false, // FormData送信に必須
+            contentType: false, // FormData送信に必須
             success: function (res) {
                 if (callback) callback(res);
             }

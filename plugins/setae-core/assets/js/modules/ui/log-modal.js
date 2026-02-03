@@ -9,6 +9,34 @@ var SetaeUILogModal = (function ($) {
         'Pinky (ピンキー)'
     ];
 
+    // モジュール内に追加: 画像プレビュー等のイベント設定
+    function bindLogImageEvents() {
+        // アップロードボタン -> ファイル選択発火
+        $('#btn-trigger-upload').off('click').on('click', function () {
+            $('#log-image').click();
+        });
+
+        // ファイル選択時 -> プレビュー表示
+        $('#log-image').off('change').on('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#preview-img-tag').attr('src', e.target.result);
+                    $('#log-image-preview').show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 削除ボタン -> クリア
+        $('#btn-remove-image').off('click').on('click', function () {
+            $('#log-image').val('');
+            $('#preview-img-tag').attr('src', '');
+            $('#log-image-preview').hide();
+        });
+    }
+
     function openLogModal(eOrId = null, initialType = 'feed') {
         // eOrId could be event object or ID string/number
         let idToUse = null;
@@ -34,6 +62,15 @@ var SetaeUILogModal = (function ($) {
         if (!idToUse) return;
 
         $('#setae-log-form')[0].reset();
+
+        // 画像プレビューのリセット
+        $('#log-image').val('');
+        $('#log-image-preview').hide();
+        $('#preview-img-tag').attr('src', '');
+
+        // イベントバインド (まだ行われていなければ)
+        bindLogImageEvents();
+
         $('#log-date').val(new Date().toISOString().split('T')[0]);
         $('#log-spider-id').val(idToUse);
         renderLogPreyButtons();
@@ -99,6 +136,10 @@ var SetaeUILogModal = (function ($) {
         const date = $('#log-date').val();
         const note = $('#log-note').val();
 
+        // [追加] ファイル入力を取得
+        const fileInput = $('#log-image')[0];
+        const file = (fileInput && fileInput.files.length > 0) ? fileInput.files[0] : null;
+
         let dataPayload = {};
         if (type === 'feed') {
             const prey = $('#log-feed-prey-select').val();
@@ -115,19 +156,21 @@ var SetaeUILogModal = (function ($) {
             dataPayload.note = note;
         }
 
-        SetaeAPI.logEvent(id, type, date, dataPayload, () => {
+        // [変更] API呼び出しにfile引数を追加
+        SetaeAPI.logEvent(id, type, date, dataPayload, file, () => {
             SetaeCore.showToast('記録を追加しました', 'success');
             $('#setae-log-modal').fadeOut();
             $('#setae-log-form')[0].reset();
 
+            // [追加] 画像プレビューのリセット
+            $('#log-image-preview').hide();
+            $('#preview-img-tag').attr('src', '');
+            $('#log-image').val('');
+
             if (window.SetaeUIDetail) {
-                // ログ一覧（タイムライン）のみを更新
                 if (SetaeUIDetail.loadSpiderLogs) {
                     SetaeUIDetail.loadSpiderLogs(id);
                 }
-                // 詳細画面全体のリロード（画像フェードインなど）を避けるため
-                // ステータス更新が必要な場合は別途APIから取得して描画だけ更新するのが理想
-                // SetaeUIDetail.loadSpiderDetail(id); 
             }
             if (window.SetaeUIList && SetaeUIList.renderMySpiders) {
                 SetaeAPI.fetchMySpiders(SetaeUIList.renderMySpiders);

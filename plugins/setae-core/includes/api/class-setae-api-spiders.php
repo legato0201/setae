@@ -415,6 +415,17 @@ class Setae_API_Spiders
             return new WP_Error('insert_failed', 'Could not create log', array('status' => 500));
         }
 
+        // [追加] 画像アップロード処理
+        if (!empty($_FILES['image'])) {
+            // 既存のヘルパーメソッドを利用してアップロード
+            $image_url = $this->handle_file_upload('image', $log_id);
+
+            if (!is_wp_error($image_url) && $image_url) {
+                // 画像URLをログのメタデータとして保存
+                update_post_meta($log_id, '_setae_log_image', $image_url);
+            }
+        }
+
         // Save Meta
         update_post_meta($log_id, '_setae_log_spider_id', $spider_id);
         update_post_meta($log_id, '_setae_log_type', $type);
