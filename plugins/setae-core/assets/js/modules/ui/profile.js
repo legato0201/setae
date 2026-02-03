@@ -59,11 +59,19 @@ var SetaeUIProfile = (function ($) {
                     if (response.success) {
                         $('#header-user-name').text(newName);
 
-                        // --- 修正箇所：プレビュー画像をヘッダー等のアイコンにも反映 ---
-                        const previewSrc = $('#profile-avatar-preview-container img').attr('src');
-                        if (previewSrc) {
-                            $('.setae-profile-avatar img').attr('src', previewSrc);
-                            $('.header-user-icon').attr('src', previewSrc); // WordPress get_avatar outputs img with classes, often 'avatar' or custom. My template uses 'header-user-icon' class on the img tag.
+                        // --- 修正箇所：アバター画像の反映 ---
+                        let newAvatarUrl = null;
+                        if (response.data && response.data.avatar_url) {
+                            newAvatarUrl = response.data.avatar_url;
+                        } else {
+                            // フォールバック: プレビュー画像を使用
+                            newAvatarUrl = $('#profile-avatar-preview-container img').attr('src');
+                        }
+
+                        if (newAvatarUrl) {
+                            $('.setae-profile-avatar img').attr('src', newAvatarUrl);
+                            $('.header-user-icon').attr('src', newAvatarUrl);
+                            $('.avatar').attr('src', newAvatarUrl); // ページ内すべてのWordPress標準アバターを更新
                         }
                         // ---------------------------------------------------
 

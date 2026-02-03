@@ -123,6 +123,7 @@ class Setae_Core
         // Avatar Filter (Optional: Enable custom avatar if stored)
         $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 10, 5);
         $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 10, 3);
+        $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 10, 2);
     }
 
     public function custom_avatar_filter($avatar, $id_or_email, $size, $default, $alt)
@@ -154,6 +155,21 @@ class Setae_Core
             }
         }
         return $url;
+    }
+
+    public function custom_avatar_data_filter($args, $id_or_email)
+    {
+        $user_id = $this->get_user_id_from_mixed($id_or_email);
+        if ($user_id) {
+            $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
+            if ($attachment_id) {
+                $img_url = wp_get_attachment_url($attachment_id);
+                if ($img_url) {
+                    $args['url'] = $img_url;
+                }
+            }
+        }
+        return $args;
     }
 
     private function get_user_id_from_mixed($id_or_email)

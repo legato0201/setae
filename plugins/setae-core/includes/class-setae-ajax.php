@@ -60,6 +60,14 @@ class Setae_Ajax
             }
         }
 
-        wp_send_json_success(array('message' => 'Profile updated'));
+        if (isset($attachment_id) && !is_wp_error($attachment_id)) {
+            $avatar_url = wp_get_attachment_url($attachment_id);
+            wp_send_json_success(array(
+                'message' => 'Profile updated',
+                'avatar_url' => $avatar_url
+            ));
+        } else {
+            wp_send_json_success(array('message' => 'Profile updated'));
+        }
     }
 }
