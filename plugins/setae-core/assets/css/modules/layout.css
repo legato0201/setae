@@ -1,0 +1,725 @@
+/* =========================================
+   Unified Layout & Navigation (Apple Style)
+   ========================================= */
+
+/* 1. 全体レイアウト */
+.setae-content {
+    /* ナビゲーションバーの高さ分+余白を確保して被りを防ぐ */
+    padding: 16px;
+    padding-bottom: 100px !important;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* 2. ツールバー (検索・フィルタ) */
+.setae-toolbar-container {
+    position: sticky;
+    top: 60px;
+    /* PCヘッダー考慮 */
+    z-index: 900;
+    /* 背景色を制御して下のコンテンツが透けすぎないようにする */
+    background: rgba(245, 247, 250, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    padding: 12px 16px;
+    margin: -16px -16px 16px -16px;
+    /* 親のpaddingを打ち消して全幅にする */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+}
+
+/* スマホ用調整 */
+@media (max-width: 767px) {
+    .setae-toolbar-container {
+        top: 0;
+        /* スマホは最上部 */
+        padding-top: env(safe-area-inset-top);
+        /* ノッチ対応 */
+    }
+}
+
+/* 3. 検索ボックス */
+.setae-search-wrapper {
+    position: relative;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.setae-search-input {
+    width: 100%;
+    height: 40px;
+    background-color: #e3e3e8;
+    /* iOS Gray 5 */
+    border: none;
+    border-radius: 10px;
+    padding: 0 12px 0 36px !important;
+    /* アイコン分のスペース */
+    font-size: 16px;
+    color: #1c1c1e;
+    box-sizing: border-box;
+    transition: all 0.2s;
+}
+
+.setae-search-input:focus {
+    background-color: #fff;
+    box-shadow: 0 0 0 2px #007AFF;
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* 4. フィルターチップ (横スクロール) */
+.setae-decks-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.setae-decks-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.deck-pill {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    border-radius: 20px;
+    /* 完全なカプセル型 */
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 13px;
+    font-weight: 600;
+    color: #1c1c1e;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.deck-pill:hover {
+    background-color: #f2f2f7;
+    transform: translateY(-1px);
+}
+
+.deck-pill.active {
+    background-color: #1c1c1e;
+    /* 黒背景 */
+    color: #fff;
+    border-color: #1c1c1e;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.deck-pill .count-badge {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.deck-pill.active .count-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* 5. ナビゲーションバー (修正版) */
+.setae-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    /* 変な背景色をリセットし、Glassmorphismを適用 */
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2000;
+    /* 最前面 */
+
+    padding-bottom: env(safe-area-inset-bottom);
+    height: 60px;
+    box-sizing: content-box;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+    /* 上向きの影 */
+}
+
+/* ナビゲーションアイテム */
+.setae-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+    background: transparent !important;
+    /* 個別の背景を消す */
+    border: none !important;
+}
+
+.setae-nav-item .setae-nav-icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.setae-nav-item .setae-nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.setae-nav-item.active {
+    color: #007AFF !important;
+    /* System Blue */
+}
+
+/* 3. Action Buttons (The "Add" Button) */
+/* Unify with Filter design language but distinct */
+.setae-icon-btn {
+    height: 40px;
+    width: 40px;
+    /* Square-ish but rounded */
+    border-radius: 10px;
+    border: none;
+    background-color: #F2F2F7;
+    color: #1D1D1F;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.setae-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* Primary "Add" Button Styles */
+.setae-icon-btn.btn-accent {
+    background-color: #007AFF;
+    /* Apple System Blue */
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+}
+
+.setae-icon-btn.btn-accent:hover {
+    background-color: #0066CC;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
+}
+
+.setae-icon-btn.btn-accent img.emoji {
+    filter: brightness(0) invert(1);
+    /* Ensure icons are white */
+}
+
+/* --- Advanced Toolbar --- */
+.setae-search-wrapper input:focus {
+    outline: none;
+    border-color: #3498db !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.deck-tab {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.deck-tab:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+
+.deck-tab.active {
+    opacity: 1;
+    background: #eef2f7 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.count-badge {
+    font-size: 11px;
+    color: #999;
+    font-weight: normal;
+    margin-left: 2px;
+}
+
+.sort-option:hover {
+    background-color: #f9f9f9 !important;
+}
+
+.sort-option.active {
+    background-color: #f0f8ff !important;
+    color: #3498db;
+    font-weight: bold;
+}
+
+/* --- Robust Sticky Toolbar (No Animation / No Overlap) --- */
+.setae-toolbar-container {
+    /* Layout */
+    position: -webkit-sticky;
+    position: sticky;
+    /* Desktop: Header is approx 60px height + padding */
+    top: 60px;
+    z-index: 900;
+    /* Below Header (1000) */
+
+    /* Box Model */
+    width: 100%;
+    margin: 0;
+    /* Remove bottom margin to prevent gaps */
+    padding: 12px 16px;
+    /* Comfortable padding */
+    box-sizing: border-box;
+
+    /* Aesthetics: Premium Glass/White to hide scrolling content */
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    /* Very subtle depth */
+
+}
+
+/* Mobile: Toolbar covers header at the very top */
+@media (max-width: 767px) {
+    .setae-toolbar-container {
+        top: 0 !important;
+        /* Force to very top */
+        z-index: 2000 !important;
+        /* Cover everything including Header (1000) */
+        padding: 10px 14px;
+        /* Keep square */
+        /* Slight shadow to separate from content */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Ensure Header doesn't fight for dominance & Scrolls away naturally */
+    .setae-header {
+        position: relative !important;
+        /* Non-sticky on mobile */
+        z-index: 1000 !important;
+    }
+}
+
+/* Header (Glass) - STATIC (Scrolls away) */
+.setae-header {
+    background: var(--setae-glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--setae-glass-border);
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    /* Changed from sticky to relative per user request (Collapsing) */
+    z-index: 100;
+}
+
+
+
+/* --- Desktop Layout: Floating Workspace (Professional) --- */
+@media (min-width: 768px) {
+
+    /* 1. App Container: CSS Grid Layout on Gray Desk */
+    #setae-app {
+        display: grid !important;
+        grid-template-columns: 260px 1fr;
+        /* Fixed Nav width, auto Content */
+        grid-template-rows: auto 1fr;
+        grid-template-areas:
+            "header header"
+            "nav content";
+        gap: 0;
+        max-width: 100%;
+        /* Full viewport canvas */
+        margin: 0 auto;
+        height: auto !important;
+        overflow: visible !important;
+        position: relative !important;
+        background-color: #F5F5F7 !important;
+        /* Unified Gray Background */
+    }
+
+    /* 2. Header: Glassmorphism over Gray */
+    .setae-header {
+        grid-area: header;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        width: 100% !important;
+
+        background-color: rgba(245, 245, 247, 0.8) !important;
+        /* Match desk */
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+        box-shadow: none !important;
+    }
+
+    /* Mobile: Toolbar covers header at the very top */
+    @media (max-width: 767px) {
+        .setae-toolbar-container {
+            top: 0 !important;
+            /* Force to very top */
+            z-index: 2000 !important;
+            /* Cover everything including Header (1000) */
+            padding: 10px 14px;
+            /* Keep square */
+            /* Slight shadow to separate from content */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Ensure Header doesn't fight for dominance & Scrolls away naturally */
+        .setae-header {
+            position: relative !important;
+            /* Non-sticky on mobile */
+            z-index: 1000 !important;
+        }
+    }
+
+    /* 3. Navigation: Native Sidebar */
+    .setae-nav {
+        grid-area: nav;
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 80px !important;
+        height: calc(100vh - 80px);
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        margin-top: 10px;
+        /* Blends into background */
+        background-color: transparent !important;
+        padding: 32px 16px !important;
+        border-right: none !important;
+        border-top: none !important;
+        z-index: 999 !important;
+    }
+
+    /* Sidebar Items: Sophisticated Pills */
+    .setae-nav-item {
+        flex: 0 0 auto !important;
+        width: 100%;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        padding: 10px 14px;
+        justify-content: flex-start !important;
+        /* Left align */
+        height: auto !important;
+        transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+
+        color: #555;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+    }
+
+    .setae-nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.5);
+        /* Subtle highlight */
+        color: #1D1D1F;
+    }
+
+    .setae-nav-icon {
+        margin-bottom: 0 !important;
+        /* Reset stacked icon */
+        margin-right: 12px !important;
+        opacity: 0.8;
+    }
+
+    .setae-nav-label {
+        display: inline-block !important;
+        font-size: 14px;
+        font-weight: 500;
+        color: inherit;
+    }
+
+    /* Active State: White Plate (Floating) */
+    .setae-nav-item.active {
+        background-color: #FFFFFF !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        color: #1D1D1F;
+        font-weight: 600;
+    }
+
+    .setae-nav-item.active .setae-nav-label {
+        color: inherit;
+    }
+
+    .setae-nav-item.active .setae-nav-icon {
+        opacity: 1;
+    }
+
+    /* 4. Content Area: The Floating Sheet */
+    .setae-content {
+        grid-area: content;
+        /* Floating Card Style */
+        margin: 10px 24px 24px 0 !important;
+        /* Gap from sidebar and right edge */
+        padding: 40px !important;
+        border-radius: 24px !important;
+        /* Modern rounded corners */
+        background-color: #FFFFFF;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        /* Soft float shadow */
+        border: 1px solid rgba(255, 255, 255, 0.6);
+
+        min-width: 0;
+        max-width: none !important;
+        width: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Keep section height auto but RESPECT display property */
+    .setae-section {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* 5. Toolbar Stickiness (Inside Content Column) */
+    .setae-toolbar-container {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 80px !important;
+        /* Matches Nav stickiness start */
+        z-index: 900 !important;
+        width: 100%;
+        margin-top: 0;
+    }
+
+    /* Admin Bar Offset Adjustments */
+    body.admin-bar .setae-header {
+        top: 32px !important;
+    }
+
+    body.admin-bar .setae-nav {
+        top: 112px !important;
+        height: calc(100vh - 112px);
+    }
+
+    body.admin-bar .setae-toolbar-container {
+        top: 112px !important;
+    }
+
+    /* 6. Reset List Scroll */
+    .setae-scrollable-list-group {
+        height: auto;
+        overflow: visible;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+/* 1. Bar Layout */
+.setae-toolbar-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 44px;
+    /* Modern Standard Height */
+    width: 100%;
+}
+
+
+/* Header User Actions */
+.setae-user-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.4);
+    padding: 5px 10px 5px 15px;
+    border-radius: 30px;
+    transition: background 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.setae-user-actions:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+#header-user-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    font-size: 14px;
+    max-width: 120px;
+    /* Limit name width */
+}
+
+.header-user-icon {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* File Upload Button (Professional) */
+.setae-btn-upload {
+    width: 100%;
+    border: 2px dashed #bdc3c7;
+    background: rgba(255, 255, 255, 0.5);
+    color: #7f8c8d;
+    padding: 20px;
+    border-radius: var(--setae-radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    text-align: center;
+    display: block;
+}
+
+.setae-btn-upload:hover {
+    border-color: #3498db;
+    color: #3498db;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.image-preview-area {
+    margin-top: 15px;
+    position: relative;
+    border-radius: var(--setae-radius-md);
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.remove-image-btn:hover {
+    background: rgba(231, 76, 60, 0.9);
+}
+
+/* Calendar Mobile Fix */
+@media (max-width: 480px) {
+    .setae-calendar-grid {
+        gap: 2px;
+        /* Tighter gap */
+        margin: 5px -5px 0 -5px;
+        /* Pull out slightly to gain space */
+    }
+
+    .cal-day {
+        font-size: 8px;
+        /* Smaller font */
+        padding: 1px;
+        border-radius: 2px;
+        aspect-ratio: auto;
+        /* Allow flexible height if needed */
+        height: 40px;
+    }
+
+    .cal-icon {
+        font-size: 9px;
+    }
+
+    .day-num {
+        font-size: 8px;
+        top: 1px;
+        right: 1px;
+    }
+}
+
+/* Larger View Toggles */
+.setae-view-switch .view-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 10px;
+    color: #95a5a6;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 5px;
+}
+
+.setae-view-switch .view-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.setae-view-switch .view-btn.active {
+    background: #fff;
+    color: #2c3e50;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Favorite Icon on Card */
+.btn-favorite {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #bdc3c7;
+    /* Default gray */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-favorite:hover {
+    transform: scale(1.1);
+}
+
+.btn-favorite.active {
+    color: #f1c40f;
+    /* Gold for favorite */
+    background: #fff;
+    text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+    border: 1px solid #f1c40f;
+}

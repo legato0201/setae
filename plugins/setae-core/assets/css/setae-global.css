@@ -1,0 +1,57 @@
+:root {
+    /* Color Palette - iOS/Glassmorphism */
+    --setae-primary: #2c3e50;
+    --setae-accent: #e74c3c;
+    --setae-bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+    /* System Colors */
+    --setae-text: #1c1c1e;
+    --setae-text-light: #8e8e93;
+    --setae-border: rgba(0, 0, 0, 0.05);
+
+    /* Radius */
+    --setae-radius-lg: 16px;
+    --setae-radius-md: 12px;
+
+    /* Font */
+    --setae-font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--setae-font-main);
+    background: var(--setae-bg-gradient);
+    color: var(--setae-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 700;
+    color: var(--setae-primary);
+    margin-top: 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul,
+li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}

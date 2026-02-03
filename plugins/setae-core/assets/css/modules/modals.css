@@ -1,0 +1,460 @@
+/* =========================================
+   Modal Base Styles
+   ========================================= */
+.setae-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+
+}
+
+.setae-modal[style*="display: block"],
+.setae-modal[style*="display: flex"],
+.setae-modal:not([style*="display: none"]) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.setae-modal-content {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    position: relative;
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.setae-modal[style*="display: block"] .setae-modal-content,
+.setae-modal[style*="display: flex"] .setae-modal-content,
+.setae-modal:not([style*="display: none"]) .setae-modal-content {
+    transform: scale(1);
+}
+
+.setae-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+    z-index: 10;
+}
+
+.setae-close:hover {
+    color: #333;
+}
+
+.setae-modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1d1d1f;
+    text-align: center;
+}
+
+/* =========================================
+   Form Styles
+   ========================================= */
+.setae-form-group {
+    margin-bottom: 20px;
+}
+
+.setae-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.setae-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #f5f5f7;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    /* Fix input width overflow */
+}
+
+.setae-input:focus {
+    background: #fff;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+    outline: none;
+}
+
+/* =========================================
+   Log Type Grid (Legacy)
+   ========================================= */
+.log-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.log-type-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background: #f5f5f7;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.log-type-btn .icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.log-type-btn .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+}
+
+.log-type-btn.active {
+    background: #e3f2fd;
+    border-color: #0071e3;
+}
+
+.log-type-btn.active .label {
+    color: #0071e3;
+}
+
+/* --- モバイルでの被り・レイアウト崩れ防止 --- */
+@media screen and (max-width: 480px) {
+
+    /* 上段の2カラムを維持しつつ、日付の幅を最適化 */
+    .form-row-top {
+        gap: 8px;
+        /* 隙間を詰める */
+    }
+
+    .date-group {
+        flex: 1 !important;
+        /* 日付を少し狭める */
+        min-width: 0;
+        /* flexの圧縮を許可 */
+    }
+
+    .type-group {
+        flex: 1.8 !important;
+        /* タイプ選択の幅を確保 */
+    }
+
+    /* 日付入力の中身をコンパクトに（ブラウザ固有のアイコン等を調整） */
+    .setae-input-sm[type="date"] {
+        padding: 8px 4px;
+        /* 横パディングを削る */
+        font-size: 13px;
+        /* 文字をわずかに小さく */
+        letter-spacing: -0.5px;
+        /* 日付の数字を詰める */
+    }
+
+    /* 絵文字ボタンのサイズ微調整 */
+    .log-type-grid-sm {
+        gap: 4px;
+    }
+
+    .type-btn-sm {
+        font-size: 18px;
+        height: 36px;
+    }
+}
+
+/* =========================================
+   Buttons
+   ========================================= */
+.setae-btn-submit {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: #0071e3;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.setae-btn-submit:hover {
+    background: #0077ed;
+}
+
+.setae-btn-upload {
+    width: 100%;
+    padding: 12px;
+    background: #f5f5f7;
+    border: 1px dashed #d2d2d7;
+    border-radius: 10px;
+    color: #0071e3;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.setae-btn-upload:hover {
+    background: #eef2f7;
+    border-color: #0071e3;
+}
+
+/* =========================================
+   COMPACT MODE STYLES (New Redesign)
+   ========================================= */
+.setae-modal-content.compact-mode {
+    padding: 16px;
+    max-width: 420px;
+}
+
+.compact-mode .modal-title {
+    font-size: 18px;
+    margin: 0 0 16px 0;
+}
+
+/* Top Row Layout */
+.form-row-top {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.date-group {
+    flex: 1.2;
+    margin-bottom: 0 !important;
+}
+
+.type-group {
+    flex: 2;
+    margin-bottom: 0 !important;
+}
+
+.type-group .setae-input-sm,
+.date-group .setae-input-sm {
+    margin-top: 4px;
+    /* Align slightly */
+}
+
+.label-icon {
+    width: 14px;
+    vertical-align: middle;
+    margin-right: 4px;
+    display: inline-block;
+}
+
+.setae-input-sm {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f2f2f7;
+    border: 1px solid transparent;
+    /* default no border */
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.setae-input-sm:focus {
+    background: #fff;
+    border-color: #0071e3;
+    outline: none;
+}
+
+/* Small Icon Grid */
+.log-type-grid-sm {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 5px;
+    /* space from label */
+}
+
+.type-btn-sm {
+    background: #f2f2f7;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 0;
+    font-size: 20px;
+    /* Big emoji */
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+}
+
+.type-btn-sm:hover {
+    background: #e5e5ea;
+}
+
+.type-btn-sm.active {
+    background: #007AFF;
+    color: white;
+    /* ensuring emoji might not change color but consistent feel */
+    box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+}
+
+/* Options Container */
+.options-container {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: none;
+    /* Default hidden */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Form Row Adjustments */
+.form-row-top {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+/* When options hidden, reduce gap below */
+.options-container[style*="display: none"]+.form-row-bottom {
+    margin-top: 0;
+}
+
+.option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.option-header label {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 0;
+}
+
+.prey-chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 100px;
+    /* limit height if many types */
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.prey-btn {
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.prey-btn.active {
+    background: #e3f2fd;
+    border-color: #007AFF;
+    color: #007AFF;
+    font-weight: 600;
+}
+
+.setae-checkbox-group-sm label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #d13030;
+    /* Refused color hint */
+    cursor: pointer;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+/* Bottom Row (Memo & Photo) */
+.form-row-bottom {
+    display: flex;
+    align-items: flex-end;
+    /* Align bottom so button matches textarea height if grows */
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.memo-group {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+
+.memo-group textarea {
+    min-height: 40px;
+    resize: none;
+    /* Fixed height or auto-grow via JS if added later */
+    line-height: 1.4;
+    padding: 10px;
+}
+
+.upload-group {
+    margin-bottom: 0 !important;
+    position: relative;
+}
+
+.btn-icon-only {
+    background: #f2f2f7;
+    border-radius: 10px;
+    /* Squircle */
+    width: 42px;
+    height: 42px;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-icon-only:hover {
+    background: #e5e5ea;
+}
+
+/* Helper Buttons */
+.btn-text-only {
+    background: none;
+    border: none;
+    color: #007AFF;
+    font-size: 12px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.btn-text-only:hover {
+    text-decoration: underline;
+}

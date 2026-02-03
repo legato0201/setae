@@ -1,0 +1,409 @@
+jQuery(document).ready(function ($) {
+    console.log('Setae App UI Loaded');
+
+    const apiRoot = SetaeSettings.api_root + 'setae/v1'; // Ensure wp_localize_script defines SetaeSettings
+    const nonce = SetaeSettings.nonce;
+
+    // --- Tab Switching ---
+    $('.setae-nav-item').on('click', function () {
+        var target = $(this).data('target');
+
+        // Update Nav State
+        $('.setae-nav-item').removeClass('active');
+        $(this).addClass('active');
+
+        // Switch View with Fade
+        $('.setae-section').hide();
+        $('#' + target).fadeIn(200);
+
+        // Load content if needed
+        if (target === 'section-my') {
+            loadMySpiders();
+        } else if (target === 'section-com') {
+            loadThreads();
+        }
+
+        if ($(window).width() < 768) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+
+    // --- My Spiders Logic ---
+    function loadMySpiders() {
+        console.log('Loading My Spiders...');
+        $.ajax({
+            url: apiRoot + '/my-spiders',
+            method: 'GET',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            success: function (data) {
+                console.log('My Spiders loaded:', data);
+                renderSpiders(data);
+            },
+            error: function (err) {
+                console.error('Error fetching spiders', err);
+                $('#my-spiders-list').html('<p>読み込みに失敗しました。</p>');
+            }
+        });
+    }
+
+    // --- View Toggle ---
+    let currentViewMode = 'list';
+    $(document).on('click', '#btn-toggle-view', function () {
+        if (currentViewMode === 'list') {
+            currentViewMode = 'gallery';
+            $('#my-spiders-list').addClass('view-gallery');
+            $(this).text('List View');
+        } else {
+            currentViewMode = 'list';
+            $('#my-spiders-list').removeClass('view-gallery');
+            $(this).text('Gallery View');
+        }
+    });
+
+    function renderSpiders(spiders) {
+        const container = $('#my-spiders-list');
+        container.empty();
+
+        if (spiders.length === 0) {
+            container.html('<div class="setae-card" style="grid-column: 1/-1;"><p>登録された個体はいません。</p></div>');
+            return;
+        }
+
+        spiders.forEach(spider => {
+            // Fallback image if no thumb
+            const imgStyle = spider.thumb ? `background-image: url('${spider.thumb}');` : 'background-color: #eee;';
+
+            // data-json to easily populate edit form
+            const spiderJson = JSON.stringify(spider).replace(/"/g, '&quot;');
+
+            const html = `
+                <div class="setae-card spider-card" style="margin:0; text-align:center; cursor:pointer;" data-id="${spider.id}" data-json="${spiderJson}">
+                    <div class="spider-thumb" style="height:100px; border-radius:4px; margin-bottom:10px; background-size:cover; background-position:center; ${imgStyle}"></div>
+                    <strong class="spider-title">${spider.title}</strong>
+                    <div class="spider-meta" style="font-size:12px; color:#666;">${spider.species_name}</div>
+                    <div style="margin-top:5px; font-size:11px; color:#888;">Live</div>
+                </div>
+             `;
+            container.append(html);
+        });
+    }
+
+    // Delegated Event for Spider Cards
+    $(document).on('click', '.spider-card', function () {
+        console.log('Spider Card Clicked');
+        const data = $(this).data('json');
+        openEditModal(data);
+    });
+
+    function openEditModal(spider) {
+        $('#edit-spider-id').val(spider.id);
+        $('#edit-spider-name').val(spider.title);
+        $('#edit-spider-last-molt').val(spider.last_molt);
+        // Load species options if empty? Assume loaded or load now.
+        loadSpeciesOptionsForEdit(spider.species_name); // Helper to ensure select is ready
+
+        $('#modal-edit-spider').fadeIn();
+    }
+
+    // Helper to load species and set value
+    function loadSpeciesOptionsForEdit(currentSpeciesName) {
+        // Reuse loadSpeciesOptions but how to set value if we don't know ID?
+        // API get_my_spiders returns user-friendly content.
+        // Ideally API should return species_id too.
+        // Let's assume we fetch details or existing get_my_spiders data has it. 
+        // Update API to return species_id? OR fetch detail on click.
+        // Fetching detail on click is safer.
+        const id = $('#edit-spider-id').val();
+        $.ajax({
+            url: apiRoot + '/spider/' + id,
+            method: 'GET',
+            success: function (res) {
+                // Populate detailed fields
+                $('#edit-spider-last-molt').val(res.meta.last_molt);
+                $('#edit-spider-last-feed').val(res.meta.last_feed);
+
+                // For species select, we need to load list first
+                $.ajax({
+                    url: apiRoot + '/species',
+                    method: 'GET',
+                    success: function (data) {
+                        const select = $('#edit-spider-species-select');
+                        select.empty().append('<option value="">選択してください...</option>');
+                        data.forEach(species => {
+                            const selected = (species.id == res.meta.species_id) ? 'selected' : '';
+                            select.append(`<option value="${species.id}" ${selected}>${species.title} (${species.genus})</option>`);
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Edit Modal Submit
+    $('#form-edit-spider').on('submit', function (e) {
+        e.preventDefault();
+        const id = $('#edit-spider-id').val();
+        const speciesId = $('#edit-spider-species-select').val();
+        const name = $('#edit-spider-name').val();
+        const lastMolt = $('#edit-spider-last-molt').val();
+        const lastFeed = $('#edit-spider-last-feed').val();
+
+        $.ajax({
+            url: apiRoot + '/spiders/' + id,
+            method: 'POST',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            data: {
+                species_id: speciesId,
+                name: name,
+                last_molt: lastMolt,
+                last_feed: lastFeed
+            },
+            success: function (res) {
+                alert('更新しました！');
+                $('#modal-edit-spider').fadeOut();
+                loadMySpiders();
+            },
+            error: function (err) {
+                alert('エラー: ' + err.statusText);
+            }
+        });
+    });
+
+    // Delete Logic
+    $('#btn-delete-spider').on('click', function () {
+        if (!confirm('本当に削除しますか？この操作は取り消せません。')) return;
+
+        const id = $('#edit-spider-id').val();
+        $.ajax({
+            url: apiRoot + '/spiders/' + id,
+            method: 'DELETE',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            success: function (res) {
+                alert('削除しました。');
+                $('#modal-edit-spider').fadeOut();
+                loadMySpiders();
+            },
+            error: function (err) {
+                alert('削除エラー: ' + err.statusText);
+            }
+        });
+    });
+
+    // Add Spider Modal
+    $(document).on('click', '#btn-add-spider', function () {
+        console.log('Add Spider Clicked');
+        // Load species options first
+        loadSpeciesOptions();
+        $('#modal-add-spider').fadeIn();
+    });
+
+    $('.setae-close').on('click', function () {
+        $(this).closest('.setae-modal').fadeOut();
+    });
+
+    function loadSpeciesOptions() {
+        $.ajax({
+            url: apiRoot + '/species',
+            method: 'GET',
+            success: function (data) {
+                const select = $('#spider-species-select');
+                select.empty().append('<option value="">選択してください...</option>');
+                data.forEach(species => {
+                    select.append(`<option value="${species.id}">${species.title} (${species.genus})</option>`);
+                });
+            }
+        });
+    }
+
+    $('#form-add-spider').on('submit', function (e) {
+        e.preventDefault();
+        const speciesId = $('#spider-species-select').val();
+        const name = $('#spider-name').val();
+        const lastMolt = $('#spider-last-molt').val();
+        const lastFeed = $('#spider-last-feed').val();
+
+        $.ajax({
+            url: apiRoot + '/spiders',
+            method: 'POST',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            data: {
+                species_id: speciesId,
+                name: name,
+                last_molt: lastMolt,
+                last_feed: lastFeed
+            },
+            success: function (res) {
+                alert('登録しました！'); // Replace with toast later
+                $('#modal-add-spider').fadeOut();
+                $('#form-add-spider')[0].reset();
+                loadMySpiders();
+            },
+            error: function (err) {
+                alert('エラーが発生しました: ' + err.statusText);
+            }
+        });
+    });
+
+    // --- Community Logic ---
+    function loadThreads() {
+        $.ajax({
+            url: apiRoot + '/threads',
+            method: 'GET',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            success: function (data) {
+                renderThreads(data);
+            },
+            error: function (err) {
+                console.error(err);
+                $('#community-threads-list').html('<p>読み込み失敗</p>');
+            }
+        });
+    }
+
+    function renderThreads(threads) {
+        const container = $('#community-threads-list');
+        container.empty();
+
+        if (threads.length === 0) {
+            container.html('<div class="setae-card"><p>スレッドはまだありません。</p></div>');
+            return;
+        }
+
+        threads.forEach(thread => {
+            const authorIcon = thread.author.icon ? `<img src="${thread.author.icon}" style="width:24px; height:24px; border-radius:50%; margin-right:8px;">` : '';
+
+            const html = `
+                <div class="setae-card" style="cursor:pointer;" onclick="location.href='/?thread=${thread.id}'"> <!-- Temporary Link -->
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="font-weight:bold; font-size:16px;">${thread.title}</span>
+                        <span style="font-size:12px; color:#888;">${thread.date}</span>
+                    </div>
+                    <p style="font-size:14px; color:#444; margin:0;">${thread.excerpt}</p>
+                    <div style="margin-top:10px; display:flex; items-align:center; font-size:12px; color:#666;">
+                        ${authorIcon}
+                        <span>${thread.author.name}</span>
+                        <span style="margin-left:auto;">💬 ${thread.comment_count}</span>
+                    </div>
+                </div>
+            `;
+            container.append(html);
+        });
+    }
+
+    $('#btn-create-thread').on('click', function () {
+        $('#modal-create-thread').fadeIn();
+    });
+
+    $('#form-create-thread').on('submit', function (e) {
+        e.preventDefault();
+        const title = $('#thread-title').val();
+        const content = $('#thread-content').val();
+
+        $.ajax({
+            url: apiRoot + '/threads',
+            method: 'POST',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            data: {
+                title: title,
+                content: content
+            },
+            success: function (res) {
+                alert('投稿しました！');
+                $('#modal-create-thread').fadeOut();
+                $('#form-create-thread')[0].reset();
+                loadThreads();
+            },
+            error: function (err) {
+                alert('投稿エラー: ' + err.statusText);
+            }
+        });
+    });
+
+    // --- User Settings ---
+    $('#btn-open-settings').on('click', function () {
+        // Pre-fill form with current values if available (requires passing user data to JS in wp_localize_script or fetching it)
+        // For now, we assume user knows what to fill, or we fetch it first.
+        // Let's fetch current profile to fill inputs.
+        // For MVC simplicity, we'll just open it. Enhancment: Fetch profile first.
+        $('#modal-user-settings').fadeIn();
+    });
+
+    $('#btn-upload-icon').on('click', function () {
+        $('#settings-icon-file').click();
+    });
+
+    $('#settings-icon-file').on('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Use WP Media API
+        $.ajax({
+            url: SetaeSettings.api_root + 'wp/v2/media',
+            method: 'POST',
+            processData: false,
+            contentType: false,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+                xhr.setRequestHeader('Content-Disposition', 'attachment; filename=' + file.name);
+            },
+            success: function (res) {
+                // Set Preview and ID
+                const url = res.source_url || (res.guid ? res.guid.rendered : '');
+                $('#settings-icon-preview').attr('src', url);
+                $('#settings-icon-id').val(res.id);
+                alert('アイコンをアップロードしました (保存ボタンを押して確定してください)');
+            },
+            error: function (err) {
+                console.error(err);
+                alert('アップロード失敗: ' + (err.responseJSON ? err.responseJSON.message : err.statusText));
+            }
+        });
+    });
+
+    $('#form-user-settings').on('submit', function (e) {
+        e.preventDefault();
+        const display_name = $('#settings-display-name').val();
+        const email = $('#settings-email').val();
+        const password = $('#settings-password').val();
+        const icon_id = $('#settings-icon-id').val();
+
+        const data = {};
+        if (display_name) data.display_name = display_name;
+        if (email) data.email = email;
+        if (password) data.password = password;
+        if (icon_id) data.user_icon_id = icon_id;
+
+        $.ajax({
+            url: apiRoot + '/user/profile',
+            method: 'POST',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            data: data,
+            success: function (res) {
+                alert('設定を保存しました');
+                $('#modal-user-settings').fadeOut();
+                location.reload(); // Reload to reflect name/icon changes in header
+            },
+            error: function (err) {
+                alert('保存失敗: ' + (err.responseJSON ? err.responseJSON.message : err.statusText));
+            }
+        });
+    });
+
+});

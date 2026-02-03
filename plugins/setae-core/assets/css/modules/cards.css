@@ -1,0 +1,278 @@
+/* =========================================
+   Unified Card Design (iOS Style)
+   ========================================= */
+
+/* 1. リスト行のコンテナ (透明なレール) */
+.setae-spider-list-row {
+    position: relative;
+    /* 背景を透明にすることで、角の白い余白を消す */
+    background-color: transparent !important;
+    border: none !important;
+    height: auto !important;
+    min-height: 80px;
+    /* カードの高さ */
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 0 !important;
+    overflow: visible !important;
+    /* 影を隠さない */
+    display: flex;
+    align-items: stretch;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 2. カード本体 (白・影付き・角丸) */
+.setae-list-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 16px !important;
+    /* iOS標準の角丸 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    /* 繊細な影 */
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    /* 極薄の境界線 */
+    position: relative;
+    z-index: 10;
+    padding: 12px 16px 12px 0;
+    /* 左側はステータスバー用に空ける */
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.setae-list-content:active {
+    transform: scale(0.98);
+    background-color: #f9f9f9;
+}
+
+/* 3. スワイプ背景 (裏側) */
+.setae-swipe-bg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /* カードの下 */
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 24px;
+    color: white;
+    box-sizing: border-box;
+    border-radius: 16px;
+    /* カードと同じ角丸 */
+    background-color: transparent;
+    /* JSで色が乗るまで透明 */
+    visibility: hidden;
+}
+
+.setae-swipe-bg.swipe-left {
+    justify-content: flex-start;
+    left: 0;
+}
+
+.setae-swipe-bg.swipe-right {
+    justify-content: flex-end;
+    right: 0;
+}
+
+/* 4. 各パーツのデザイン */
+
+/* 左端のステータスバー */
+.setae-status-strip {
+    width: 6px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+/* アバター画像 */
+.setae-avatar-container {
+    margin-left: 12px;
+    margin-right: 14px;
+    flex-shrink: 0;
+}
+
+.setae-avatar-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    /* 少し丸く */
+    object-fit: cover;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background-color: #f2f2f7;
+}
+
+/* テキスト情報 */
+.setae-info-column {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding-right: 8px;
+}
+
+.setae-scientific-name {
+    font-size: 11px;
+    color: #8e8e93;
+    /* System Gray */
+    font-style: italic;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.setae-nickname {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1c1c1e;
+    /* System Black */
+    line-height: 1.3;
+}
+
+/* メタデータ (右側) */
+.setae-meta-column {
+    text-align: right;
+    min-width: 70px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.meta-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.meta-label {
+    font-size: 9px;
+    color: #aeaeb2;
+    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-family: -apple-system-monospaced, "SF Mono", monospace;
+    color: #3a3a3c;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.alert-text {
+    color: #ff3b30 !important;
+    /* System Red */
+    font-weight: 700;
+}
+
+/* --- PC用 ステータス・パイプライン (路線図) --- */
+.setae-pipeline {
+    display: none;
+    /* スマホでは非表示 */
+    flex: 2;
+    /* 中央のスペースを広く取る */
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+/* PCサイズ以上でのみ表示 */
+@media (min-width: 768px) {
+    .setae-pipeline {
+        display: flex;
+    }
+
+    /* 名前エリアの幅を少し制限してバランスを取る */
+    .setae-info-column {
+        flex: 1;
+        max-width: 250px;
+    }
+}
+
+/* 各ステーション（駅） */
+.pipeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    /* 均等配置 */
+}
+
+/* 路線（線）を描画 */
+.pipeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    /* 丸の中心の高さ */
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 0;
+}
+
+/* 駅の「丸」 */
+.pipeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    z-index: 1;
+    /* 線の上に置く */
+    transition: all 0.3s ease;
+    border: 2px solid #fff;
+    /* 白フチで見やすく */
+}
+
+/* 駅名（ラベル） */
+.pipeline-label {
+    font-size: 10px;
+    color: #bbb;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* --- アクティブ（現在地）のスタイル --- */
+.pipeline-step.active .pipeline-dot {
+    transform: scale(1.4);
+    /* 少し大きく */
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    /* うっすら外光彩 */
+}
+
+.pipeline-step.active .pipeline-label {
+    color: #555;
+    font-weight: bold;
+}
+
+/* 各ステータスの色定義 */
+.pipeline-step.active[data-step="normal"] .pipeline-dot {
+    background-color: #2ecc71;
+}
+
+.pipeline-step.active[data-step="fasting"] .pipeline-dot {
+    background-color: #ff9800;
+}
+
+.pipeline-step.active[data-step="pre_molt"] .pipeline-dot {
+    background-color: #e74c3c;
+}
+
+.pipeline-step.active[data-step="post_molt"] .pipeline-dot {
+    background-color: #9c27b0;
+}

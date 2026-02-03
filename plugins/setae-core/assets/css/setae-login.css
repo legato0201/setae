@@ -1,0 +1,122 @@
+/* Setae Custom Login Styles (Light Glass Theme) */
+body.login {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#login {
+    width: 400px;
+    padding: 0;
+    margin: 0;
+}
+
+#login h1 a {
+    background-image: none !important;
+    text-indent: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 36px !important;
+    font-weight: 800 !important;
+    background: linear-gradient(to right, #2c3e50, #3498db) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    letter-spacing: -1px;
+    margin-bottom: 30px !important;
+    display: block !important;
+    text-align: center;
+}
+
+.login form {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+    padding: 40px !important;
+}
+
+.login label {
+    color: #555 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+
+.login input[type="text"],
+.login input[type="password"],
+.login input[type="email"] {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 12px !important;
+    color: #333 !important;
+    padding: 12px 15px !important;
+    font-size: 16px !important;
+    margin-bottom: 5px !important;
+    box-shadow: none !important;
+}
+
+.login input:focus {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1) !important;
+    outline: none !important;
+}
+
+.login .button-primary {
+    background: linear-gradient(135deg, #2c3e50, #34495e) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    padding: 12px 20px !important;
+    height: auto !important;
+    width: 100% !important;
+    margin-top: 25px !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+    text-shadow: none !important;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3) !important;
+    font-size: 16px !important;
+}
+
+.login .button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(44, 62, 80, 0.4) !important;
+}
+
+.login #nav,
+.login #backtoblog {
+    text-align: center !important;
+    margin: 20px 0 0 0 !important;
+    padding: 0 !important;
+}
+
+.login #nav a,
+.login #backtoblog a {
+    color: #7f8c8d !important;
+    transition: color 0.2s !important;
+    font-size: 13px !important;
+}
+
+.login #nav a:hover,
+.login #backtoblog a:hover {
+    color: #2c3e50 !important;
+}
+
+/* Hide bits we don't want */
+.login .forgetmenot {
+    margin-bottom: 10px !important;
+}
+
+.login .privacy-policy-page-link {
+    display: none;
+}
+
+/* Hide language switcher as requested to prevent layout issues */
+.login .language-switcher {
+    display: none !important;
+}
