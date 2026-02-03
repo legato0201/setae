@@ -248,7 +248,27 @@ var SetaeUIList = (function ($) {
         renderMySpiders();
     }
 
+    /**
+     * 初期化：現在のステートをUIに反映させる
+     */
+    function init() {
+        // 1. 検索クエリの復元
+        if (SetaeCore.state.currentSearch) {
+            $('#setae-spider-search').val(SetaeCore.state.currentSearch);
+        }
+
+        // 2. デッキ（フィルター）の復元
+        if (SetaeCore.state.currentDeck) {
+            $('.deck-pill').removeClass('active');
+            $(`.deck-pill[data-deck="${SetaeCore.state.currentDeck}"]`).addClass('active');
+        }
+
+        // 3. 初回レンダリング
+        renderMySpiders();
+    }
+
     return {
+        init: init,
         renderMySpiders: renderMySpiders,
         handleDeckFilterClick: handleDeckFilterClick,
         handleSearchInput: handleSearchInput,

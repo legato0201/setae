@@ -48,7 +48,7 @@ var SetaeUI = (function ($) {
         $(document).on('click', '#btn-back-to-list', function () {
             $('#section-my-detail').hide();
             $('#section-my').fadeIn();
-            SetaeAPI.fetchMySpiders(SetaeUIList.renderMySpiders);
+            SetaeAPI.fetchMySpiders(SetaeUIList.init);
         });
 
         // Scroll Shadow
@@ -67,7 +67,7 @@ var SetaeUI = (function ($) {
 
     function checkInitialLoad() {
         if ($('#section-my').is(':visible')) {
-            SetaeAPI.fetchMySpiders(SetaeUIList.renderMySpiders);
+            SetaeAPI.fetchMySpiders(SetaeUIList.init);
         }
     }
 
@@ -82,7 +82,7 @@ var SetaeUI = (function ($) {
         $('#' + target).fadeIn(200);
 
         if (target === 'section-my') {
-            SetaeAPI.fetchMySpiders(SetaeUIList.renderMySpiders);
+            SetaeAPI.fetchMySpiders(SetaeUIList.init);
         }
     }
 
