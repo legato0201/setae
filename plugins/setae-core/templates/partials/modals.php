@@ -1,14 +1,16 @@
 <?php
-// All Modals
+/**
+ * Partial: Modals
+ */
 ?>
+<!-- Modals (Moved to Root) -->
 <div id="setae-profile-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="margin:0;">Profile Settings</h3>
             <div class="setae-profile-avatar" id="profile-avatar-preview-container"
                 style="width:60px; height:60px; border-radius:50%; overflow:hidden; border:2px solid #00ffcc; position:relative;">
-                <img alt="" src="<?php echo get_avatar_url(get_current_user_id()); ?>" class="avatar avatar-60 photo"
-                    height="60" width="60">
+                <?php echo get_avatar(get_current_user_id(), 60); ?>
             </div>
         </div>
 
@@ -20,7 +22,9 @@
             </div>
             <div class="setae-form-group">
                 <label>Icon Photo</label>
+                <!-- Hidden Input -->
                 <input type="file" id="prof-icon" accept="image/*" style="display:none;">
+                <!-- Custom Button -->
                 <button type="button" id="btn-trigger-prof-upload" class="setae-btn-upload" style="width:100%;">
                     📸 写真を変更
                 </button>
@@ -44,36 +48,38 @@
     </div>
 </div>
 
+<!-- Edit Spider Modal -->
+<!-- Edit Spider Modal -->
 <div id="modal-edit-spider" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-edit-spider">×</span>
         <h3>個体情報の編集</h3>
         <form id="form-edit-spider">
             <input type="hidden" id="edit-spider-id">
-
             <div class="setae-form-group">
-                <label>名前 (ニックネーム)</label>
-                <input type="text" id="edit-spider-name" name="name" class="setae-input" placeholder="Name/ID">
+                <label>写真更新 (任意)</label>
+                <div class="setae-file-upload-wrapper">
+                    <input type="file" id="edit-spider-image" accept="image/*" style="display:none;">
+                    <button type="button" id="btn-trigger-edit-upload" class="setae-btn-upload">
+                        📸 写真を変更
+                    </button>
+                    <div id="edit-spider-image-preview" class="image-preview-area" style="display:none;">
+                        <img id="edit-preview-img-tag" src=""
+                            style="width:100%; border-radius:8px; height:150px; object-fit:cover;">
+                        <button type="button" id="btn-remove-edit-image" class="remove-image-btn">×</button>
+                    </div>
+                </div>
             </div>
-
             <div class="setae-form-group">
-                <label>種類</label>
-                <select id="edit-spider-species-select" name="species_id" required class="setae-input">
-                    <option value="">種類を選択してください</option>
+                <label>種類 (Species)</label>
+                <select id="edit-spider-species-select" required="" class="setae-input">
+                    <option value="">選択してください...</option>
                 </select>
             </div>
-
             <div class="setae-form-group">
-                <label>個体写真</label>
-                <div id="edit-spider-image-preview" style="margin-bottom:10px; position:relative; display:none;">
-                    <img id="edit-preview-img-tag" src=""
-                        style="width:100%; border-radius:12px; height:150px; object-fit:cover;">
-                    <button type="button" id="btn-remove-edit-image" class="remove-image-btn">×</button>
-                </div>
-                <button type="button" id="btn-trigger-edit-upload" class="setae-btn-upload">写真を変更する</button>
-                <input type="file" id="edit-spider-image" name="image" accept="image/*" style="display:none;">
+                <label>ニックネーム</label>
+                <input type="text" id="edit-spider-name" class="setae-input" placeholder="Name/ID">
             </div>
-
             <div class="setae-form-actions setae-modal-footer-split">
                 <button type="button" id="btn-delete-spider" class="setae-btn-text-danger">
                     🗑️ 削除
@@ -88,6 +94,7 @@
     </div>
 </div>
 
+<!-- Add Spider Modal -->
 <div id="modal-add-spider" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close">×</span>
@@ -105,7 +112,7 @@
                         <img id="preview-img-tag-add" src=""
                             style="width:100%; border-radius:8px; height:150px; object-fit:cover;">
                         <button type="button" id="btn-remove-image-add"
-                            style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">×</button>
+                            style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">×</button>
                     </div>
                 </div>
             </div>
@@ -137,6 +144,7 @@
     </div>
 </div>
 
+<!-- Create Topic Modal -->
 <div id="setae-create-topic-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-topic-modal">×</span>
@@ -144,17 +152,18 @@
         <form id="setae-topic-form">
             <div class="setae-form-group">
                 <label>タイトル</label>
-                <input type="text" id="topic-title" class="setae-input" required>
+                <input type="text" id="topic-title" class="setae-input" required="">
             </div>
             <div class="setae-form-group">
                 <label>内容</label>
-                <textarea id="topic-content" class="setae-input" rows="5" required></textarea>
+                <textarea id="topic-content" class="setae-input" rows="5" required=""></textarea>
             </div>
             <button type="submit" class="setae-btn setae-btn-primary">投稿</button>
         </form>
     </div>
 </div>
 
+<!-- QR Code Modal -->
 <div id="setae-qr-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content" style="text-align:center;">
         <span class="setae-close" id="close-qr-modal">×</span>
@@ -164,12 +173,14 @@
     </div>
 </div>
 
+<!-- Manage Feed Types Modal -->
 <div id="setae-manage-feed-modal" class="setae-modal" style="display:none; z-index:10002;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-manage-feed-modal">×</span>
         <h3>餌リストの編集</h3>
         <div id="feed-type-list"
             style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid #eee; padding:5px; border-radius:8px;">
+            <!-- JS Populated -->
         </div>
         <div style="display:flex; gap:5px;">
             <input type="text" id="new-feed-type" class="setae-input" placeholder="新しい餌の名前 (例: 🪳 デュビア)">
@@ -179,63 +190,52 @@
     </div>
 </div>
 
+<!-- Add Log Modal (Compact Design) -->
 <div id="setae-log-modal" class="setae-modal" style="display:none;">
-    <div class="setae-modal-content">
+    <div class="setae-modal-content compact-mode">
         <span class="setae-close" id="close-log-modal">×</span>
-        <h3>記録を追加</h3>
+        <h3 class="modal-title">記録を追加</h3>
+
         <form id="setae-log-form">
             <input type="hidden" id="log-spider-id">
-            <div class="setae-form-group">
-                <label>日付</label>
-                <input type="date" id="log-date" class="setae-input" required>
-            </div>
-            <div class="setae-form-group">
-                <label>イベントタイプ</label>
-                <input type="hidden" id="log-type" value="feed">
 
-                <div class="log-type-grid">
-                    <button type="button" class="log-type-btn active" data-val="feed">
-                        <span class="icon">🦗</span>
-                        <span class="label">Feed</span>
-                    </button>
-                    <button type="button" class="log-type-btn" data-val="molt">
-                        <span class="icon">🧬</span>
-                        <span class="label">Molt</span>
-                    </button>
-                    <button type="button" class="log-type-btn" data-val="growth">
-                        <span class="icon">📏</span>
-                        <span class="label">Growth</span>
-                    </button>
-                    <button type="button" class="log-type-btn" data-val="note">
-                        <span class="icon">📝</span>
-                        <span class="label">Note</span>
-                    </button>
+            <div class="form-row-top">
+                <div class="setae-form-group date-group">
+                    <label><img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4c5.svg" class="label-icon">
+                        日付</label>
+                    <input type="date" id="log-date" class="setae-input-sm" required>
+                </div>
+                <div class="setae-form-group type-group">
+                    <label>イベントタイプ</label>
+                    <input type="hidden" id="log-type" value="feed">
+                    <div class="log-type-grid-sm">
+                        <button type="button" class="type-btn-sm active" data-val="feed" title="Feed">🦗</button>
+                        <button type="button" class="type-btn-sm" data-val="molt" title="Molt">🧬</button>
+                        <button type="button" class="type-btn-sm" data-val="growth" title="Growth">📏</button>
+                        <button type="button" class="type-btn-sm" data-val="note" title="Note">📝</button>
+                    </div>
                 </div>
             </div>
 
-            <div id="log-feed-options" class="log-option-group">
-                <label>餌の種類 (Prey Type)</label>
-
-                <input type="hidden" id="log-feed-prey-select">
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span style="font-size:12px; color:#888;">よく使う餌を選択:</span>
-                    <button type="button" id="btn-manage-feed-types" class="setae-btn-sm"
-                        style="background:#eee; color:#333; font-size:12px; padding:2px 8px;">⚙️ 編集</button>
+            <div class="options-container" style="display: block;">
+                <div id="log-feed-options" class="log-option-group">
+                    <div class="option-header">
+                        <label>餌 (Prey)</label>
+                        <button type="button" id="btn-manage-feed-types" class="btn-text-only">⚙️ 編集</button>
+                    </div>
+                    <input type="hidden" id="log-feed-prey-select" value="Dubia (デュビア)">
+                    <div id="log-feed-prey-buttons" class="prey-chip-container">
+                        <!-- JS Populated -->
+                    </div>
+                    <div class="setae-checkbox-group-sm">
+                        <label><input type="checkbox" id="log-feed-refused"> <span>拒食 (Refused)</span></label>
+                    </div>
                 </div>
 
-                <div id="log-feed-prey-buttons" class="log-type-grid"
-                    style="grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); margin-bottom:15px;">
+                <div id="log-growth-options" class="log-option-group" style="display:none;">
+                    <label>サイズ (cm / Instar)</label>
+                    <input type="text" id="log-size" class="setae-input-sm" placeholder="e.g. 5cm">
                 </div>
-
-                <div class="setae-checkbox-group">
-                    <label><input type="checkbox" id="log-feed-refused"> 拒食 (Refused)</label>
-                </div>
-            </div>
-
-            <div id="log-growth-options" class="log-option-group" style="display:none;">
-                <label>サイズ (cm) or Instar</label>
-                <input type="text" id="log-size" class="setae-input" placeholder="e.g. 5cm or 3LS">
             </div>
 
             <div class="form-row-bottom">
@@ -244,29 +244,34 @@
                 </div>
                 <div class="setae-form-group upload-group">
                     <input type="file" id="log-image" accept="image/*" style="display:none;">
-                    <button type="button" id="btn-trigger-upload" class="btn-icon-only">
-                        <img draggable="false" role="img" class="emoji" alt="📸"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4f8.svg">
-                    </button>
+                    <button type="button" id="btn-trigger-upload" class="btn-icon-only">📸</button>
+                    <!-- Best Shot Checkbox -->
+                    <label
+                        style="display:flex; align-items:center; gap:5px; font-size:12px; margin-left:10px; cursor:pointer;">
+                        <input type="checkbox" id="log-best-shot"> Best Shot
+                    </label>
                     <div id="log-image-preview" class="image-preview-area"
                         style="display:none; position:absolute; bottom:60px; right:20px; z-index:10; background:white; padding:5px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
                         <img id="preview-img-tag" src="" alt="Preview"
                             style="max-width:100px; max-height:100px; border-radius:4px;">
                         <button type="button" id="btn-remove-image" class="remove-image-btn"
-                            style="background:rgba(0,0,0,0.6); color:white; border-radius:50%; width:24px; height:24px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">×</button>
+                            style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; border:none; cursor:pointer;">×</button>
                     </div>
                 </div>
             </div>
-            <button type="submit" class="setae-btn setae-btn-primary">保存</button>
+
+            <button type="submit" class="setae-btn-submit">保存する</button>
         </form>
     </div>
 </div>
 
+<!-- Date Detail Modal -->
 <div id="setae-date-detail-modal" class="setae-modal" style="display:none;">
     <div class="setae-modal-content" style="max-width:400px;">
         <span class="setae-close" id="close-date-detail-modal">×</span>
         <h3 id="date-detail-title">YYYY-MM-DD</h3>
         <div id="date-detail-list" style="margin-bottom:20px;">
+            <!-- JS Populated -->
         </div>
         <button id="btn-add-log-from-date" class="setae-btn setae-btn-primary" style="width:100%;">
             + この日に記録を追加

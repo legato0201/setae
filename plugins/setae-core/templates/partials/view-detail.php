@@ -1,66 +1,55 @@
 <?php
-// My Spiders Detail Section (Hidden by Default)
+/**
+ * Partial: Encyclopedia Detail View
+ */
 ?>
-<div id="section-my-detail" class="setae-section" style="display: none;">
-    <div class="setae-card" style="margin-bottom:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button class="setae-btn-text" id="btn-back-to-list"
-                style="margin-right:15px; font-size:18px; color:var(--setae-primary); border:none; background:none; cursor:pointer;">
-                ← Back
-            </button>
-            <h3 style="margin:0;" id="detail-spider-name">Spider Name</h3>
-            <!-- Edit Button (Pencil) Trigger -->
-            <button id="btn-edit-spider-trigger" class="setae-btn"
-                style="padding:5px 10px; font-size:20px; background:rgba(0,0,0,0.05); border-radius:50%;">✏️</button>
-        </div>
+<div id="section-enc-detail" class="setae-section" style="display: none;">
+    <div class="setae-header-bar" style="display:flex; align-items:center; margin-bottom:15px;">
+        <button id="btn-back-to-enc" class="setae-btn-text" style="margin-right:15px; font-size:18px;">←
+            Back</button>
+        <h4 style="margin:0; flex-grow:1; text-align:center;" id="enc-detail-title">Species Name</h4>
+        <div style="width:50px;"></div>
     </div>
 
-    <div class="setae-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-        <!-- Info Column -->
-        <div class="setae-card">
-            <h4 style="border-bottom:1px solid #eee; padding-bottom:5px;">基本情報</h4>
-            <p><strong>種類:</strong> <span id="detail-spider-species">Species Name</span></p>
-            <p><strong>最終脱皮:</strong> <span id="detail-spider-molt">-</span></p>
-            <p><strong>最終給餌:</strong> <span id="detail-spider-feed">-</span></p>
-
-            <!-- Prey Stats Placeholder -->
-            <div id="prey-stats-wrapper" style="margin-top: 20px; display: block;">
-                <canvas id="preyChart" style="max-height: 200px; width: 100%; display: block;"></canvas>
+    <div class="setae-card" style="padding:0; overflow:hidden; margin-bottom:15px;">
+        <img id="enc-detail-image" src="" style="width:100%; height:200px; object-fit:cover; display:block;">
+        <div style="padding:15px;">
+            <span id="enc-detail-genus"
+                style="display:block; font-style:italic; color:#888; font-size:12px; margin-bottom:4px;">Genus</span>
+            <h3 id="enc-detail-name" style="margin:0;">Species Title</h3>
+            <div style="margin-top:10px; display:flex; gap:10px; font-size:12px;">
+                <span id="enc-detail-temperament"
+                    style="background:#eee; padding:3px 8px; border-radius:12px;">Docile</span>
+                <span id="enc-detail-keeping"
+                    style="background:#ffcc00; color:#333; padding:3px 8px; border-radius:12px; font-weight:bold;">🔥
+                    10 Keeping</span>
             </div>
         </div>
-
-        <!-- Growth Graph Column -->
-        <div class="setae-card">
-            <h4 style="border-bottom:1px solid #eee; padding-bottom:5px;">成長記録 (Instar / Size)</h4>
-            <canvas id="growthChart" style="max-height: 200px; width: 100%; display: block;"></canvas>
-        </div>
     </div>
 
-    <!-- Calendar Section -->
-    <div class="setae-card" style="margin-top:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h4>Feeding &amp; Molt Log</h4>
-            <div style="display:flex; gap:10px;">
-                <button id="cal-prev" class="setae-btn-sm">&lt;</button>
-                <span id="cal-month-label" style="font-weight:bold; padding-top:5px;">YYYY.MM</span>
-                <button id="cal-next" class="setae-btn-sm">&gt;</button>
+    <!-- Stats/Info -->
+    <div class="setae-card" style="margin-bottom:15px;">
+        <h4 style="margin-top:0;">Species Info</h4>
+        <p id="enc-detail-description" style="font-size:13px; line-height:1.6; color:#555;">...</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
+                <span style="display:block; font-size:10px; color:#888;">Lifespan</span>
+                <strong id="enc-detail-lifespan">-</strong>
+            </div>
+            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
+                <span style="display:block; font-size:10px; color:#888;">Max Legspan</span>
+                <strong id="enc-detail-size">-</strong>
             </div>
         </div>
-        <div id="setae-calendar" class="setae-calendar-grid">
-            <!-- JS populated -->
-        </div>
-        <!-- Add Log Button moved to here for visibility -->
-        <div style="text-align:right; margin-top:15px;">
-            <button id="btn-add-log" class="setae-btn setae-btn-primary">+ 記録追加</button>
-        </div>
     </div>
 
-    <!-- Recent Logs List with Images -->
+    <!-- Community Gallery -->
     <div class="setae-card">
-        <h4>Log History</h4>
-        <div id="setae-log-list" style="display:flex; flex-direction:column; gap:10px;">
-            <!-- JS populated -->
+        <h4 style="margin-top:0;">Best Shots Gallery</h4>
+        <div id="enc-gallery-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;">
+            <!-- JS Populated -->
         </div>
-        <div id="log-sentinel" style="height:20px; text-align:center;"></div>
+        <p id="enc-gallery-empty" style="text-align:center; color:#ccc; font-size:12px; display:none;">No
+            community photos yet.</p>
     </div>
 </div>

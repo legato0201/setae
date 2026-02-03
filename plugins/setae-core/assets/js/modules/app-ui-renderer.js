@@ -28,6 +28,9 @@ var SetaeUI = (function ($) {
         // Search Input
         $(document).on('input', '#setae-spider-search', SetaeUIList.handleSearchInput);
 
+        // Initialize Species Search (Server-Side List)
+        initSpeciesSearch();
+
         $(document).on('click', function (e) {
             // Close Context Menu if click outside
             if (!$(e.target).closest('.setae-context-menu').length && !$(e.target).closest('.btn-feed-smart').length) {
@@ -50,8 +53,9 @@ var SetaeUI = (function ($) {
             $('#section-enc').fadeIn(200);
         });
 
-        // Species Card Click
-        $(document).on('click', '.setae-species-card', function () {
+        // Species Card Click - Updated selector for PHP rendered items
+        $(document).on('click', '.js-open-species-detail, .setae-species-card', function (e) {
+            // If it's the anchor inside, prevent default if needed, though href is void(0)
             const id = $(this).data('id');
             if (id) SetaeUI.openSpeciesDetail(id);
         });
@@ -131,6 +135,9 @@ var SetaeUI = (function ($) {
     // ==========================================
     // Navigation
     // ==========================================
+    // ==========================================
+    // Navigation
+    // ==========================================
     function handleTabClick() {
         const target = $(this).data('target');
         $('.setae-nav-item').removeClass('active');
@@ -140,53 +147,27 @@ var SetaeUI = (function ($) {
 
         if (target === 'section-my') {
             SetaeAPI.fetchMySpiders(SetaeUIList.init);
-        } else if (target === 'section-enc') {
-            loadSpeciesBook();
         }
+        // section-enc is now server-side rendered, no need to fetch API
     }
 
-    function loadSpeciesBook() {
-        const $grid = $('#setae-species-grid');
-        if ($grid.children().length > 0 && !$grid.data('dirty')) return; // Cache
-
-        $grid.html('<div style="text-align:center; padding:20px;">Loading...</div>');
-        SetaeAPI.fetchSpecies('', function (speciesList) {
-            $grid.empty();
-            if (!speciesList || speciesList.length === 0) {
-                $grid.html('<p style="text-align:center;">No species found.</p>');
-                return;
-            }
-
-            speciesList.forEach(sp => {
-                const keepingCount = sp.keeping_count || 0;
-                const keepingBadge = keepingCount > 0
-                    ? `<div style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:3px 8px; border-radius:12px; backdrop-filter:blur(4px);">🔥 ${keepingCount} Keeping</div>`
-                    : '';
-
-                // Temperament Color Border
-                let borderColor = '#eee';
-                if (sp.temperament_slug === 'aggressive') borderColor = '#e74c3c';
-                if (sp.temperament_slug === 'defensive') borderColor = '#f39c12';
-                if (sp.temperament_slug === 'docile') borderColor = '#2ecc71';
-                if (sp.temperament_slug === 'nervous') borderColor = '#9b59b6';
-
-                const card = `
-                    <div class="setae-card setae-species-card" data-id="${sp.id}" style="padding:0; overflow:hidden; border-top: 3px solid ${borderColor}; position:relative; cursor:pointer;">
-                        ${keepingBadge}
-                        <img src="${sp.thumb || 'https://placehold.co/300x200/eee/999?text=SP'}" 
-                             style="width:100%; height:140px; object-fit:cover;">
-                        <div style="padding:12px;">
-                            <div style="color:#888; font-size:11px; font-style:italic; margin-bottom:2px;">${sp.genus || ''}</div>
-                            <h4 style="margin:0 0 5px 0; font-size:15px;">${sp.title}</h4>
-                            <div style="font-size:12px; color:#555;">${sp.habitat || ''}</div>
-                        </div>
-                    </div>
-                `;
-                $grid.append(card);
+    // New: Client-side filtering for Server-Side Rendered Species List
+    function initSpeciesSearch() {
+        $(document).on('input', '#setae-species-search', function () {
+            const val = $(this).val().toLowerCase().trim();
+            $('.js-species-item').each(function () {
+                const searchData = $(this).data('search'); // string already lowercased from PHP
+                if (!val || (searchData && searchData.indexOf(val) > -1)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
             });
-            $grid.data('dirty', false);
         });
     }
+
+    // Removed: loadSpeciesBook() - Now handled by PHP in section-encyclopedia.php
+
 
     function handleToolbarShadow(scrollTop) {
         if (scrollTop > 10) $('.setae-toolbar-container').addClass('sticky-shadow');
