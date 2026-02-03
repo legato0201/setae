@@ -484,7 +484,8 @@ class Setae_API_Spiders
                     'type' => get_post_meta(get_the_ID(), '_setae_log_type', true),
                     'date' => get_post_meta(get_the_ID(), '_setae_log_date', true),
                     'data' => get_post_meta(get_the_ID(), '_setae_log_data', true),
-                    'note' => get_the_content()
+                    'note' => get_the_content(),
+                    'image' => get_post_meta(get_the_ID(), '_setae_log_image', true)
                 );
             }
             wp_reset_postdata();

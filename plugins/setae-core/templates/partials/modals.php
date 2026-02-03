@@ -62,7 +62,8 @@
                     <div id="edit-spider-image-preview" class="image-preview-area" style="display:none;">
                         <img id="edit-preview-img-tag" src=""
                             style="width:100%; border-radius:8px; height:150px; object-fit:cover;">
-                        <button type="button" id="btn-remove-edit-image" class="remove-image-btn">×</button>
+                        <button type="button" id="btn-remove-edit-image" class="remove-image-btn"
+                            style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); color:white; border-radius:50%; width:24px; height:24px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">×</button>
                     </div>
                 </div>
             </div>
@@ -111,7 +112,7 @@
                         <img id="preview-img-tag-add" src=""
                             style="width:100%; border-radius:8px; height:150px; object-fit:cover;">
                         <button type="button" id="btn-remove-image-add"
-                            style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">×</button>
+                            style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">×</button>
                     </div>
                 </div>
             </div>
@@ -269,7 +270,7 @@
                         <img id="preview-img-tag" src="" alt="Preview"
                             style="max-width:100px; max-height:100px; border-radius:4px;">
                         <button type="button" id="btn-remove-image" class="remove-image-btn"
-                            style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; border:none; cursor:pointer;">×</button>
+                            style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); color:white; border-radius:50%; width:24px; height:24px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">×</button>
                     </div>
                 </div>
             </div>

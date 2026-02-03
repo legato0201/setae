@@ -230,6 +230,13 @@ var SetaeUIDetail = (function ($) {
                             nodeClass = 'node-note';
                         }
 
+                        // [Added] Image display
+                        const imageHtml = e.image
+                            ? `<div style="margin-top:10px; margin-bottom:5px;">
+                                 <img src="${e.image}" style="max-width:100%; border-radius:6px; max-height:200px; object-fit:cover; border:1px solid #eee;" loading="lazy">
+                               </div>`
+                            : '';
+
                         const noteText = e.note || parsedData.note || '';
                         const noteHtml = noteText && noteText.trim() !== ''
                             ? `<div class="timeline-note-content">${noteText}</div>`
@@ -245,7 +252,7 @@ var SetaeUIDetail = (function ($) {
                                         </span>
                                         <span style="color:#aaa; font-size:11px;">${e.date}</span>
                                     </div>
-                                    ${noteHtml} 
+                                    ${imageHtml}  ${noteHtml} 
                                 </div>
                             </div>
                         `;
