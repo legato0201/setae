@@ -26,16 +26,48 @@ var SetaeUIList = (function ($) {
 
         // Sort
         spiders.sort((a, b) => {
-            const sort = SetaeCore.state.currentSort;
-            if (sort === 'hungriest') {
-                const da = a.last_feed ? new Date(a.last_feed).getTime() : 0;
-                const db = b.last_feed ? new Date(b.last_feed).getTime() : 0;
-                return da - db;
+            const sort = SetaeCore.state.currentSort || 'priority';
+
+            if (sort === 'priority') {
+                // Priority Score Logic
+                const getScore = (s) => {
+                    let score = 0;
+                    if (s.status === 'pre_molt') score += 100;
+                    if (s.status === 'fasting') score -= 50;
+                    if (s.last_feed) {
+                        const days = (new Date() - new Date(s.last_feed)) / (1000 * 60 * 60 * 24);
+                        score += days;
+                    } else {
+                        score += 30;
+                    }
+                    return score;
+                };
+                return getScore(b) - getScore(a);
             }
+
+            if (sort === 'species_asc') {
+                const sA = (a.species_name || '').toLowerCase();
+                const sB = (b.species_name || '').toLowerCase();
+                if (sA !== sB) return sA.localeCompare(sB);
+                return (a.title || '').localeCompare(b.title || '');
+            }
+
+            if (sort === 'hungriest') {
+                const tA = a.last_feed ? new Date(a.last_feed).getTime() : 0;
+                const tB = b.last_feed ? new Date(b.last_feed).getTime() : 0;
+                return tA - tB;
+            }
+
+            if (sort === 'molt_oldest') {
+                const tA = a.last_molt ? new Date(a.last_molt).getTime() : Date.now();
+                const tB = b.last_molt ? new Date(b.last_molt).getTime() : Date.now();
+                return tA - tB;
+            }
+
             if (sort === 'name_asc') return (a.title || '').localeCompare(b.title || '');
             if (sort === 'newest') return b.id - a.id;
-            if (sort === 'oldest') return a.id - b.id;
-            return b.id - a.id;
+
+            return b.id - a.id; // Default newest
         });
 
         updateDeckCounts();
@@ -45,7 +77,22 @@ var SetaeUIList = (function ($) {
             return;
         }
 
+        let lastSpecies = null;
         spiders.forEach(spider => {
+            // Species Header for multi-level sort
+            if (SetaeCore.state.currentSort === 'species_asc') {
+                const currentSpecies = spider.species_name || 'Unidentified';
+                if (currentSpecies !== lastSpecies) {
+                    // Count how many of this species
+                    const count = spiders.filter(s => (s.species_name || 'Unidentified') === currentSpecies).length;
+                    container.append(`
+                        <div class="setae-list-header" style="padding:8px 12px; background:#f9f9f9; color:#666; font-size:13px; font-weight:bold; border-bottom:1px solid #eee; margin-top:0;">
+                            ${currentSpecies} <span style="font-weight:normal; color:#999; margin-left:5px;">(${count})</span>
+                        </div>
+                    `);
+                    lastSpecies = currentSpecies;
+                }
+            }
             container.append(renderSmartListItem(spider));
         });
     }
@@ -169,10 +216,15 @@ var SetaeUIList = (function ($) {
         var menuDiv = document.createElement('div');
         menuDiv.id = 'setae-sort-menu-v3';
         menuDiv.innerHTML = `
-            <div class="sort-option active" data-sort="newest">📅 最新 (Newest)</div>
-            <div class="sort-option" data-sort="oldest">📅 古い順 (Oldest)</div>
-            <div class="sort-option" data-sort="name_asc">🔤 名前 (A-Z)</div>
-            <div class="sort-option" data-sort="hungriest">🦗 空腹順 (Hungry)</div>
+            <div class="sort-group-label" style="padding:4px 16px; font-size:11px; color:#888; font-weight:bold; background:#fafafa; margin-bottom:4px;">ケア優先</div>
+            <div class="sort-option active" data-sort="priority">🔥 メンテナンス優先 (Priority)</div>
+            <div class="sort-option" data-sort="hungriest">🍽 給餌が必要な順</div>
+            
+            <div class="sort-group-label" style="padding:4px 16px; font-size:11px; color:#888; font-weight:bold; background:#fafafa; margin:4px 0;">個体管理</div>
+            <div class="sort-option" data-sort="species_asc">🧬 種類・学名順</div>
+            <div class="sort-option" data-sort="molt_oldest">⏳ 脱皮日が古い順</div>
+            <div class="sort-option" data-sort="name_asc">🔤 名前・ID順 (A-Z)</div>
+            <div class="sort-option" data-sort="newest">🆕 登録が新しい順</div>
         `;
         document.body.appendChild(menuDiv);
 

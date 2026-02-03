@@ -95,13 +95,32 @@ var SetaeAPI = (function ($) {
         });
     }
 
+    function createSpider(data, callback) {
+        $.ajax({
+            url: root + '/spiders',
+            method: 'POST',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            data: data,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                if (callback) callback(res);
+            },
+            error: function (xhr) {
+                SetaeCore.showToast('作成に失敗しました: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.statusText), 'error');
+            }
+        });
+    }
+
     return {
         fetchMySpiders: fetchMySpiders,
         updateSpider: updateSpider,
         updateSpiderStatus: updateSpiderStatus,
+        createSpider: createSpider,
         getSpiderDetail: getSpiderDetail,
         logEvent: logEvent,
-        fetchSpecies: fetchSpecies
+        fetchSpecies: fetchSpecies,
+        searchSpecies: fetchSpecies // Alias
     };
 
 })(jQuery);
