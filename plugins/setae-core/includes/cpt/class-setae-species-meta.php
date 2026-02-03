@@ -22,6 +22,7 @@ class Setae_Species_Meta
         wp_nonce_field('setae_species_save', 'setae_species_nonce');
 
         // Fields
+        $common_name_ja = get_post_meta($post->ID, '_setae_common_name_ja', true);
         $description = get_post_meta($post->ID, '_setae_description', true);
         $lifespan = get_post_meta($post->ID, '_setae_lifespan', true);
         $size = get_post_meta($post->ID, '_setae_size', true);
@@ -32,6 +33,14 @@ class Setae_Species_Meta
         $featured_images = get_post_meta($post->ID, '_setae_featured_images', true) ?: array();
         ?>
         <table class="form-table">
+            <tr>
+                <th><label for="setae_common_name_ja">Japanese Name (和名)</label></th>
+                <td>
+                    <input type="text" name="setae_common_name_ja" id="setae_common_name_ja"
+                        value="<?php echo esc_attr($common_name_ja); ?>" class="regular-text" placeholder="例: メキシカンレッドニー">
+                    <p class="description">※Title Field should be Scientific Name (e.g. Brachypelma hamorii).</p>
+                </td>
+            </tr>
             <tr>
                 <th><label for="setae_lifespan">Lifespan / Growth</label></th>
                 <td><input type="text" name="setae_lifespan" id="setae_lifespan" value="<?php echo esc_attr($lifespan); ?>"
@@ -141,11 +150,26 @@ class Setae_Species_Meta
         if (!current_user_can('edit_post', $post_id))
             return;
 
-        $fields = ['setae_lifespan', 'setae_size', 'setae_difficulty', 'setae_temperature', 'setae_humidity'];
-        foreach ($fields as $field) {
+        // Save individual text/number fields
+        $fields_to_save = [
+            'setae_common_name_ja', // Added this field
+            'setae_lifespan',
+            'setae_size',
+            'setae_difficulty',
+            'setae_temperature',
+            'setae_humidity'
+        ];
+
+        foreach ($fields_to_save as $field) {
             if (isset($_POST[$field])) {
+                // Sanitize based on field type if necessary, for now, all are text.
                 update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
             }
+        }
+
+        // Save description field (if it were present in the form, using textarea sanitization)
+        if (isset($_POST['setae_description'])) {
+            update_post_meta($post_id, '_setae_description', sanitize_textarea_field($_POST['setae_description']));
         }
 
         // Featured Images (Array)
