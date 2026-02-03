@@ -469,7 +469,17 @@ var SetaeUIDetail = (function ($) {
     $(document).on('submit', '#form-edit-spider', function (e) {
         e.preventDefault();
         const id = $('#edit-spider-id').val();
-        const formData = new FormData(this);
+
+        // Manual FormData construction for robustness
+        const formData = new FormData();
+        formData.append('species_id', $('#edit-spider-species-select').val());
+        formData.append('name', $('#edit-spider-name').val()); // Matches PHP 'name' expectation (which maps to post_title/nickname)
+
+        // [Fix] Check for file input manually since it might lack 'name' attribute or be outside form context
+        const imageFile = $('#edit-spider-image')[0].files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
 
         SetaeAPI.updateSpider(id, formData, function (response) {
             SetaeCore.showToast('個体情報を更新しました', 'success');

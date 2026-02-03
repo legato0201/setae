@@ -114,6 +114,38 @@ class Setae_Core
 
         // Update Roles & Capabilities
         $this->loader->add_action('init', $this, 'update_roles');
+
+        // Ajax Handler
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-ajax.php';
+        $ajax_handler = new Setae_Ajax();
+        $this->loader->add_action('wp_ajax_setae_update_profile', $ajax_handler, 'update_profile');
+
+        // Avatar Filter (Optional: Enable custom avatar if stored)
+        $this->loader->add_filter('pre_get_avatar', $this, 'custom_avatar_filter', 10, 3);
+    }
+
+    public function custom_avatar_filter($avatar, $id_or_email, $args)
+    {
+        $user_id = 0;
+        if (is_numeric($id_or_email)) {
+            $user_id = $id_or_email;
+        } elseif (is_string($id_or_email) && ($user = get_user_by('email', $id_or_email))) {
+            $user_id = $user->ID;
+        } elseif (is_object($id_or_email) && !empty($id_or_email->user_id)) {
+            $user_id = $id_or_email->user_id;
+        }
+
+        if ($user_id) {
+            $custom_avatar_id = get_user_meta($user_id, 'setae_user_avatar', true);
+            if ($custom_avatar_id) {
+                $img_url = wp_get_attachment_image_url($custom_avatar_id, 'thumbnail'); // or $args['size']
+                if ($img_url) {
+                    return '<img alt="" src="' . esc_url($img_url) . '" class="avatar avatar-' . esc_attr($args['size']) . ' photo" height="' . esc_attr($args['size']) . '" width="' . esc_attr($args['size']) . '" />';
+                }
+            }
+        }
+        return $avatar;
+
     }
 
     public function update_roles()

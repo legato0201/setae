@@ -39,7 +39,9 @@ class Setae_Dashboard
         // Localize Script for Core (Pass API Root, Nonce, etc.)
         wp_localize_script('setae-app-core', 'SetaeSettings', array(
             'api_root' => esc_url_raw(rest_url()),
-            'nonce' => wp_create_nonce('wp_rest')
+            'nonce' => wp_create_nonce('wp_rest'),
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'logout_url' => wp_logout_url(home_url())
         ));
 
         // Enqueue API Module (Depends on Core)
@@ -53,12 +55,13 @@ class Setae_Dashboard
         wp_enqueue_script('setae-ui-detail', SETAE_PLUGIN_URL . 'assets/js/modules/ui/detail.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-list', SETAE_PLUGIN_URL . 'assets/js/modules/ui/list.js', array_merge($ui_deps, array('setae-ui-detail')), $this->version, true);
         wp_enqueue_script('setae-ui-log-modal', SETAE_PLUGIN_URL . 'assets/js/modules/ui/log-modal.js', $ui_deps, $this->version, true);
+        wp_enqueue_script('setae-ui-profile', SETAE_PLUGIN_URL . 'assets/js/modules/ui/profile.js', $ui_deps, $this->version, true); // New Profile Module
 
         // 1.5 Desktop Specific Logic
         wp_enqueue_script('setae-ui-desktop', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-desktop.js', array('setae-ui-actions', 'jquery'), $this->version, true);
 
         // 2. Controller (Renderer)
-        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal'), $this->version, true);
+        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile'), $this->version, true);
 
         // 3. Main App Entry
         wp_enqueue_script('setae-app-main', SETAE_PLUGIN_URL . 'assets/js/setae-app.js', array('setae-app-ui-renderer', 'setae-ui-desktop'), $this->version, true);
