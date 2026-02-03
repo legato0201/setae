@@ -112,15 +112,34 @@ var SetaeAPI = (function ($) {
         });
     }
 
+    function getSpeciesStats(speciesId) {
+        return $.ajax({
+            url: root + '/species/' + speciesId + '/stats',
+            method: 'GET',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            }
+        });
+    }
+
     return {
         fetchMySpiders: fetchMySpiders,
         updateSpider: updateSpider,
         updateSpiderStatus: updateSpiderStatus,
         createSpider: createSpider,
         getSpiderDetail: getSpiderDetail,
+        getSpeciesDetail: function (id, callback) {
+            $.ajax({
+                url: root + '/species/' + id,
+                method: 'GET',
+                success: function (data) { if (callback) callback(data); },
+                error: function () { SetaeCore.showToast('種情報の取得に失敗しました', 'error'); }
+            });
+        },
         logEvent: logEvent,
         fetchSpecies: fetchSpecies,
-        searchSpecies: fetchSpecies // Alias
+        searchSpecies: fetchSpecies, // Alias
+        getSpeciesStats: getSpeciesStats // Add to public interface
     };
 
 })(jQuery);

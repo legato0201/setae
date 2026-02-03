@@ -112,14 +112,18 @@ var SetaeUIList = (function ($) {
     }
 
     function handleDeckFilterClick() {
-        SetaeCore.state.currentDeck = $(this).data('deck');
+        const deck = $(this).data('deck');
+        SetaeCore.state.currentDeck = deck;
+        localStorage.setItem('setae_my_deck', deck);
         $('.deck-pill').removeClass('active');
         $(this).addClass('active');
         renderMySpiders();
     }
 
     function handleSearchInput() {
-        SetaeCore.state.currentSearch = $(this).val();
+        const query = $(this).val();
+        SetaeCore.state.currentSearch = query;
+        localStorage.setItem('setae_my_search', query);
         renderMySpiders();
     }
 
@@ -243,7 +247,9 @@ var SetaeUIList = (function ($) {
         }
     }
     function handleSortOptionClick() {
-        SetaeCore.state.currentSort = $(this).data('sort');
+        const sort = $(this).data('sort');
+        SetaeCore.state.currentSort = sort;
+        localStorage.setItem('setae_my_sort', sort);
         closeSortMenu();
         renderMySpiders();
     }

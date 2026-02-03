@@ -64,6 +64,7 @@ class Setae_Species_Meta
                 return array(
                     'lifespan' => get_post_meta($object['id'], '_setae_lifespan', true),
                     'size' => get_post_meta($object['id'], '_setae_size', true),
+                    'featured_images' => get_post_meta($object['id'], '_setae_featured_images', true) ?: [],
                 );
             },
             'schema' => null,

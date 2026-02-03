@@ -156,6 +156,11 @@ var SetaeUILogModal = (function ($) {
             dataPayload.note = note;
         }
 
+        // [追加] Best Shot フラグ
+        if ($('#log-best-shot').is(':checked')) {
+            dataPayload.is_best_shot = true;
+        }
+
         // [変更] API呼び出しにfile引数を追加
         SetaeAPI.logEvent(id, type, date, dataPayload, file, () => {
             SetaeCore.showToast('記録を追加しました', 'success');

@@ -8,8 +8,8 @@ var SetaeCore = (function ($) {
         cachedSpiders: [],
         currentDeck: localStorage.getItem('setae_my_deck') || 'all',
         currentViewMode: localStorage.getItem('setae_my_view') || 'list',
-        currentSort: 'hungriest',
-        currentSearch: '',
+        currentSort: localStorage.getItem('setae_my_sort') || 'hungriest',
+        currentSearch: localStorage.getItem('setae_my_search') || '',
         feedTypes: (typeof SetaeSettings !== 'undefined' && SetaeSettings.feed_types) ? SetaeSettings.feed_types : ['Cricket', 'Dubia']
     };
 

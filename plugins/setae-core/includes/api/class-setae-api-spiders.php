@@ -558,6 +558,24 @@ class Setae_API_Spiders
         update_post_meta($log_id, '_setae_log_date', $date);
         update_post_meta($log_id, '_setae_log_data', $data_json); // Store raw JSON string or serialized array
 
+        // [追加] Best Shot Logic
+        $parsed_data = is_string($data_json) ? json_decode($data_json, true) : $data_json;
+        if (!empty($parsed_data['is_best_shot'])) {
+            update_post_meta($log_id, '_setae_is_best_shot', 1);
+
+            // Auto-approve for Admin (Demo/Prototype mode)
+            if (current_user_can('manage_options') && !empty($image_url)) {
+                $species_id = get_post_meta($spider_id, '_setae_species_id', true);
+                if ($species_id) {
+                    $featured = get_post_meta($species_id, '_setae_featured_images', true) ?: [];
+                    if (!in_array($image_url, $featured)) {
+                        $featured[] = $image_url; // Store URL for simplicity, or ID if we have attachment_id
+                        update_post_meta($species_id, '_setae_featured_images', $featured);
+                    }
+                }
+            }
+        }
+
         // == Updates on Spider State ==
         // Update Last Feed / Molt Date on Spider
         if ($type === 'feed') {
