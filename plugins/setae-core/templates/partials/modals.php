@@ -76,9 +76,15 @@
                 <input type="file" id="edit-spider-image" name="image" accept="image/*" style="display:none;">
             </div>
 
-            <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
-                <button type="submit" class="setae-btn-submit">保存する</button>
-                <button type="button" id="btn-delete-spider" class="setae-btn-text-danger" style="align-self: center;">この個体を削除する</button>
+            <div class="setae-form-actions"
+                style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" id="btn-delete-spider" class="setae-btn setae-btn-secondary"
+                    style="color: #e74c3c; border-color: rgba(231, 76, 60, 0.3);">
+                    削除
+                </button>
+                <button type="submit" class="setae-btn setae-btn-primary">
+                    保存
+                </button>
             </div>
         </form>
     </div>

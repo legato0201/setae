@@ -11,6 +11,7 @@ var SetaeUIDetail = (function ($) {
         $.ajax({
             url: SetaeCore.state.apiRoot + '/spider/' + id,
             method: 'GET',
+            cache: false, // ★追加: これにより、常に最新のデータをサーバーから取得します
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeCore.state.nonce); },
             success: function (spider) {
                 renderSpiderDetailSection(spider);
