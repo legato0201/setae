@@ -226,22 +226,36 @@ class Setae_API_Spiders
     public function get_spider_detail($request)
     {
         $spider_id = $request['id'];
+        $data = $this->get_spider_data_array($spider_id);
+
+        if (!$data) {
+            return new WP_REST_Response(array('error' => 'Spider not found'), 404);
+        }
+
+        return new WP_REST_Response($data, 200);
+    }
+
+    /**
+     * Helper to get spider data array by ID
+     */
+    private function get_spider_data_array($spider_id)
+    {
         $post = get_post($spider_id);
 
         if (!$post || $post->post_type !== 'setae_spider') {
-            return new WP_Error('not_found', 'Spider not found', array('status' => 404));
+            return null;
         }
 
         $species_id = get_post_meta($spider_id, '_setae_species_id', true);
         $species_name = $species_id ? get_the_title($species_id) : '';
 
-        // Added logic from get_my_spiders for completeness
+        // Image logic
         $thumb = get_post_meta($spider_id, '_setae_spider_image', true);
         if (!$thumb && $species_id) {
             $thumb = get_the_post_thumbnail_url($species_id, 'medium');
         }
 
-        $data = array(
+        return array(
             'id' => $spider_id,
             'title' => $post->post_title,
             'species_id' => $species_id,
@@ -252,8 +266,6 @@ class Setae_API_Spiders
             'owner_id' => $post->post_author,
             'thumb' => $thumb
         );
-
-        return new WP_REST_Response($data, 200);
     }
 
     public function update_spider($request)
@@ -298,7 +310,10 @@ class Setae_API_Spiders
         }
         // Date updates (last_molt, last_feed) are now handled via logs only. Logic removed.
 
-        return new WP_REST_Response(array('success' => true), 200);
+        // [Fix] 更新後の最新データを取得して返す (画面への即時反映のため)
+        $updated_data = $this->get_spider_data_array($spider_id);
+
+        return new WP_REST_Response(array('success' => true, 'data' => $updated_data), 200);
     }
 
     public function delete_spider($request)

@@ -490,3 +490,32 @@
     opacity: 0.8;
     text-decoration: underline;
 }
+
+/* [Fix] モーダル下部のアクションボタン配置 */
+.setae-modal-footer-split {
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+/* 削除ボタンの見た目調整 */
+.setae-btn-text-danger {
+    color: #ff3b30;
+    font-size: 14px;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.setae-btn-text-danger:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}

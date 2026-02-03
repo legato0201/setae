@@ -460,8 +460,8 @@ var SetaeUIDetail = (function ($) {
         // For simplicity, we just hide preview. 
     });
 
-    // Close Modal
-    $(document).on('click', '#close-edit-spider', function () {
+    // Close Modal (Icon & Cancel Button)
+    $(document).on('click', '#close-edit-spider, #close-edit-spider-btn', function () {
         $('#modal-edit-spider').fadeOut();
     });
 
@@ -471,7 +471,6 @@ var SetaeUIDetail = (function ($) {
         const id = $('#edit-spider-id').val();
         const formData = new FormData(this);
 
-        // Append ID to path, but also can be in data
         $.ajax({
             url: SetaeCore.state.apiRoot + '/spiders/' + id,
             method: 'POST',
@@ -484,9 +483,16 @@ var SetaeUIDetail = (function ($) {
             success: function (response) {
                 SetaeCore.showToast('個体情報を更新しました', 'success');
                 $('#modal-edit-spider').fadeOut();
-                loadSpiderDetail(id); // Reload view
 
-                // Refresh list if needed (optional)
+                // [Fix] サーバーから返却された最新データで即座にビューを更新
+                if (response.data) {
+                    renderSpiderDetailSection(response.data);
+                } else {
+                    // フォールバック
+                    loadSpiderDetail(id);
+                }
+
+                // リスト側の表示もバックグラウンドで更新
                 if (window.SetaeUI && SetaeUI.renderMySpiders) {
                     SetaeAPI.fetchMySpiders(SetaeUI.renderMySpiders);
                 }

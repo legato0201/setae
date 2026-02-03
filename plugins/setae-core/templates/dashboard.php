@@ -301,6 +301,7 @@
 </div>
 
 <!-- Edit Spider Modal -->
+<!-- Edit Spider Modal -->
 <div id="modal-edit-spider" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close" id="close-edit-spider">×</span>
@@ -331,18 +332,15 @@
                 <label>ニックネーム</label>
                 <input type="text" id="edit-spider-name" class="setae-input" placeholder="Name/ID">
             </div>
-            <div class="setae-form-group">
-                <label>最終脱皮日</label>
-                <input type="date" id="edit-spider-last-molt" class="setae-input">
-            </div>
-            <div class="setae-form-group">
-                <label>最終給餌日</label>
-                <input type="date" id="edit-spider-last-feed" class="setae-input">
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-top:20px;">
-                <button type="button" id="btn-delete-spider" class="setae-btn"
-                    style="background:#ff4d4d; color:white;">削除</button>
-                <button type="submit" class="setae-btn setae-btn-primary">保存</button>
+            <div class="setae-form-actions setae-modal-footer-split">
+                <button type="button" id="btn-delete-spider" class="setae-btn-text-danger">
+                    🗑️ 削除
+                </button>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="setae-btn setae-btn-secondary"
+                        id="close-edit-spider-btn">キャンセル</button>
+                    <button type="submit" class="setae-btn setae-btn-primary">保存</button>
+                </div>
             </div>
         </form>
     </div>
