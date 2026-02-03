@@ -66,9 +66,25 @@ var SetaeAPI = (function ($) {
         });
     }
 
+
+    function getSpiderDetail(id, callback) {
+        $.ajax({
+            url: root + '/spider/' + id,
+            method: 'GET',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            success: function (data) {
+                if (callback) callback(data);
+            },
+            error: function () {
+                SetaeCore.showToast('詳細の取得に失敗しました', 'error');
+            }
+        });
+    }
+
     return {
         fetchMySpiders: fetchMySpiders,
         updateSpiderStatus: updateSpiderStatus,
+        getSpiderDetail: getSpiderDetail,
         logEvent: logEvent,
         fetchSpecies: fetchSpecies
     };

@@ -244,6 +244,7 @@ class Setae_API_Spiders
         $data = array(
             'id' => $spider_id,
             'title' => $post->post_title,
+            'species_id' => $species_id, // Added
             'species_name' => $species_name,
             'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
             'last_feed' => get_post_meta($spider_id, '_setae_last_feed_date', true),

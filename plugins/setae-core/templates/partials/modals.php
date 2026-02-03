@@ -55,7 +55,7 @@
             <div class="setae-form-group">
                 <label>写真更新 (任意)</label>
                 <div class="setae-file-upload-wrapper">
-                    <input type="file" id="edit-spider-image" accept="image/*" style="display:none;">
+                    <input type="file" id="edit-spider-image" name="image" accept="image/*" style="display:none;">
                     <button type="button" id="btn-trigger-edit-upload" class="setae-btn-upload">
                         📸 写真を変更
                     </button>
@@ -69,21 +69,21 @@
             </div>
             <div class="setae-form-group">
                 <label>種類 (Species)</label>
-                <select id="edit-spider-species-select" required class="setae-input">
+                <select id="edit-spider-species-select" name="species_id" required class="setae-input">
                     <option value="">選択してください...</option>
                 </select>
             </div>
             <div class="setae-form-group">
                 <label>ニックネーム</label>
-                <input type="text" id="edit-spider-name" class="setae-input" placeholder="Name/ID">
+                <input type="text" id="edit-spider-name" name="name" class="setae-input" placeholder="Name/ID">
             </div>
             <div class="setae-form-group">
                 <label>最終脱皮日</label>
-                <input type="date" id="edit-spider-last-molt" class="setae-input">
+                <input type="date" id="edit-spider-last-molt" name="last_molt" class="setae-input">
             </div>
             <div class="setae-form-group">
                 <label>最終給餌日</label>
-                <input type="date" id="edit-spider-last-feed" class="setae-input">
+                <input type="date" id="edit-spider-last-feed" name="last_feed" class="setae-input">
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:20px;">
                 <button type="button" id="btn-delete-spider" class="setae-btn"
