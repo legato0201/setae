@@ -471,37 +471,24 @@ var SetaeUIDetail = (function ($) {
         const id = $('#edit-spider-id').val();
         const formData = new FormData(this);
 
-        $.ajax({
-            url: SetaeCore.state.apiRoot + '/spiders/' + id,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader('X-WP-Nonce', SetaeCore.state.nonce);
-            },
-            success: function (response) {
-                SetaeCore.showToast('個体情報を更新しました', 'success');
-                $('#modal-edit-spider').fadeOut();
+        SetaeAPI.updateSpider(id, formData, function (response) {
+            SetaeCore.showToast('個体情報を更新しました', 'success');
+            $('#modal-edit-spider').fadeOut();
 
-                // [Fix] サーバーから返却された最新データで即座にビューを更新
-                if (response.data) {
-                    renderSpiderDetailSection(response.data);
-                } else {
-                    // フォールバック
-                    loadSpiderDetail(id);
-                }
+            // Server response (fresh data)
+            if (response.data) {
+                renderSpiderDetailSection(response.data);
+            } else {
+                loadSpiderDetail(id);
+            }
 
-                // リスト側の表示もバックグラウンドで更新
-                if (window.SetaeUI && SetaeUI.renderMySpiders) {
-                    SetaeAPI.fetchMySpiders(SetaeUI.renderMySpiders);
-                }
-            },
-            error: function () {
-                SetaeCore.showToast('更新に失敗しました', 'error');
+            // Update List in Background
+            if (window.SetaeUI && SetaeUI.renderMySpiders) {
+                SetaeAPI.fetchMySpiders(SetaeUI.renderMySpiders);
             }
         });
     });
+
 
     return {
         loadSpiderDetail: loadSpiderDetail,

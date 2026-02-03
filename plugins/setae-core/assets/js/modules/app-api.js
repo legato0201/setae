@@ -20,16 +20,30 @@ var SetaeAPI = (function ($) {
         });
     }
 
-    function updateSpiderStatus(id, status, callback) {
+    // [Fix] オブジェクトだけでなくFormDataも扱える汎用的な更新関数
+    function updateSpider(id, data, callback) {
+        const isFormData = data instanceof FormData;
+
         $.ajax({
             url: root + '/spiders/' + id,
             method: 'POST',
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
-            data: { status: status },
+            data: data,
+            // FormDataの場合は以下2行が必須
+            processData: isFormData ? false : true,
+            contentType: isFormData ? false : 'application/x-www-form-urlencoded; charset=UTF-8',
             success: function (res) {
                 if (callback) callback(res);
+            },
+            error: function () {
+                SetaeCore.showToast('更新に失敗しました。', 'error');
             }
         });
+    }
+
+    // 既存の名称も維持（互換性のため）
+    function updateSpiderStatus(id, status, callback) {
+        updateSpider(id, { status: status }, callback);
     }
 
     function logEvent(id, type, date, data, file, callback) {
@@ -83,6 +97,7 @@ var SetaeAPI = (function ($) {
 
     return {
         fetchMySpiders: fetchMySpiders,
+        updateSpider: updateSpider,
         updateSpiderStatus: updateSpiderStatus,
         getSpiderDetail: getSpiderDetail,
         logEvent: logEvent,

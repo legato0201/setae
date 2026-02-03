@@ -51,7 +51,7 @@ class Setae_Dashboard
         // 1. Logic Sub-Modules
         wp_enqueue_script('setae-ui-actions', SETAE_PLUGIN_URL . 'assets/js/modules/ui/actions.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-detail', SETAE_PLUGIN_URL . 'assets/js/modules/ui/detail.js', $ui_deps, $this->version, true);
-        wp_enqueue_script('setae-ui-list', SETAE_PLUGIN_URL . 'assets/js/modules/ui/list.js', $ui_deps, $this->version, true);
+        wp_enqueue_script('setae-ui-list', SETAE_PLUGIN_URL . 'assets/js/modules/ui/list.js', array_merge($ui_deps, array('setae-ui-detail')), $this->version, true);
         wp_enqueue_script('setae-ui-log-modal', SETAE_PLUGIN_URL . 'assets/js/modules/ui/log-modal.js', $ui_deps, $this->version, true);
 
         // 1.5 Desktop Specific Logic
