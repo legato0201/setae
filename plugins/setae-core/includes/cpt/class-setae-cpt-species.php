@@ -46,6 +46,45 @@ class Setae_CPT_Species
         add_filter('manage_setae_species_posts_columns', array($this, 'set_custom_columns'));
         add_action('manage_setae_species_posts_custom_column', array($this, 'render_custom_column'), 10, 2);
         add_filter('manage_edit-setae_species_sortable_columns', array($this, 'set_sortable_columns'));
+        
+        // Admin CSS
+        add_action('admin_head', array($this, 'admin_head_css'));
+    }
+
+    public function admin_head_css()
+    {
+        $screen = get_current_screen();
+        if ($screen && $screen->id === 'edit-setae_species') {
+            ?>
+            <style>
+                /* Thumbnail Column */
+                .column-setae_thumb { width: 60px; }
+                
+                /* Spider Count Column */
+                .column-spider_count { width: 80px; text-align:center; font-size:1.2em; }
+
+                /* Genus */
+                .taxonomy-setae_genus a { font-family: monospace; color:#3498db; }
+
+                /* Temperament Colors */
+                .taxonomy-setae_temperament a { font-weight: 600; padding:2px 6px; border-radius:4px; text-decoration: none; }
+                /* Match slugs loosely */
+                .taxonomy-setae_temperament a[href*="docile"] { background:#e8f5e9; color:#27ae60; }
+                .taxonomy-setae_temperament a[href*="calm"] { background:#e8f5e9; color:#27ae60; }
+                .taxonomy-setae_temperament a[href*="nervous"] { background:#f3e5f5; color:#8e44ad; }
+                .taxonomy-setae_temperament a[href*="flighty"] { background:#f3e5f5; color:#8e44ad; }
+                .taxonomy-setae_temperament a[href*="defensive"] { background:#fff3e0; color:#e67e22; }
+                .taxonomy-setae_temperament a[href*="aggressive"] { background:#ffebee; color:#c0392b; }
+
+                /* Habitat Styling */
+                .taxonomy-setae_habitat a { 
+                    background:#f5f5f5; color:#666; padding:2px 6px; border-radius:4px; 
+                    display:inline-block; margin:1px 0; font-size:11px; text-decoration: none; border:1px solid #ddd;
+                }
+                .taxonomy-setae_habitat a:hover { background:#fff; border-color:#bbb; }
+            </style>
+            <?php
+        }
     }
 
     private function register_taxonomies()
@@ -84,11 +123,12 @@ class Setae_CPT_Species
 
     public function set_custom_columns($columns)
     {
-        // Reorder columns: Checkbox, Thumb, Title, Genus, Habitat, Date
+        // Reorder columns: Checkbox, Thumb, Title, Counts, Genus, Habitat, Date
         $new_columns = array();
         $new_columns['cb'] = $columns['cb'];
         $new_columns['setae_thumb'] = 'Image';
         $new_columns['title'] = 'Name (Japanese / Common)';
+        $new_columns['spider_count'] = 'Count'; // Added
         $new_columns['setae_size'] = 'Max Legspan (cm)';
 
         // Add taxonomies (added auto by WP, but we want to control order)
@@ -121,6 +161,20 @@ class Setae_CPT_Species
             case 'setae_size':
                 $size = get_post_meta($post_id, '_setae_size', true);
                 echo $size ? esc_html($size) . ' cm' : '-';
+                break;
+            case 'spider_count':
+                // Count spiders linked to this species
+                $args = array(
+                    'post_type' => 'setae_spider',
+                    'post_status' => 'publish', // Only active spiders
+                    'meta_query' => array(
+                        array('key' => '_setae_species_id', 'value' => $post_id)
+                    ),
+                    'fields' => 'ids',
+                    'posts_per_page' => -1,
+                );
+                $query = new WP_Query($args);
+                echo '<strong style="color:#e67e22;">' . esc_html($query->found_posts) . '</strong>';
                 break;
         }
     }
