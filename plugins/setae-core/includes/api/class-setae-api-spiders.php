@@ -244,7 +244,7 @@ class Setae_API_Spiders
         $data = array(
             'id' => $spider_id,
             'title' => $post->post_title,
-            'species_id' => $species_id, // Added
+            'species_id' => $species_id,
             'species_name' => $species_name,
             'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
             'last_feed' => get_post_meta($spider_id, '_setae_last_feed_date', true),
@@ -293,12 +293,10 @@ class Setae_API_Spiders
             }
         }
 
-        if ($request->get_param('last_molt'))
-            update_post_meta($spider_id, '_setae_last_molt_date', sanitize_text_field($request->get_param('last_molt')));
-        if ($request->get_param('last_feed'))
-            update_post_meta($spider_id, '_setae_last_feed_date', sanitize_text_field($request->get_param('last_feed')));
-        if ($request->get_param('species_id'))
+        if ($request->get_param('species_id')) {
             update_post_meta($spider_id, '_setae_species_id', absint($request->get_param('species_id')));
+        }
+        // Date updates (last_molt, last_feed) are now handled via logs only. Logic removed.
 
         return new WP_REST_Response(array('success' => true), 200);
     }

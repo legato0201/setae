@@ -475,3 +475,18 @@
     margin: 0 !important;
     vertical-align: middle !important;
 }
+
+.setae-btn-text-danger {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 10px;
+    transition: opacity 0.2s;
+}
+
+.setae-btn-text-danger:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}

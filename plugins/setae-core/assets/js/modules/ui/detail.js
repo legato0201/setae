@@ -409,21 +409,7 @@ var SetaeUIDetail = (function ($) {
         SetaeAPI.getSpiderDetail(spiderId, function (data) {
             $('#edit-spider-id').val(data.id);
             $('#edit-spider-name').val(data.title);
-            $('#edit-spider-last-molt').val(data.last_molt);
-            $('#edit-spider-last-feed').val(data.last_feed);
 
-            // Select Species
-            // Note: data.species_name is returned, but we need ID for select if possible.
-            // SetaeAPI.getSpiderDetail returns 'species_name'. 
-            // It does NOT currently return 'species_id'. 
-            // We should check if we need to update the API to return species_id or if we can rely on what we have.
-            // The user snippet used: $('#edit-spider-species-select').val(data.species_id);
-            // This implies the API should return species_id.
-            // TODO: Verify API returns species_id. 'class-setae-api-spiders.php' get_spider_detail does NOT return species_id in current implementation I read.
-            // I should fix the API or pass it. 
-            // Actually, I can fix the API quickly. 'get_spider_detail' in 'class-setae-api-spiders.php'
-
-            // For now let's assume I will fix the API to return species_id.
             if (data.species_id) {
                 $('#edit-spider-species-select').val(data.species_id);
             }
@@ -439,6 +425,12 @@ var SetaeUIDetail = (function ($) {
             $('#modal-edit-spider').fadeIn();
         });
     }
+
+    // Delete Button Handler
+    $(document).on('click', '#btn-delete-spider', function () {
+        const id = $('#edit-spider-id').val();
+        SetaeUIDetail.deleteSpider(id);
+    });
 
     // Modal Image Upload Trigger
     $(document).on('click', '#btn-trigger-edit-upload', function () {
