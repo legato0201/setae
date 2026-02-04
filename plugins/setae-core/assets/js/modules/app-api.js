@@ -71,6 +71,23 @@ var SetaeAPI = (function ($) {
         });
     }
 
+    function deleteLog(logId, callback) {
+        $.ajax({
+            url: root + '/logs/' + logId,
+            method: 'DELETE',
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', nonce);
+            },
+            success: function (response) {
+                if (callback) callback(response);
+            },
+            error: function (err) {
+                console.error(err);
+                SetaeCore.showToast('削除に失敗しました', 'error');
+            }
+        });
+    }
+
     function fetchSpecies(search, callback) {
         $.ajax({
             url: root + '/species',
@@ -122,6 +139,52 @@ var SetaeAPI = (function ($) {
         });
     }
 
+    // --- Community API Start ---
+
+    function fetchTopics(callback) {
+        $.ajax({
+            url: root + '/topics', // エンドポイントはサーバー実装に合わせて調整してください
+            method: 'GET',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            success: function (data) { if (callback) callback(data); },
+            error: function () { SetaeCore.showToast('トピックの読み込みに失敗しました', 'error'); }
+        });
+    }
+
+    function createTopic(data, callback) {
+        $.ajax({
+            url: root + '/topics',
+            method: 'POST',
+            data: data,
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            success: function (res) { if (callback) callback(res); },
+            error: function () { SetaeCore.showToast('トピック作成に失敗しました', 'error'); }
+        });
+    }
+
+    function getTopicDetail(id, callback) {
+        $.ajax({
+            url: root + '/topics/' + id,
+            method: 'GET',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            success: function (data) { if (callback) callback(data); },
+            error: function () { SetaeCore.showToast('トピック詳細の取得に失敗しました', 'error'); }
+        });
+    }
+
+    function postComment(topicId, content, callback) {
+        $.ajax({
+            url: root + '/topics/' + topicId + '/comments',
+            method: 'POST',
+            data: { content: content },
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            success: function (res) { if (callback) callback(res); },
+            error: function () { SetaeCore.showToast('コメント投稿に失敗しました', 'error'); }
+        });
+    }
+
+    // --- Community API End ---
+
     return {
         fetchMySpiders: fetchMySpiders,
         updateSpider: updateSpider,
@@ -137,9 +200,14 @@ var SetaeAPI = (function ($) {
             });
         },
         logEvent: logEvent,
+        deleteLog: deleteLog,
         fetchSpecies: fetchSpecies,
         searchSpecies: fetchSpecies, // Alias
-        getSpeciesStats: getSpeciesStats // Add to public interface
+        getSpeciesStats: getSpeciesStats, // Add to public interface
+        fetchTopics: fetchTopics,
+        createTopic: createTopic,
+        getTopicDetail: getTopicDetail,
+        postComment: postComment
     };
 
 })(jQuery);

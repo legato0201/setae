@@ -189,7 +189,7 @@ var SetaeUILogModal = (function ($) {
     function renderEditPreyListModal() {
         if ($('#modal-edit-prey-list').length === 0) {
             $('body').append(`
-            <div id="modal-edit-prey-list" class="setae-modal" style="display:none; z-index:10004;">
+            <div id="modal-edit-prey-list" class="setae-modal" style="display:none; z-index:100000;">
                 <div class="setae-modal-content" style="max-width:400px;">
                     <span class="setae-close" onclick="$('#modal-edit-prey-list').fadeOut()">&times;</span>
                     <h3>Edit Prey List</h3>

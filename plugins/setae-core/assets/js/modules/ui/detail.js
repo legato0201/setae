@@ -246,14 +246,22 @@ var SetaeUIDetail = (function ($) {
                         const listRow = `
                             <div class="timeline-item log-card-animate">
                                 <div class="timeline-node ${nodeClass}">${iconChar}</div>
-                                <div class="timeline-card">
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span style="font-weight:600; font-size:14px; color:#333;">
-                                            ${e.type.toUpperCase()} <span style="font-weight:normal; color:#666; font-size:13px;">${displayMeta}</span>
-                                        </span>
-                                        <span style="color:#aaa; font-size:11px;">${e.date}</span>
+                                <div class="timeline-content">
+                                    <button class="btn-delete-log" data-id="${e.id}" title="削除">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                    <div class="timeline-card">
+                                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span style="font-weight:600; font-size:14px; color:#333;">
+                                                ${e.type.toUpperCase()} <span style="font-weight:normal; color:#666; font-size:13px;">${displayMeta}</span>
+                                            </span>
+                                            <span style="color:#aaa; font-size:11px;">${e.date}</span>
+                                        </div>
+                                        ${imageHtml}  ${noteHtml} 
                                     </div>
-                                    ${imageHtml}  ${noteHtml} 
                                 </div>
                             </div>
                         `;
@@ -263,6 +271,21 @@ var SetaeUIDetail = (function ($) {
             }
         });
     }
+
+    // Delete Log Event Handler
+    $(document).on('click', '.btn-delete-log', function (e) {
+        e.stopPropagation();
+        if (!confirm('この記録を削除しますか？\n（この操作は取り消せません）')) {
+            return;
+        }
+
+        const id = $(this).data('id');
+        const $item = $(this).closest('.timeline-item');
+
+        SetaeAPI.deleteLog(id, function () {
+            $item.fadeOut(300, function () { $(this).remove(); });
+        });
+    });
 
     function renderGrowthChart(logs) {
         const ctx = document.getElementById('growthChart');

@@ -6,7 +6,7 @@ $partials_path = plugin_dir_path(__FILE__) . 'partials/';
 <div id="setae-app">
     <!-- App Header -->
     <div class="setae-header">
-        <div class="setae-logo">SETAE</div>
+        <div class="setae-logo setae-logo-text">SETAE</div>
         <div class="setae-user-actions" id="setae-profile-trigger">
             <span id="header-user-name"><?php echo esc_html(wp_get_current_user()->display_name); ?></span>
             <?php echo get_avatar(get_current_user_id(), 32, '', 'Profile', array('class' => 'header-user-icon')); ?>

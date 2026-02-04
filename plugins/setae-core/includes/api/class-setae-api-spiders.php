@@ -84,6 +84,15 @@ class Setae_API_Spiders
                 return is_user_logged_in();
             },
         ));
+
+        // Delete Log Event
+        register_rest_route('setae/v1', '/logs/(?P<id>\d+)', array(
+            'methods' => 'DELETE',
+            'callback' => array($this, 'delete_log_event'),
+            'permission_callback' => function () {
+                return is_user_logged_in();
+            },
+        ));
     }
 
     // ==========================================
@@ -580,28 +589,35 @@ class Setae_API_Spiders
             }
         }
 
-        // == Updates on Spider State ==
-        // Update Last Feed / Molt Date on Spider
+        // == Updates on Spider State (修正箇所) ==
+        // イベントに基づいて、個体のステータスと日付を自動更新するロジックを強化
+
         if ($type === 'feed') {
             $parsed = is_string($data_json) ? json_decode($data_json, true) : $data_json;
+
             if (empty($parsed['refused'])) {
+                // 食べた場合 (Ate)
                 update_post_meta($spider_id, '_setae_last_feed_date', $date);
+                update_post_meta($spider_id, '_setae_status', 'normal'); // ★通常モードへ復帰
+
                 if (!empty($parsed['prey_type'])) {
                     update_post_meta($spider_id, '_setae_last_prey', sanitize_text_field($parsed['prey_type']));
                 }
-
-                // [追加] 拒食(Fasting)状態で食べた場合、Normalに戻す
-                $current_status = get_post_meta($spider_id, '_setae_status', true);
-                if ($current_status === 'fasting') {
-                    update_post_meta($spider_id, '_setae_status', 'normal');
-                }
+            } else {
+                // 拒食の場合 (Refused)
+                // ★ここで確実に fasting ステータスを保存する
+                update_post_meta($spider_id, '_setae_status', 'fasting');
             }
         }
+
         if ($type === 'molt') {
             update_post_meta($spider_id, '_setae_last_molt_date', $date);
+            update_post_meta($spider_id, '_setae_status', 'post_molt'); // ★脱皮後はPost-moltへ
+        }
 
-            // [追加] 脱皮記録時は自動的に 'post_molt' (脱皮後) ステータスへ移行
-            update_post_meta($spider_id, '_setae_status', 'post_molt');
+        // Growth (計測) の場合、通常モードへ戻す運用ならここに追加しても良い
+        if ($type === 'growth') {
+            // update_post_meta($spider_id, '_setae_status', 'normal'); 
         }
 
         return new WP_REST_Response(array('success' => true, 'id' => $log_id), 201);
@@ -648,5 +664,29 @@ class Setae_API_Spiders
         }
 
         return new WP_REST_Response($data, 200);
+    }
+
+    public function delete_log_event($request)
+    {
+        $user_id = get_current_user_id();
+        $log_id = $request['id'];
+
+        $post = get_post($log_id);
+        if (!$post || $post->post_type !== 'setae_log') {
+            return new WP_Error('not_found', 'Log not found', array('status' => 404));
+        }
+
+        // Allow author or admin
+        if ($post->post_author != $user_id && !current_user_can('manage_options')) {
+            return new WP_Error('forbidden', 'Permission denied', array('status' => 403));
+        }
+
+        $result = wp_delete_post($log_id, true);
+
+        if (!$result) {
+            return new WP_Error('delete_failed', 'Could not delete log', array('status' => 500));
+        }
+
+        return new WP_REST_Response(array('success' => true, 'id' => $log_id), 200);
     }
 }

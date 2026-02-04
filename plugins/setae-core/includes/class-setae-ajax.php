@@ -6,6 +6,45 @@ class Setae_Ajax
     public function __construct()
     {
         // Hooks are registered by the loader in Setae_Core
+        // But for explicit feature addition requested:
+        add_action('wp_ajax_nopriv_setae_register_user', array($this, 'handle_register_user'));
+        add_action('wp_ajax_setae_register_user', array($this, 'handle_register_user'));
+    }
+
+    public function handle_register_user()
+    {
+        // 設定がOFFなら拒否
+        if (!get_option('setae_enable_registration')) {
+            wp_send_json_error('現在、新規登録は受け付けていません。');
+        }
+
+        // 入力データの取得とサニタイズ
+        $username = isset($_POST['username']) ? sanitize_user($_POST['username']) : '';
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+        // バリデーション
+        if (empty($username) || empty($email) || empty($password)) {
+            wp_send_json_error('すべての項目を入力してください。');
+        }
+
+        if (username_exists($username)) {
+            wp_send_json_error('このユーザー名は既に使用されています。');
+        }
+
+        if (email_exists($email)) {
+            wp_send_json_error('このメールアドレスは既に登録されています。');
+        }
+
+        // ユーザー作成
+        $user_id = wp_create_user($username, $password, $email);
+
+        if (is_wp_error($user_id)) {
+            wp_send_json_error($user_id->get_error_message());
+        }
+
+        // 成功
+        wp_send_json_success('登録完了');
     }
 
     public function update_profile()

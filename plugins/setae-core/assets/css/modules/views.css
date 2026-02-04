@@ -611,3 +611,75 @@
     color: #007AFF;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* スマホ表示（幅768px以下）の場合のスタイル */
+@media screen and (max-width: 768px) {
+
+    /* テキストが入っているspanタグを非表示にする */
+    #btn-add-spider span {
+        display: none;
+    }
+
+    /* 文字が消えた分、ボタンの余白を調整して正方形に近づける */
+    #btn-add-spider {
+        padding: 10px;
+        /* アイコン周りの余白 */
+        justify-content: center;
+        /* アイコンを中央寄せ */
+        width: 44px;
+        /* 押しやすい幅に固定（必要であれば調整） */
+        height: 44px;
+        /* 高さも揃える */
+    }
+}
+
+/* タイムラインアイテムを相対配置に（ボタンの基準点） */
+.timeline-content {
+    position: relative;
+    /* 既存スタイルがあれば維持 */
+}
+
+/* 削除ボタンのスタイル */
+.btn-delete-log {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    z-index: 10;
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: #999;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    opacity: 0;
+    /* デフォルトで非表示（PC） */
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* タイムラインアイテムにホバーした時に表示 */
+.timeline-content:hover .btn-delete-log {
+    opacity: 1;
+}
+
+.btn-delete-log:hover {
+    color: #fff;
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-delete-log svg {
+    pointer-events: none;
+}
+
+/* モバイル対応：タッチデバイスではホバーがないため常時表示（ただし薄く） */
+@media (max-width: 768px) {
+    .btn-delete-log {
+        opacity: 0.6;
+    }
+}

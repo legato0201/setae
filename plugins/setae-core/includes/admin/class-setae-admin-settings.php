@@ -36,6 +36,37 @@ class Setae_Admin_Settings {
         register_setting( 'setae_options_group', 'setae_smtp_user' );
         register_setting( 'setae_options_group', 'setae_smtp_pass' );
         register_setting( 'setae_options_group', 'setae_smtp_from' );
+
+        // Registration Settings
+        register_setting('setae_options_group', 'setae_enable_registration');
+
+        add_settings_section(
+            'setae_general_section',
+            'General Settings',
+            null,
+            'setae_options_group'
+        );
+
+        add_settings_field(
+            'setae_enable_registration',
+            '新規ユーザー登録',
+            array($this, 'render_checkbox_field'),
+            'setae_options_group',
+            'setae_general_section',
+            array(
+                'label_for' => 'setae_enable_registration',
+                'description' => 'ログイン画面に「新規登録」ボタンを表示し、登録を受け付ける'
+            )
+        );
+    }
+
+    public function render_checkbox_field($args) {
+        $option_name = $args['label_for'];
+        $value = get_option($option_name);
+        echo '<input type="checkbox" id="' . esc_attr($option_name) . '" name="' . esc_attr($option_name) . '" value="1" ' . checked(1, $value, false) . ' />';
+        if (isset($args['description'])) {
+            echo '<p class="description">' . esc_html($args['description']) . '</p>';
+        }
     }
 
     public function render_settings_page() {

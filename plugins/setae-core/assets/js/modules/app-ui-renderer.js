@@ -13,6 +13,61 @@ var SetaeUI = (function ($) {
         // Tab Navigation
         $('.setae-nav-item').on('click', handleTabClick);
 
+        // --- Community Listeners (追記) ---
+
+        // 1. 新規トピックモーダルを開く
+        $(document).on('click', '#btn-create-topic', function () {
+            $('#setae-create-topic-modal').fadeIn(200);
+        });
+
+        // 2. 新規トピックモーダルを閉じる
+        $(document).on('click', '#close-topic-modal', function () {
+            $('#setae-create-topic-modal').fadeOut(200);
+        });
+
+        // 3. 新規トピック作成フォーム送信
+        $(document).on('submit', '#setae-topic-form', function (e) {
+            e.preventDefault();
+            const title = $('#topic-title').val();
+            const content = $('#topic-content').val();
+
+            SetaeAPI.createTopic({ title: title, content: content }, function () {
+                $('#setae-create-topic-modal').fadeOut();
+                $('#topic-title').val('');
+                $('#topic-content').val('');
+                SetaeCore.showToast('トピックを作成しました', 'success');
+                loadTopics(); // リスト再読み込み
+            });
+        });
+
+        // 4. トピック詳細を開く (一覧のアイテムクリック時)
+        $(document).on('click', '.setae-topic-row', function () {
+            const id = $(this).data('id');
+            openTopicDetail(id);
+        });
+
+        // 5. 詳細から一覧に戻る
+        $(document).on('click', '#btn-back-to-topics', function () {
+            $('#section-com-detail').hide();
+            $('#section-com').fadeIn(200);
+            loadTopics(); // 最新状態に更新
+        });
+
+        // 6. コメント投稿
+        $(document).on('submit', '#setae-comment-form', function (e) {
+            e.preventDefault();
+            const topicId = $('#comment-post-id').val();
+            const content = $('#comment-content').val();
+
+            if (!content) return;
+
+            SetaeAPI.postComment(topicId, content, function () {
+                $('#comment-content').val('');
+                openTopicDetail(topicId); // コメント反映のため再読み込み
+                SetaeCore.showToast('書き込みました', 'success');
+            });
+        });
+
         // Deck Filters
         $('.deck-pill').on('click', SetaeUIList.handleDeckFilterClick);
 
@@ -148,7 +203,87 @@ var SetaeUI = (function ($) {
         if (target === 'section-my') {
             SetaeAPI.fetchMySpiders(SetaeUIList.init);
         }
+        // ▼ 追加: Communityタブが選択された時の処理
+        else if (target === 'section-com') {
+            loadTopics();
+        }
+        // ▲ 追加ここまで
+
         // section-enc is now server-side rendered, no need to fetch API
+    }
+
+    // --- Community Functions (追記) ---
+
+    function loadTopics() {
+        $('#setae-topic-list').html('<p style="text-align:center;">読み込み中...</p>');
+        SetaeAPI.fetchTopics(function (data) {
+            const container = $('#setae-topic-list');
+            container.empty();
+
+            if (!data || data.length === 0) {
+                container.html('<div style="text-align:center; padding:20px; color:#999;">トピックがありません</div>');
+                return;
+            }
+
+            data.forEach(topic => {
+                // クラス名 .setae-topic-row をクリックイベントのフックに使用
+                const html = `
+                    <div class="setae-topic-row setae-card" data-id="${topic.id}" style="cursor:pointer; margin-bottom:10px; padding:15px;">
+                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">${topic.title}</div>
+                        <div style="font-size:12px; color:#666; display:flex; justify-content:space-between;">
+                            <span>👤 ${topic.author_name || 'Anonymous'}</span>
+                            <span>📅 ${SetaeCore.formatRelativeDate(topic.date)}</span>
+                        </div>
+                        <div style="font-size:12px; color:#888; margin-top:5px;">
+                            💬 ${topic.comment_count || 0} comments
+                        </div>
+                    </div>
+                `;
+                container.append(html);
+            });
+        });
+    }
+
+    function openTopicDetail(id) {
+        $('#section-com').hide();
+        $('#section-com-detail').show().scrollTop(0);
+        $('#topic-detail-content').html('<p>Loading...</p>');
+        $('#topic-comments-list').empty();
+
+        SetaeAPI.getTopicDetail(id, function (data) {
+            // ヘッダー設定
+            $('#detail-header-title').text(data.title);
+            $('#comment-post-id').val(data.id);
+
+            // 本文描画
+            $('#topic-detail-content').html(`
+                <div class="setae-card" style="margin-bottom:20px; padding:15px; background:#fff;">
+                    <div style="font-size:12px; color:#666; margin-bottom:10px;">
+                        👤 ${data.author_name} / 📅 ${data.date}
+                    </div>
+                    <div style="line-height:1.6; white-space:pre-wrap;">${data.content}</div>
+                </div>
+            `);
+
+            // コメント描画
+            const commentsContainer = $('#topic-comments-list');
+            commentsContainer.empty();
+
+            if (data.comments && data.comments.length > 0) {
+                data.comments.forEach(comment => {
+                    commentsContainer.append(`
+                        <div class="setae-comment-row" style="border-bottom:1px solid #eee; padding:10px 0;">
+                            <div style="font-size:12px; color:#888; margin-bottom:4px;">
+                                <strong>${comment.author_name}</strong> - ${SetaeCore.formatRelativeDate(comment.date)}
+                            </div>
+                            <div style="font-size:14px;">${comment.content}</div>
+                        </div>
+                    `);
+                });
+            } else {
+                commentsContainer.html('<p style="text-align:center; color:#ccc; margin-top:20px;">まだコメントはありません</p>');
+            }
+        });
     }
 
     // New: Client-side filtering for Server-Side Rendered Species List

@@ -21,6 +21,13 @@
     z-index: 1;
 }
 
+/* Header Logo Adjustment */
+.setae-header .setae-logo {
+    font-size: 24px;
+    /* ヘッダー用にサイズを調整 */
+    line-height: 1;
+}
+
 /* 2. ツールバー (Modern & Functional) */
 .setae-toolbar-container {
     padding: 16px;
@@ -501,8 +508,6 @@
 
     .setae-nav-icon {
         margin-bottom: 0 !important;
-        /* Reset stacked icon */
-        margin-right: 12px !important;
         opacity: 0.8;
     }
 
