@@ -589,11 +589,19 @@ class Setae_API_Spiders
                 if (!empty($parsed['prey_type'])) {
                     update_post_meta($spider_id, '_setae_last_prey', sanitize_text_field($parsed['prey_type']));
                 }
+
+                // [修正] 拒食(Fasting)状態で餌を食べた場合、通常(Normal)に戻す
+                $current_status = get_post_meta($spider_id, '_setae_status', true);
+                if ($current_status === 'fasting') {
+                    update_post_meta($spider_id, '_setae_status', 'normal');
+                }
             }
         }
         if ($type === 'molt') {
             update_post_meta($spider_id, '_setae_last_molt_date', $date);
-            // Auto update status? Maybe optional.
+
+            // [修正] 脱皮記録時は自動的に 'post_molt' (脱皮後) ステータスへ移行する
+            update_post_meta($spider_id, '_setae_status', 'post_molt');
         }
 
         return new WP_REST_Response(array('success' => true, 'id' => $log_id), 201);
