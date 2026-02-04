@@ -58,3 +58,11 @@ function setae_get_avatar($avatar, $id_or_email, $size, $default, $alt)
     }
     return $avatar;
 }
+
+// Theme Setup
+function setae_theme_setup()
+{
+    // Add support for post thumbnails (featured images)
+    add_theme_support('post-thumbnails');
+}
+add_action('after_setup_theme', 'setae_theme_setup');

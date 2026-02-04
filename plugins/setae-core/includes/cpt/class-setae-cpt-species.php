@@ -33,7 +33,7 @@ class Setae_CPT_Species
             'has_archive' => true,
             'hierarchical' => false,
             'menu_position' => 5,
-            'supports' => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields'),
+            'supports' => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields', 'revisions'),
             'show_in_rest' => true,
         );
 
