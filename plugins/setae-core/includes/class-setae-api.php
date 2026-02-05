@@ -237,13 +237,13 @@ class Setae_API
                 $terms = get_the_terms(get_the_ID(), 'setae_genus');
                 $genus = (!empty($terms) && !is_wp_error($terms)) ? $terms[0]->name : '';
 
-                // 和名もレスポンスに含めるとUIで確認しやすいかもしれません
+                // 和名を取得
                 $ja_name = get_post_meta(get_the_ID(), '_setae_common_name_ja', true);
 
                 $data[] = array(
                     'id' => get_the_ID(),
                     'title' => get_the_title(),
-                    'ja_name' => $ja_name, // ★任意追加
+                    'ja_name' => $ja_name, // ★ここを追加
                     'genus' => $genus,
                     'thumb' => get_the_post_thumbnail_url(get_the_ID(), 'medium'),
                     'link' => get_permalink(),
