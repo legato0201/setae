@@ -395,6 +395,7 @@ var SetaeUIDetail = (function ($) {
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeCore.state.nonce); },
             success: function () {
                 SetaeCore.showToast('削除しました', 'success');
+                $('#modal-edit-spider').fadeOut(); // ★追加: モーダルを閉じる
                 $('#section-my-detail').hide();
                 $('#section-my').fadeIn();
                 if (window.SetaeUI && SetaeUI.renderMySpiders) {

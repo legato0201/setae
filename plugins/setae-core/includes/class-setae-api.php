@@ -175,20 +175,60 @@ class Setae_API
         $search = $request->get_param('search');
         $offset = $request->get_param('offset') ?: 0;
 
-        $args = array(
+        // ベースとなる引数
+        $base_args = array(
             'post_type' => 'setae_species',
             'posts_per_page' => 20,
             'offset' => $offset,
             'post_status' => 'publish',
             'orderby' => 'title',
             'order' => 'ASC',
+            'fields' => 'ids', // IDのみ取得して後でマージする
         );
 
+        $final_ids = array();
+
         if (!empty($search)) {
-            $args['s'] = $search;
+            // クエリ1: 学名 (タイトル) で検索
+            $args_title = $base_args;
+            $args_title['s'] = $search;
+            $query_title = new WP_Query($args_title);
+            $ids_title = $query_title->posts;
+
+            // クエリ2: 和名 (メタデータ) で検索
+            $args_meta = $base_args;
+            $args_meta['meta_query'] = array(
+                array(
+                    'key' => '_setae_common_name_ja',
+                    'value' => $search,
+                    'compare' => 'LIKE'
+                )
+            );
+            $query_meta = new WP_Query($args_meta);
+            $ids_meta = $query_meta->posts;
+
+            // 結果を結合して重複を削除
+            $final_ids = array_unique(array_merge($ids_title, $ids_meta));
+
+            // ヒットなしの場合は空を返す
+            if (empty($final_ids)) {
+                return new WP_REST_Response(array(), 200);
+            }
+        } else {
+            // 検索なしの場合
+            $query = new WP_Query($base_args);
+            $final_ids = $query->posts;
         }
 
-        $query = new WP_Query($args);
+        // 最終的なデータ取得 (詳細情報の取得)
+        $args_final = array(
+            'post_type' => 'setae_species',
+            'post__in' => $final_ids,
+            'posts_per_page' => 20,
+            'orderby' => 'post__in', // 検索ヒット順などを考慮する場合はここを調整
+        );
+
+        $query = new WP_Query($args_final);
         $data = array();
 
         if ($query->have_posts()) {
@@ -197,9 +237,13 @@ class Setae_API
                 $terms = get_the_terms(get_the_ID(), 'setae_genus');
                 $genus = (!empty($terms) && !is_wp_error($terms)) ? $terms[0]->name : '';
 
+                // 和名もレスポンスに含めるとUIで確認しやすいかもしれません
+                $ja_name = get_post_meta(get_the_ID(), '_setae_common_name_ja', true);
+
                 $data[] = array(
                     'id' => get_the_ID(),
                     'title' => get_the_title(),
+                    'ja_name' => $ja_name, // ★任意追加
                     'genus' => $genus,
                     'thumb' => get_the_post_thumbnail_url(get_the_ID(), 'medium'),
                     'link' => get_permalink(),

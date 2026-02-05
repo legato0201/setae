@@ -254,6 +254,10 @@ var SetaeUIList = (function ($) {
         renderMySpiders();
     }
 
+    function refresh() {
+        SetaeAPI.fetchMySpiders(renderMySpiders);
+    }
+
     /**
      * 初期化：現在のステートをUIに反映させる
      */
@@ -275,6 +279,7 @@ var SetaeUIList = (function ($) {
 
     return {
         init: init,
+        refresh: refresh, // ★追加: これにより add-spider.js から SetaeUIList.refresh() が呼べるようになります
         renderMySpiders: renderMySpiders,
         handleDeckFilterClick: handleDeckFilterClick,
         handleSearchInput: handleSearchInput,

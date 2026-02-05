@@ -131,14 +131,7 @@
                 <label>ニックネーム (任意)</label>
                 <input type="text" id="spider-name" placeholder="Name/ID" class="setae-input">
             </div>
-            <div class="setae-form-group">
-                <label>最終脱皮日</label>
-                <input type="date" id="spider-last-molt" class="setae-input">
-            </div>
-            <div class="setae-form-group">
-                <label>最終給餌日</label>
-                <input type="date" id="spider-last-feed" class="setae-input">
-            </div>
+
             <button type="submit" class="setae-btn setae-btn-primary">登録</button>
         </form>
     </div>

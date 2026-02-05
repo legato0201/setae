@@ -71,8 +71,12 @@ var SetaeUIAddSpider = (function ($) {
 
                     let html = '';
                     results.forEach(s => {
-                        html += `<div class="suggestion-item" data-id="${s.id}" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f0f0f0;">
-                            <div style="font-weight:bold; font-size:14px;">${s.title}</div>
+                        // ★修正: 和名があれば表示用HTMLを作成
+                        const jaDisplay = s.ja_name ? `<span style="font-size:12px; color:#666; font-weight:normal; margin-left:8px;">${s.ja_name}</span>` : '';
+
+                        // ★修正: data-name属性を追加して学名を保持させる
+                        html += `<div class="suggestion-item" data-id="${s.id}" data-name="${s.title}" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f0f0f0;">
+                            <div style="font-weight:bold; font-size:14px;">${s.title}${jaDisplay}</div>
                             <div style="font-size:12px; color:#888;">${s.genus || ''}</div>
                         </div>`;
                     });
@@ -82,7 +86,7 @@ var SetaeUIAddSpider = (function ($) {
         });
 
         $(document).on('click', '#spider-species-suggestions .suggestion-item', function () {
-            const name = $(this).find('div:first').text();
+            const name = $(this).data('name') || $(this).find('div:first').text();
             $('#spider-species-search').val(name);
             $('#spider-species-select').val($(this).data('id'));
             $('#spider-species-suggestions').hide();

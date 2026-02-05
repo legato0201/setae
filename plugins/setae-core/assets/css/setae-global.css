@@ -79,7 +79,7 @@ li {
     display: inline-block;
     background: linear-gradient(135deg, #2c3e50, #34495e);
     /* ログイン画面と同じ色 */
-    color: #fff !important;
+    color: #fff;
     font-weight: 600;
     padding: 12px 30px;
     border-radius: 12px;
@@ -95,7 +95,7 @@ li {
 .setae-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(44, 62, 80, 0.4);
-    color: #fff !important;
+
     text-decoration: none;
 }
 
