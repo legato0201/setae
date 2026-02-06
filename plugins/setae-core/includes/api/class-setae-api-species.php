@@ -13,8 +13,11 @@ class Setae_API_Species extends WP_REST_Controller
             'callback' => array($this, 'get_species_detail'),
             'permission_callback' => '__return_true',
             'args' => array(
-                'id' => array('validate_callback' => function ($p) {
-                    return is_numeric($p); })
+                'id' => array(
+                    'validate_callback' => function ($p) {
+                        return is_numeric($p);
+                    }
+                )
             )
         ));
 
