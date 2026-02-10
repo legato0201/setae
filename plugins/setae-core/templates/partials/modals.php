@@ -226,7 +226,7 @@
                 </div>
 
                 <div id="log-growth-options" class="log-option-group" style="display:none;">
-                    <label>サイズ (cm / Instar)</label>
+                    <label>サイズ (cm)</label>
                     <input type="text" id="log-size" class="setae-input-sm" placeholder="e.g. 5cm">
                 </div>
             </div>

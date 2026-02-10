@@ -35,8 +35,8 @@ var SetaeUIActions = (function ($) {
             config.left_swipe = { color: '#95a5a6', icon: '🚫', action: 'locked', next: null, label: 'ロック' };
         }
         else if (status === 'post_molt') {
-            config.right_swipe = { color: '#3498db', icon: '📏', action: 'measure', next: 'normal', label: '計測' };
-            config.left_swipe = { color: '#95a5a6', icon: '⏳', action: 'wait', next: null, label: '待機' };
+            config.right_swipe = { color: '#2ecc71', icon: '🦗', action: 'feed', next: 'normal', label: '給餌' };
+            config.left_swipe = { color: '#3498db', icon: '📏', action: 'measure', next: 'normal', label: '計測' };
         }
         return config;
     }

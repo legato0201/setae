@@ -287,52 +287,119 @@ var SetaeUIDetail = (function ($) {
         });
     });
 
-    function renderGrowthChart(logs) {
+    /**
+     * 成長グラフと脱皮履歴テーブルを描画
+     */
+    function renderGrowthChart(spider) {
         const ctx = document.getElementById('growthChart');
+        const container = $('.chart-container');
+
+        // 1. コンテナの初期化（既存のテーブルがあれば削除）
+        container.find('.molt-history-container').remove();
+
         if (!ctx) return;
 
-        if (window.setaeGrowthChart instanceof Chart) window.setaeGrowthChart.destroy();
+        // 2. データの準備（サイズ記録があるログのみ抽出）
+        const logs = spider.logs || [];
+        const sizeLogs = logs
+            .filter(l => l.size && parseFloat(l.size) > 0)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        const growthData = logs
-            .filter(l => l.type === 'molt' || l.type === 'growth')
-            .map(l => {
-                let size = 0;
-                try {
-                    const d = JSON.parse(l.data);
-                    if (d.size) size = parseFloat(d.size);
-                } catch (e) { }
-                return { x: l.date, y: size };
-            })
-            .filter(p => p.y > 0)
-            .reverse();
+        const chartData = sizeLogs.map(l => ({
+            x: l.date,
+            y: parseFloat(l.size)
+        }));
 
-        window.setaeGrowthChart = new Chart(ctx.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: growthData.map(d => d.x),
-                datasets: [{
-                    label: 'Leg Span (cm)',
-                    data: growthData.map(d => d.y),
-                    borderColor: '#2ecc71',
-                    backgroundColor: 'rgba(46, 204, 113, 0.15)',
-                    borderWidth: 2.5,
-                    tension: 0.4,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#2ecc71',
-                    pointRadius: 5,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { display: false },
-                    y: { beginAtZero: false, grid: { borderDash: [5, 5] } }
+        // 3. チャート描画 (Chart.js)
+        if (window.myGrowthChart) {
+            window.myGrowthChart.destroy();
+        }
+
+        if (chartData.length > 0) {
+            window.myGrowthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Size (cm)',
+                        data: chartData,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3498db',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { type: 'time', time: { unit: 'month' }, grid: { display: false } },
+                        y: { beginAtZero: true, title: { display: true, text: 'cm' } }
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            // データがない場合の表示
+            const chartInstance = Chart.getChart(ctx);
+            if (chartInstance) chartInstance.destroy();
+            // キャンバスをクリアしてメッセージを表示する場合などはここに記述
+        }
+
+        // ==========================================
+        // ★追加機能: 脱皮履歴テーブル (Pro View)
+        // ==========================================
+        const molts = logs.filter(l => l.type === 'molt').sort((a, b) => new Date(b.date) - new Date(a.date)); // 新しい順
+
+        if (molts.length > 0) {
+            let rows = '';
+            molts.forEach((m, i) => {
+                // 前回脱皮からの経過日数を計算
+                let interval = '-';
+                let intervalClass = '';
+
+                if (i < molts.length - 1) {
+                    const current = new Date(m.date);
+                    const prev = new Date(molts[i + 1].date);
+                    const diffTime = Math.abs(current - prev);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    interval = `${diffDays} days`;
+                    intervalClass = 'color:#27ae60; font-weight:bold;'; // 緑色で強調
+                }
+
+                const sizeDisplay = m.size ? `${m.size}cm` : '<span style="color:#ccc">-</span>';
+
+                rows += `
+                    <tr style="border-bottom:1px solid #f0f0f0;">
+                        <td style="padding:10px 8px; color:#555;">${m.date}</td>
+                        <td style="padding:10px 8px; ${intervalClass}">${interval}</td>
+                        <td style="padding:10px 8px; color:#666;">${sizeDisplay}</td>
+                    </tr>
+                `;
+            });
+
+            const tableHtml = `
+                <div class="molt-history-container" style="margin-top:24px; border-top:2px solid #f5f5f5; padding-top:16px;">
+                    <div style="font-size:12px; font-weight:bold; color:#999; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">Molt History</div>
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; line-height:1.4;">
+                        <thead>
+                            <tr style="text-align:left; color:#aaa; font-size:11px; border-bottom:1px solid #eee;">
+                                <th style="padding:4px 8px; font-weight:normal;">DATE</th>
+                                <th style="padding:4px 8px; font-weight:normal;">INTERVAL</th>
+                                <th style="padding:4px 8px; font-weight:normal;">SIZE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.append(tableHtml);
+        }
     }
 
     function renderPreyChart(logs) {
