@@ -250,7 +250,7 @@ var SetaeUIDetail = (function ($) {
                                     <button class="btn-delete-log" data-id="${e.id}" title="削除">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path>
                                         </svg>
                                     </button>
                                     <div class="timeline-card">
@@ -290,7 +290,7 @@ var SetaeUIDetail = (function ($) {
     /**
      * 成長グラフと脱皮履歴テーブルを描画
      */
-    function renderGrowthChart(spider) {
+    function renderGrowthChart(logs) {
         const ctx = document.getElementById('growthChart');
         const container = $('.chart-container');
 
@@ -299,37 +299,45 @@ var SetaeUIDetail = (function ($) {
 
         if (!ctx) return;
 
-        // 2. データの準備（サイズ記録があるログのみ抽出）
-        const logs = spider.logs || [];
-        const sizeLogs = logs
-            .filter(l => l.size && parseFloat(l.size) > 0)
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-        const chartData = sizeLogs.map(l => ({
-            x: l.date,
-            y: parseFloat(l.size)
-        }));
+        // 2. データの準備（サイズ記録があるログのみ抽出・パース）
+        // APIから返るログは新しい順の場合が多いので、グラフ用に古い順に並べ替えます
+        const sizeLogs = logs.map(l => {
+            let sizeVal = 0;
+            // 直接sizeがある場合と、data文字列内にJSONとして入っている場合の両対応
+            if (l.size) {
+                sizeVal = parseFloat(l.size);
+            } else if (l.data) {
+                try {
+                    const d = typeof l.data === 'string' ? JSON.parse(l.data) : l.data;
+                    if (d.size) sizeVal = parseFloat(d.size);
+                } catch (e) { }
+            }
+            return { ...l, sizeVal: sizeVal };
+        })
+            .filter(l => l.sizeVal > 0)
+            .sort((a, b) => new Date(a.date) - new Date(b.date)); // 古い順 (Chart用)
 
         // 3. チャート描画 (Chart.js)
-        if (window.myGrowthChart) {
-            window.myGrowthChart.destroy();
+        if (window.setaeGrowthChart instanceof Chart) {
+            window.setaeGrowthChart.destroy();
         }
 
-        if (chartData.length > 0) {
-            window.myGrowthChart = new Chart(ctx, {
+        if (sizeLogs.length > 0) {
+            window.setaeGrowthChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
+                    labels: sizeLogs.map(l => l.date), // 日付ラベル
                     datasets: [{
-                        label: 'Size (cm)',
-                        data: chartData,
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        borderWidth: 2,
+                        label: 'Leg Span (cm)',
+                        data: sizeLogs.map(l => l.sizeVal),
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.15)',
+                        borderWidth: 2.5,
                         tension: 0.3,
                         fill: true,
                         pointBackgroundColor: '#fff',
-                        pointBorderColor: '#3498db',
-                        pointRadius: 4
+                        pointBorderColor: '#2ecc71',
+                        pointRadius: 5
                     }]
                 },
                 options: {
@@ -337,40 +345,51 @@ var SetaeUIDetail = (function ($) {
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { type: 'time', time: { unit: 'month' }, grid: { display: false } },
-                        y: { beginAtZero: true, title: { display: true, text: 'cm' } }
+                        x: { display: true, grid: { display: false } },
+                        y: { beginAtZero: false, title: { display: true, text: 'cm' } }
                     }
                 }
             });
         } else {
-            // データがない場合の表示
+            // データがない場合
             const chartInstance = Chart.getChart(ctx);
             if (chartInstance) chartInstance.destroy();
-            // キャンバスをクリアしてメッセージを表示する場合などはここに記述
         }
 
         // ==========================================
-        // ★追加機能: 脱皮履歴テーブル (Pro View)
+        // ★脱皮履歴テーブル (Pro View)
         // ==========================================
-        const molts = logs.filter(l => l.type === 'molt').sort((a, b) => new Date(b.date) - new Date(a.date)); // 新しい順
+        // 脱皮(molt)のみ抽出し、新しい順に並べる
+        const moltLogs = logs
+            .filter(l => l.type === 'molt')
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        if (molts.length > 0) {
+        if (moltLogs.length > 0) {
             let rows = '';
-            molts.forEach((m, i) => {
+            moltLogs.forEach((m, i) => {
                 // 前回脱皮からの経過日数を計算
                 let interval = '-';
                 let intervalClass = '';
 
-                if (i < molts.length - 1) {
+                if (i < moltLogs.length - 1) {
                     const current = new Date(m.date);
-                    const prev = new Date(molts[i + 1].date);
+                    const prev = new Date(moltLogs[i + 1].date);
                     const diffTime = Math.abs(current - prev);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     interval = `${diffDays} days`;
                     intervalClass = 'color:#27ae60; font-weight:bold;'; // 緑色で強調
                 }
 
-                const sizeDisplay = m.size ? `${m.size}cm` : '<span style="color:#ccc">-</span>';
+                // サイズ情報の抽出
+                let sizeDisplay = '<span style="color:#ccc">-</span>';
+                let currentSize = 0;
+                if (m.data) {
+                    try {
+                        const d = typeof m.data === 'string' ? JSON.parse(m.data) : m.data;
+                        if (d.size) currentSize = d.size;
+                    } catch (e) { }
+                }
+                if (currentSize) sizeDisplay = `${currentSize}cm`;
 
                 rows += `
                     <tr style="border-bottom:1px solid #f0f0f0;">
