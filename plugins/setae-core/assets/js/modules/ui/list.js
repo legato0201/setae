@@ -217,19 +217,25 @@ var SetaeUIList = (function ($) {
         var $existing = $('#setae-sort-menu-v3');
         if ($existing.length > 0) { $existing.remove(); return; }
 
+        // ▼ 修正開始: 現在のソート状態を取得して active クラスを判定する関数を追加
+        const currentSort = SetaeCore.state.currentSort || 'priority';
+        const getActiveClass = (sortKey) => (sortKey === currentSort ? ' active' : '');
+
         var menuDiv = document.createElement('div');
         menuDiv.id = 'setae-sort-menu-v3';
+        // HTML生成部分で getActiveClass を使用するように変更
         menuDiv.innerHTML = `
             <div class="sort-group-label" style="padding:4px 16px; font-size:11px; color:#888; font-weight:bold; background:#fafafa; margin-bottom:4px;">ケア優先</div>
-            <div class="sort-option active" data-sort="priority">🔥 メンテナンス優先 (Priority)</div>
-            <div class="sort-option" data-sort="hungriest">🍽 給餌が必要な順</div>
+            <div class="sort-option${getActiveClass('priority')}" data-sort="priority">🔥 メンテナンス優先 (Priority)</div>
+            <div class="sort-option${getActiveClass('hungriest')}" data-sort="hungriest">🍽 給餌が必要な順</div>
             
             <div class="sort-group-label" style="padding:4px 16px; font-size:11px; color:#888; font-weight:bold; background:#fafafa; margin:4px 0;">個体管理</div>
-            <div class="sort-option" data-sort="species_asc">🧬 種類・学名順</div>
-            <div class="sort-option" data-sort="molt_oldest">⏳ 脱皮日が古い順</div>
-            <div class="sort-option" data-sort="name_asc">🔤 名前・ID順 (A-Z)</div>
-            <div class="sort-option" data-sort="newest">🆕 登録が新しい順</div>
+            <div class="sort-option${getActiveClass('species_asc')}" data-sort="species_asc">🧬 種類・学名順</div>
+            <div class="sort-option${getActiveClass('molt_oldest')}" data-sort="molt_oldest">⏳ 脱皮日が古い順</div>
+            <div class="sort-option${getActiveClass('name_asc')}" data-sort="name_asc">🔤 名前・ID順 (A-Z)</div>
+            <div class="sort-option${getActiveClass('newest')}" data-sort="newest">🆕 登録が新しい順</div>
         `;
+        // ▲ 修正終了
         document.body.appendChild(menuDiv);
 
         var rect = $(this)[0].getBoundingClientRect();
