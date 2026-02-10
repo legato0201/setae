@@ -292,18 +292,19 @@ var SetaeUIDetail = (function ($) {
      */
     function renderGrowthChart(logs) {
         const ctx = document.getElementById('growthChart');
-        const container = $('.chart-container');
-
-        // 1. コンテナの初期化（既存のテーブルがあれば削除）
-        container.find('.molt-history-container').remove();
-
         if (!ctx) return;
 
+        // ★修正: canvas要素から親のコンテナを特定します
+        const $container = $(ctx).closest('.chart-container');
+
+        // ★修正: 既存のテーブルを削除
+        // (以前の実装で中に作られたものと、修正後に外に作られたものの両方を削除してクリーンアップ)
+        $container.find('.molt-history-container').remove();
+        $container.next('.molt-history-container').remove();
+
         // 2. データの準備（サイズ記録があるログのみ抽出・パース）
-        // APIから返るログは新しい順の場合が多いので、グラフ用に古い順に並べ替えます
         const sizeLogs = logs.map(l => {
             let sizeVal = 0;
-            // 直接sizeがある場合と、data文字列内にJSONとして入っている場合の両対応
             if (l.size) {
                 sizeVal = parseFloat(l.size);
             } else if (l.data) {
@@ -315,7 +316,7 @@ var SetaeUIDetail = (function ($) {
             return { ...l, sizeVal: sizeVal };
         })
             .filter(l => l.sizeVal > 0)
-            .sort((a, b) => new Date(a.date) - new Date(b.date)); // 古い順 (Chart用)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
 
         // 3. チャート描画 (Chart.js)
         if (window.setaeGrowthChart instanceof Chart) {
@@ -326,7 +327,7 @@ var SetaeUIDetail = (function ($) {
             window.setaeGrowthChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: sizeLogs.map(l => l.date), // 日付ラベル
+                    labels: sizeLogs.map(l => l.date),
                     datasets: [{
                         label: 'Leg Span (cm)',
                         data: sizeLogs.map(l => l.sizeVal),
@@ -351,7 +352,6 @@ var SetaeUIDetail = (function ($) {
                 }
             });
         } else {
-            // データがない場合
             const chartInstance = Chart.getChart(ctx);
             if (chartInstance) chartInstance.destroy();
         }
@@ -359,7 +359,6 @@ var SetaeUIDetail = (function ($) {
         // ==========================================
         // ★脱皮履歴テーブル (Pro View)
         // ==========================================
-        // 脱皮(molt)のみ抽出し、新しい順に並べる
         const moltLogs = logs
             .filter(l => l.type === 'molt')
             .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -367,7 +366,6 @@ var SetaeUIDetail = (function ($) {
         if (moltLogs.length > 0) {
             let rows = '';
             moltLogs.forEach((m, i) => {
-                // 前回脱皮からの経過日数を計算
                 let interval = '-';
                 let intervalClass = '';
 
@@ -377,10 +375,9 @@ var SetaeUIDetail = (function ($) {
                     const diffTime = Math.abs(current - prev);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     interval = `${diffDays} days`;
-                    intervalClass = 'color:#27ae60; font-weight:bold;'; // 緑色で強調
+                    intervalClass = 'color:#27ae60; font-weight:bold;';
                 }
 
-                // サイズ情報の抽出
                 let sizeDisplay = '<span style="color:#ccc">-</span>';
                 let currentSize = 0;
                 if (m.data) {
@@ -417,7 +414,10 @@ var SetaeUIDetail = (function ($) {
                     </table>
                 </div>
             `;
-            container.append(tableHtml);
+
+            // ★修正: 高さ固定のグラフエリア(.chart-container)の「外(後ろ)」に追加することで
+            // レイアウト崩れ（重なり）を防ぎます。
+            $container.after(tableHtml);
         }
     }
 
