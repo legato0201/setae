@@ -7,7 +7,8 @@ class Setae_API_Manager
 {
     private $spiders_controller;
     private $species_controller;
-    private $topics_controller; // ▼ 追加
+    private $topics_controller;
+    private $bl_controller; // ▼ 追加 // ▼ 追加
 
     public function __construct()
     {
@@ -19,7 +20,8 @@ class Setae_API_Manager
         // Load Controllers
         require_once plugin_dir_path(__FILE__) . 'class-setae-api-spiders.php';
         require_once plugin_dir_path(__FILE__) . 'class-setae-api-species.php';
-        require_once plugin_dir_path(__FILE__) . 'class-setae-api-topics.php'; // ▼ 追加
+        require_once plugin_dir_path(__FILE__) . 'class-setae-api-topics.php';
+        require_once plugin_dir_path(__FILE__) . 'class-setae-api-bl.php'; // ▼ 追加 // ▼ 追加
 
         $this->spiders_controller = new Setae_API_Spiders();
         $this->spiders_controller->register_routes();
@@ -30,5 +32,9 @@ class Setae_API_Manager
         // ▼ 追加: Topicsコントローラーの初期化と登録
         $this->topics_controller = new Setae_API_Topics();
         $this->topics_controller->register_routes();
+
+        // ▼ 追加: BLコントローラーの登録
+        $this->bl_controller = new Setae_API_BL();
+        $this->bl_controller->register_routes();
     }
 }
