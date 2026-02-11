@@ -49,6 +49,11 @@ class Setae_CPT_Species
 
         // Admin CSS
         add_action('admin_head', array($this, 'admin_head_css'));
+
+        // ▼ 追加: 一括登録メニューとAJAXフック
+        add_action('admin_menu', array($this, 'add_bulk_menu'));
+        add_action('wp_ajax_setae_bulk_species_save', array($this, 'handle_bulk_save'));
+        // ▲ 追加ここまで
     }
 
     public function admin_head_css()
@@ -241,6 +246,233 @@ class Setae_CPT_Species
         $columns['taxonomy-setae_genus'] = 'taxonomy-setae_genus';
         $columns['taxonomy-setae_habitat'] = 'taxonomy-setae_habitat';
         return $columns;
+    }
+
+
+    public function add_bulk_menu()
+    {
+        add_submenu_page(
+            'edit.php?post_type=setae_species',
+            '一括登録',
+            '一括登録 (Bulk)',
+            'manage_options',
+            'setae_species_bulk',
+            array($this, 'render_bulk_page')
+        );
+    }
+
+    // 2. 一括登録画面の描画
+    public function render_bulk_page()
+    {
+        ?>
+        <div class="wrap">
+            <h1 class="wp-heading-inline">図鑑データ一括登録</h1>
+            <p>学名、和名、属などを連続して登録できます。完了したら「保存して登録」を押してください。</p>
+
+            <style>
+                .setae-bulk-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                    background: #fff;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                .setae-bulk-table th,
+                .setae-bulk-table td {
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                }
+
+                .setae-bulk-table th {
+                    background: #f9f9f9;
+                    text-align: left;
+                }
+
+                .setae-bulk-table input,
+                .setae-bulk-table select {
+                    width: 100%;
+                    border: 1px solid #ccc;
+                    padding: 5px;
+                    border-radius: 4px;
+                }
+
+                .btn-remove-row {
+                    color: red;
+                    cursor: pointer;
+                    font-weight: bold;
+                }
+            </style>
+
+            <form id="setae-bulk-form">
+                <table class="setae-bulk-table" id="bulk-table">
+                    <thead>
+                        <tr>
+                            <th style="width:200px;">学名 (Title) *</th>
+                            <th style="width:200px;">和名 (Meta)</th>
+                            <th style="width:150px;">属 (Genus)</th>
+                            <th style="width:100px;">サイズ (cm)</th>
+                            <th style="width:150px;">性格 (Temp)</th>
+                            <th style="width:50px;">×</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button type="button" class="button" id="btn-add-row">+ 行を追加</button>
+                    <button type="submit" class="button button-primary button-large" id="btn-save-bulk">保存して登録</button>
+                </div>
+            </form>
+
+            <div id="bulk-result" style="margin-top:20px; font-weight:bold;"></div>
+        </div>
+
+        <script>
+            jQuery(document).ready(function ($) {
+                function addRow() {
+                    const row = `
+                    <tr>
+                        <td><input type="text" name="title[]" placeholder="例: Grammostola pulchra" required></td>
+                        <td><input type="text" name="ja_name[]" placeholder="例: ブラジリアンブラック"></td>
+                        <td><input type="text" name="genus[]" placeholder="例: Grammostola" list="genus_list"></td>
+                        <td><input type="number" step="0.1" name="size[]" placeholder="15.0"></td>
+                        <td>
+                            <select name="temperament[]">
+                                <option value="">- 選択 -</option>
+                                <option value="Docile (温厚)">Docile (温厚)</option>
+                                <option value="Calm (大人しい)">Calm (大人しい)</option>
+                                <option value="Skittish (臆病)">Skittish (臆病)</option>
+                                <option value="Defensive (荒い)">Defensive (荒い)</option>
+                                <option value="Aggressive (凶暴)">Aggressive (凶暴)</option>
+                            </select>
+                        </td>
+                        <td style="text-align:center;"><span class="btn-remove-row">×</span></td>
+                    </tr>
+                `;
+                    $('#bulk-table tbody').append(row);
+                }
+
+                // 初期状態で5行追加
+                for (let i = 0; i < 5; i++) addRow();
+
+                $('#btn-add-row').on('click', addRow);
+
+                $(document).on('click', '.btn-remove-row', function () {
+                    $(this).closest('tr').remove();
+                });
+
+                $('#setae-bulk-form').on('submit', function (e) {
+                    e.preventDefault();
+                    if (!confirm('入力したデータを登録しますか？')) return;
+
+                    const $btn = $('#btn-save-bulk');
+                    $btn.prop('disabled', true).text('保存中...');
+
+                    // データを構築
+                    let items = [];
+                    $('#bulk-table tbody tr').each(function () {
+                        const title = $(this).find('input[name="title[]"]').val();
+                        if (title) {
+                            items.push({
+                                title: title,
+                                ja_name: $(this).find('input[name="ja_name[]"]').val(),
+                                genus: $(this).find('input[name="genus[]"]').val(),
+                                size: $(this).find('input[name="size[]"]').val(),
+                                temperament: $(this).find('select[name="temperament[]"]').val()
+                            });
+                        }
+                    });
+
+                    if (items.length === 0) {
+                        alert('データがありません');
+                        $btn.prop('disabled', false).text('保存して登録');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'setae_bulk_species_save',
+                            items: items
+                        },
+                        success: function (res) {
+                            if (res.success) {
+                                $('#bulk-result').html('<span style="color:green;">' + res.data.count + '件の登録が完了しました。</span>');
+                                $('#bulk-table tbody').empty();
+                                for (let i = 0; i < 5; i++) addRow();
+                            } else {
+                                alert('エラー: ' + res.data);
+                            }
+                        },
+                        complete: function () {
+                            $btn.prop('disabled', false).text('保存して登録');
+                        }
+                    });
+                });
+            });
+        </script>
+        <?php
+    }
+
+    // 3. AJAX保存処理
+    public function handle_bulk_save()
+    {
+        // 権限チェック (簡易)
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('権限がありません');
+        }
+
+        $items = isset($_POST['items']) ? $_POST['items'] : array();
+        $count = 0;
+
+        foreach ($items as $item) {
+            $title = sanitize_text_field($item['title']);
+            if (empty($title))
+                continue;
+
+            // 既存チェック（同名の種があればスキップまたは更新）
+            $existing = get_page_by_title($title, OBJECT, 'setae_species');
+            if ($existing) {
+                $post_id = $existing->ID;
+            } else {
+                $post_id = wp_insert_post(array(
+                    'post_type' => 'setae_species',
+                    'post_title' => $title,
+                    'post_status' => 'publish'
+                ));
+            }
+
+            if ($post_id) {
+                // 和名 (Meta)
+                if (!empty($item['ja_name'])) {
+                    update_post_meta($post_id, '_setae_common_name_ja', sanitize_text_field($item['ja_name']));
+                }
+
+                // サイズ (Meta)
+                if (!empty($item['size'])) {
+                    update_post_meta($post_id, '_setae_size', sanitize_text_field($item['size']));
+                }
+
+                // 属 (Taxonomy: setae_genus)
+                if (!empty($item['genus'])) {
+                    $genus = sanitize_text_field($item['genus']);
+                    // タームが存在しなければ作成してセット
+                    wp_set_object_terms($post_id, $genus, 'setae_genus');
+                }
+
+                // 性格 (Taxonomy: setae_temperament)
+                if (!empty($item['temperament'])) {
+                    wp_set_object_terms($post_id, sanitize_text_field($item['temperament']), 'setae_temperament');
+                }
+
+                $count++;
+            }
+        }
+
+        wp_send_json_success(array('count' => $count));
     }
 
 }

@@ -54,6 +54,10 @@ var SetaeUIAddSpider = (function ($) {
         $(document).on('input', '#spider-species-search', function () {
             const term = $(this).val();
 
+            // ▼ 追加: 入力内容が変わったら、選択済みのIDをクリアする（リスト選択を強制するため）
+            $('#spider-species-select').val('');
+            // ▲ 追加ここまで
+
             if (searchTimer) clearTimeout(searchTimer);
 
             if (term.length < 2) {
@@ -117,8 +121,17 @@ var SetaeUIAddSpider = (function ($) {
                 return;
             }
 
-            // ★追加: ボタンを無効化してローディング状態にする
             const originalText = $btn.text();
+
+            // ▼ 追加: 種類がリストから選択されているかチェック
+            const speciesIdCheck = $('#spider-species-select').val();
+            if (!speciesIdCheck) {
+                SetaeCore.showToast('種類をリストから選択してください', 'warning');
+                return; // IDが無い場合はここで処理を中断
+            }
+            // ▲ 追加ここまで
+
+            // ★追加: ボタンを無効化してローディング状態にする
             $btn.prop('disabled', true).text('登録中...');
 
             // フォームデータの構築

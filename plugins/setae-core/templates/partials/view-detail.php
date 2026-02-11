@@ -4,11 +4,18 @@
  */
 ?>
 <div id="section-enc-detail" class="setae-section" style="display: none;">
-    <div class="setae-header-bar" style="display:flex; align-items:center; margin-bottom:15px;">
-        <button id="btn-back-to-enc" class="setae-btn-text" style="margin-right:15px; font-size:18px;">←
-            Back</button>
-        <h4 style="margin:0; flex-grow:1; text-align:center;" id="enc-detail-title">Species Name</h4>
-        <div style="width:50px;"></div>
+    <div class="setae-header-bar"
+        style="display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #eee; background:#fff; position:sticky; top:0; z-index:100;">
+        <button id="btn-back-to-enc" class="setae-btn-back" type="button" aria-label="Back">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
+            </svg>
+        </button>
+        <h4 style="margin:0; flex-grow:1; text-align:center; font-size:16px; font-weight:bold; color:#333;"
+            id="enc-detail-title">
+            Loading...
+        </h4>
+        <div style="width:40px;"></div>
     </div>
 
     <div class="setae-card" style="padding:0; overflow:hidden; margin-bottom:15px;">

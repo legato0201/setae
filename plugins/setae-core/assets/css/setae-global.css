@@ -105,3 +105,32 @@ li {
     margin-top: 10px;
     padding: 5px 10px;
 }
+
+/* Back Button Style (アプリ風の戻るボタン) */
+.setae-btn-back {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    /* 丸いクリックエリア */
+    transition: background-color 0.2s ease;
+    color: #333;
+    /* アイコンの色 */
+}
+
+.setae-btn-back:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    /* ホバー時に薄く背景色を表示 */
+}
+
+/* SVGアイコンのサイズ調整 */
+.setae-btn-back svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}

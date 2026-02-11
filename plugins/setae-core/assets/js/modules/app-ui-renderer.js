@@ -152,7 +152,8 @@ var SetaeUI = (function ($) {
         $('#enc-gallery-grid').html('<p style="text-align:center;">Loading...</p>');
 
         SetaeAPI.getSpeciesDetail(id, function (data) {
-            $('#enc-detail-title').text(data.title);
+            const displayName = data.ja_name ? data.ja_name : data.title;
+            $('#enc-detail-title').text(displayName);
             $('#enc-detail-name').text(data.title);
             $('#enc-detail-genus').text(data.genus || '');
             $('#enc-detail-description').html(data.description ? data.description.replace(/\n/g, '<br>') : 'No description available.');
