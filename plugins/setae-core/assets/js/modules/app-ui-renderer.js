@@ -134,6 +134,11 @@ var SetaeUI = (function ($) {
             // Desktop Hover Actions is now handled by SetaeUIDesktop (app-ui-desktop.js)
             // SetaeUIActions.initDesktopHoverLogic();
         }
+
+        // Initialize Breeding Loan Module
+        if (typeof SetaeUIBL !== 'undefined') {
+            SetaeUIBL.init();
+        }
     }
 
     function checkInitialLoad() {
@@ -207,6 +212,9 @@ var SetaeUI = (function ($) {
         // ▼ 追加: Communityタブが選択された時の処理
         else if (target === 'section-com') {
             loadTopics();
+        }
+        else if (target === 'section-bl') {
+            if (typeof SetaeUIBL !== 'undefined') SetaeUIBL.loadRecruits();
         }
         // ▲ 追加ここまで
 

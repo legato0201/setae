@@ -282,33 +282,8 @@ class Setae_API
 
     public function get_bl_candidates($request)
     {
-        $args = array(
-            'post_type' => 'setae_spider',
-            'posts_per_page' => 50,
-            'meta_key' => '_setae_bl_recruiting',
-            'meta_value' => '1',
-            'post_status' => 'publish',
-        );
-
-        $query = new WP_Query($args);
-        $data = array();
-
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $species_id = get_post_meta(get_the_ID(), '_setae_species_id', true);
-                $species_title = $species_id ? get_the_title($species_id) : 'Unknown Species';
-
-                $data[] = array(
-                    'id' => get_the_ID(),
-                    'title' => get_the_title(),
-                    'species' => $species_title,
-                    'owner_id' => get_the_author_meta('ID'),
-                    'owner_name' => get_the_author_meta('display_name'),
-                );
-            }
-            wp_reset_postdata();
-        }
+        $db = new Setae_BL_Contracts();
+        $data = $db->get_recruiting_spiders();
         return new WP_REST_Response($data, 200);
     }
 

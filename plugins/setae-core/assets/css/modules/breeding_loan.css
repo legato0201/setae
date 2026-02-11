@@ -1,0 +1,73 @@
+/* Breeding Loan Card Styles */
+.bl-card {
+    position: relative;
+    padding: 15px;
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
+}
+
+.bl-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #2ecc71;
+    /* Default recruiting */
+}
+
+.bl-species {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.bl-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.bl-owner {
+    font-size: 11px;
+    color: #999;
+    display: flex;
+    align-items: center;
+}
+
+.bl-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.bl-actions button {
+    flex: 1;
+}
+
+/* Specific Badge Colors */
+.bl-badge.recruiting {
+    background: #2ecc71;
+}
+
+.bl-badge.loaned {
+    background: #f39c12;
+}
+
+/* Gender Styles */
+.bl-card.gender-male {
+    border-left: 5px solid #3498db;
+}
+
+.bl-card.gender-female {
+    border-left: 5px solid #e74c3c;
+}
+
+.bl-card.gender-unknown {
+    border-left: 5px solid #95a5a6;
+}

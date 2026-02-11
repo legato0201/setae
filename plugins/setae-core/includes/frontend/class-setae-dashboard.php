@@ -23,6 +23,7 @@ class Setae_Dashboard
         wp_enqueue_style('setae-layout', SETAE_PLUGIN_URL . 'assets/css/modules/layout.css', $deps, $this->version, 'all');
         wp_enqueue_style('setae-cards', SETAE_PLUGIN_URL . 'assets/css/modules/cards.css', $deps, $this->version, 'all');
         wp_enqueue_style('setae-modals', SETAE_PLUGIN_URL . 'assets/css/modules/modals.css', $deps, $this->version, 'all');
+        wp_enqueue_style('setae-bl', SETAE_PLUGIN_URL . 'assets/css/modules/breeding_loan.css', $deps, $this->version, 'all'); // Breeding Loan CSS
 
         // 残りのビュー専用スタイル (Chat, Kanban, etc.)
         wp_enqueue_style('setae-views', SETAE_PLUGIN_URL . 'assets/css/modules/views.css', $deps, $this->version, 'all');
@@ -57,12 +58,14 @@ class Setae_Dashboard
         wp_enqueue_script('setae-ui-log-modal', SETAE_PLUGIN_URL . 'assets/js/modules/ui/log-modal.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-profile', SETAE_PLUGIN_URL . 'assets/js/modules/ui/profile.js', $ui_deps, $this->version, true); // New Profile Module
         wp_enqueue_script('setae-ui-add-spider', SETAE_PLUGIN_URL . 'assets/js/modules/ui/add-spider.js', $ui_deps, $this->version, true); // Add Spider Module
+        wp_enqueue_script('setae-ui-breeding-loan', SETAE_PLUGIN_URL . 'assets/js/modules/ui/breeding_loan.js', $ui_deps, $this->version, true); // Breeding Loan Module
 
         // 1.5 Desktop Specific Logic
         wp_enqueue_script('setae-ui-desktop', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-desktop.js', array('setae-ui-actions', 'jquery'), $this->version, true);
 
         // 2. Controller (Renderer)
-        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile'), $this->version, true);
+        // 2. Controller (Renderer)
+        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile', 'setae-ui-breeding-loan'), $this->version, true);
 
         // 3. Main App Entry
         wp_enqueue_script('setae-app-main', SETAE_PLUGIN_URL . 'assets/js/setae-app.js', array('setae-app-ui-renderer', 'setae-ui-desktop'), $this->version, true);

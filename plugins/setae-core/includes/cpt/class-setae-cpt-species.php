@@ -269,6 +269,34 @@ class Setae_CPT_Species
             <h1 class="wp-heading-inline">図鑑データ一括登録</h1>
             <p>学名、和名、属などを連続して登録できます。完了したら「保存して登録」を押してください。</p>
 
+            <div style="background:#f0f0f1; padding:15px; border:1px solid #ccc; margin-bottom:20px; border-radius:5px;">
+                <h3>🤖 AI生成データ取り込み</h3>
+                <p>以下のJSONフォーマットでデータを貼り付けると、下の表に自動的に入力されます。</p>
+
+                <details style="margin-bottom:10px;">
+                    <summary style="cursor:pointer; color:#0073aa;">コピー用プロンプト (クリックして展開)</summary>
+                    <div
+                        style="background:#fff; padding:10px; border:1px solid #ddd; margin-top:5px; font-family:monospace; font-size:11px;">
+                        以下のタランチュラの情報をJSON形式で出力してください。<br>
+                        キーは必ず以下のようにしてください。<br>
+                        [<br>
+                        {<br>
+                        "title": "学名 (例: Grammostola pulchra)",<br>
+                        "ja_name": "和名/流通名 (例: ブラジリアンブラック)",<br>
+                        "genus": "属名 (例: Grammostola)",<br>
+                        "size": "最大レッグスパン数値のみ (例: 15.0)",<br>
+                        "temperament": "性格 (選択肢: Docile, Calm, Skittish, Defensive, Aggressive のいずれか)"<br>
+                        },<br>
+                        ...<br>
+                        ]
+                    </div>
+                </details>
+
+                <textarea id="json-paste-area" style="width:100%; height:100px; font-family:monospace;"
+                    placeholder='[{"title":"...", "ja_name":"...", ...}]'></textarea>
+                <button type="button" class="button" id="btn-parse-json" style="margin-top:10px;">JSONを反映</button>
+            </div>
+
             <style>
                 .setae-bulk-table {
                     width: 100%;
@@ -412,6 +440,58 @@ class Setae_CPT_Species
                         }
                     });
                 });
+
+                // ▼ 追加: JSONパースと反映処理
+                $('#btn-parse-json').on('click', function () {
+                    const raw = $('#json-paste-area').val();
+                    if (!raw.trim()) return;
+
+                    try {
+                        const data = JSON.parse(raw);
+                        if (!Array.isArray(data)) {
+                            alert('JSONは配列形式である必要があります (例: [ {...}, {...} ])');
+                            return;
+                        }
+
+                        // 既存の空行をクリアする（任意）
+                        // $('#bulk-table tbody').empty();
+
+                        let count = 0;
+                        data.forEach(item => {
+                            // 必須チェック
+                            if (!item.title) return;
+
+                            const row = `
+                            <tr>
+                                <td><input type="text" name="title[]" value="${item.title}" required></td>
+                                <td><input type="text" name="ja_name[]" value="${item.ja_name || ''}"></td>
+                                <td><input type="text" name="genus[]" value="${item.genus || ''}"></td>
+                                <td><input type="number" step="0.1" name="size[]" value="${item.size || ''}"></td>
+                                <td>
+                                    <select name="temperament[]">
+                                        <option value="">- 選択 -</option>
+                                        <option value="Docile (温厚)" ${item.temperament && item.temperament.match(/docile/i) ? 'selected' : ''}>Docile (温厚)</option>
+                                        <option value="Calm (大人しい)" ${item.temperament && item.temperament.match(/calm/i) ? 'selected' : ''}>Calm (大人しい)</option>
+                                        <option value="Skittish (臆病)" ${item.temperament && item.temperament.match(/skittish/i) ? 'selected' : ''}>Skittish (臆病)</option>
+                                        <option value="Defensive (荒い)" ${item.temperament && item.temperament.match(/defensive/i) ? 'selected' : ''}>Defensive (荒い)</option>
+                                        <option value="Aggressive (凶暴)" ${item.temperament && item.temperament.match(/aggressive/i) ? 'selected' : ''}>Aggressive (凶暴)</option>
+                                    </select>
+                                </td>
+                                <td style="text-align:center;"><span class="btn-remove-row">×</span></td>
+                            </tr>
+                            `;
+                            $('#bulk-table tbody').append(row);
+                            count++;
+                        });
+
+                        alert(count + '件のデータを読み込みました。');
+                        $('#json-paste-area').val(''); // クリア
+
+                    } catch (e) {
+                        alert('JSONの解析に失敗しました。フォーマットを確認してください。\n' + e.message);
+                    }
+                });
+                // ▲ 追加ここまで
             });
         </script>
         <?php

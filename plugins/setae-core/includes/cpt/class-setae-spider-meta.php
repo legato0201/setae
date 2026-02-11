@@ -51,10 +51,23 @@ class Setae_Spider_Meta
                         value="<?php echo esc_attr($feed_date); ?>" /></td>
             </tr>
             <tr>
-                <th><label for="setae_bl_recruiting">BL募集</label></th>
+                <th><label for="setae_bl_status">BL Status</label></th>
                 <td>
-                    <input type="checkbox" name="setae_bl_recruiting" id="setae_bl_recruiting" value="1" <?php checked(get_post_meta($post->ID, '_setae_bl_recruiting', true), '1'); ?> />
-                    <label for="setae_bl_recruiting">この個体をブリーディングローン募集に出す</label>
+                    <select name="setae_bl_status" id="setae_bl_status">
+                        <option value="none" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'none'); ?>>None
+                            (募集なし)</option>
+                        <option value="recruiting" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'recruiting'); ?>>Recruiting (募集中)</option>
+                        <option value="loaned" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'loaned'); ?>>
+                            Loaned (貸出中)</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="setae_bl_terms">BL Terms</label></th>
+                <td>
+                    <input type="text" name="setae_bl_terms" id="setae_bl_terms" class="regular-text"
+                        value="<?php echo esc_attr(get_post_meta($post->ID, '_setae_bl_terms', true)); ?>"
+                        placeholder="Ex: 50/50 split" />
                 </td>
             </tr>
         </table>
@@ -78,8 +91,11 @@ class Setae_Spider_Meta
         if (isset($_POST['setae_last_feed_date']))
             update_post_meta($post_id, '_setae_last_feed_date', sanitize_text_field($_POST['setae_last_feed_date']));
 
-        $recruiting = isset($_POST['setae_bl_recruiting']) ? '1' : '0';
-        update_post_meta($post_id, '_setae_bl_recruiting', $recruiting);
+        if (isset($_POST['setae_bl_status']))
+            update_post_meta($post_id, '_setae_bl_status', sanitize_text_field($_POST['setae_bl_status']));
+
+        if (isset($_POST['setae_bl_terms']))
+            update_post_meta($post_id, '_setae_bl_terms', sanitize_text_field($_POST['setae_bl_terms']));
 
         // Auto-save owner ID if not set (for admin convenience, though owner should be set on creation)
         $owner_id = get_post_meta($post_id, '_setae_owner_id', true);
@@ -99,7 +115,8 @@ class Setae_Spider_Meta
                     'species_name' => $species_name,
                     'last_molt' => get_post_meta($object['id'], '_setae_last_molt_date', true),
                     'last_feed' => get_post_meta($object['id'], '_setae_last_feed_date', true),
-                    'recruiting' => get_post_meta($object['id'], '_setae_bl_recruiting', true),
+                    'bl_status' => get_post_meta($object['id'], '_setae_bl_status', true),
+                    'bl_terms' => get_post_meta($object['id'], '_setae_bl_terms', true),
                     'owner_id' => get_post_meta($object['id'], '_setae_owner_id', true),
                 );
             },
@@ -116,8 +133,11 @@ class Setae_Spider_Meta
                 if (isset($meta_value['last_feed'])) {
                     update_post_meta($object->ID, '_setae_last_feed_date', sanitize_text_field($meta_value['last_feed']));
                 }
-                if (isset($meta_value['recruiting'])) {
-                    update_post_meta($object->ID, '_setae_bl_recruiting', sanitize_text_field($meta_value['recruiting']));
+                if (isset($meta_value['bl_status'])) {
+                    update_post_meta($object->ID, '_setae_bl_status', sanitize_text_field($meta_value['bl_status']));
+                }
+                if (isset($meta_value['bl_terms'])) {
+                    update_post_meta($object->ID, '_setae_bl_terms', sanitize_text_field($meta_value['bl_terms']));
                 }
                 return true;
             },
