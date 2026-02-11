@@ -519,3 +519,45 @@
     text-decoration: underline;
     opacity: 0.8;
 }
+
+/* チップ型ラジオボタンのスタイル */
+.radio-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    /* 通常時の枠線 */
+    border-radius: 20px;
+    /* 丸み */
+    cursor: pointer;
+    font-size: 14px;
+    background: #fff;
+    /* 通常時の背景 */
+    transition: all 0.2s ease;
+    user-select: none;
+    /* テキスト選択防止 */
+}
+
+/* ホバー時の挙動 */
+.radio-chip:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+/* 選択中（Active）のスタイル */
+.radio-chip.active {
+    background: #e0f7fa;
+    /* 選択時の薄い背景色 */
+    border-color: #00acc1;
+    /* 選択時の枠線色 */
+    color: #006064;
+    /* 選択時の文字色 */
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 非表示のinput要素がレイアウトに悪影響を与えないように念のため明示 */
+.radio-chip input[type="radio"][hidden] {
+    display: none;
+}
