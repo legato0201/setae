@@ -103,34 +103,72 @@ var SetaeUIAddSpider = (function ($) {
             }
         });
 
-        // フォーム送信
+        // ==========================================
+        // Submit New Spider (連打防止対策済み)
+        // ==========================================
         $(document).on('submit', '#form-add-spider', function (e) {
             e.preventDefault();
 
-            const speciesId = $('#spider-species-select').val();
-            if (!speciesId) {
-                SetaeCore.showToast('種類を選択してください', 'error');
+            const $form = $(this);
+            const $btn = $form.find('button[type="submit"]');
+
+            // ★追加: 既に送信処理中（ボタンが無効）なら何もしない
+            if ($btn.prop('disabled')) {
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('species_id', speciesId);
-            formData.append('name', $('#spider-name').val());
-            formData.append('last_molt', $('#spider-last-molt').val());
-            formData.append('last_feed', $('#spider-last-feed').val());
+            // ★追加: ボタンを無効化してローディング状態にする
+            const originalText = $btn.text();
+            $btn.prop('disabled', true).text('登録中...');
 
-            if ($('#spider-image')[0].files[0]) {
-                formData.append('image', $('#spider-image')[0].files[0]);
+            // フォームデータの構築
+            const formData = new FormData(this);
+
+            // 学名 (Autocompleteの隠しフィールドから取得)
+            const speciesId = $('#spider-species-select').val();
+            if (speciesId) {
+                formData.set('species_id', speciesId);
             }
 
-            SetaeAPI.createSpider(formData, function (response) {
-                if (response.success) {
-                    SetaeCore.showToast('新しいクモを登録しました！', 'success');
-                    $('#modal-add-spider').fadeOut(200);
-                    // リストを再読み込み
-                    if (window.SetaeUIList) SetaeUIList.refresh();
+            // 画像ファイル (input[type=file] がフォーム外や特殊な配置の場合に備えて明示的に取得)
+            const imageFile = $('#spider-image')[0].files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            // API送信
+            SetaeAPI.addSpider(formData,
+                // 成功時
+                function (response) {
+                    SetaeCore.showToast('新しい個体を登録しました', 'success');
+
+                    // フォームとプレビューのリセット
+                    $form[0].reset();
+                    $('#spider-species-search').val('');
+                    $('#spider-species-select').val('');
+                    $('#preview-img-tag-add').attr('src', '');
+                    $('#spider-image-preview').hide();
+
+                    // モーダルを閉じる
+                    $('#modal-add-spider').fadeOut();
+
+                    // リストを更新 (マイリスト画面にいる場合)
+                    if (window.SetaeUI && SetaeUI.renderMySpiders) {
+                        SetaeAPI.fetchMySpiders(SetaeUI.renderMySpiders);
+                    }
+
+                    // ★追加: ボタンを元の状態に戻す
+                    $btn.prop('disabled', false).text(originalText);
+                },
+                // エラー時 (SetaeAPIが第2引数でエラーを受け取る想定)
+                function (error) {
+                    console.error('Add Spider Error:', error);
+                    SetaeCore.showToast('登録に失敗しました', 'error');
+
+                    // ★追加: エラー発生時もボタンを元の状態に戻して再試行可能にする
+                    $btn.prop('disabled', false).text(originalText);
                 }
-            });
+            );
         });
     }
 

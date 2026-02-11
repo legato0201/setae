@@ -194,7 +194,11 @@ var SetaeUILogModal = (function ($) {
                     <span class="setae-close" onclick="$('#modal-edit-prey-list').fadeOut()">&times;</span>
                     <h3>Edit Prey List</h3>
                     <textarea id="edit-prey-textarea" class="setae-input" style="height:200px;"></textarea>
-                    <div style="margin-top:10px; text-align:right;">
+                    
+                    <div style="margin-top:10px; display:flex; justify-content:space-between;">
+                        <button class="setae-btn setae-btn-secondary" onclick="window.resetPreyListToDefault()" style="color:#666; border:1px solid #ccc;">
+                            Default
+                         </button>
                          <button class="setae-btn setae-btn-primary" onclick="window.savePreyList()">Save</button>
                     </div>
                 </div>

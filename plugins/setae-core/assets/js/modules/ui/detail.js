@@ -294,11 +294,9 @@ var SetaeUIDetail = (function ($) {
         const ctx = document.getElementById('growthChart');
         if (!ctx) return;
 
-        // ★修正: canvas要素から親のコンテナを特定します
         const $container = $(ctx).closest('.chart-container');
 
-        // ★修正: 既存のテーブルを削除
-        // (以前の実装で中に作られたものと、修正後に外に作られたものの両方を削除してクリーンアップ)
+        // 既存のテーブルを削除 (初期化)
         $container.find('.molt-history-container').remove();
         $container.next('.molt-history-container').remove();
 
@@ -366,6 +364,7 @@ var SetaeUIDetail = (function ($) {
         if (moltLogs.length > 0) {
             let rows = '';
             moltLogs.forEach((m, i) => {
+                // 前回脱皮からの経過日数を計算
                 let interval = '-';
                 let intervalClass = '';
 
@@ -378,21 +377,15 @@ var SetaeUIDetail = (function ($) {
                     intervalClass = 'color:#27ae60; font-weight:bold;';
                 }
 
-                let sizeDisplay = '<span style="color:#ccc">-</span>';
-                let currentSize = 0;
-                if (m.data) {
-                    try {
-                        const d = typeof m.data === 'string' ? JSON.parse(m.data) : m.data;
-                        if (d.size) currentSize = d.size;
-                    } catch (e) { }
-                }
-                if (currentSize) sizeDisplay = `${currentSize}cm`;
+                // ★変更: SIZEの代わりに脱皮回数(NO.)を計算
+                // リストは新しい順(降順)なので、(総数 - インデックス) で 1, 2, 3... となる
+                const countVal = moltLogs.length - i;
 
                 rows += `
                     <tr style="border-bottom:1px solid #f0f0f0;">
                         <td style="padding:10px 8px; color:#555;">${m.date}</td>
                         <td style="padding:10px 8px; ${intervalClass}">${interval}</td>
-                        <td style="padding:10px 8px; color:#666;">${sizeDisplay}</td>
+                        <td style="padding:10px 8px; color:#666; font-weight:bold;">#${countVal}</td>
                     </tr>
                 `;
             });
@@ -405,7 +398,7 @@ var SetaeUIDetail = (function ($) {
                             <tr style="text-align:left; color:#aaa; font-size:11px; border-bottom:1px solid #eee;">
                                 <th style="padding:4px 8px; font-weight:normal;">DATE</th>
                                 <th style="padding:4px 8px; font-weight:normal;">INTERVAL</th>
-                                <th style="padding:4px 8px; font-weight:normal;">SIZE</th>
+                                <th style="padding:4px 8px; font-weight:normal;">NO.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -415,8 +408,7 @@ var SetaeUIDetail = (function ($) {
                 </div>
             `;
 
-            // ★修正: 高さ固定のグラフエリア(.chart-container)の「外(後ろ)」に追加することで
-            // レイアウト崩れ（重なり）を防ぎます。
+            // レイアウト崩れ防止のためコンテナの後ろに追加
             $container.after(tableHtml);
         }
     }
