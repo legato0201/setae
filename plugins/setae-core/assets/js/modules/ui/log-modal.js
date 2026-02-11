@@ -43,23 +43,39 @@ var SetaeUILogModal = (function ($) {
         if (eOrId && (typeof eOrId === 'string' || typeof eOrId === 'number')) {
             idToUse = eOrId;
         } else if (SetaeUIDetail && SetaeUIDetail.getCurrentSpiderId) {
-            // Ideally getting current ID from state if available, 
-            // but previously it relied on a module-level variable currentSpiderId.
-            // We can check the hidden field if modal was opened before? 
-            // Or we accept it must be passed.
-            // For now let's grab it from the DOM if we are in detail view
             const val = $('#log-spider-id').val();
             if (val) idToUse = val;
         }
 
         // If still null, try to find from open detail section
         if (!idToUse && $('#section-my-detail').is(':visible')) {
-            // This is a bit hacky, but robust enough for now given HTML structure
             const text = $('#detail-spider-id-badge').text().replace('#', '');
             if (text) idToUse = text;
         }
 
         if (!idToUse) return;
+
+        // ★追加: 現在の個体データを取得して分類判定
+        const spider = SetaeCore.state.cachedSpiders ? SetaeCore.state.cachedSpiders.find(s => s.id == idToUse) : null;
+        const cls = spider ? (spider.classification || 'tarantula') : 'tarantula';
+        const isPlant = (cls === 'plant');
+
+        // ★追加: ボタン・ラベルの書き換え
+        const $modal = $('#setae-log-modal');
+        const $btnFeed = $modal.find('button[data-val="feed"]');
+        const $btnMolt = $modal.find('button[data-val="molt"]');
+
+        if (isPlant) {
+            // 植物モード
+            $btnFeed.html('💧').attr('title', 'Water');
+            $btnMolt.html('🪴').attr('title', 'Repot');
+            $('#log-feed-options label').first().text('Watering Type (Option)');
+        } else {
+            // 通常モード
+            $btnFeed.html('🦗').attr('title', 'Feed');
+            $btnMolt.html('🧬').attr('title', 'Molt');
+            $('#log-feed-options label').first().text('餌 (Prey)');
+        }
 
         $('#setae-log-form')[0].reset();
 
