@@ -239,3 +239,26 @@ Text Domain: setae-theme
         flex-direction: column;
     }
 }
+
+/* Radio Chips */
+.radio-chip {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    background: #fff;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.radio-chip:hover {
+    background: #f5f5f5;
+}
+
+.radio-chip.active {
+    background: #00ffcc;
+    border-color: #00ccaa;
+    color: #004d40;
+    font-weight: bold;
+}

@@ -225,7 +225,19 @@ class Setae_API_Spiders
             while ($query->have_posts()) {
                 $query->the_post();
                 $species_id = get_post_meta(get_the_ID(), '_setae_species_id', true);
-                $species_name = $species_id ? get_the_title($species_id) : 'Unknown';
+                $custom_name = get_post_meta(get_the_ID(), '_setae_custom_species_name', true);
+
+                if ($species_id) {
+                    $species_name = get_the_title($species_id);
+                } elseif ($custom_name) {
+                    $species_name = $custom_name;
+                } else {
+                    $species_name = 'Unknown';
+                }
+
+                // タクソノミー取得
+                $terms = get_the_terms(get_the_ID(), 'setae_classification');
+                $classification = ($terms && !is_wp_error($terms)) ? $terms[0]->slug : 'tarantula';
 
                 // Use uploaded image if exists, else fallback to species thumb
                 $thumb = get_post_meta(get_the_ID(), '_setae_spider_image', true);
@@ -237,6 +249,7 @@ class Setae_API_Spiders
                     'id' => get_the_ID(),
                     'title' => get_the_title(),
                     'species_name' => $species_name,
+                    'classification' => $classification, // フロントでアイコン出し分けに使用
                     'status' => get_post_meta(get_the_ID(), '_setae_status', true) ?: 'normal',
                     'last_molt' => get_post_meta(get_the_ID(), '_setae_last_molt_date', true),
                     'last_feed' => get_post_meta(get_the_ID(), '_setae_last_feed_date', true),
@@ -306,16 +319,27 @@ class Setae_API_Spiders
     public function create_spider($request)
     {
         $user_id = get_current_user_id();
+
+        // パラメータ取得
+        $classification = $request->get_param('classification') ?: 'tarantula';
         $species_id = $request->get_param('species_id');
+        $custom_species = sanitize_text_field($request->get_param('custom_species'));
         $name = sanitize_text_field($request->get_param('name'));
 
-        // Validation
-        if (empty($species_id)) {
-            return new WP_Error('missing_params', 'Species ID is required', array('status' => 400));
+        // ▼ 変更: タイトル決定ロジック
+        if ($classification === 'tarantula') {
+            if (empty($species_id)) {
+                return new WP_Error('missing_params', 'Species ID is required for Tarantulas', array('status' => 400));
+            }
+            $base_name = get_the_title($species_id);
+        } else {
+            if (empty($custom_species)) {
+                return new WP_Error('missing_params', 'Species Name is required', array('status' => 400));
+            }
+            $base_name = $custom_species;
         }
 
-        $species_title = get_the_title($species_id);
-        $title = $name ? $name : $species_title;
+        $title = $name ? $name : $base_name;
 
         $post_data = array(
             'post_title' => $title,
@@ -330,6 +354,9 @@ class Setae_API_Spiders
             return new WP_Error('creation_failed', $spider_id->get_error_message(), array('status' => 500));
         }
 
+        // ▼ 追加: タクソノミー登録
+        wp_set_object_terms($spider_id, $classification, 'setae_classification');
+
         // Handle Image Upload
         $image_url = $this->handle_file_upload('image', $spider_id);
         if ($image_url && !is_wp_error($image_url)) {
@@ -337,7 +364,15 @@ class Setae_API_Spiders
         }
 
         // Save Meta
-        update_post_meta($spider_id, '_setae_species_id', $species_id);
+        // ▼ 追加: メタデータ保存分岐
+        if ($classification === 'tarantula') {
+            update_post_meta($spider_id, '_setae_species_id', $species_id);
+        } else {
+            update_post_meta($spider_id, '_setae_custom_species_name', $custom_species);
+            // 図鑑IDは保存しない (0 または null)
+            delete_post_meta($spider_id, '_setae_species_id');
+        }
+
         update_post_meta($spider_id, '_setae_owner_id', $user_id);
 
         if ($request->get_param('last_molt'))

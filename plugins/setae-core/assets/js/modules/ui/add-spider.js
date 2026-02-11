@@ -23,6 +23,29 @@ var SetaeUIAddSpider = (function ($) {
             $('#modal-add-spider').fadeOut(200);
         });
 
+        // ▼ 追加: カテゴリー切り替えロジック
+        $(document).on('change', 'input[name="classification"]', function () {
+            // スタイルの切り替え
+            $('.radio-chip').removeClass('active');
+            $(this).closest('.radio-chip').addClass('active');
+
+            const val = $(this).val();
+
+            if (val === 'tarantula') {
+                // タランチュラ: DB検索モード
+                $('#wrapper-species-search').show();
+                $('#spider-custom-species').hide();
+                $('#spider-species-search').prop('required', true);
+                $('#spider-custom-species').prop('required', false);
+            } else {
+                // その他: 自由入力モード
+                $('#wrapper-species-search').hide();
+                $('#spider-custom-species').show();
+                $('#spider-species-search').prop('required', false);
+                $('#spider-custom-species').prop('required', true);
+            }
+        });
+
         // 写真選択のトリガー
         $(document).on('click', '#btn-trigger-upload-add', function () {
             $('#spider-image').click();
@@ -123,11 +146,14 @@ var SetaeUIAddSpider = (function ($) {
 
             const originalText = $btn.text();
 
-            // ▼ 追加: 種類がリストから選択されているかチェック
-            const speciesIdCheck = $('#spider-species-select').val();
-            if (!speciesIdCheck) {
-                SetaeCore.showToast('種類をリストから選択してください', 'warning');
-                return; // IDが無い場合はここで処理を中断
+            // ▼ 追加: 種類がリストから選択されているかチェック (タランチュラの場合のみ)
+            const classificationCheck = $('input[name="classification"]:checked').val();
+            if (classificationCheck === 'tarantula') {
+                const speciesIdCheck = $('#spider-species-select').val();
+                if (!speciesIdCheck) {
+                    SetaeCore.showToast('種類をリストから選択してください', 'warning');
+                    return; // IDが無い場合はここで処理を中断
+                }
             }
             // ▲ 追加ここまで
 
@@ -136,11 +162,29 @@ var SetaeUIAddSpider = (function ($) {
 
             // フォームデータの構築
             const formData = new FormData(this);
+            const classification = $('input[name="classification"]:checked').val();
 
-            // 学名 (Autocompleteの隠しフィールドから取得)
-            const speciesId = $('#spider-species-select').val();
-            if (speciesId) {
+            // カテゴリー情報を追加
+            formData.append('classification', classification);
+
+            if (classification === 'tarantula') {
+                // 既存ロジック: IDチェック
+                const speciesId = $('#spider-species-select').val();
+                if (!speciesId) {
+                    SetaeCore.showToast('種類をリストから選択してください', 'warning');
+                    $btn.prop('disabled', false).text(originalText);
+                    return;
+                }
                 formData.set('species_id', speciesId);
+            } else {
+                // 新規ロジック: 自由入力テキストを取得
+                const customName = $('#spider-custom-species').val();
+                if (!customName) {
+                    SetaeCore.showToast('種類名を入力してください', 'warning');
+                    $btn.prop('disabled', false).text(originalText);
+                    return;
+                }
+                formData.append('custom_species', customName);
             }
 
             // 画像ファイル (input[type=file] がフォーム外や特殊な配置の場合に備えて明示的に取得)
@@ -158,7 +202,13 @@ var SetaeUIAddSpider = (function ($) {
                     // フォームとプレビューのリセット
                     $form[0].reset();
                     $('#spider-species-search').val('');
+                    $form[0].reset();
+                    $('#spider-species-search').val('');
                     $('#spider-species-select').val('');
+                    $('#spider-custom-species').val(''); // Clear custom input
+
+                    // Reset to Tarantula default
+                    $('input[name="classification"][value="tarantula"]').prop('checked', true).trigger('change');
                     $('#preview-img-tag-add').attr('src', '');
                     $('#spider-image-preview').hide();
 

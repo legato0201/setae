@@ -100,6 +100,32 @@
         <span class="setae-close">×</span>
         <h3>新規個体登録</h3>
         <form id="form-add-spider">
+
+            <div class="setae-form-group">
+                <label>カテゴリー</label>
+                <div class="setae-radio-group" style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <label class="radio-chip active">
+                        <input type="radio" name="classification" value="tarantula" checked hidden>
+                        🕷️ Tarantula
+                    </label>
+                    <label class="radio-chip">
+                        <input type="radio" name="classification" value="scorpion" hidden>
+                        🦂 Scorpion
+                    </label>
+                    <label class="radio-chip">
+                        <input type="radio" name="classification" value="reptile" hidden>
+                        🦎 Reptile
+                    </label>
+                    <label class="radio-chip">
+                        <input type="radio" name="classification" value="plant" hidden>
+                        🌿 Plant
+                    </label>
+                    <label class="radio-chip">
+                        <input type="radio" name="classification" value="other" hidden>
+                        📦 Other
+                    </label>
+                </div>
+            </div>
             <div class="setae-form-group">
                 <label>写真 (任意)</label>
                 <div class="setae-file-upload-wrapper">
@@ -117,15 +143,19 @@
                 </div>
             </div>
             <div class="setae-form-group">
-                <label>種類 (Species)</label>
-                <div class="setae-autocomplete-wrapper" style="position:relative;">
-                    <input type="text" id="spider-species-search" class="setae-input" placeholder="学名・和名を入力..."
+                <label>種類 / 品種名</label>
+
+                <div id="wrapper-species-search" class="setae-autocomplete-wrapper" style="position:relative;">
+                    <input type="text" id="spider-species-search" class="setae-input" placeholder="学名・和名を入力 (DB検索)..."
                         autocomplete="off">
                     <input type="hidden" id="spider-species-select">
                     <div id="spider-species-suggestions"
                         style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ddd; max-height:200px; overflow-y:auto; z-index:1000; display:none; border-radius:0 0 8px 8px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
                     </div>
                 </div>
+
+                <input type="text" id="spider-custom-species" class="setae-input"
+                    placeholder="種類名を入力 (例: Monstera deliciosa)" style="display:none;">
             </div>
             <div class="setae-form-group">
                 <label>ニックネーム (任意)</label>

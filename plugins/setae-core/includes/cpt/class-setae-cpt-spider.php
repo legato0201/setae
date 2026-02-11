@@ -35,6 +35,18 @@ class Setae_CPT_Spider
 
         register_post_type('setae_spider', $args);
 
+        // ▼ 追加: 分類タクソノミーの登録 (Category)
+        register_taxonomy(
+            'setae_classification',
+            'setae_spider',
+            array(
+                'label' => 'Classification',
+                'rewrite' => array('slug' => 'classification'),
+                'hierarchical' => true, // カテゴリーのように振る舞う
+                'show_in_rest' => true,
+            )
+        );
+
         // Initialize Meta Boxes
         require_once plugin_dir_path(__FILE__) . 'class-setae-spider-meta.php';
         new Setae_Spider_Meta();
