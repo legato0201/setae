@@ -130,52 +130,124 @@ var SetaeUIList = (function ($) {
     // ==========================================
     // Smart List Item
     // ==========================================
+    // ==========================================
+    // Smart List Item (Classification Aware)
+    // ==========================================
     function renderSmartListItem(spider) {
+        // 分類を取得 (未設定なら tarantula)
+        const cls = spider.classification || 'tarantula';
         const status = spider.status || 'normal';
         const statusColor = getStatusColor(status);
         const thumb = spider.thumb || 'https://placehold.co/100x100/eee/999?text=SP';
 
         const feedRel = SetaeCore.formatRelativeDate(spider.last_feed);
         const moltRel = SetaeCore.formatRelativeDate(spider.last_molt);
-        const prey = spider.last_prey || 'Cricket';
+        const prey = spider.last_prey || '';
 
+        // 空腹/水切れ判定
         const isHungry = !spider.last_feed || (new Date() - new Date(spider.last_feed) > (14 * 24 * 60 * 60 * 1000));
         const feedClass = isHungry ? 'meta-value alert-text' : 'meta-value';
 
-        const steps = [
-            { id: 'normal', label: 'Normal' },
-            { id: 'fasting', label: 'Fasting' },
-            { id: 'pre_molt', label: 'Pre-molt' },
-            { id: 'post_molt', label: 'Post-molt' }
-        ];
-        let pipelineHtml = '<div class="setae-pipeline">';
-        steps.forEach(step => {
-            const activeClass = (status === step.id) ? 'active' : '';
-            pipelineHtml += `
-            <div class="pipeline-step ${activeClass}" data-step="${step.id}">
-                <div class="pipeline-dot"></div>
-                <div class="pipeline-label">${step.label}</div>
-            </div>`;
-        });
-        pipelineHtml += '</div>';
+        // --- 分類ごとのUI設定 ---
+        let steps = [];
+        let labelFeed = 'Feed';
+        let labelMolt = 'Molt';
+        let icon = ''; // 必要に応じて種別アイコンを表示
 
+        switch (cls) {
+            case 'plant':
+                // 植物: パイプラインなし、ラベル変更
+                steps = [];
+                labelFeed = 'Water';
+                labelMolt = 'Repot';
+                icon = '🌿';
+                break;
+
+            case 'reptile':
+                // 爬虫類: サイクル簡略化
+                steps = [
+                    { id: 'normal', label: 'Normal' },
+                    { id: 'fasting', label: 'Refused' },
+                    { id: 'pre_molt', label: 'Shedding' }
+                ];
+                labelFeed = 'Feed';
+                labelMolt = 'Shed';
+                icon = '🦎';
+                break;
+
+            case 'scorpion':
+                // サソリ: タランチュラと同じだがアイコン変更
+                steps = [
+                    { id: 'normal', label: 'Normal' },
+                    { id: 'fasting', label: 'Fasting' },
+                    { id: 'pre_molt', label: 'Pre-molt' },
+                    { id: 'post_molt', label: 'Post-molt' }
+                ];
+                icon = '🦂';
+                break;
+
+            case 'tarantula':
+            default:
+                // タランチュラ (デフォルト)
+                steps = [
+                    { id: 'normal', label: 'Normal' },
+                    { id: 'fasting', label: 'Fasting' },
+                    { id: 'pre_molt', label: 'Pre-molt' },
+                    { id: 'post_molt', label: 'Post-molt' }
+                ];
+                icon = ''; // 写真があればアイコン不要、または 🕷️
+                break;
+        }
+
+        // --- パイプラインHTML生成 ---
+        let pipelineHtml = '';
+        if (steps.length > 0) {
+            pipelineHtml = '<div class="setae-pipeline">';
+            steps.forEach(step => {
+                const activeClass = (status === step.id) ? 'active' : '';
+                pipelineHtml += `
+                <div class="pipeline-step ${activeClass}" data-step="${step.id}">
+                    <div class="pipeline-dot"></div>
+                    <div class="pipeline-label">${step.label}</div>
+                </div>`;
+            });
+            pipelineHtml += '</div>';
+        } else {
+            // ステップが無い場合（植物など）は余白調整のみ
+            pipelineHtml = '<div style="margin-bottom: 8px;"></div>';
+        }
+
+        // --- HTML出力 ---
         return `
             <div class="setae-spider-list-row" data-id="${spider.id}" data-status="${status}" data-prey="${prey}">
                 <div class="setae-swipe-bg swipe-left"></div>
                 <div class="setae-swipe-bg swipe-right"></div>
                 <div class="setae-list-content">
                     <div class="setae-status-strip" style="background-color:${statusColor}"></div>
-                    <div class="setae-avatar-container"><img src="${thumb}" class="setae-avatar-img" alt="Thumbnail"></div>
+                    
+                    <div class="setae-avatar-container">
+                        <img src="${thumb}" class="setae-avatar-img" alt="Thumbnail">
+                        ${icon ? `<span style="position:absolute; bottom:-5px; right:-5px; font-size:16px; background:#fff; border-radius:50%; padding:2px;">${icon}</span>` : ''}
+                    </div>
+
                     <div class="setae-info-column">
                         <div class="setae-scientific-name"><i>${spider.species_name || 'Unidentified'}</i></div>
                         <div class="setae-nickname-row">
                             <span class="setae-nickname">${spider.title}</span>
                         </div>
                     </div>
+
                     ${pipelineHtml}
+
                     <div class="setae-meta-column">
-                        <div class="meta-row"><span class="meta-label">Feed</span><span class="${feedClass} meta-value">${feedRel}</span></div>
-                        <div class="meta-row"><span class="meta-label">Molt</span><span class="meta-value">${moltRel}</span></div>
+                        <div class="meta-row">
+                            <span class="meta-label">${labelFeed}</span>
+                            <span class="${feedClass} meta-value">${feedRel}</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">${labelMolt}</span>
+                            <span class="meta-value">${moltRel}</span>
+                        </div>
                     </div>
                 </div>
             </div>
