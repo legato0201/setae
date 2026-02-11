@@ -41,9 +41,6 @@
             <button class="deck-pill" data-deck="pre_molt">
                 <span class="pill-icon">⚠️</span> 脱皮前 <span class="count-badge">0</span>
             </button>
-            <button class="deck-pill" data-deck="sling">
-                <span class="pill-icon">👶</span> 幼体 <span class="count-badge">0</span>
-            </button>
         </div>
     </div>
 

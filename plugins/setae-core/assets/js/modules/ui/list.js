@@ -20,7 +20,6 @@ var SetaeUIList = (function ($) {
                 return diff > (14 * 24 * 60 * 60 * 1000);
             }
             if (deck === 'pre_molt') return s.status === 'pre_molt';
-            if (deck === 'sling') return (s.size && parseFloat(s.size) < 3);
             return true;
         });
 
@@ -43,6 +42,13 @@ var SetaeUIList = (function ($) {
                     return score;
                 };
                 return getScore(b) - getScore(a);
+            }
+
+            if (sort === 'classification') {
+                const cA = (a.classification || 'tarantula');
+                const cB = (b.classification || 'tarantula');
+                if (cA !== cB) return cA.localeCompare(cB);
+                return (a.title || '').localeCompare(b.title || '');
             }
 
             if (sort === 'species_asc') {
@@ -98,17 +104,15 @@ var SetaeUIList = (function ($) {
     }
 
     function updateDeckCounts() {
-        const counts = { all: 0, hungry: 0, pre_molt: 0, sling: 0 };
+        const counts = { all: 0, hungry: 0, pre_molt: 0 };
         SetaeCore.state.cachedSpiders.forEach(s => {
             counts.all++;
             if (!s.last_feed || (new Date() - new Date(s.last_feed) > 1209600000)) counts.hungry++;
             if (s.status === 'pre_molt') counts.pre_molt++;
-            if (s.size && parseFloat(s.size) < 3) counts.sling++;
         });
         $(`.deck-pill[data-deck="all"] .count-badge`).text(counts.all);
         $(`.deck-pill[data-deck="hungry"] .count-badge`).text(counts.hungry);
         $(`.deck-pill[data-deck="pre_molt"] .count-badge`).text(counts.pre_molt);
-        $(`.deck-pill[data-deck="sling"] .count-badge`).text(counts.sling);
     }
 
     function handleDeckFilterClick() {
@@ -302,6 +306,7 @@ var SetaeUIList = (function ($) {
             <div class="sort-option${getActiveClass('hungriest')}" data-sort="hungriest">🍽 給餌が必要な順</div>
             
             <div class="sort-group-label" style="padding:4px 16px; font-size:11px; color:#888; font-weight:bold; background:#fafafa; margin:4px 0;">個体管理</div>
+            <div class="sort-option${getActiveClass('classification')}" data-sort="classification">📂 カテゴリー順</div>
             <div class="sort-option${getActiveClass('species_asc')}" data-sort="species_asc">🧬 種類・学名順</div>
             <div class="sort-option${getActiveClass('molt_oldest')}" data-sort="molt_oldest">⏳ 脱皮日が古い順</div>
             <div class="sort-option${getActiveClass('name_asc')}" data-sort="name_asc">🔤 名前・ID順 (A-Z)</div>
