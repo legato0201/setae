@@ -20,6 +20,14 @@ var SetaeUIList = (function ($) {
                 return diff > (14 * 24 * 60 * 60 * 1000);
             }
             if (deck === 'pre_molt') return s.status === 'pre_molt';
+
+            // カテゴリーフィルター処理
+            if (deck.startsWith('cat_')) {
+                const targetCat = deck.replace('cat_', ''); // 'tarantula' 等を取得
+                const myCat = s.classification || 'tarantula'; // 未設定ならtarantula扱い
+                return myCat === targetCat;
+            }
+
             return true;
         });
 
@@ -104,15 +112,45 @@ var SetaeUIList = (function ($) {
     }
 
     function updateDeckCounts() {
+        const categories = ['tarantula', 'scorpion', 'reptile', 'plant', 'other'];
         const counts = { all: 0, hungry: 0, pre_molt: 0 };
+        categories.forEach(key => counts['cat_' + key] = 0);
+
         SetaeCore.state.cachedSpiders.forEach(s => {
             counts.all++;
+
             if (!s.last_feed || (new Date() - new Date(s.last_feed) > 1209600000)) counts.hungry++;
             if (s.status === 'pre_molt') counts.pre_molt++;
+
+            const cls = s.classification || 'tarantula';
+            if (categories.includes(cls)) {
+                counts['cat_' + cls]++;
+            } else {
+                counts['cat_other']++;
+            }
         });
+
         $(`.deck-pill[data-deck="all"] .count-badge`).text(counts.all);
         $(`.deck-pill[data-deck="hungry"] .count-badge`).text(counts.hungry);
         $(`.deck-pill[data-deck="pre_molt"] .count-badge`).text(counts.pre_molt);
+
+        let activeCategoryCount = 0;
+        categories.forEach(key => {
+            if (counts['cat_' + key] > 0) activeCategoryCount++;
+        });
+
+        categories.forEach(key => {
+            const $btn = $(`.deck-pill[data-deck="cat_${key}"]`);
+            const count = counts['cat_' + key];
+
+            $btn.find('.count-badge').text(count);
+
+            if (count === 0 || activeCategoryCount <= 1) {
+                $btn.hide();
+            } else {
+                $btn.show();
+            }
+        });
     }
 
     function handleDeckFilterClick() {

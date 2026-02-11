@@ -41,6 +41,22 @@
             <button class="deck-pill" data-deck="pre_molt">
                 <span class="pill-icon">⚠️</span> 脱皮前 <span class="count-badge">0</span>
             </button>
+
+            <button class="deck-pill" data-deck="cat_tarantula" style="display:none;">
+                <span class="pill-icon">🕷️</span> クモ <span class="count-badge">0</span>
+            </button>
+            <button class="deck-pill" data-deck="cat_scorpion" style="display:none;">
+                <span class="pill-icon">🦂</span> サソリ <span class="count-badge">0</span>
+            </button>
+            <button class="deck-pill" data-deck="cat_reptile" style="display:none;">
+                <span class="pill-icon">🦎</span> 爬虫類 <span class="count-badge">0</span>
+            </button>
+            <button class="deck-pill" data-deck="cat_plant" style="display:none;">
+                <span class="pill-icon">🌿</span> 植物 <span class="count-badge">0</span>
+            </button>
+            <button class="deck-pill" data-deck="cat_other" style="display:none;">
+                <span class="pill-icon">📦</span> その他 <span class="count-badge">0</span>
+            </button>
         </div>
     </div>
 
