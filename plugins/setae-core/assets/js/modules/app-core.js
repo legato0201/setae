@@ -10,6 +10,12 @@ var SetaeCore = (function ($) {
         currentViewMode: localStorage.getItem('setae_my_view') || 'list',
         currentSort: localStorage.getItem('setae_my_sort') || 'hungriest',
         currentSearch: localStorage.getItem('setae_my_search') || '',
+
+        // Encyclopedia State
+        encSearch: localStorage.getItem('setae_enc_search') || '',
+        encFilter: localStorage.getItem('setae_enc_filter') || 'all',
+        encSort: localStorage.getItem('setae_enc_sort') || 'name',
+
         feedTypes: (typeof SetaeSettings !== 'undefined' && SetaeSettings.feed_types) ? SetaeSettings.feed_types : ['Cricket', 'Dubia']
     };
 
