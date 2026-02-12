@@ -214,10 +214,11 @@ var SetaeUIList = (function ($) {
 
             case 'reptile':
                 // 爬虫類: サイクル簡略化
+                // 修正: ラベルを日本語化 (Refused -> 拒食, Shedding -> 脱皮前)
                 steps = [
-                    { id: 'normal', label: 'Normal' },
-                    { id: 'fasting', label: 'Refused' },
-                    { id: 'pre_molt', label: 'Shedding' }
+                    { id: 'normal', label: '通常' },
+                    { id: 'fasting', label: '拒食' },
+                    { id: 'pre_molt', label: '脱皮前' }
                 ];
                 labelFeed = 'Feed';
                 labelMolt = 'Shed';
@@ -226,11 +227,12 @@ var SetaeUIList = (function ($) {
 
             case 'scorpion':
                 // サソリ: タランチュラと同じだがアイコン変更
+                // 修正: ラベルを日本語化
                 steps = [
-                    { id: 'normal', label: 'Normal' },
-                    { id: 'fasting', label: 'Fasting' },
-                    { id: 'pre_molt', label: 'Pre-molt' },
-                    { id: 'post_molt', label: 'Post-molt' }
+                    { id: 'normal', label: '通常' },
+                    { id: 'fasting', label: '拒食' },
+                    { id: 'pre_molt', label: '脱皮前' },
+                    { id: 'post_molt', label: '脱皮後' }
                 ];
                 icon = '🦂';
                 break;
@@ -238,11 +240,12 @@ var SetaeUIList = (function ($) {
             case 'tarantula':
             default:
                 // タランチュラ (デフォルト)
+                // 修正: ラベルを日本語化
                 steps = [
-                    { id: 'normal', label: 'Normal' },
-                    { id: 'fasting', label: 'Fasting' },
-                    { id: 'pre_molt', label: 'Pre-molt' },
-                    { id: 'post_molt', label: 'Post-molt' }
+                    { id: 'normal', label: '通常' },
+                    { id: 'fasting', label: '拒食' },
+                    { id: 'pre_molt', label: '脱皮前' },
+                    { id: 'post_molt', label: '脱皮後' }
                 ];
                 icon = ''; // 写真があればアイコン不要、または 🕷️
                 break;
