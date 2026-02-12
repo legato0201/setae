@@ -69,12 +69,25 @@ class Setae_CPT_Suggestion
         echo '<p>対象種ID: <a href="' . esc_url($target_link) . '" target="_blank">#' . esc_html($target_id) . '</a></p>';
         echo '<p>ステータスを<strong>「公開 (Publish)」</strong>に変更して更新すると、提案内容が対象種に自動反映されます。</p>';
 
-        // 提案内容のプレビュー
-        $fields = ['_suggested_common_name_ja', '_suggested_lifestyle', '_suggested_difficulty'];
-        foreach ($fields as $f) {
-            $val = get_post_meta($post->ID, $f, true);
+        echo '<hr>';
+        $fields = [
+            '_suggested_common_name_ja' => '和名',
+            '_suggested_lifestyle' => 'スタイル',
+            '_suggested_temperature' => '温度',
+            '_suggested_humidity' => '湿度', // ★追加
+            '_suggested_lifespan' => '寿命',
+            '_suggested_size' => 'サイズ',
+        ];
+        foreach ($fields as $meta_key => $label) {
+            $val = get_post_meta($post->ID, $meta_key, true);
             if ($val)
-                echo '<div><strong>' . str_replace('_suggested_', '', $f) . ':</strong> ' . esc_html($val) . '</div>';
+                echo '<div><strong>' . $label . ':</strong> ' . esc_html($val) . '</div>';
+        }
+
+        // 性格の表示
+        $temp_slugs = get_post_meta($post->ID, '_suggested_temperament_slugs', true);
+        if ($temp_slugs) {
+            echo '<div><strong>性格Slug:</strong> ' . esc_html($temp_slugs) . '</div>';
         }
     }
 
@@ -91,8 +104,6 @@ class Setae_CPT_Suggestion
         if (get_post_status($post_id) !== 'publish')
             return;
 
-        // 既に反映済みかチェックするフラグがあれば防止できるが、ここでは簡易的に毎回上書きする仕様とします
-
         $target_id = get_post_meta($post_id, '_target_species_id', true);
         if (!$target_id)
             return;
@@ -102,8 +113,8 @@ class Setae_CPT_Suggestion
         // 1. テキストメタデータ
         $map = [
             '_suggested_common_name_ja' => '_setae_common_name_ja',
-            '_suggested_difficulty' => '_setae_difficulty',
             '_suggested_temperature' => '_setae_temperature',
+            '_suggested_humidity' => '_setae_humidity', // ★追加
             '_suggested_lifespan' => '_setae_lifespan',
             '_suggested_size' => '_setae_size',
         ];
@@ -114,7 +125,17 @@ class Setae_CPT_Suggestion
                 update_post_meta($target_id, $dest, $val);
         }
 
-        // 2. タクソノミー (Lifestyle)
+        // 2. タクソノミー (性格: Multi)
+        $temp_slugs_str = get_post_meta($post_id, '_suggested_temperament_slugs', true);
+        if ($temp_slugs_str) {
+            $slugs = explode(',', $temp_slugs_str);
+            // スラッグからIDに変換せずとも、wp_set_object_termsはスラッグで指定可能
+            // 第3引数は taxonomy名, 第4引数 true で「追加(append)」、falseで「上書き」
+            // ここでは「上書き」として設定します。
+            wp_set_object_terms($target_id, $slugs, 'setae_temperament', false);
+        }
+
+        // 3. タクソノミー (Lifestyle: Single)
         $lifestyle = get_post_meta($post_id, '_suggested_lifestyle', true);
         if ($lifestyle) {
             // スラッグからタームIDを取得してセット (termが存在しない場合は作成が必要だが、通常は固定)
@@ -124,16 +145,17 @@ class Setae_CPT_Suggestion
             }
         }
 
-        // 3. 画像 (アイキャッチ)
+        // 4. 画像 (アイキャッチ)
         if (has_post_thumbnail($post_id)) {
             $thumb_id = get_post_thumbnail_id($post_id);
             set_post_thumbnail($target_id, $thumb_id);
         }
 
-        // 4. 説明文 (本文) -> 追記する形にするか、上書きするか。今回は「追記」にします。
+        // 5. 説明文 (本文) -> 追記
         $suggestion_content = get_post_field('post_content', $post_id);
         if (!empty($suggestion_content)) {
             $original_content = get_post_field('post_content', $target_id);
+            // 重複追記を避けるロジックなどは必要に応じて追加
             $new_content = $original_content . "\n\n\n" . $suggestion_content;
             wp_update_post(array(
                 'ID' => $target_id,

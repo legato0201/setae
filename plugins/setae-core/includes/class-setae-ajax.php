@@ -114,65 +114,62 @@ class Setae_Ajax
     }
     public function handle_submit_species_edit()
     {
-        // 1. 基本バリデーション
+        // ... (冒頭のIDチェック等は同じ) ...
         $species_id = isset($_POST['species_id']) ? intval($_POST['species_id']) : 0;
-        if (!$species_id) {
+        if (!$species_id)
             wp_send_json_error('対象の種が不明です。');
-        }
 
-        // 投稿データの作成
+        // タイトルの生成
         $target_species = get_post($species_id);
-        $title = '修正提案: ' . $target_species->post_title;
+        $req_name = isset($_POST['species_name']) ? sanitize_text_field($_POST['species_name']) : $target_species->post_title;
+
+        $title = '修正提案: ' . $req_name;
         if (is_user_logged_in()) {
-            $user = wp_get_current_user();
-            $title .= ' (by ' . $user->display_name . ')';
-        } else {
-            $title .= ' (by Guest)';
+            $title .= ' (by ' . wp_get_current_user()->display_name . ')';
         }
 
         $post_data = array(
             'post_type' => 'setae_suggestion',
             'post_title' => $title,
-            'post_content' => isset($_POST['suggested_description']) ? sanitize_textarea_field($_POST['suggested_description']) : '',
-            'post_status' => 'pending', // 承認待ち
+            'post_content' => sanitize_textarea_field($_POST['suggested_description']),
+            'post_status' => 'pending',
         );
 
         $suggestion_id = wp_insert_post($post_data);
-
-        if (is_wp_error($suggestion_id)) {
+        if (is_wp_error($suggestion_id))
             wp_send_json_error('保存に失敗しました。');
-        }
 
-        // --- メタデータの保存 ---
+        // メタデータの保存
         update_post_meta($suggestion_id, '_target_species_id', $species_id);
 
-        // 追加フィールドの保存
         $fields = [
             'suggested_common_name_ja',
             'suggested_lifestyle',
-            'suggested_difficulty',
             'suggested_temperature',
-            'suggested_temperament',
+            'suggested_humidity', // ★追加
             'suggested_lifespan',
             'suggested_size'
         ];
 
         foreach ($fields as $field) {
-            if (!empty($_POST[$field])) {
+            if (isset($_POST[$field])) {
                 update_post_meta($suggestion_id, '_' . $field, sanitize_text_field($_POST[$field]));
             }
         }
 
-        // --- 画像処理 ---
+        // 性格 (カンマ区切りで来るので、そのまま保存するか配列にするか)
+        if (isset($_POST['suggested_temperament_slugs'])) {
+            // カンマ区切り文字列として保存 (承認時に展開)
+            update_post_meta($suggestion_id, '_suggested_temperament_slugs', sanitize_text_field($_POST['suggested_temperament_slugs']));
+        }
+
+        // 画像処理 (変更なし)
         if (!empty($_FILES['suggested_image']['name'])) {
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             require_once(ABSPATH . 'wp-admin/includes/file.php');
             require_once(ABSPATH . 'wp-admin/includes/media.php');
-
             $attachment_id = media_handle_upload('suggested_image', $suggestion_id);
-
             if (!is_wp_error($attachment_id)) {
-                // アイキャッチ画像として設定
                 set_post_thumbnail($suggestion_id, $attachment_id);
             }
         }

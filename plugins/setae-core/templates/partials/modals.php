@@ -49,108 +49,200 @@
 </div>
 
 <!-- Edit Suggestion Modal -->
+<?php
+// 性格タームの取得 (モーダル内で選択肢として表示するため)
+$temperaments = get_terms(array(
+    'taxonomy' => 'setae_temperament',
+    'hide_empty' => false,
+));
+?>
+
 <div id="setae-species-edit-modal" class="setae-modal" style="display: none;">
-    <div class="setae-modal-content" style="max-width: 600px; padding: 0; border-radius: 8px; overflow:hidden;">
+    <div class="setae-modal-content"
+        style="max-width: 650px; width:90%; padding: 0; border-radius: 12px; overflow:hidden; display:flex; flex-direction:column; max-height:90vh;">
+
         <div
-            style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0; font-size:16px; font-weight:600; color:#333;">図鑑情報の修正・提供</h3>
+            style="background: #fff; padding: 15px 20px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+            <div>
+                <h3 style="margin:0; font-size:18px; font-weight:700; color:#333;">修正・情報提供</h3>
+                <p id="edit-req-species-name-display"
+                    style="margin:2px 0 0 0; font-size:12px; font-style:italic; color:#888;">Species Name</p>
+            </div>
             <span id="close-species-edit-modal" class="setae-close"
-                style="font-size:24px; line-height:1; cursor:pointer;">&times;</span>
+                style="font-size:24px; line-height:1; cursor:pointer; color:#999;">&times;</span>
         </div>
 
-        <div style="padding: 20px;">
-            <p
-                style="font-size:13px; color:#666; margin-bottom:20px; background:#eef2f5; padding:10px; border-radius:4px; border-left:4px solid #3498db;">
-                <span style="font-weight:bold;">📝 編集提案機能</span><br>
-                より正確な情報や画像の提供にご協力ください。管理者が承認すると図鑑に反映されます。
-            </p>
+        <div style="padding: 20px; overflow-y: auto; background:#f9f9f9; flex-grow:1;">
 
             <form id="setae-species-edit-form" enctype="multipart/form-data">
                 <input type="hidden" id="edit-req-species-id" name="species_id" value="">
+                <input type="hidden" id="edit-req-species-name" name="species_name" value="">
                 <input type="hidden" name="action" value="setae_submit_species_edit">
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="setae-form-group">
-                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">和名 (Japanese
-                            Name)</label>
-                        <input type="text" name="suggested_common_name_ja" class="setae-input"
-                            placeholder="例: メキシカンレッドニー"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <div class="setae-form-section"
+                    style="background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; text-align:center;">
+                    <label
+                        style="display:block; font-size:13px; font-weight:bold; margin-bottom:10px; text-align:left;">画像提供
+                        (Best Shot)</label>
+
+                    <div id="image-preview-container"
+                        style="width:100%; height:200px; background:#f0f2f5; border:2px dashed #dce0e6; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin-bottom:10px;">
+                        <img id="edit-image-preview" src=""
+                            style="width:100%; height:100%; object-fit:cover; display:none;">
+                        <div id="edit-image-placeholder" style="color:#adb5bd; text-align:center;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <p style="font-size:12px; margin:5px 0 0;">No Image Selected</p>
+                        </div>
                     </div>
-                    <div class="setae-form-group">
-                        <label
-                            style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">ライフスタイル</label>
-                        <select name="suggested_lifestyle" class="setae-select"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                            <option value="">選択してください</option>
-                            <option value="terrestrial">地表性 (Terrestrial)</option>
-                            <option value="arboreal">樹上性 (Arboreal)</option>
-                            <option value="fossorial">地中性 (Fossorial)</option>
-                        </select>
+
+                    <input type="file" name="suggested_image" id="suggested-image-input" accept="image/*"
+                        style="display:none;">
+                    <label for="suggested-image-input" class="setae-btn-outline"
+                        style="display:inline-block; padding:8px 20px; border:1px solid #333; border-radius:20px; font-size:12px; font-weight:bold; color:#333; cursor:pointer; background:#fff; transition:all 0.2s;">
+                        📷 写真を選択 (Choose File)
+                    </label>
+                    <p style="font-size:10px; color:#999; margin-top:8px;">※ご自身で撮影された写真に限ります</p>
+                </div>
+
+                <div class="setae-form-section"
+                    style="background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px;">
+                    <label
+                        style="display:block; font-size:13px; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">基本データ</label>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label class="setae-label-mini">和名</label>
+                            <input type="text" name="suggested_common_name_ja" class="setae-input-std"
+                                placeholder="例: メキシカンレッドニー">
+                        </div>
+                        <div>
+                            <label class="setae-label-mini">ライフスタイル</label>
+                            <select name="suggested_lifestyle" class="setae-input-std">
+                                <option value="">選択...</option>
+                                <option value="terrestrial">地表性 (Terrestrial)</option>
+                                <option value="arboreal">樹上性 (Arboreal)</option>
+                                <option value="fossorial">地中性 (Fossorial)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label class="setae-label-mini">適温 (Temp)</label>
+                            <input type="text" name="suggested_temperature" class="setae-input-std"
+                                placeholder="例: 24-28℃">
+                        </div>
+                        <div>
+                            <label class="setae-label-mini">湿度 (Humidity)</label> <input type="text"
+                                name="suggested_humidity" class="setae-input-std" placeholder="例: 60-70%">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label class="setae-label-mini">性格 (Temperament)</label>
+                        <div id="temperament-selector-trigger"
+                            style="border:1px solid #ddd; padding:8px; border-radius:4px; background:#fff; cursor:pointer; font-size:13px; min-height:38px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                            <span style="color:#999;">タップして選択してください...</span>
+                        </div>
+                        <input type="hidden" name="suggested_temperament_slugs" id="suggested-temperament-input">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label class="setae-label-mini">寿命 (Lifespan)</label>
+                            <input type="text" name="suggested_lifespan" class="setae-input-std"
+                                placeholder="例: 15-20 years">
+                        </div>
+                        <div>
+                            <label class="setae-label-mini">最大サイズ (Legspan)</label>
+                            <input type="text" name="suggested_size" class="setae-input-std" placeholder="例: 15cm">
+                        </div>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="setae-form-group">
-                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">難易度</label>
-                        <select name="suggested_difficulty"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                            <option value="">未選択</option>
-                            <option value="beginner">初心者 (Beginner)</option>
-                            <option value="intermediate">中級者 (Intermediate)</option>
-                            <option value="expert">上級者 (Expert)</option>
-                        </select>
-                    </div>
-                    <div class="setae-form-group">
-                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">適温
-                            (Temp)</label>
-                        <input type="text" name="suggested_temperature" placeholder="例: 24-28℃"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                    </div>
-                    <div class="setae-form-group">
-                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">性格
-                            (Temperament)</label>
-                        <input type="text" name="suggested_temperament" placeholder="例: 荒い/温厚"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                    </div>
+                <div class="setae-form-section"
+                    style="background:#fff; padding:15px; border-radius:8px; border:1px solid #eee;">
+                    <label class="setae-label-mini">特徴・補足情報</label>
+                    <textarea name="suggested_description" rows="4" class="setae-input-std" style="resize:vertical;"
+                        placeholder="詳細な特徴や飼育のポイントがあれば追記してください..."></textarea>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="setae-form-group">
-                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">寿命
-                            (Lifespan)</label>
-                        <input type="text" name="suggested_lifespan" placeholder="例: 15-20 years"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                    </div>
-                    <div class="setae-form-group">
-                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">最大サイズ
-                            (Legspan)</label>
-                        <input type="text" name="suggested_size" placeholder="例: 15cm"
-                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                    </div>
-                </div>
-
-                <div class="setae-form-group" style="margin-bottom: 15px;">
-                    <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">説明文・特徴の追記</label>
-                    <textarea name="suggested_description" rows="4"
-                        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; resize:vertical;"
-                        placeholder="生息地、性格、飼育のコツなどの情報..."></textarea>
-                </div>
-
-                <div class="setae-form-group" style="margin-bottom: 20px;">
-                    <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">画像提供 (任意)</label>
-                    <input type="file" name="suggested_image" accept="image/*" style="font-size:12px;">
-                    <p style="font-size:10px; color:#999; margin-top:4px;">※ご自身で撮影された写真に限ります。</p>
-                </div>
-
-                <div class="setae-form-actions" style="text-align:right; border-top:1px solid #eee; padding-top:15px;">
+                <div style="height:20px;"></div>
+                <div class="setae-form-actions" style="text-align:center;">
                     <button type="submit" class="setae-btn-primary"
-                        style="background:#333; color:#fff; border:none; padding:10px 24px; border-radius:4px; font-weight:bold; cursor:pointer;">管理者に提案を送信</button>
+                        style="width:100%; padding:12px; font-size:16px; font-weight:bold; border-radius:8px;">提案を送信する</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<div id="setae-temperament-dialog"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100002; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div
+        style="background:#fff; width:300px; max-height:80vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+        <div style="padding:15px; border-bottom:1px solid #eee; font-weight:bold; text-align:center;">性格を選択 (複数可)</div>
+        <div style="padding:10px; overflow-y:auto; flex-grow:1;">
+            <?php if (!empty($temperaments) && !is_wp_error($temperaments)): ?>
+                <?php foreach ($temperaments as $term): ?>
+                    <label
+                        style="display:flex; align-items:center; padding:10px; border-bottom:1px solid #f5f5f5; cursor:pointer;">
+                        <input type="checkbox" class="js-temp-checkbox" value="<?php echo esc_attr($term->slug); ?>"
+                            data-label="<?php echo esc_attr($term->name); ?>" style="transform:scale(1.2); margin-right:10px;">
+                        <span style="font-size:14px;"><?php echo esc_html($term->name); ?></span>
+                    </label>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p style="padding:10px; font-size:12px; color:#999;">登録された性格がありません。</p>
+            <?php endif; ?>
+        </div>
+        <div style="padding:10px; border-top:1px solid #eee; text-align:center; background:#f9f9f9;">
+            <button type="button" id="btn-confirm-temperament"
+                style="background:#333; color:#fff; border:none; padding:8px 24px; border-radius:20px; cursor:pointer;">決定</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .setae-label-mini {
+        display: block;
+        font-size: 11px;
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 4px;
+    }
+
+    .setae-input-std {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    .setae-input-std:focus {
+        border-color: #333;
+        outline: none;
+    }
+
+    /* チップスタイル (選択された性格表示用) */
+    .temp-chip {
+        display: inline-block;
+        font-size: 11px;
+        background: #eee;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-right: 4px;
+        margin-bottom: 2px;
+    }
+</style>
 
 
 <!-- Edit Spider Modal -->

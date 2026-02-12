@@ -59,37 +59,100 @@ jQuery(document).ready(function ($) {
 
     // ▼▼▼ 追加機能: 編集提案モーダル (ここに追加) ▼▼▼
 
-    // 1. モーダルを開く
+    // ▼▼▼ 修正提案モーダル関連ロジック ▼▼▼
+
+    // 1. モーダルを開く & 学名セット
     $('#btn-open-edit-modal').on('click', function (e) {
         e.preventDefault();
 
-        // ボタンにセットされた data-id を取得
         var speciesId = $(this).data('id');
+        // 学名 (タイトル) を取得 (詳細画面のIDに依存)
+        var speciesName = $('#enc-detail-title').text() || 'Unknown Species';
 
-        // フォールバック: グローバル変数などから取得 (必要に応じて)
         if (!speciesId && typeof currentSpeciesId !== 'undefined') {
             speciesId = currentSpeciesId;
         }
 
         if (!speciesId) {
-            console.warn('Species ID not found on button. Please ensure data-id is set when opening the detail view.');
-            // IDがない場合でも、とりあえずモーダルは開くがIDは空になる（ユーザーに入力させる等の運用カバーも可）
+            console.warn('No Species ID');
+            return;
         }
 
+        // フォームへのセット
         $('#edit-req-species-id').val(speciesId);
+        $('#edit-req-species-name').val(speciesName); // 送信用
+        $('#edit-req-species-name-display').text(speciesName); // 表示用
+
         $('#setae-species-edit-modal').fadeIn(200).css('display', 'flex');
     });
 
-    // 2. モーダルを閉じる
+    // 2. 閉じる
     $('#close-species-edit-modal').on('click', function () {
         $('#setae-species-edit-modal').fadeOut(200);
     });
 
-    // 3. フォーム送信処理
+    // 3. 画像プレビュー機能
+    $('#suggested-image-input').on('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#edit-image-preview').attr('src', e.target.result).show();
+                $('#edit-image-placeholder').hide();
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 4. 性格選択ダイアログの制御
+    const $tempTrigger = $('#temperament-selector-trigger');
+    const $tempDialog = $('#setae-temperament-dialog');
+    const $tempInput = $('#suggested-temperament-input'); // hidden
+
+    // ダイアログを開く
+    $tempTrigger.on('click', function () {
+        // 現在の選択状態を反映 (inputの値からチェックボックスへ)
+        const currentVals = $tempInput.val().split(',');
+        $('.js-temp-checkbox').prop('checked', false);
+        currentVals.forEach(slug => {
+            if (slug) $(`.js-temp-checkbox[value="${slug}"]`).prop('checked', true);
+        });
+        $tempDialog.css('display', 'flex').fadeIn(100);
+    });
+
+    // 決定ボタン
+    $('#btn-confirm-temperament').on('click', function () {
+        const selected = [];
+        const labels = [];
+
+        $('.js-temp-checkbox:checked').each(function () {
+            selected.push($(this).val());
+            labels.push($(this).data('label'));
+        });
+
+        // 隠しフィールドにセット
+        $tempInput.val(selected.join(','));
+
+        // 表示エリアを更新
+        if (labels.length > 0) {
+            const html = labels.map(lbl => `<span class="temp-chip">${lbl}</span>`).join('');
+            $tempTrigger.html(html);
+        } else {
+            $tempTrigger.html('<span style="color:#999;">タップして選択してください...</span>');
+        }
+
+        $tempDialog.fadeOut(100);
+    });
+
+    // ダイアログ外クリックで閉じる (簡易実装)
+    $tempDialog.on('click', function (e) {
+        if (e.target === this) $(this).fadeOut(100);
+    });
+
+    // 5. 送信処理 (Ajax)
     $('#setae-species-edit-form').on('submit', function (e) {
         e.preventDefault();
         var $btn = $(this).find('button[type="submit"]');
-        var originalText = $btn.text();
         $btn.text('送信中...').prop('disabled', true);
 
         var formData = new FormData(this);
@@ -103,18 +166,22 @@ jQuery(document).ready(function ($) {
             contentType: false,
             success: function (response) {
                 if (response.success) {
-                    alert('提案を送信しました。管理者の確認後に反映されます。');
+                    alert('提案を送信しました。ありがとうございます！');
                     $('#setae-species-edit-modal').fadeOut(200);
                     $('#setae-species-edit-form')[0].reset();
+                    // プレビューなどをリセット
+                    $('#edit-image-preview').hide();
+                    $('#edit-image-placeholder').show();
+                    $('#temperament-selector-trigger').html('<span style="color:#999;">タップして選択してください...</span>');
                 } else {
-                    alert('エラー: ' + (response.data || '送信できませんでした'));
+                    alert('エラー: ' + (response.data || 'Error'));
                 }
             },
             error: function () {
                 alert('通信エラーが発生しました。');
             },
             complete: function () {
-                $btn.text(originalText).prop('disabled', false);
+                $btn.text('提案を送信する').prop('disabled', false);
             }
         });
     });
