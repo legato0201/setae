@@ -6,7 +6,7 @@
 ?>
 <div id="section-enc" class="setae-section" style="display: none;">
 
-    <div class="setae-toolbar-container sticky-shadow" style="position:sticky; top:0; z-index:90; background:#f4f7f6; padding:10px 15px; margin: -15px -15px 15px -15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <div class="setae-toolbar-container sticky-shadow" style="position:sticky; top:0; z-index:90; background:#f4f7f6; padding:10px 15px; margin: -16px -16px 16px -16px; width: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
         <div class="setae-toolbar-header" style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
             
             <div class="setae-search-wrapper" style="position:relative; flex-grow:1;">
