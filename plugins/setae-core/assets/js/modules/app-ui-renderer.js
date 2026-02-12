@@ -167,6 +167,9 @@ var SetaeUI = (function ($) {
             $('#enc-detail-temperament').text(data.temperament || 'Unknown');
             $('#enc-detail-keeping').html(`🔥 ${data.keeping_count} Keeping`);
 
+            // Set ID for Edit Suggestion Button
+            $('#btn-open-edit-modal').data('id', id);
+
             if (data.thumb) {
                 $('#enc-detail-image').attr('src', data.thumb).show();
             } else {

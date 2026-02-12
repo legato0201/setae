@@ -48,6 +48,50 @@
     </div>
 </div>
 
+<!-- Edit Suggestion Modal -->
+<div id="setae-species-edit-modal" class="setae-modal" style="display: none;">
+    <div class="setae-modal-content">
+        <span id="close-species-edit-modal" class="setae-close">&times;</span>
+        <h3>図鑑情報の修正・提供</h3>
+        <p style="font-size:12px; color:#666; margin-bottom:15px;">
+            より正確な情報や、より良い画像の提供にご協力ください。<br>
+            送信された内容は管理者が確認後、反映されます。
+        </p>
+
+        <form id="setae-species-edit-form" enctype="multipart/form-data">
+            <input type="hidden" id="edit-req-species-id" name="species_id" value="">
+            <input type="hidden" name="action" value="setae_submit_species_edit">
+
+            <div class="setae-form-group">
+                <label>画像提供 (任意)</label>
+                <input type="file" name="suggested_image" accept="image/*">
+                <p style="font-size:10px; color:#999;">※ご自身で撮影された写真に限ります。</p>
+            </div>
+
+            <div class="setae-form-group">
+                <label>説明文・特徴の追記</label>
+                <textarea name="suggested_description" rows="5" placeholder="生息地、性格、飼育のコツなどの情報..."></textarea>
+            </div>
+
+            <div class="setae-form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div>
+                    <label>寿命 (Lifespan)</label>
+                    <input type="text" name="suggested_lifespan" placeholder="例: 15-20 years">
+                </div>
+                <div>
+                    <label>最大サイズ (Legspan)</label>
+                    <input type="text" name="suggested_size" placeholder="例: 15cm">
+                </div>
+            </div>
+
+            <div class="setae-form-actions">
+                <button type="submit" class="setae-btn-primary">管理者に提案を送信</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 <!-- Edit Spider Modal -->
 <!-- Edit Spider Modal -->
 <div id="modal-edit-spider" class="setae-modal" style="display:none;">

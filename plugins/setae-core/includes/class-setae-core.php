@@ -102,8 +102,11 @@ class Setae_Core
         $this->loader->add_action('init', $topic, 'register');
 
         $log = new Setae_CPT_Log();
-        $log = new Setae_CPT_Log();
         $this->loader->add_action('init', $log, 'register');
+
+        // Register Suggestion CPT (Inline for now, or move to separate class later)
+        // Register Suggestion CPT
+        $this->loader->add_action('init', $this, 'register_suggestion_cpt');
 
         // Dashboard & Assets
         $plugin_public = new Setae_Dashboard($this->get_plugin_name(), $this->get_version());
@@ -258,6 +261,17 @@ class Setae_Core
     public function get_version()
     {
         return $this->version;
+    }
+
+    public function register_suggestion_cpt()
+    {
+        register_post_type('setae_suggestion', array(
+            'labels' => array('name' => '修正提案', 'singular_name' => '修正提案'),
+            'public' => false,  // 一般公開はしない
+            'show_ui' => true,  // 管理画面には表示
+            'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
+            'menu_icon' => 'dashicons-lightbulb',
+        ));
     }
 
 }

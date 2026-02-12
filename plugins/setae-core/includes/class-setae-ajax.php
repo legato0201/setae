@@ -9,6 +9,9 @@ class Setae_Ajax
         // But for explicit feature addition requested:
         add_action('wp_ajax_nopriv_setae_register_user', array($this, 'handle_register_user'));
         add_action('wp_ajax_setae_register_user', array($this, 'handle_register_user'));
+
+        add_action('wp_ajax_setae_submit_species_edit', array($this, 'handle_submit_species_edit'));
+        add_action('wp_ajax_nopriv_setae_submit_species_edit', array($this, 'handle_submit_species_edit')); // ログイン不要にする場合
     }
 
     public function handle_register_user()
@@ -108,5 +111,63 @@ class Setae_Ajax
         } else {
             wp_send_json_success(array('message' => 'Profile updated'));
         }
+    }
+    public function handle_submit_species_edit()
+    {
+        // 1. 基本バリデーション
+        $species_id = isset($_POST['species_id']) ? intval($_POST['species_id']) : 0;
+        if (!$species_id) {
+            wp_send_json_error('対象の種が不明です。');
+        }
+
+        $description = isset($_POST['suggested_description']) ? sanitize_textarea_field($_POST['suggested_description']) : '';
+        $lifespan = isset($_POST['suggested_lifespan']) ? sanitize_text_field($_POST['suggested_lifespan']) : '';
+        $size = isset($_POST['suggested_size']) ? sanitize_text_field($_POST['suggested_size']) : '';
+
+        // 内容が空ならエラー
+        if (empty($description) && empty($lifespan) && empty($size) && empty($_FILES['suggested_image']['name'])) {
+            wp_send_json_error('提案内容が入力されていません。');
+        }
+
+        // 2. 提案用カスタム投稿 (setae_suggestion) として保存
+
+        $target_species = get_post($species_id);
+        $title = '修正提案: ' . $target_species->post_title . ' (by ' . (is_user_logged_in() ? wp_get_current_user()->display_name : 'Guest') . ')';
+
+        $post_data = array(
+            'post_type' => 'setae_suggestion',
+            'post_title' => $title,
+            'post_content' => $description, // 本文に提案テキストを入れる
+            'post_status' => 'pending',    // 「レビュー待ち」状態
+        );
+
+        $suggestion_id = wp_insert_post($post_data);
+
+        if (is_wp_error($suggestion_id)) {
+            wp_send_json_error('保存に失敗しました。');
+        }
+
+        // 3. メタデータの保存
+        update_post_meta($suggestion_id, '_target_species_id', $species_id);
+        if ($lifespan)
+            update_post_meta($suggestion_id, '_suggested_lifespan', $lifespan);
+        if ($size)
+            update_post_meta($suggestion_id, '_suggested_size', $size);
+
+        // 4. 画像アップロード処理
+        if (!empty($_FILES['suggested_image']['name'])) {
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+            $attachment_id = media_handle_upload('suggested_image', $suggestion_id);
+
+            if (!is_wp_error($attachment_id)) {
+                // アイキャッチ画像として設定
+                set_post_thumbnail($suggestion_id, $attachment_id);
+            }
+        }
+
+        wp_send_json_success('提案を受け付けました');
     }
 }
