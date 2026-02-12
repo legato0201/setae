@@ -23,8 +23,15 @@ var SetaeUIList = (function ($) {
 
             // カテゴリーフィルター処理
             if (deck.startsWith('cat_')) {
-                const targetCat = deck.replace('cat_', ''); // 'tarantula' 等を取得
+                const targetCat = deck.replace('cat_', '');
                 const myCat = s.classification || 'tarantula'; // 未設定ならtarantula扱い
+
+                // 'other'を選択した場合は、明示的な'other'に加えて定義外の値も表示する
+                if (targetCat === 'other') {
+                    const knownCats = ['tarantula', 'scorpion', 'reptile', 'plant'];
+                    return myCat === 'other' || !knownCats.includes(myCat);
+                }
+
                 return myCat === targetCat;
             }
 
