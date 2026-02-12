@@ -88,16 +88,24 @@ jQuery(document).ready(function ($) {
         var currentCommonName = $('#enc-detail-common-name').text();
         if (currentCommonName) $('input[name="suggested_common_name_ja"]').val(currentCommonName);
 
-        // ライフスタイル
-        var currentLifestyle = $('#enc-detail-lifestyle').data('value');
-        if (!currentLifestyle) {
-            // テキストから簡易判定 (Terrestrial, Arboreal...)
-            var text = $('#enc-detail-lifestyle').text().toLowerCase();
-            if (text.includes('terrestrial')) currentLifestyle = 'terrestrial';
-            else if (text.includes('arboreal')) currentLifestyle = 'arboreal';
-            else if (text.includes('fossorial')) currentLifestyle = 'fossorial';
+        // --- 修正箇所: ライフスタイルの判定ロジック ---
+        var lifestyleVal = '';
+        // 詳細画面の表示テキストを取得 (例: "樹上性", "Arboreal" など)
+        var lsText = $('#enc-detail-lifestyle').text().trim();
+
+        // 日本語または英語が含まれているか判定して値を決定
+        if (lsText.indexOf('地表') > -1 || lsText.toLowerCase().indexOf('terrestrial') > -1) {
+            lifestyleVal = '地表性';
+        } else if (lsText.indexOf('樹上') > -1 || lsText.toLowerCase().indexOf('arboreal') > -1) {
+            lifestyleVal = '樹上性';
+        } else if (lsText.indexOf('地中') > -1 || lsText.toLowerCase().indexOf('fossorial') > -1) {
+            lifestyleVal = '地中性';
         }
-        if (currentLifestyle) $('select[name="suggested_lifestyle"]').val(currentLifestyle);
+
+        // セレクトボックスに値をセット
+        if (lifestyleVal) {
+            $('select[name="suggested_lifestyle"]').val(lifestyleVal);
+        }
 
         // 温度 (Temp)
         var currentTemp = $('#enc-detail-temp').text();

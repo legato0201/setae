@@ -121,12 +121,12 @@ $temperaments = get_terms(array(
                                 placeholder="例: メキシカンレッドニー">
                         </div>
                         <div>
-                            <label class="setae-label-mini">ライフスタイル</label>
+                            <label class="setae-label-mini">スタイル (Lifestyle)</label>
                             <select name="suggested_lifestyle" class="setae-input-std">
                                 <option value="">選択...</option>
-                                <option value="terrestrial">地表性 (Terrestrial)</option>
-                                <option value="arboreal">樹上性 (Arboreal)</option>
-                                <option value="fossorial">地中性 (Fossorial)</option>
+                                <option value="地表性">地表性 (Terrestrial)</option>
+                                <option value="樹上性">樹上性 (Arboreal)</option>
+                                <option value="地中性">地中性 (Fossorial)</option>
                             </select>
                         </div>
                     </div>
