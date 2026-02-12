@@ -128,26 +128,25 @@ var SetaeUIActions = (function ($) {
         const newStatus = actionConfig.next;
         const preyType = $row.data('prey') || 'Cricket';
 
-        // Check classification
-        // Robust check: data attribute might be missing, so check global state
+        // Check classification logic
         let isPlant = false;
         if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
+            // IDから状態を検索（HTMLにdata-classificationがない場合の対策）
             const spider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
             if (spider && spider.classification === 'plant') isPlant = true;
         }
-        // Fallback to data attribute
         if (!isPlant && $row.data('classification') === 'plant') isPlant = true;
 
         if (isPlant) {
-            // Plant Actions: Open Modal instead of Quick Action
-            // Direction 'right' (Swipe Right, diffX > 0) -> Water -> 'feed' log
-            // Direction 'left' (Swipe Left, diffX < 0) -> Repot -> 'molt' log
+            // Plant Actions
+            // direction 'right' (Swipe Right -> Reveals Left BG) -> Water -> Feed Log
+            // direction 'left'  (Swipe Left  -> Reveals Right BG) -> Repot -> Molt Log
 
             if (direction === 'right') {
                 // Water
                 if (window.SetaeUILogModal) SetaeUILogModal.openLogModal(id, 'feed');
             } else {
-                // Repot (using 'molt' log type for structure, or could be 'growth')
+                // Repot (Always Modal)
                 if (window.SetaeUILogModal) SetaeUILogModal.openLogModal(id, 'molt');
             }
         } else {
@@ -240,12 +239,11 @@ var SetaeUIActions = (function ($) {
         if (status === 'pre_molt' && diffX < 0) return;
 
         if (diffX > 0) {
-            // Left Swipe Visuals (Feed/Water)
+            // Left Swipe Visuals (Reveals Left BG)
             bgLeft.style.visibility = 'visible';
             bgRight.style.visibility = 'hidden';
 
-            // Check classification
-            // Robust check: data attribute might be missing
+            // Check classification dynamically
             let isPlant = false;
             const id = $(currentSwipeRow).data('id');
             if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
@@ -255,15 +253,13 @@ var SetaeUIActions = (function ($) {
             if (!isPlant && $(currentSwipeRow).data('classification') === 'plant') isPlant = true;
 
             if (isPlant) {
-                // 植物: Water
+                // 植物: Water (Left Icon)
                 bgLeft.style.backgroundColor = '#3498db'; // 水色
-                bgLeft.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">💧 Water</span>';
-            } else {
-                // 通常は setupSwipeBg で設定済みだが、動的な変更が必要ならここで行う
+                bgLeft.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">💧</span>';
             }
 
         } else if (diffX < 0) {
-            // Right Swipe Visuals (Molt/Repot)
+            // Right Swipe Visuals (Reveals Right BG)
             bgLeft.style.visibility = 'hidden';
             bgRight.style.visibility = 'visible';
 
@@ -276,9 +272,9 @@ var SetaeUIActions = (function ($) {
             if (!isPlant && $(currentSwipeRow).data('classification') === 'plant') isPlant = true;
 
             if (isPlant) {
-                // 植物: Repot
+                // 植物: Repot (Right Icon) -> Always Modal
                 bgRight.style.backgroundColor = '#8e44ad'; // 紫
-                bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴 Repot</span>';
+                bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴</span>';
             }
         }
 

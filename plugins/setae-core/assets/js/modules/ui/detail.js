@@ -513,8 +513,22 @@ var SetaeUIDetail = (function ($) {
             $('#edit-spider-id').val(data.id);
             $('#edit-spider-name').val(data.title);
 
-            if (data.species_id) {
-                $('#edit-spider-species-select').val(data.species_id);
+            // ▼ 修正: 種類入力のハンドリング (Select vs Custom)
+            const $select = $('#edit-spider-species-select');
+            const $custom = $('#edit-spider-species-custom');
+            const $toggle = $('#btn-toggle-edit-species-input');
+
+            // DBに登録された種類IDを持っているか確認
+            if (data.species_id && data.species_id != 0) {
+                $select.val(data.species_id).show();
+                $custom.hide().val('');
+                $toggle.text('手入力に切り替え');
+            } else {
+                // IDがない場合は手入力モード
+                $select.hide().val('');
+                // species_name があればセット
+                $custom.val(data.species_name || data.species || '').show();
+                $toggle.text('リストから選択');
             }
 
             // Preview Image
@@ -528,6 +542,23 @@ var SetaeUIDetail = (function ($) {
             $('#modal-edit-spider').fadeIn();
         });
     }
+
+    // ▼ 追加: 種類入力モードの切り替えイベント
+    $(document).on('click', '#btn-toggle-edit-species-input', function (e) {
+        e.preventDefault();
+        const $select = $('#edit-spider-species-select');
+        const $custom = $('#edit-spider-species-custom');
+
+        if ($select.is(':visible')) {
+            $select.hide();
+            $custom.show().focus();
+            $(this).text('リストから選択');
+        } else {
+            $custom.hide();
+            $select.show();
+            $(this).text('手入力に切り替え');
+        }
+    });
 
     // Delete Button Handler
     $(document).on('click', '#btn-delete-spider', function () {
@@ -573,8 +604,18 @@ var SetaeUIDetail = (function ($) {
         const id = $('#edit-spider-id').val();
 
         // Manual FormData construction for robustness
+        // Manual FormData construction for robustness
         const formData = new FormData();
-        formData.append('species_id', $('#edit-spider-species-select').val());
+
+        // ▼ 修正: 表示されている方の種類情報を送信
+        if ($('#edit-spider-species-select').is(':visible')) {
+            const val = $('#edit-spider-species-select').val();
+            if (val) formData.append('species_id', val);
+        } else {
+            const val = $('#edit-spider-species-custom').val();
+            if (val) formData.append('species_name', val);
+        }
+        // ▲ 修正ここまで
         formData.append('name', $('#edit-spider-name').val()); // Matches PHP 'name' expectation (which maps to post_title/nickname)
 
         // [Fix] Check for file input manually since it might lack 'name' attribute or be outside form context

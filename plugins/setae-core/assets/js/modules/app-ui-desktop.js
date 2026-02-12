@@ -14,8 +14,6 @@ var SetaeUIDesktop = (function ($) {
 
     function handleMouseMove(e) {
         // モバイルでスワイプ中の場合は無視
-        // Note: SetaeUIMobile is deprecated/removed in favor of SetaeUIActions but
-        // we keep the check just in case or we can check 'ontouchstart'
         if ('ontouchstart' in window) return;
 
         const $row = $(this);
@@ -26,7 +24,6 @@ var SetaeUIDesktop = (function ($) {
 
         // 背景設定の準備
         const status = $row.data('status') || 'normal';
-        // SetaeUIActions があればそこから、なければグローバルから取得
         const config = (window.SetaeUIActions) ? SetaeUIActions.getSwipeConfig(status) : getSwipeConfigFallback(status);
 
         const bgLeft = this.querySelector('.swipe-left');
@@ -34,16 +31,40 @@ var SetaeUIDesktop = (function ($) {
 
         if (!bgLeft || !bgRight) return;
 
-        // 左端 (20%未満) -> 右スワイプアクション (給餌など)
+        // 植物かどうかの判定 (表示変更用)
+        let isPlant = false;
+        const id = $row.data('id');
+        if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
+            const spider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
+            if (spider && spider.classification === 'plant') isPlant = true;
+        }
+        if (!isPlant && $row.data('classification') === 'plant') isPlant = true;
+
+
+        // 左端 (20%未満) -> 右スワイプアクション (Reveal Left BG)
         if (percent < 0.2) {
             setupSwipeBg(bgLeft, config.right_swipe);
+
+            // 植物用のアイコン上書き
+            if (isPlant) {
+                bgLeft.style.backgroundColor = '#3498db'; // Water
+                bgLeft.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">💧</span>';
+            }
+
             content.style.transform = 'translateX(60px)';
             bgLeft.style.visibility = 'visible';
             bgRight.style.visibility = 'hidden';
         }
-        // 右端 (80%以上) -> 左スワイプアクション (拒食など)
+        // 右端 (80%以上) -> 左スワイプアクション (Reveal Right BG)
         else if (percent > 0.8) {
             setupSwipeBg(bgRight, config.left_swipe);
+
+            // 植物用のアイコン上書き
+            if (isPlant) {
+                bgRight.style.backgroundColor = '#8e44ad'; // Repot
+                bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴</span>';
+            }
+
             content.style.transform = 'translateX(-60px)';
             bgLeft.style.visibility = 'hidden';
             bgRight.style.visibility = 'visible';
@@ -71,13 +92,19 @@ var SetaeUIDesktop = (function ($) {
         const percent = x / width;
 
         let actionConfig = null;
+        let direction = null;
+
         const status = $row.data('status') || 'normal';
         const config = (window.SetaeUIActions) ? SetaeUIActions.getSwipeConfig(status) : getSwipeConfigFallback(status);
 
         if (percent < 0.2) {
-            actionConfig = config.right_swipe; // 左エリアクリック
+            // Clicked Left Area -> Simulates Swipe Right (Reveal Left BG)
+            actionConfig = config.right_swipe;
+            direction = 'right';
         } else if (percent > 0.8) {
-            actionConfig = config.left_swipe; // 右エリアクリック
+            // Clicked Right Area -> Simulates Swipe Left (Reveal Right BG)
+            actionConfig = config.left_swipe;
+            direction = 'left';
         }
 
         if (actionConfig && actionConfig.action) {
@@ -86,18 +113,19 @@ var SetaeUIDesktop = (function ($) {
 
             // アニメーション演出
             const $content = $row.find('.setae-list-content');
-            const direction = (percent < 0.2) ? '100px' : '-100px';
+            const moveVal = (direction === 'right') ? '100px' : '-100px';
 
-            $content.css('transition', 'transform 0.2s ease-out').css('transform', `translateX(${direction})`);
+            $content.css('transition', 'transform 0.2s ease-out').css('transform', `translateX(${moveVal})`);
 
             setTimeout(() => {
                 // グローバルの executeSwipeAction を呼ぶ
+                // ★修正点: direction を第三引数に渡す
                 if (window.SetaeUIActions && SetaeUIActions.executeSwipeAction) {
-                    SetaeUIActions.executeSwipeAction(this, actionConfig);
+                    SetaeUIActions.executeSwipeAction(this, actionConfig, direction);
                 } else if (window.executeSwipeAction) {
-                    executeSwipeAction(this, actionConfig);
+                    executeSwipeAction(this, actionConfig, direction);
                 } else if (window.handleQuickAction) {
-                    // フォールバック
+                    // フォールバック (植物対応なし)
                     window.handleQuickAction($row.data('id'), actionConfig.action, {});
                 }
 
@@ -118,7 +146,6 @@ var SetaeUIDesktop = (function ($) {
 
     // Fallback if module is missing
     function getSwipeConfigFallback(status) {
-        // 最低限の設定（本来は共通モジュールから呼ぶべき）
         return {
             right_swipe: { color: '#2ecc71', icon: '🦗', action: 'feed', next: 'normal' },
             left_swipe: { color: '#f1c40f', icon: '✋', action: 'refused', next: 'fasting' }

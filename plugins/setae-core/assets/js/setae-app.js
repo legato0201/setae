@@ -3,26 +3,24 @@ jQuery(document).ready(function ($) {
 
     console.log('Setae App Initializing...');
 
-    // Modules are now self-initializing via app-ui-renderer.js (Controller)
-    // and actions.js handles swipe/click logic.
-
+    // Desktop UI Logic (Hover/Click Actions)
     if (typeof SetaeUIDesktop !== 'undefined') {
         SetaeUIDesktop.init();
     }
 
-    // Registration Logic
-    // 1. モーダルを開く
+    // Note: SetaeUI (Renderer) auto-initializes on document.ready in app-ui-renderer.js
+    // SetaeUIActions binds touch events automatically in app-ui-renderer.js
+
+    // Registration Logic (Keep existing)
     $('#setae-btn-register-start').on('click', function (e) {
         e.preventDefault();
         $('#setae-register-modal').fadeIn(200).css('display', 'flex');
     });
 
-    // 2. モーダルを閉じる
     $('#close-register-modal').on('click', function () {
         $('#setae-register-modal').fadeOut(200);
     });
 
-    // 3. 登録フォーム送信処理
     $('#setae-register-form').on('submit', function (e) {
         e.preventDefault();
 
@@ -31,15 +29,12 @@ jQuery(document).ready(function ($) {
         $btn.text('処理中...').prop('disabled', true);
 
         var data = {
-            action: 'setae_register_user', // PHP側の関数と紐づくアクション名
+            action: 'setae_register_user',
             username: $('#reg-username').val(),
             email: $('#reg-email').val(),
             password: $('#reg-password').val(),
-            // セキュリティ用のNonceがあればここに追加（推奨）
-            // nonce: setae_vars.nonce 
         };
 
-        // Fallback for ajax_url if not defined (though it should be)
         var ajaxUrl = (typeof setae_vars !== 'undefined' && setae_vars.ajax_url) ? setae_vars.ajax_url : '/wp-admin/admin-ajax.php';
 
         $.ajax({
@@ -49,7 +44,7 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 if (response.success) {
                     alert('登録が完了しました。ログインしてください。');
-                    location.reload(); // 画面をリロードしてログインフォームへ
+                    location.reload();
                 } else {
                     alert('エラー: ' + (response.data || 'Unknown error'));
                     $btn.text(originalText).prop('disabled', false);

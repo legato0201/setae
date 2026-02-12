@@ -72,9 +72,15 @@
             </div>
             <div class="setae-form-group">
                 <label>種類 (Species)</label>
-                <select id="edit-spider-species-select" required="" class="setae-input">
+                <select id="edit-spider-species-select" class="setae-input">
                     <option value="">選択してください...</option>
                 </select>
+                <input type="text" id="edit-spider-species-custom" class="setae-input" style="display:none;"
+                    placeholder="種類名を入力">
+                <div style="text-align:right; margin-top:4px;">
+                    <span id="btn-toggle-edit-species-input"
+                        style="font-size:12px; color:#3498db; cursor:pointer; text-decoration:underline;">手入力に切り替え</span>
+                </div>
             </div>
             <div class="setae-form-group">
                 <label>ニックネーム</label>
