@@ -11,7 +11,7 @@ jQuery(document).ready(function ($) {
     // Note: SetaeUI (Renderer) auto-initializes on document.ready in app-ui-renderer.js
     // SetaeUIActions binds touch events automatically in app-ui-renderer.js
 
-    // Registration Logic (Keep existing)
+    // Registration Logic
     $('#setae-btn-register-start').on('click', function (e) {
         e.preventDefault();
         $('#setae-register-modal').fadeIn(200).css('display', 'flex');
@@ -57,59 +57,68 @@ jQuery(document).ready(function ($) {
         });
     });
 
-});
+    // ▼▼▼ 追加機能: 編集提案モーダル (ここに追加) ▼▼▼
 
-// --- Encyclopedia Edit Suggestion Modal ---
-$('#btn-open-edit-modal').on('click', function (e) {
-    e.preventDefault();
-    var speciesId = $(this).data('id');
+    // 1. モーダルを開く
+    $('#btn-open-edit-modal').on('click', function (e) {
+        e.preventDefault();
 
-    if (!speciesId && typeof currentSpeciesId !== 'undefined') {
-        speciesId = currentSpeciesId;
-    }
+        // ボタンにセットされた data-id を取得
+        var speciesId = $(this).data('id');
 
-    if (!speciesId) {
-        alert('種IDが取得できませんでした。');
-        return;
-    }
-
-    $('#edit-req-species-id').val(speciesId);
-    $('#setae-species-edit-modal').fadeIn(200).css('display', 'flex');
-});
-
-$('#close-species-edit-modal').on('click', function () {
-    $('#setae-species-edit-modal').fadeOut(200);
-});
-
-$('#setae-species-edit-form').on('submit', function (e) {
-    e.preventDefault();
-    var $btn = $(this).find('button[type="submit"]');
-    var originalText = $btn.text();
-    $btn.text('送信中...').prop('disabled', true);
-
-    var formData = new FormData(this);
-    var ajaxUrl = (typeof setae_vars !== 'undefined' && setae_vars.ajax_url) ? setae_vars.ajax_url : '/wp-admin/admin-ajax.php';
-
-    $.ajax({
-        url: ajaxUrl,
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (response) {
-            if (response.success) {
-                alert('提案を送信しました。管理者の確認後に反映されます。');
-                $('#setae-species-edit-modal').fadeOut(200);
-                $('#setae-species-edit-form')[0].reset();
-            } else {
-                alert('エラー: ' + (response.data || '送信できませんでした'));
-            }
-        },
-        error: function () {
-            alert('通信エラーが発生しました。');
-        },
-        complete: function () {
-            $btn.text(originalText).prop('disabled', false);
+        // フォールバック: グローバル変数などから取得 (必要に応じて)
+        if (!speciesId && typeof currentSpeciesId !== 'undefined') {
+            speciesId = currentSpeciesId;
         }
+
+        if (!speciesId) {
+            console.warn('Species ID not found on button. Please ensure data-id is set when opening the detail view.');
+            // IDがない場合でも、とりあえずモーダルは開くがIDは空になる（ユーザーに入力させる等の運用カバーも可）
+        }
+
+        $('#edit-req-species-id').val(speciesId);
+        $('#setae-species-edit-modal').fadeIn(200).css('display', 'flex');
     });
-});
+
+    // 2. モーダルを閉じる
+    $('#close-species-edit-modal').on('click', function () {
+        $('#setae-species-edit-modal').fadeOut(200);
+    });
+
+    // 3. フォーム送信処理
+    $('#setae-species-edit-form').on('submit', function (e) {
+        e.preventDefault();
+        var $btn = $(this).find('button[type="submit"]');
+        var originalText = $btn.text();
+        $btn.text('送信中...').prop('disabled', true);
+
+        var formData = new FormData(this);
+        var ajaxUrl = (typeof setae_vars !== 'undefined' && setae_vars.ajax_url) ? setae_vars.ajax_url : '/wp-admin/admin-ajax.php';
+
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.success) {
+                    alert('提案を送信しました。管理者の確認後に反映されます。');
+                    $('#setae-species-edit-modal').fadeOut(200);
+                    $('#setae-species-edit-form')[0].reset();
+                } else {
+                    alert('エラー: ' + (response.data || '送信できませんでした'));
+                }
+            },
+            error: function () {
+                alert('通信エラーが発生しました。');
+            },
+            complete: function () {
+                $btn.text(originalText).prop('disabled', false);
+            }
+        });
+    });
+
+    // ▲▲▲ 追加機能終了 ▲▲▲
+
+}); // ← この閉じカッコの中に全てのコードが入っている必要があります
