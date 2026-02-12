@@ -42,7 +42,7 @@
             </button>
 
             <?php
-            // 地域タームを取得してボタン化
+            // 地域ターム（こちらは動的スラッグのままでOK）
             $regions = get_terms(array('taxonomy' => 'setae_habitat', 'hide_empty' => true));
             if (!empty($regions) && !is_wp_error($regions)) {
                 foreach ($regions as $region) {
@@ -54,6 +54,7 @@
             ?>
         </div>
     </div>
+
     <div class="setae-species-grid" id="setae-species-list-container">
         <?php
         $args = array(
@@ -67,24 +68,28 @@
             while ($species_query->have_posts()):
                 $species_query->the_post();
 
-                // メタデータの取得
                 $common_name = get_post_meta(get_the_ID(), '_setae_common_name_ja', true);
                 $size = get_post_meta(get_the_ID(), '_setae_size', true);
                 $temp = get_post_meta(get_the_ID(), '_setae_temperature', true);
                 $difficulty = get_post_meta(get_the_ID(), '_setae_difficulty', true);
-                
-                // ★追加: 飼育数（未設定なら0）
                 $keeping_count = get_post_meta(get_the_ID(), '_setae_keeping_count', true) ?: 0;
 
-                // 難易度の数値化（ソート用）
+                // 難易度数値化
                 $diff_map = ['beginner' => 1, 'intermediate' => 2, 'expert' => 3];
                 $diff_val = isset($diff_map[$difficulty]) ? $diff_map[$difficulty] : 0;
 
-                // タクソノミーの取得
+                // ライフスタイル取得 & 修正: 日本語スラッグを英語キーに変換
                 $lifestyles = get_the_terms(get_the_ID(), 'setae_lifestyle');
                 $lifestyle_name = $lifestyles ? $lifestyles[0]->name : '';
-                $lifestyle_slug = $lifestyles ? $lifestyles[0]->slug : '';
+                $raw_slug = $lifestyles ? urldecode($lifestyles[0]->slug) : '';
+                
+                $style_key = '';
+                if ($raw_slug === '樹上性') $style_key = 'arboreal';
+                elseif ($raw_slug === '地表性') $style_key = 'terrestrial';
+                elseif ($raw_slug === '地中性') $style_key = 'fossorial';
+                else $style_key = $lifestyles ? $lifestyles[0]->slug : ''; // その他の場合はそのまま
 
+                // 地域
                 $regions = get_the_terms(get_the_ID(), 'setae_habitat');
                 $region_name = $regions ? $regions[0]->name : '';
                 $region_slug = $regions ? $regions[0]->slug : '';
@@ -99,7 +104,7 @@
                     data-sort-name="<?php echo esc_attr(strtolower(get_the_title())); ?>"
                     data-sort-count="<?php echo esc_attr($keeping_count); ?>"
                     data-sort-diff="<?php echo esc_attr($diff_val); ?>"
-                    data-filter-style="<?php echo esc_attr('style_' . $lifestyle_slug); ?>"
+                    data-filter-style="<?php echo esc_attr('style_' . $style_key); ?>" 
                     data-filter-region="<?php echo esc_attr('region_' . $region_slug); ?>"
                 >
                     <a href="javascript:void(0);" class="card-link js-open-species-detail" data-id="<?php the_ID(); ?>">
@@ -117,7 +122,7 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($lifestyle_name): ?>
-                                    <span class="badge badge-lifestyle <?php echo esc_attr($lifestyle_slug); ?>">
+                                    <span class="badge badge-lifestyle <?php echo esc_attr($style_key); ?>">
                                         <?php echo esc_html($lifestyle_name); ?>
                                     </span>
                                 <?php endif; ?>
@@ -178,89 +183,67 @@ jQuery(document).ready(function($) {
     const $filterBtns = $('#setae-enc-filters .deck-pill');
     
     let currentFilter = 'all';
-    let currentSort = 'name_asc'; // default
+    let currentSort = 'name_asc';
 
-    // 1. 検索機能
-    $input.on('input', function() {
-        applyFilterSort();
-    });
+    // 検索
+    $input.on('input', function() { applyFilterSort(); });
 
-    // 2. フィルター機能
+    // フィルター
     $filterBtns.on('click', function() {
         $filterBtns.removeClass('active').css('background', '#fff').css('color', '#333');
-        $(this).addClass('active').css('background', '#333').css('color', '#fff'); // Active Style
+        $(this).addClass('active').css('background', '#333').css('color', '#fff');
         currentFilter = $(this).data('filter');
         applyFilterSort();
     });
 
-    // 3. ソートメニュー表示
+    // ソートメニュー
     $('#btn-enc-sort-menu').on('click', function(e) {
         e.stopPropagation();
-        const $existing = $('#setae-enc-sort-popup');
-        if($existing.length) { $existing.remove(); return; }
-
+        $('#setae-enc-sort-popup').remove();
         const menuHtml = `
             <div id="setae-enc-sort-popup" style="position:absolute; background:#fff; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.15); width:200px; z-index:9999; overflow:hidden;">
                 <div class="enc-sort-opt" data-sort="name_asc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔤 学名順 (A-Z)</div>
-                <div class="enc-sort-opt" data-sort="count_desc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔥 飼育数順</div>
+                <div class="enc-sort-opt" data-sort="count_desc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔥 飼育数順 (多→少)</div>
                 <div class="enc-sort-opt" data-sort="diff_asc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔰 難易度順 (易→難)</div>
                 <div class="enc-sort-opt" data-sort="diff_desc" style="padding:10px 15px; cursor:pointer;">👿 難易度順 (難→易)</div>
             </div>
         `;
         $('body').append(menuHtml);
-        
-        // 位置調整
         const rect = this.getBoundingClientRect();
-        $('#setae-enc-sort-popup').css({
-            top: (rect.bottom + window.scrollY + 5) + 'px',
-            left: (rect.right + window.scrollX - 200) + 'px'
-        });
+        $('#setae-enc-sort-popup').css({ top: (rect.bottom + window.scrollY + 5) + 'px', left: (rect.right + window.scrollX - 200) + 'px' });
     });
 
-    // ソート選択イベント
     $(document).on('click', '.enc-sort-opt', function() {
         currentSort = $(this).data('sort');
         $('#setae-enc-sort-popup').remove();
         applyFilterSort();
     });
 
-    // メニュー外クリックで閉じる
     $(document).on('click', function(e) {
-        if(!$(e.target).closest('#btn-enc-sort-menu').length) {
-            $('#setae-enc-sort-popup').remove();
-        }
+        if(!$(e.target).closest('#btn-enc-sort-menu').length) $('#setae-enc-sort-popup').remove();
     });
 
-    // メインロジック: フィルターとソートを適用
     function applyFilterSort() {
         const query = $input.val().toLowerCase();
         
         // --- Filter ---
         const $visibleItems = $items.filter(function() {
             const $el = $(this);
-            // Search Text
             const searchData = $el.data('search');
             if(query && !searchData.includes(query)) return false;
 
-            // Category Filter
             if (currentFilter !== 'all') {
-                // ライフスタイル or 地域
-                // data-filter-style="style_arboreal" 等を持っているかチェック
                 const style = $el.data('filter-style') || '';
                 const region = $el.data('filter-region') || '';
-                
-                // 完全一致で判定 (currentFilterは 'style_arboreal' のような形式)
                 if (style !== currentFilter && region !== currentFilter) return false;
             }
             return true;
         });
 
-        // 非表示
         $items.hide();
         $visibleItems.show();
 
         // --- Sort ---
-        // 表示要素のみをソートして再配置
         const sorted = $visibleItems.toArray().sort(function(a, b) {
             const $a = $(a);
             const $b = $(b);
@@ -269,13 +252,14 @@ jQuery(document).ready(function($) {
                 return $a.data('sort-name').localeCompare($b.data('sort-name'));
             }
             if (currentSort === 'count_desc') {
-                return $b.data('sort-count') - $a.data('sort-count');
+                // 修正: 数値として明示的にパースして比較（降順：大きい方が先）
+                return parseInt($b.data('sort-count')) - parseInt($a.data('sort-count'));
             }
             if (currentSort === 'diff_asc') {
-                return $a.data('sort-diff') - $b.data('sort-diff');
+                return parseInt($a.data('sort-diff')) - parseInt($b.data('sort-diff'));
             }
             if (currentSort === 'diff_desc') {
-                return $b.data('sort-diff') - $a.data('sort-diff');
+                return parseInt($b.data('sort-diff')) - parseInt($a.data('sort-diff'));
             }
             return 0;
         });
