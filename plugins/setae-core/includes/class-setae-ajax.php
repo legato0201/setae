@@ -158,9 +158,9 @@ class Setae_Ajax
         }
 
         // 性格 (カンマ区切りで来るので、そのまま保存するか配列にするか)
-        if (isset($_POST['suggested_temperament_slugs'])) {
+        if (isset($_POST['suggested_temperament_ids'])) {
             // カンマ区切り文字列として保存 (承認時に展開)
-            update_post_meta($suggestion_id, '_suggested_temperament_slugs', sanitize_text_field($_POST['suggested_temperament_slugs']));
+            update_post_meta($suggestion_id, '_suggested_temperament_ids', sanitize_text_field($_POST['suggested_temperament_ids']));
         }
 
         // 画像処理 (変更なし)

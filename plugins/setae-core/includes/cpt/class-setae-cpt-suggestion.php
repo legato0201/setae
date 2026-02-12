@@ -85,9 +85,17 @@ class Setae_CPT_Suggestion
         }
 
         // 性格の表示
-        $temp_slugs = get_post_meta($post->ID, '_suggested_temperament_slugs', true);
-        if ($temp_slugs) {
-            echo '<div><strong>性格Slug:</strong> ' . esc_html($temp_slugs) . '</div>';
+        $temp_ids_str = get_post_meta($post->ID, '_suggested_temperament_ids', true);
+        if ($temp_ids_str) {
+            $ids = explode(',', $temp_ids_str);
+            $names = [];
+            foreach ($ids as $tid) {
+                $term = get_term($tid, 'setae_temperament');
+                if ($term && !is_wp_error($term)) {
+                    $names[] = $term->name;
+                }
+            }
+            echo '<div><strong>性格:</strong> ' . esc_html(implode(', ', $names)) . '</div>';
         }
     }
 
@@ -114,7 +122,7 @@ class Setae_CPT_Suggestion
         $map = [
             '_suggested_common_name_ja' => '_setae_common_name_ja',
             '_suggested_temperature' => '_setae_temperature',
-            '_suggested_humidity' => '_setae_humidity', // ★追加
+            '_suggested_humidity' => '_setae_humidity',
             '_suggested_lifespan' => '_setae_lifespan',
             '_suggested_size' => '_setae_size',
         ];
@@ -126,13 +134,14 @@ class Setae_CPT_Suggestion
         }
 
         // 2. タクソノミー (性格: Multi)
-        $temp_slugs_str = get_post_meta($post_id, '_suggested_temperament_slugs', true);
-        if ($temp_slugs_str) {
-            $slugs = explode(',', $temp_slugs_str);
-            // スラッグからIDに変換せずとも、wp_set_object_termsはスラッグで指定可能
-            // 第3引数は taxonomy名, 第4引数 true で「追加(append)」、falseで「上書き」
-            // ここでは「上書き」として設定します。
-            wp_set_object_terms($target_id, $slugs, 'setae_temperament', false);
+        $temp_ids_str = get_post_meta($post_id, '_suggested_temperament_ids', true);
+        if ($temp_ids_str) {
+            $ids_raw = explode(',', $temp_ids_str);
+            // 必ず整数(int)に変換する。整数の配列を渡すとWPはIDとして認識する。
+            $ids = array_map('intval', $ids_raw);
+
+            // 第4引数 false = 上書き (既存のタグを消してこれにする)
+            wp_set_object_terms($target_id, $ids, 'setae_temperament', false);
         }
 
         // 3. タクソノミー (Lifestyle: Single)

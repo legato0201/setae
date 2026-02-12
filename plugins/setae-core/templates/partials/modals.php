@@ -149,7 +149,7 @@ $temperaments = get_terms(array(
                             style="border:1px solid #ddd; padding:8px; border-radius:4px; background:#fff; cursor:pointer; font-size:13px; min-height:38px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
                             <span style="color:#999;">タップして選択してください...</span>
                         </div>
-                        <input type="hidden" name="suggested_temperament_slugs" id="suggested-temperament-input">
+                        <input type="hidden" name="suggested_temperament_ids" id="suggested-temperament-input">
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
@@ -192,7 +192,7 @@ $temperaments = get_terms(array(
                 <?php foreach ($temperaments as $term): ?>
                     <label
                         style="display:flex; align-items:center; padding:10px; border-bottom:1px solid #f5f5f5; cursor:pointer;">
-                        <input type="checkbox" class="js-temp-checkbox" value="<?php echo esc_attr($term->slug); ?>"
+                        <input type="checkbox" class="js-temp-checkbox" value="<?php echo esc_attr($term->term_id); ?>"
                             data-label="<?php echo esc_attr($term->name); ?>" style="transform:scale(1.2); margin-right:10px;">
                         <span style="font-size:14px;"><?php echo esc_html($term->name); ?></span>
                     </label>
