@@ -5,7 +5,7 @@
 ?>
 <div id="section-my" class="setae-section">
     <!-- Advanced Control Bar -->
-    <div class="setae-toolbar-container">
+    <div class="setae-toolbar-container" style="width: auto; margin: -16px -16px 16px -16px;">
         <div class="setae-toolbar-header">
             <div class="setae-search-wrapper">
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

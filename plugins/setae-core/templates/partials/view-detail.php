@@ -5,7 +5,7 @@
 ?>
 <div id="section-enc-detail" class="setae-section" style="display: none;">
     <div class="setae-header-bar"
-        style="display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #eee; background:#fff; position:sticky; top:0; z-index:100;">
+        style="display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #eee; background:#fff; position:sticky; top:0; z-index:100; width: auto; margin: -16px -16px 0 -16px;">
         <button id="btn-back-to-enc" class="setae-btn-back" type="button" aria-label="Back">
             <svg viewBox="0 0 24 24">
                 <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
