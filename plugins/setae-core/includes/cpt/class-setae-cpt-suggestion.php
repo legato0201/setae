@@ -22,7 +22,7 @@ class Setae_CPT_Suggestion
             ),
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => 'setae_main_menu', // Setaeメニューのサブ項目として配置する場合
+            'show_in_menu' => true, // 独立したメニューとして表示
             'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
             'capability_type' => 'post',
         ));
