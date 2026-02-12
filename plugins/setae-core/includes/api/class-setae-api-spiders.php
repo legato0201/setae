@@ -245,6 +245,9 @@ class Setae_API_Spiders
                     $thumb = get_the_post_thumbnail_url($species_id, 'thumbnail');
                 }
 
+                $last_feed_date = get_post_meta(get_the_ID(), '_setae_last_feed_date', true);
+                $is_hungry = $this->is_spider_hungry(get_the_ID(), $last_feed_date);
+
                 $data[] = array(
                     'id' => get_the_ID(),
                     'title' => get_the_title(),
@@ -252,9 +255,10 @@ class Setae_API_Spiders
                     'classification' => $classification, // フロントでアイコン出し分けに使用
                     'status' => get_post_meta(get_the_ID(), '_setae_status', true) ?: 'normal',
                     'last_molt' => get_post_meta(get_the_ID(), '_setae_last_molt_date', true),
-                    'last_feed' => get_post_meta(get_the_ID(), '_setae_last_feed_date', true),
+                    'last_feed' => $last_feed_date,
                     'last_prey' => get_post_meta(get_the_ID(), '_setae_last_prey', true),
                     'is_favorite' => (bool) get_post_meta(get_the_ID(), '_setae_is_favorite', true),
+                    'is_hungry' => $is_hungry, // ★Added
                     'thumb' => $thumb
                 );
             }
@@ -268,6 +272,80 @@ class Setae_API_Spiders
      * Apply Priority Sort Order for SQL
      * Logic: High priority for 'pre_molt', penalty for 'fasting', boost for long time since last feed.
      */
+    /**
+     * Helper: Determine if spider is hungry based on history
+     */
+    private function is_spider_hungry($spider_id, $last_feed_date)
+    {
+        // 1. まだ一度も食べていない場合は空腹扱い
+        if (empty($last_feed_date)) {
+            return true;
+        }
+
+        // 2. 過去の給餌ログを取得 (最大5件)
+        $logs = get_posts(array(
+            'post_type' => 'setae_log',
+            'posts_per_page' => 5,
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'key' => '_setae_log_spider_id',
+                    'value' => $spider_id
+                ),
+                array(
+                    'key' => '_setae_log_type',
+                    'value' => 'feed'
+                )
+            ),
+            'orderby' => 'meta_value',
+            'meta_key' => '_setae_log_date',
+            'order' => 'DESC',
+        ));
+
+        // 有効な給餌日（拒食以外）を抽出
+        $valid_dates = [];
+        foreach ($logs as $log) {
+            $json = get_post_meta($log->ID, '_setae_log_data', true);
+            $data = is_string($json) ? json_decode($json, true) : $json;
+
+            // 拒食(refused)は計算から除外
+            if (empty($data['refused'])) {
+                $date_val = get_post_meta($log->ID, '_setae_log_date', true);
+                if ($date_val) {
+                    $valid_dates[] = strtotime($date_val);
+                }
+            }
+        }
+
+        // 現在時刻
+        $now = current_time('timestamp');
+        $last_feed_ts = strtotime($last_feed_date);
+        $days_since = ($now - $last_feed_ts) / (60 * 60 * 24);
+
+        // 3. 履歴が2回未満の場合 -> デフォルト判定 (14日以上で空腹)
+        if (count($valid_dates) < 2) {
+            return $days_since >= 14;
+        }
+
+        // 4. 平均間隔の計算 (2回以上ある場合)
+        $intervals = [];
+        for ($i = 0; $i < count($valid_dates) - 1; $i++) {
+            $diff = ($valid_dates[$i] - $valid_dates[$i + 1]) / (60 * 60 * 24);
+            if ($diff > 0) {
+                $intervals[] = $diff;
+            }
+        }
+
+        if (empty($intervals)) {
+            return $days_since >= 14;
+        }
+
+        $avg_interval = array_sum($intervals) / count($intervals);
+
+        // 推定日を超えているか判定 (余裕を持たせるなら +1日など調整可)
+        return $days_since >= $avg_interval;
+    }
+
     public function apply_priority_sort_order($orderby)
     {
         global $wpdb;

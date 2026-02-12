@@ -15,9 +15,8 @@ var SetaeUIList = (function ($) {
             }
             const deck = SetaeCore.state.currentDeck;
             if (deck === 'hungry') {
-                if (!s.last_feed) return true;
-                const diff = new Date() - new Date(s.last_feed);
-                return diff > (14 * 24 * 60 * 60 * 1000);
+                // ▼ 修正: API側で計算されたフラグを使用
+                return s.is_hungry === true;
             }
             if (deck === 'pre_molt') return s.status === 'pre_molt';
 
@@ -126,7 +125,8 @@ var SetaeUIList = (function ($) {
         SetaeCore.state.cachedSpiders.forEach(s => {
             counts.all++;
 
-            if (!s.last_feed || (new Date() - new Date(s.last_feed) > 1209600000)) counts.hungry++;
+            // ▼ 修正: API側で計算されたフラグを使用
+            if (s.is_hungry) counts.hungry++;
             if (s.status === 'pre_molt') counts.pre_molt++;
 
             const cls = s.classification || 'tarantula';
@@ -194,7 +194,7 @@ var SetaeUIList = (function ($) {
         const prey = spider.last_prey || '';
 
         // 空腹/水切れ判定
-        const isHungry = !spider.last_feed || (new Date() - new Date(spider.last_feed) > (14 * 24 * 60 * 60 * 1000));
+        const isHungry = spider.is_hungry;
         const feedClass = isHungry ? 'meta-value alert-text' : 'meta-value';
 
         // --- 分類ごとのUI設定 ---
