@@ -74,7 +74,19 @@
                 $temp = get_post_meta(get_the_ID(), '_setae_temperature', true);
                 $difficulty = get_post_meta(get_the_ID(), '_setae_difficulty', true);
                 // 飼育数を取得 (未設定は0)
-                $keeping_count = (int)(get_post_meta(get_the_ID(), '_setae_keeping_count', true) ?: 0);
+                // 飼育数を取得 (DBから直接集計)
+                global $wpdb;
+                $species_id = get_the_ID();
+                $sql = $wpdb->prepare("
+                    SELECT COUNT(DISTINCT post_author)
+                    FROM {$wpdb->posts} p
+                    INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                    WHERE p.post_type = 'setae_spider'
+                    AND p.post_status = 'publish'
+                    AND pm.meta_key = '_setae_species_id'
+                    AND pm.meta_value = %d
+                ", $species_id);
+                $keeping_count = (int) $wpdb->get_var($sql);
 
                 // 難易度の数値化
                 $diff_map = ['beginner' => 1, 'intermediate' => 2, 'expert' => 3];
