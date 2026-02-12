@@ -164,7 +164,7 @@ var SetaeUIList = (function ($) {
         const deck = $(this).data('deck');
         SetaeCore.state.currentDeck = deck;
         localStorage.setItem('setae_my_deck', deck);
-        $('.deck-pill').removeClass('active');
+        $('.deck-pill[data-deck]').removeClass('active');
         $(this).addClass('active');
         renderMySpiders();
     }
@@ -397,7 +397,7 @@ var SetaeUIList = (function ($) {
 
         // 2. デッキ（フィルター）の復元
         if (SetaeCore.state.currentDeck) {
-            $('.deck-pill').removeClass('active');
+            $('.deck-pill[data-deck]').removeClass('active');
             $(`.deck-pill[data-deck="${SetaeCore.state.currentDeck}"]`).addClass('active');
         }
 

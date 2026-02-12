@@ -72,8 +72,8 @@ var SetaeUI = (function ($) {
             });
         });
 
-        // Deck Filters
-        $('.deck-pill').on('click', SetaeUIList.handleDeckFilterClick);
+        // Deck Filters (My Spiders Only)
+        $(document).on('click', '.deck-pill[data-deck]', SetaeUIList.handleDeckFilterClick);
 
         // Sort Menu
         $(document).on('click', '#btn-sort-menu', SetaeUIList.toggleSortMenu);
@@ -97,7 +97,7 @@ var SetaeUI = (function ($) {
             runEncyclopediaFilter();
         });
 
-        // 2. Filter Buttons
+        // 2. Filter Buttons (Encyclopedia Only)
         $(document).on('click', '#setae-enc-filters .deck-pill', function () {
             const filter = $(this).data('filter');
             SetaeCore.state.encFilter = filter;
@@ -371,6 +371,8 @@ var SetaeUI = (function ($) {
 
         // 2. Restore Filter
         const savedFilter = SetaeCore.state.encFilter || 'all';
+
+        // Reset only encyclopedia buttons
         $('#setae-enc-filters .deck-pill').removeClass('active');
 
         const $targetPill = $(`#setae-enc-filters .deck-pill[data-filter="${savedFilter}"]`);
@@ -381,11 +383,7 @@ var SetaeUI = (function ($) {
             SetaeCore.state.encFilter = 'all';
         }
 
-        // 3. Restore Sort
-        const savedSort = SetaeCore.state.encSort || 'name';
-        // No direct UI update needed for sort button, just ensure state is set.
-
-        // 4. Run
+        // 3. Run
         runEncyclopediaFilter();
     }
 
