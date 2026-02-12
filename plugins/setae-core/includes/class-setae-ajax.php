@@ -120,25 +120,21 @@ class Setae_Ajax
             wp_send_json_error('対象の種が不明です。');
         }
 
-        $description = isset($_POST['suggested_description']) ? sanitize_textarea_field($_POST['suggested_description']) : '';
-        $lifespan = isset($_POST['suggested_lifespan']) ? sanitize_text_field($_POST['suggested_lifespan']) : '';
-        $size = isset($_POST['suggested_size']) ? sanitize_text_field($_POST['suggested_size']) : '';
-
-        // 内容が空ならエラー
-        if (empty($description) && empty($lifespan) && empty($size) && empty($_FILES['suggested_image']['name'])) {
-            wp_send_json_error('提案内容が入力されていません。');
-        }
-
-        // 2. 提案用カスタム投稿 (setae_suggestion) として保存
-
+        // 投稿データの作成
         $target_species = get_post($species_id);
-        $title = '修正提案: ' . $target_species->post_title . ' (by ' . (is_user_logged_in() ? wp_get_current_user()->display_name : 'Guest') . ')';
+        $title = '修正提案: ' . $target_species->post_title;
+        if (is_user_logged_in()) {
+            $user = wp_get_current_user();
+            $title .= ' (by ' . $user->display_name . ')';
+        } else {
+            $title .= ' (by Guest)';
+        }
 
         $post_data = array(
             'post_type' => 'setae_suggestion',
             'post_title' => $title,
-            'post_content' => $description, // 本文に提案テキストを入れる
-            'post_status' => 'pending',    // 「レビュー待ち」状態
+            'post_content' => isset($_POST['suggested_description']) ? sanitize_textarea_field($_POST['suggested_description']) : '',
+            'post_status' => 'pending', // 承認待ち
         );
 
         $suggestion_id = wp_insert_post($post_data);
@@ -147,14 +143,27 @@ class Setae_Ajax
             wp_send_json_error('保存に失敗しました。');
         }
 
-        // 3. メタデータの保存
+        // --- メタデータの保存 ---
         update_post_meta($suggestion_id, '_target_species_id', $species_id);
-        if ($lifespan)
-            update_post_meta($suggestion_id, '_suggested_lifespan', $lifespan);
-        if ($size)
-            update_post_meta($suggestion_id, '_suggested_size', $size);
 
-        // 4. 画像アップロード処理
+        // 追加フィールドの保存
+        $fields = [
+            'suggested_common_name_ja',
+            'suggested_lifestyle',
+            'suggested_difficulty',
+            'suggested_temperature',
+            'suggested_temperament',
+            'suggested_lifespan',
+            'suggested_size'
+        ];
+
+        foreach ($fields as $field) {
+            if (!empty($_POST[$field])) {
+                update_post_meta($suggestion_id, '_' . $field, sanitize_text_field($_POST[$field]));
+            }
+        }
+
+        // --- 画像処理 ---
         if (!empty($_FILES['suggested_image']['name'])) {
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             require_once(ABSPATH . 'wp-admin/includes/file.php');

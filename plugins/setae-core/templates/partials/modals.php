@@ -50,44 +50,105 @@
 
 <!-- Edit Suggestion Modal -->
 <div id="setae-species-edit-modal" class="setae-modal" style="display: none;">
-    <div class="setae-modal-content">
-        <span id="close-species-edit-modal" class="setae-close">&times;</span>
-        <h3>図鑑情報の修正・提供</h3>
-        <p style="font-size:12px; color:#666; margin-bottom:15px;">
-            より正確な情報や、より良い画像の提供にご協力ください。<br>
-            送信された内容は管理者が確認後、反映されます。
-        </p>
+    <div class="setae-modal-content" style="max-width: 600px; padding: 0; border-radius: 8px; overflow:hidden;">
+        <div
+            style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:16px; font-weight:600; color:#333;">図鑑情報の修正・提供</h3>
+            <span id="close-species-edit-modal" class="setae-close"
+                style="font-size:24px; line-height:1; cursor:pointer;">&times;</span>
+        </div>
 
-        <form id="setae-species-edit-form" enctype="multipart/form-data">
-            <input type="hidden" id="edit-req-species-id" name="species_id" value="">
-            <input type="hidden" name="action" value="setae_submit_species_edit">
+        <div style="padding: 20px;">
+            <p
+                style="font-size:13px; color:#666; margin-bottom:20px; background:#eef2f5; padding:10px; border-radius:4px; border-left:4px solid #3498db;">
+                <span style="font-weight:bold;">📝 編集提案機能</span><br>
+                より正確な情報や画像の提供にご協力ください。管理者が承認すると図鑑に反映されます。
+            </p>
 
-            <div class="setae-form-group">
-                <label>画像提供 (任意)</label>
-                <input type="file" name="suggested_image" accept="image/*">
-                <p style="font-size:10px; color:#999;">※ご自身で撮影された写真に限ります。</p>
-            </div>
+            <form id="setae-species-edit-form" enctype="multipart/form-data">
+                <input type="hidden" id="edit-req-species-id" name="species_id" value="">
+                <input type="hidden" name="action" value="setae_submit_species_edit">
 
-            <div class="setae-form-group">
-                <label>説明文・特徴の追記</label>
-                <textarea name="suggested_description" rows="5" placeholder="生息地、性格、飼育のコツなどの情報..."></textarea>
-            </div>
-
-            <div class="setae-form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div>
-                    <label>寿命 (Lifespan)</label>
-                    <input type="text" name="suggested_lifespan" placeholder="例: 15-20 years">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="setae-form-group">
+                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">和名 (Japanese
+                            Name)</label>
+                        <input type="text" name="suggested_common_name_ja" class="setae-input"
+                            placeholder="例: メキシカンレッドニー"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    <div class="setae-form-group">
+                        <label
+                            style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">ライフスタイル</label>
+                        <select name="suggested_lifestyle" class="setae-select"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                            <option value="">選択してください</option>
+                            <option value="terrestrial">地表性 (Terrestrial)</option>
+                            <option value="arboreal">樹上性 (Arboreal)</option>
+                            <option value="fossorial">地中性 (Fossorial)</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label>最大サイズ (Legspan)</label>
-                    <input type="text" name="suggested_size" placeholder="例: 15cm">
-                </div>
-            </div>
 
-            <div class="setae-form-actions">
-                <button type="submit" class="setae-btn-primary">管理者に提案を送信</button>
-            </div>
-        </form>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="setae-form-group">
+                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">難易度</label>
+                        <select name="suggested_difficulty"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                            <option value="">未選択</option>
+                            <option value="beginner">初心者 (Beginner)</option>
+                            <option value="intermediate">中級者 (Intermediate)</option>
+                            <option value="expert">上級者 (Expert)</option>
+                        </select>
+                    </div>
+                    <div class="setae-form-group">
+                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">適温
+                            (Temp)</label>
+                        <input type="text" name="suggested_temperature" placeholder="例: 24-28℃"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    <div class="setae-form-group">
+                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">性格
+                            (Temperament)</label>
+                        <input type="text" name="suggested_temperament" placeholder="例: 荒い/温厚"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="setae-form-group">
+                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">寿命
+                            (Lifespan)</label>
+                        <input type="text" name="suggested_lifespan" placeholder="例: 15-20 years"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    <div class="setae-form-group">
+                        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">最大サイズ
+                            (Legspan)</label>
+                        <input type="text" name="suggested_size" placeholder="例: 15cm"
+                            style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                </div>
+
+                <div class="setae-form-group" style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">説明文・特徴の追記</label>
+                    <textarea name="suggested_description" rows="4"
+                        style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; resize:vertical;"
+                        placeholder="生息地、性格、飼育のコツなどの情報..."></textarea>
+                </div>
+
+                <div class="setae-form-group" style="margin-bottom: 20px;">
+                    <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:5px;">画像提供 (任意)</label>
+                    <input type="file" name="suggested_image" accept="image/*" style="font-size:12px;">
+                    <p style="font-size:10px; color:#999; margin-top:4px;">※ご自身で撮影された写真に限ります。</p>
+                </div>
+
+                <div class="setae-form-actions" style="text-align:right; border-top:1px solid #eee; padding-top:15px;">
+                    <button type="submit" class="setae-btn-primary"
+                        style="background:#333; color:#fff; border:none; padding:10px 24px; border-radius:4px; font-weight:bold; cursor:pointer;">管理者に提案を送信</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

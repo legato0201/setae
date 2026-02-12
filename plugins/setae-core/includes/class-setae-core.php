@@ -33,6 +33,7 @@ class Setae_Core
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-spider.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-topic.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-log.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-suggestion.php';
 
         /**
          * DB Classes
@@ -104,9 +105,9 @@ class Setae_Core
         $log = new Setae_CPT_Log();
         $this->loader->add_action('init', $log, 'register');
 
-        // Register Suggestion CPT (Inline for now, or move to separate class later)
         // Register Suggestion CPT
-        $this->loader->add_action('init', $this, 'register_suggestion_cpt');
+        $suggestion = new Setae_CPT_Suggestion();
+        $suggestion->init();
 
         // Dashboard & Assets
         $plugin_public = new Setae_Dashboard($this->get_plugin_name(), $this->get_version());
@@ -263,15 +264,6 @@ class Setae_Core
         return $this->version;
     }
 
-    public function register_suggestion_cpt()
-    {
-        register_post_type('setae_suggestion', array(
-            'labels' => array('name' => '修正提案', 'singular_name' => '修正提案'),
-            'public' => false,  // 一般公開はしない
-            'show_ui' => true,  // 管理画面には表示
-            'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
-            'menu_icon' => 'dashicons-lightbulb',
-        ));
-    }
+
 
 }
