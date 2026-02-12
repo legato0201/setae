@@ -86,6 +86,21 @@ class Setae_Core
     private function define_admin_hooks()
     {
         $plugin_admin = new Setae_Admin_Settings();
+
+        // ▼ 追加: 管理画面アクセス制限のフックを登録
+        $this->loader->add_action('admin_init', $this, 'restrict_admin_access');
+    }
+
+    /**
+     * 管理者以外が管理画面にアクセスしたらリダイレクトする
+     */
+    public function restrict_admin_access()
+    {
+        // 管理画面へのアクセス、かつAJAX通信ではなく、管理者権限がない場合
+        if (is_admin() && !wp_doing_ajax() && !current_user_can('administrator')) {
+            wp_redirect(home_url());
+            exit;
+        }
     }
 
     private function define_public_hooks()

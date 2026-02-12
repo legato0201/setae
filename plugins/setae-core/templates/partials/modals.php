@@ -472,10 +472,14 @@ $temperaments = get_terms(array(
                     <input type="file" id="log-image" accept="image/*" style="display:none;">
                     <button type="button" id="btn-trigger-upload" class="btn-icon-only">📸</button>
                     <!-- Best Shot Checkbox -->
-                    <label
-                        style="display:flex; align-items:center; gap:5px; font-size:12px; margin-left:10px; cursor:pointer;">
-                        <input type="checkbox" id="log-best-shot"> Best Shot
-                    </label>
+                    <!-- Best Shot Toggle Switch -->
+                    <div class="setae-toggle-wrapper">
+                        <label class="setae-switch">
+                            <input type="checkbox" id="log-best-shot">
+                            <span class="setae-slider"></span>
+                        </label>
+                        <span class="toggle-label">Best Shot</span>
+                    </div>
                     <div id="log-image-preview" class="image-preview-area"
                         style="display:none; position:absolute; bottom:60px; right:20px; z-index:10; background:white; padding:5px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
                         <img id="preview-img-tag" src="" alt="Preview"

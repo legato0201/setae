@@ -24,6 +24,10 @@ var SetaeUILogModal = (function ($) {
                 reader.onload = function (e) {
                     $('#preview-img-tag').attr('src', e.target.result);
                     $('#log-image-preview').show();
+
+                    // ▼▼▼ 追加: アップロードボタンを隠し、Best Shotトグルを表示 ▼▼▼
+                    $('#btn-trigger-upload').hide();
+                    $('.setae-toggle-wrapper').css('display', 'flex');
                 }
                 reader.readAsDataURL(file);
             }
@@ -34,6 +38,11 @@ var SetaeUILogModal = (function ($) {
             $('#log-image').val('');
             $('#preview-img-tag').attr('src', '');
             $('#log-image-preview').hide();
+
+            // ▼▼▼ 追加: アップロードボタンを表示し、Best Shotトグルを隠す（リセット） ▼▼▼
+            $('#btn-trigger-upload').show();
+            $('.setae-toggle-wrapper').hide();
+            $('#log-best-shot').prop('checked', false);
         });
     }
 
@@ -83,6 +92,10 @@ var SetaeUILogModal = (function ($) {
         $('#log-image').val('');
         $('#log-image-preview').hide();
         $('#preview-img-tag').attr('src', '');
+
+        // ▼▼▼ 追加: UIの初期状態セット（ボタン表示、トグル非表示） ▼▼▼
+        $('#btn-trigger-upload').show();
+        $('.setae-toggle-wrapper').hide();
 
         // イベントバインド (まだ行われていなければ)
         bindLogImageEvents();
@@ -187,6 +200,10 @@ var SetaeUILogModal = (function ($) {
             $('#log-image-preview').hide();
             $('#preview-img-tag').attr('src', '');
             $('#log-image').val('');
+
+            // ▼▼▼ 追加: UI状態のリセット ▼▼▼
+            $('#btn-trigger-upload').show();
+            $('.setae-toggle-wrapper').hide();
 
             if (window.SetaeUIDetail) {
                 if (SetaeUIDetail.loadSpiderLogs) {

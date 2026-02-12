@@ -721,7 +721,7 @@ class Setae_API_Spiders
         if (!empty($parsed_data['is_best_shot'])) {
             update_post_meta($log_id, '_setae_is_best_shot', 1);
 
-            // Auto-approve for Admin (Demo/Prototype mode)
+            /* // Auto-approve for Admin (Demo/Prototype mode)
             if (current_user_can('manage_options') && !empty($image_url) && $species_id) {
                 // $species_id fetched above
                 $featured = get_post_meta($species_id, '_setae_featured_images', true) ?: [];
@@ -730,6 +730,7 @@ class Setae_API_Spiders
                     update_post_meta($species_id, '_setae_featured_images', $featured);
                 }
             }
+            */
         }
 
         // == Updates on Spider State (修正箇所) ==
