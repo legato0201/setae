@@ -52,26 +52,42 @@ class Setae_API_Species extends WP_REST_Controller
             'title' => $post->post_title,
             'type' => 'setae_species', // context
             'genus' => $genus,
-            'description' => $post->post_content, // Assuming description is content
+            'ja_name' => get_post_meta($id, '_setae_common_name_ja', true),
+            'description' => $post->post_content,
             'thumb' => get_the_post_thumbnail_url($id, 'large'),
             'lifespan' => $lifespan,
             'size' => $size,
+            'temperature' => get_post_meta($id, '_setae_temperature', true),
+            'humidity' => get_post_meta($id, '_setae_humidity', true),
             'featured_images' => $featured,
             'keeping_count' => $keeping_count,
-            // Temperament (fetch from taxonomy if exists, else meta?) 
-            // Previous code used `temperament_slug`, checking `setae_temperament` tax?
-            // Checking `app-ui-renderer.js`... it uses `sp.temperament_slug`.
-            // I should fetch that.
         );
 
-        // Add Temperament
+        // Temperament (Array of objects)
         $t_terms = get_the_terms($id, 'setae_temperament');
+        $data['temperaments'] = [];
         if (!empty($t_terms) && !is_wp_error($t_terms)) {
-            $data['temperament'] = $t_terms[0]->name;
-            $data['temperament_slug'] = $t_terms[0]->slug;
+            foreach ($t_terms as $t) {
+                $data['temperaments'][] = [
+                    'term_id' => $t->term_id,
+                    'name' => $t->name,
+                    'slug' => $t->slug
+                ];
+            }
+            // Keep specific string for simple display if needed, or join them
+            $data['temperament'] = implode(', ', wp_list_pluck($data['temperaments'], 'name'));
+        } else {
+            $data['temperament'] = 'Unknown';
         }
 
-        // Add Habitat?
+        // Lifestyle
+        $l_terms = get_the_terms($id, 'setae_lifestyle');
+        if (!empty($l_terms) && !is_wp_error($l_terms)) {
+            $data['lifestyle'] = $l_terms[0]->name;
+            $data['lifestyle_slug'] = $l_terms[0]->slug;
+        }
+
+        // Habitat
         $h_terms = get_the_terms($id, 'setae_habitat');
         if (!empty($h_terms) && !is_wp_error($h_terms)) {
             $data['habitat'] = $h_terms[0]->name;

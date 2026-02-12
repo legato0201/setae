@@ -61,12 +61,11 @@ jQuery(document).ready(function ($) {
 
     // ▼▼▼ 修正提案モーダル関連ロジック ▼▼▼
 
-    // 1. モーダルを開く & 学名セット
+    // 1. モーダルを開く & 学名セット & 既存データの流し込み
     $('#btn-open-edit-modal').on('click', function (e) {
         e.preventDefault();
 
         var speciesId = $(this).data('id');
-        // 学名 (タイトル) を取得 (詳細画面のIDに依存)
         var speciesName = $('#enc-detail-title').text() || 'Unknown Species';
 
         if (!speciesId && typeof currentSpeciesId !== 'undefined') {
@@ -78,10 +77,77 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        // フォームへのセット
+        // 基本情報のセット
         $('#edit-req-species-id').val(speciesId);
-        $('#edit-req-species-name').val(speciesName); // 送信用
-        $('#edit-req-species-name-display').text(speciesName); // 表示用
+        $('#edit-req-species-name').val(speciesName);
+        $('#edit-req-species-name-display').text(speciesName);
+
+        // ▼▼▼ 追加: 既存データの取得と挿入 ▼▼▼
+
+        // 和名
+        var currentCommonName = $('#enc-detail-common-name').text();
+        if (currentCommonName) $('input[name="suggested_common_name_ja"]').val(currentCommonName);
+
+        // ライフスタイル
+        var currentLifestyle = $('#enc-detail-lifestyle').data('value');
+        if (!currentLifestyle) {
+            // テキストから簡易判定 (Terrestrial, Arboreal...)
+            var text = $('#enc-detail-lifestyle').text().toLowerCase();
+            if (text.includes('terrestrial')) currentLifestyle = 'terrestrial';
+            else if (text.includes('arboreal')) currentLifestyle = 'arboreal';
+            else if (text.includes('fossorial')) currentLifestyle = 'fossorial';
+        }
+        if (currentLifestyle) $('select[name="suggested_lifestyle"]').val(currentLifestyle);
+
+        // 温度 (Temp)
+        var currentTemp = $('#enc-detail-temp').text();
+        if (currentTemp && currentTemp !== '-') $('input[name="suggested_temperature"]').val(currentTemp);
+
+        // 湿度 (Humidity)
+        var currentHumid = $('#enc-detail-humidity').text();
+        if (currentHumid && currentHumid !== '-') $('input[name="suggested_humidity"]').val(currentHumid);
+
+        // 寿命 (Lifespan)
+        var currentLifespan = $('#enc-detail-lifespan').text();
+        if (currentLifespan && currentLifespan !== '-') $('input[name="suggested_lifespan"]').val(currentLifespan);
+
+        // サイズ (Legspan)
+        var currentSize = $('#enc-detail-size').text();
+        if (currentSize && currentSize !== '-') $('input[name="suggested_size"]').val(currentSize);
+
+        // 説明文
+        var currentDesc = $('#enc-detail-description').text();
+        if (currentDesc && !currentDesc.includes('No description')) {
+            $('textarea[name="suggested_description"]').val(currentDesc.trim());
+        } else {
+            $('textarea[name="suggested_description"]').val('');
+        }
+
+        // 性格 (Temperament)
+        var tempIds = [];
+        var tempLabels = [];
+        $('#enc-detail-temperament-list .setae-chip').each(function () {
+            var id = $(this).data('id');
+            var label = $(this).text();
+            if (id) {
+                tempIds.push(id);
+                tempLabels.push(label);
+            }
+        });
+
+        // 性格入力欄へセット
+        if (tempIds.length > 0) {
+            $('#suggested-temperament-input').val(tempIds.join(','));
+            // トリガー表示の更新
+            var html = tempLabels.map(lbl => `<span class="temp-chip">${lbl}</span>`).join('');
+            $('#temperament-selector-trigger').html(html);
+        } else {
+            // リセット
+            $('#suggested-temperament-input').val('');
+            $('#temperament-selector-trigger').html('<span style="color:#999;">タップして選択してください...</span>');
+        }
+
+        // ▲▲▲ 追加終了 ▲▲▲
 
         $('#setae-species-edit-modal').fadeIn(200).css('display', 'flex');
     });

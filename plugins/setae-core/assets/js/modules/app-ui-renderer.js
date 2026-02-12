@@ -161,10 +161,32 @@ var SetaeUI = (function ($) {
             $('#enc-detail-title').text(displayName);
             $('#enc-detail-name').text(data.title);
             $('#enc-detail-genus').text(data.genus || '');
+
+            // New Fields
+            $('#enc-detail-common-name').text(data.ja_name || '');
+
+            // Stats
             $('#enc-detail-description').html(data.description ? data.description.replace(/\n/g, '<br>') : 'No description available.');
             $('#enc-detail-lifespan').text(data.lifespan || '-');
             $('#enc-detail-size').text(data.size ? data.size + ' cm' : '-');
-            $('#enc-detail-temperament').text(data.temperament || 'Unknown');
+            $('#enc-detail-temp').text(data.temperature || '-');
+            $('#enc-detail-humidity').text(data.humidity || '-');
+
+            // Lifestyle
+            $('#enc-detail-lifestyle').text(data.lifestyle || '-').data('value', data.lifestyle_slug || '');
+
+            // Temperament List (Chips)
+            const tempContainer = $('#enc-detail-temperament-list');
+            tempContainer.empty();
+            if (data.temperaments && data.temperaments.length > 0) {
+                const chips = data.temperaments.map(t =>
+                    `<span class="setae-chip" data-id="${t.term_id}" style="background:#eee; padding:3px 8px; border-radius:12px; font-size:11px;">${t.name}</span>`
+                ).join('');
+                tempContainer.html(chips);
+            } else {
+                tempContainer.html('<span style="font-size:11px; color:#999;">Unknown</span>');
+            }
+
             $('#enc-detail-keeping').html(`🔥 ${data.keeping_count} Keeping`);
 
             // Set ID for Edit Suggestion Button

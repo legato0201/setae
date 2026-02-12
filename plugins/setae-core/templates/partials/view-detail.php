@@ -30,10 +30,15 @@
         <div style="padding:15px;">
             <span id="enc-detail-genus"
                 style="display:block; font-style:italic; color:#888; font-size:12px; margin-bottom:4px;">Genus</span>
+            <div id="enc-detail-common-name" style="font-size:12px; color:#555; font-weight:bold;"></div>
             <h3 id="enc-detail-name" style="margin:0;">Species Title</h3>
+
+            <!-- Temperament List (Chips) -->
+            <div id="enc-detail-temperament-list" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px;">
+                <!-- JS populated -->
+            </div>
+
             <div style="margin-top:10px; display:flex; gap:10px; font-size:12px;">
-                <span id="enc-detail-temperament"
-                    style="background:#eee; padding:3px 8px; border-radius:12px;">Docile</span>
                 <span id="enc-detail-keeping"
                     style="background:#ffcc00; color:#333; padding:3px 8px; border-radius:12px; font-weight:bold;">🔥
                     10 Keeping</span>
@@ -45,7 +50,20 @@
     <div class="setae-card" style="margin-bottom:15px;">
         <h4 style="margin-top:0;">Species Info</h4>
         <p id="enc-detail-description" style="font-size:13px; line-height:1.6; color:#555;">...</p>
+
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
+                <span style="display:block; font-size:10px; color:#888;">Lifestyle</span>
+                <strong id="enc-detail-lifestyle">-</strong>
+            </div>
+            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
+                <span style="display:block; font-size:10px; color:#888;">Temp</span>
+                <strong id="enc-detail-temp">-</strong>
+            </div>
+            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
+                <span style="display:block; font-size:10px; color:#888;">Humidity</span>
+                <strong id="enc-detail-humidity">-</strong>
+            </div>
             <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
                 <span style="display:block; font-size:10px; color:#888;">Lifespan</span>
                 <strong id="enc-detail-lifespan">-</strong>
