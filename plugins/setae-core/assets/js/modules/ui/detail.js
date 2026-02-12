@@ -2,6 +2,7 @@ var SetaeUIDetail = (function ($) {
     'use strict';
 
     let currentSpiderId = null;
+    let currentClassification = 'tarantula'; // ★追加: 現在の個体の分類を保持
 
     // ==========================================
     // DEEP DETAIL VIEW
@@ -23,6 +24,8 @@ var SetaeUIDetail = (function ($) {
     }
 
     function renderSpiderDetailSection(spider) {
+        currentClassification = spider.classification || 'tarantula'; // ★分類を保存
+
         const $heroBackdrop = $('#section-my-detail .hero-backdrop');
         const imgUrl = spider.image_url || spider.thumb || spider.src || spider.full_image;
 
@@ -39,6 +42,29 @@ var SetaeUIDetail = (function ($) {
 
         $('#detail-spider-molt').text(spider.last_molt || '-');
         $('#detail-spider-feed').text(spider.last_feed || '-');
+
+        // ▼ 追加: 植物用UI切り替えロジック
+        const isPlant = (currentClassification === 'plant');
+
+        if (isPlant) {
+            // ラベルの書き換え
+            $('.status-label:contains("Last Molt")').text("Last Repot");
+            $('.status-label:contains("Last Feed")').text("Last Water");
+
+            // 餌グラフ (Prey Preferences) を隠す
+            $('#preyChart').closest('.dashboard-card').hide();
+
+            // 履歴タイトルの書き換え (JSで書き換え or CSS)
+            // 後ほど renderGrowthChart でも書き換えますが、ここでも初期状態でやっておく
+            // $('.molt-history-container div:first').text("REPOT HISTORY");
+        } else {
+            // デフォルトに戻す (他の個体を見た後に植物が残らないように)
+            $('.status-label:contains("Last Repot")').text("Last Molt");
+            $('.status-label:contains("Last Water")').text("Last Feed");
+            $('#preyChart').closest('.dashboard-card').show();
+            // $('.molt-history-container div:first').text("MOLT HISTORY");
+        }
+        // ▲ 追加ここまで
 
         $('.section-calendar').remove();
 
@@ -214,12 +240,30 @@ var SetaeUIDetail = (function ($) {
                         } catch (err) { }
 
                         const typeKey = (e.type || '').toLowerCase();
+                        let typeLabel = e.type.toUpperCase(); // ラベル用変数を用意
+
+                        // ▼ 追加: 植物判定
+                        const isPlant = (currentClassification === 'plant');
+
                         if (typeKey === 'feed') {
-                            iconChar = isRefused ? '✕' : '🦗';
-                            nodeClass = isRefused ? 'node-refused' : 'node-feed';
+                            if (isPlant) {
+                                iconChar = '💧'; // Water
+                                nodeClass = 'node-growth'; // 青系クラスを流用
+                                typeLabel = 'WATER';
+                                if (displayMeta) displayMeta = displayMeta.replace('Cricket', '').replace('Dubia', ''); // デフォルト値を消す
+                            } else {
+                                iconChar = isRefused ? '✕' : '🦗';
+                                nodeClass = isRefused ? 'node-refused' : 'node-feed';
+                            }
                         } else if (typeKey === 'molt') {
-                            iconChar = '🧬';
-                            nodeClass = 'node-molt';
+                            if (isPlant) {
+                                iconChar = '🪴'; // Repot
+                                nodeClass = 'node-molt';
+                                typeLabel = 'REPOT';
+                            } else {
+                                iconChar = '🧬';
+                                nodeClass = 'node-molt';
+                            }
                         } else if (typeKey === 'growth') {
                             iconChar = '📏';
                             nodeClass = 'node-growth';
@@ -256,7 +300,7 @@ var SetaeUIDetail = (function ($) {
                                     <div class="timeline-card">
                                         <div style="display:flex; justify-content:space-between; align-items:center;">
                                             <span style="font-weight:600; font-size:14px; color:#333;">
-                                                ${e.type.toUpperCase()} <span style="font-weight:normal; color:#666; font-size:13px;">${displayMeta}</span>
+                                                ${typeLabel} <span style="font-weight:normal; color:#666; font-size:13px;">${displayMeta}</span>
                                             </span>
                                             <span style="color:#aaa; font-size:11px;">${e.date}</span>
                                         </div>
@@ -390,9 +434,12 @@ var SetaeUIDetail = (function ($) {
                 `;
             });
 
+            // ▼ 追加: タイトル切り替え
+            const historyTitle = (currentClassification === 'plant') ? 'REPOT HISTORY' : 'MOLT HISTORY';
+
             const tableHtml = `
                 <div class="molt-history-container" style="margin-top:24px; border-top:2px solid #f5f5f5; padding-top:16px;">
-                    <div style="font-size:12px; font-weight:bold; color:#999; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">Molt History</div>
+                    <div style="font-size:12px; font-weight:bold; color:#999; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">${historyTitle}</div>
                     <table style="width:100%; border-collapse:collapse; font-size:13px; line-height:1.4;">
                         <thead>
                             <tr style="text-align:left; color:#aaa; font-size:11px; border-bottom:1px solid #eee;">

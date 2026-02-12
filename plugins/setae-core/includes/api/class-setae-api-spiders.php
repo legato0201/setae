@@ -407,7 +407,16 @@ class Setae_API_Spiders
         }
 
         $species_id = get_post_meta($spider_id, '_setae_species_id', true);
-        $species_name = $species_id ? get_the_title($species_id) : '';
+        $custom_name = get_post_meta($spider_id, '_setae_custom_species_name', true); // ★追加
+
+        // IDがあればそのタイトル、なければカスタムネームを使用
+        if ($species_id) {
+            $species_name = get_the_title($species_id);
+        } elseif ($custom_name) {
+            $species_name = $custom_name;
+        } else {
+            $species_name = '';
+        }
 
         // Image logic
         $thumb = get_post_meta($spider_id, '_setae_spider_image', true);
@@ -419,7 +428,7 @@ class Setae_API_Spiders
             'id' => $spider_id,
             'title' => $post->post_title,
             'species_id' => $species_id,
-            'species_name' => $species_name,
+            'species_name' => $species_name, // ここにカスタム名も入るようになる
             'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
             'last_feed' => get_post_meta($spider_id, '_setae_last_feed_date', true),
             'status' => get_post_meta($spider_id, '_setae_status', true) ?: 'normal',
@@ -465,12 +474,24 @@ class Setae_API_Spiders
             }
         }
 
-        if ($request->get_param('species_id')) {
-            update_post_meta($spider_id, '_setae_species_id', absint($request->get_param('species_id')));
-        }
-        // Date updates (last_molt, last_feed) are now handled via logs only. Logic removed.
+        // ▼ 修正: 種類情報の更新ロジック (ID指定 または カスタム名)
+        $species_id_param = $request->get_param('species_id');
+        $species_name_param = sanitize_text_field($request->get_param('species_name'));
 
-        // [Fix] 更新後の最新データを取得して返す (画面への即時反映のため)
+        if (!empty($species_id_param)) {
+            // DB登録済みの種類IDが送られてきた場合
+            update_post_meta($spider_id, '_setae_species_id', absint($species_id_param));
+            // カスタム名は削除して整合性を保つ
+            delete_post_meta($spider_id, '_setae_custom_species_name');
+        } elseif (!empty($species_name_param)) {
+            // 手入力の名前が送られてきた場合
+            update_post_meta($spider_id, '_setae_custom_species_name', $species_name_param);
+            // 種類IDは削除して整合性を保つ
+            delete_post_meta($spider_id, '_setae_species_id');
+        }
+        // ▲ 修正ここまで
+
+        // 更新後の最新データを取得して返す
         $updated_data = $this->get_spider_data_array($spider_id);
 
         return new WP_REST_Response(array('success' => true, 'data' => $updated_data), 200);
