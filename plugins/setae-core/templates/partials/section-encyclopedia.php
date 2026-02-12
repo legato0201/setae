@@ -27,17 +27,17 @@
         </div>
 
         <div class="setae-decks-scroll" id="setae-enc-filters" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:5px; scrollbar-width:none;">
-            <button class="deck-pill active" data-filter="all" style="white-space:nowrap; padding:6px 14px; border-radius:16px; border:1px solid #ddd; background:#fff; font-size:12px; cursor:pointer;">
+            <button class="deck-pill active" data-filter="all">
                 すべて
             </button>
             
-            <button class="deck-pill" data-filter="style_arboreal" style="white-space:nowrap; padding:6px 14px; border-radius:16px; border:1px solid #ddd; background:#fff; font-size:12px; cursor:pointer;">
+            <button class="deck-pill" data-filter="style_arboreal">
                 <span class="pill-icon">🌿</span> 樹上性
             </button>
-            <button class="deck-pill" data-filter="style_terrestrial" style="white-space:nowrap; padding:6px 14px; border-radius:16px; border:1px solid #ddd; background:#fff; font-size:12px; cursor:pointer;">
+            <button class="deck-pill" data-filter="style_terrestrial">
                 <span class="pill-icon">🏜️</span> 地表性
             </button>
-            <button class="deck-pill" data-filter="style_fossorial" style="white-space:nowrap; padding:6px 14px; border-radius:16px; border:1px solid #ddd; background:#fff; font-size:12px; cursor:pointer;">
+            <button class="deck-pill" data-filter="style_fossorial">
                 <span class="pill-icon">🕳️</span> 地中性
             </button>
 
@@ -46,7 +46,7 @@
             $regions = get_terms(array('taxonomy' => 'setae_habitat', 'hide_empty' => true));
             if (!empty($regions) && !is_wp_error($regions)) {
                 foreach ($regions as $region) {
-                    echo '<button class="deck-pill" data-filter="region_' . esc_attr($region->slug) . '" style="white-space:nowrap; padding:6px 14px; border-radius:16px; border:1px solid #ddd; background:#fff; font-size:12px; cursor:pointer;">';
+                    echo '<button class="deck-pill" data-filter="region_' . esc_attr($region->slug) . '">';
                     echo '🌏 ' . esc_html($region->name);
                     echo '</button>';
                 }
@@ -190,9 +190,13 @@ jQuery(document).ready(function($) {
     $input.on('input', function() { applyFilterSort(); });
 
     // フィルター
+    // フィルター
     $filterBtns.on('click', function() {
-        $filterBtns.removeClass('active').css('background', '#fff').css('color', '#333');
-        $(this).addClass('active').css('background', '#333').css('color', '#fff');
+        // Activeクラスの切り替えはCSSに任せるため、JSでのスタイル直接操作は削除
+        // update UI
+        $filterBtns.removeClass('active');
+        $(this).addClass('active');
+        
         currentFilter = $(this).data('filter');
         applyFilterSort();
     });
