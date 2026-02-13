@@ -453,8 +453,12 @@ $temperaments = get_terms(array(
                     <div id="log-feed-prey-buttons" class="prey-chip-container">
                         <!-- JS Populated -->
                     </div>
-                    <div class="setae-checkbox-group-sm">
-                        <label><input type="checkbox" id="log-feed-refused"> <span>拒食 (Refused)</span></label>
+                    <div class="setae-toggle-wrapper toggle-refused">
+                        <label class="setae-switch">
+                            <input type="checkbox" id="log-feed-refused">
+                            <span class="setae-slider"></span>
+                        </label>
+                        <span class="toggle-label">拒食 (Refused)</span>
                     </div>
                 </div>
 

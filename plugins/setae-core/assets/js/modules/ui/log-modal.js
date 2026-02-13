@@ -160,6 +160,16 @@ var SetaeUILogModal = (function ($) {
 
     function handleLogSubmit(e) {
         e.preventDefault();
+
+        // ▼▼▼ 追加: ボタンの取得と無効化 ▼▼▼
+        const $submitBtn = $('#setae-log-form').find('button[type="submit"]');
+        const originalBtnText = $submitBtn.text();
+
+        if ($submitBtn.prop('disabled')) return; // 念のため二重チェック
+
+        $submitBtn.prop('disabled', true).text('保存中...');
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         const id = $('#log-spider-id').val();
         const type = $('#log-type').val();
         const date = $('#log-date').val();
@@ -174,7 +184,10 @@ var SetaeUILogModal = (function ($) {
             const prey = $('#log-feed-prey-select').val();
             const refused = $('#log-feed-refused').is(':checked');
             if (!prey && !refused) {
-                SetaeCore.showToast('餌の種類または拒食を選択してください', 'warning'); return;
+                SetaeCore.showToast('餌の種類または拒食を選択してください', 'warning');
+                // バリデーションエラー時はボタンを元に戻す
+                $submitBtn.prop('disabled', false).text(originalBtnText);
+                return;
             }
             dataPayload = { prey_type: prey, refused: refused };
         } else if (type === 'growth') {
@@ -201,9 +214,12 @@ var SetaeUILogModal = (function ($) {
             $('#preview-img-tag').attr('src', '');
             $('#log-image').val('');
 
-            // ▼▼▼ 追加: UI状態のリセット ▼▼▼
+            // UI状態のリセット
             $('#btn-trigger-upload').show();
-            $('.setae-toggle-wrapper').hide();
+            $('.setae-toggle-wrapper:not(.toggle-refused)').hide(); // Refused以外のトグル(BestShot)を隠す
+
+            // ▼▼▼ 追加: ボタンを元の状態に戻す ▼▼▼
+            $submitBtn.prop('disabled', false).text(originalBtnText);
 
             if (window.SetaeUIDetail) {
                 if (SetaeUIDetail.loadSpiderLogs) {

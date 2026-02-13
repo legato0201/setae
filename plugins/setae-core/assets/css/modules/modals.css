@@ -637,6 +637,18 @@
 }
 
 /* Label Active Color */
-.setae-switch input:checked~.toggle-label {
-    color: #d35400;
+/* --- Layout Fix: Align Memo and Camera Icon --- */
+.form-row-bottom {
+    align-items: center !important;
+    /* 強制的に中央揃えにしてズレを解消 */
+}
+
+/* Refused Toggle Specific Style */
+.toggle-refused {
+    margin-left: 0;
+    /* 左マージンをリセット */
+    margin-top: 10px;
+    /* 上に少し余白 */
+    width: fit-content;
+    /* 幅をコンテンツに合わせる */
 }
