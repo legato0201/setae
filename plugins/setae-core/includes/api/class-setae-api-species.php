@@ -7,7 +7,14 @@ class Setae_API_Species extends WP_REST_Controller
         $version = '1';
         $namespace = 'setae/v' . $version;
 
-        // Detail Endpoint
+        // 1. List & Search Endpoint (新規追加・移植)
+        register_rest_route($namespace, '/species', array(
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => array($this, 'get_items'),
+            'permission_callback' => '__return_true', // Public
+        ));
+
+        // 2. Detail Endpoint
         register_rest_route($namespace, '/species/(?P<id>\d+)', array(
             'methods' => WP_REST_Server::READABLE,
             'callback' => array($this, 'get_species_detail'),
@@ -21,11 +28,109 @@ class Setae_API_Species extends WP_REST_Controller
             )
         ));
 
+        // 3. Stats Endpoint
         register_rest_route($namespace, '/species/(?P<id>\d+)/stats', array(
             'methods' => WP_REST_Server::READABLE,
             'callback' => array($this, 'get_species_stats'),
             'permission_callback' => '__return_true', // Public
         ));
+    }
+
+    /**
+     * Get a collection of species (Search & List)
+     * class-setae-api.php からロジックを移植・統合
+     */
+    public function get_items($request)
+    {
+        // 検索語句を取得し、デコードと空白除去を行う
+        $raw_search = $request->get_param('search');
+        $search = trim(urldecode($raw_search));
+
+        $offset = $request->get_param('offset') ?: 0;
+
+        // ベースとなるクエリ引数
+        $args = array(
+            'post_type' => 'setae_species',
+            'posts_per_page' => 20,
+            'offset' => $offset,
+            'post_status' => 'publish',
+            'orderby' => 'title',
+            'order' => 'ASC',
+            // 'fields' => 'ids', // ここでidsを指定するとループ処理が複雑になるため、最終クエリでは外す方針
+        );
+
+        // 検索語句がある場合の処理（タイトル OR メタデータ検索）
+        if (!empty($search)) {
+            // 1. 学名（タイトル）検索
+            $args_title = $args;
+            $args_title['s'] = $search;
+            $args_title['fields'] = 'ids'; // IDだけ取得してマージするため
+            $query_title = new WP_Query($args_title);
+            $ids_title = $query_title->posts;
+
+            // 2. 和名（メタデータ）検索
+            $args_meta = $args;
+            $args_meta['meta_query'] = array(
+                array(
+                    'key' => '_setae_common_name_ja',
+                    'value' => $search,
+                    'compare' => 'LIKE' // 部分一致
+                )
+            );
+            $args_meta['posts_per_page'] = -1; // 漏れがないように全件対象
+            $args_meta['offset'] = 0;
+            $args_meta['fields'] = 'ids';
+
+            $query_meta = new WP_Query($args_meta);
+            $ids_meta = $query_meta->posts;
+
+            // IDを結合して重複削除
+            $final_ids = array_unique(array_merge($ids_title, $ids_meta));
+
+            // ヒットなしの場合は空を返す
+            if (empty($final_ids)) {
+                return new WP_REST_Response(array(), 200);
+            }
+
+            // マージしたIDを対象に最終クエリを作成
+            $args_final = array(
+                'post_type' => 'setae_species',
+                'post__in' => $final_ids,
+                'posts_per_page' => 20, // ページネーション用
+                'orderby' => 'post__in', // ヒット順（必要ならtitleに戻す）
+            );
+        } else {
+            // 検索なしの場合
+            $args_final = $args;
+        }
+
+        $query = new WP_Query($args_final);
+        $data = array();
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $id = get_the_ID();
+
+                $terms = get_the_terms($id, 'setae_genus');
+                $genus = (!empty($terms) && !is_wp_error($terms)) ? $terms[0]->name : '';
+
+                // 和名を取得
+                $ja_name = get_post_meta($id, '_setae_common_name_ja', true);
+
+                $data[] = array(
+                    'id' => $id,
+                    'title' => get_the_title(),
+                    'ja_name' => $ja_name,
+                    'genus' => $genus,
+                    'thumb' => get_the_post_thumbnail_url($id, 'thumbnail'),
+                    'link' => get_permalink(),
+                );
+            }
+            wp_reset_postdata();
+        }
+
+        return new WP_REST_Response($data, 200);
     }
 
     public function get_species_detail($request)
@@ -74,7 +179,6 @@ class Setae_API_Species extends WP_REST_Controller
                     'slug' => $t->slug
                 ];
             }
-            // Keep specific string for simple display if needed, or join them
             $data['temperament'] = implode(', ', wp_list_pluck($data['temperaments'], 'name'));
         } else {
             $data['temperament'] = 'Unknown';
@@ -98,15 +202,12 @@ class Setae_API_Species extends WP_REST_Controller
 
     /**
      * Get statistics for a specific species
-     * 
-     * @param WP_REST_Request $request
-     * @return WP_REST_Response
      */
     public function get_species_stats($request)
     {
         $species_id = $request['id'];
 
-        // 1. Now Keeping Count (Unique users with ALIVE spiders of this species)
+        // 1. Now Keeping Count
         $keeping_count = $this->count_active_keepers($species_id);
 
         // 2. Growth Data (Placeholder for now)
@@ -124,13 +225,6 @@ class Setae_API_Species extends WP_REST_Controller
     private function count_active_keepers($species_id)
     {
         global $wpdb;
-
-        // Count unique post_author from wp_posts (setae_spider)
-        // Join with postmeta to check species_id
-        // Filter by post_status 'publish'
-        // Filter out dead spiders (status != 'dead') if we had that status
-
-        // Using WP_Query or raw SQL. Raw SQL is efficiently for distinct count.
 
         $sql = $wpdb->prepare("
             SELECT COUNT(DISTINCT post_author)
