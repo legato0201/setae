@@ -27,7 +27,9 @@ var SetaeUILogModal = (function ($) {
 
                     // ▼▼▼ 追加: アップロードボタンを隠し、Best Shotトグルを表示 ▼▼▼
                     $('#btn-trigger-upload').hide();
-                    $('.setae-toggle-wrapper').css('display', 'flex');
+
+                    // 【修正】Refusedトグル以外（＝Best Shotトグル）を表示状態にする
+                    $('.setae-toggle-wrapper').not('.toggle-refused').css('display', 'flex');
                 }
                 reader.readAsDataURL(file);
             }
@@ -41,7 +43,10 @@ var SetaeUILogModal = (function ($) {
 
             // ▼▼▼ 追加: アップロードボタンを表示し、Best Shotトグルを隠す（リセット） ▼▼▼
             $('#btn-trigger-upload').show();
-            $('.setae-toggle-wrapper').hide();
+
+            // 【修正】Refusedトグル以外（＝Best Shotトグル）を隠す
+            // ※ここで単にhide()すると拒食トグルまで消えてしまうため修正
+            $('.setae-toggle-wrapper').not('.toggle-refused').hide();
             $('#log-best-shot').prop('checked', false);
         });
     }
@@ -95,7 +100,10 @@ var SetaeUILogModal = (function ($) {
 
         // ▼▼▼ 追加: UIの初期状態セット（ボタン表示、トグル非表示） ▼▼▼
         $('#btn-trigger-upload').show();
-        $('.setae-toggle-wrapper').hide();
+
+        // 【修正】Best Shotトグルは隠し、Refusedトグルは常に表示状態にする
+        $('.setae-toggle-wrapper').not('.toggle-refused').hide();
+        $('.toggle-refused').css('display', 'flex');
 
         // イベントバインド (まだ行われていなければ)
         bindLogImageEvents();
