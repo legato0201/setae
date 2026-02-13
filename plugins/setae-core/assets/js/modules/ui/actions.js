@@ -6,6 +6,9 @@ var SetaeUIActions = (function ($) {
     let touchStartY = 0;
     let currentSwipeRow = null;
     let isSwipeActionTaken = false;
+    // ▼ 追加: 動作判定用のフラグ
+    let isSwiping = false;
+    let isScrolling = false;
 
     function getStatusColor(status) {
         switch (status) {
@@ -195,6 +198,11 @@ var SetaeUIActions = (function ($) {
         touchStartY = e.changedTouches[0].screenY;
         currentSwipeRow = this;
         isSwipeActionTaken = false;
+
+        // ▼ 追加: フラグのリセット
+        isSwiping = false;
+        isScrolling = false;
+
         $('.setae-list-content').css('transform', 'translateX(0)');
 
         const bgLeft = this.querySelector('.swipe-left');
@@ -219,14 +227,25 @@ var SetaeUIActions = (function ($) {
     }
 
     function handleTouchMove(e) {
-        if (!currentSwipeRow) return;
+        // ▼ 修正: スクロール判定済みなら処理を中断
+        if (!currentSwipeRow || isScrolling) return;
+
         const diffX = e.changedTouches[0].screenX - touchStartX;
         const diffY = e.changedTouches[0].screenY - touchStartY;
 
-        if (Math.abs(diffX) > Math.abs(diffY)) {
+        // ▼ 修正: まだ判定していない場合、移動量で判定を行う
+        if (!isSwiping) {
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                isSwiping = true;   // 横移動が大きい＝スワイプ
+            } else {
+                isScrolling = true; // 縦移動が大きい＝スクロール
+                return;             // スワイプ処理はしない
+            }
+        }
+
+        // ▼ 修正: スワイプ中は確実にスクロールを阻止
+        if (isSwiping) {
             e.preventDefault();
-        } else {
-            return;
         }
 
         if (Math.abs(diffX) > 150) return;
