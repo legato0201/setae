@@ -9,6 +9,14 @@ var SetaeUILogModal = (function ($) {
         'Pinky (ピンキー)'
     ];
 
+    // ▼▼▼ 追加: 植物用のデフォルト選択肢 ▼▼▼
+    const DEFAULT_WATERING_LIST = [
+        'Water (通常)',
+        'Mist (葉水)',
+        'Liquid Fert. (液肥)',
+        'Soak (底面/ソーキング)'
+    ];
+
     // モジュール内に追加: 画像プレビュー等のイベント設定
     function bindLogImageEvents() {
         // アップロードボタン -> ファイル選択発火
@@ -84,11 +92,17 @@ var SetaeUILogModal = (function ($) {
             $btnFeed.html('💧').attr('title', 'Water');
             $btnMolt.html('🪴').attr('title', 'Repot');
             $('#log-feed-options label').first().text('Watering Type (Option)');
+
+            // ▼▼▼ 追加: 植物の場合は生き物用の設定ボタンを隠す ▼▼▼
+            $('#btn-manage-feed-types').hide();
         } else {
             // 通常モード
             $btnFeed.html('🦗').attr('title', 'Feed');
             $btnMolt.html('🧬').attr('title', 'Molt');
             $('#log-feed-options label').first().text('餌 (Prey)');
+
+            // ▼▼▼ 追加: 生き物の場合は設定ボタンを表示 ▼▼▼
+            $('#btn-manage-feed-types').show();
         }
 
         $('#setae-log-form')[0].reset();
@@ -101,31 +115,44 @@ var SetaeUILogModal = (function ($) {
         // ▼▼▼ 追加: UIの初期状態セット（ボタン表示、トグル非表示） ▼▼▼
         $('#btn-trigger-upload').show();
 
-        // 【修正】Best Shotトグルは隠し、Refusedトグルは常に表示状態にする
-        $('.setae-toggle-wrapper').not('.toggle-refused').hide();
-        $('.toggle-refused').css('display', 'flex');
+        // 【修正】トグルの表示制御を植物対応に変更
+        // 一旦すべてのトグルを隠す
+        $('.setae-toggle-wrapper').hide();
+
+        // 植物でなければ「拒食 (Refused)」トグルを表示する
+        if (!isPlant) {
+            $('.toggle-refused').css('display', 'flex');
+        }
 
         // イベントバインド (まだ行われていなければ)
         bindLogImageEvents();
 
         $('#log-date').val(new Date().toISOString().split('T')[0]);
         $('#log-spider-id').val(idToUse);
-        renderLogPreyButtons();
+        // ▼▼▼ 修正: isPlantフラグを渡す ▼▼▼
+        renderLogPreyButtons(isPlant);
         $('#setae-log-modal').fadeIn();
 
         const typeToSelect = (typeof initialType === 'string') ? initialType : 'feed';
         $(`.log-type-btn[data-val="${typeToSelect}"], .type-btn-sm[data-val="${typeToSelect}"]`).trigger('click');
     }
 
-    function renderLogPreyButtons() {
+    // ▼▼▼ 修正: 引数 isPlant を追加（デフォルトは false） ▼▼▼
+    function renderLogPreyButtons(isPlant = false) {
         const container = $('#log-feed-prey-buttons');
         container.empty();
 
-        if (!SetaeCore.state.feedTypes || SetaeCore.state.feedTypes.length === 0) {
-            SetaeCore.state.feedTypes = DEFAULT_PREY_LIST;
-        }
+        let types;
 
-        const types = SetaeCore.state.feedTypes;
+        // ▼▼▼ 追加: 植物か生き物かでリストを分岐 ▼▼▼
+        if (isPlant) {
+            types = DEFAULT_WATERING_LIST;
+        } else {
+            if (!SetaeCore.state.feedTypes || SetaeCore.state.feedTypes.length === 0) {
+                SetaeCore.state.feedTypes = DEFAULT_PREY_LIST;
+            }
+            types = SetaeCore.state.feedTypes;
+        }
 
         types.forEach(t => {
             container.append(`<button type="button" class="prey-btn" data-val="${t}">${t}</button>`);
