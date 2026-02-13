@@ -37,7 +37,7 @@
     /* 極薄の境界線 */
     position: relative;
     z-index: 10;
-    padding: 12px 16px 12px 0;
+    padding: 6px 16px 6px 0;
     /* 左側はステータスバー用に空ける */
     box-sizing: border-box;
     overflow: hidden;
@@ -85,7 +85,7 @@
 
 /* 左端のステータスバー */
 .setae-status-strip {
-    width: 6px;
+    width: 14px;
     height: 100%;
     position: absolute;
     left: 0;
@@ -95,7 +95,7 @@
 
 /* アバター画像 */
 .setae-avatar-container {
-    margin-left: 12px;
+    margin-left: 20px;
     margin-right: 14px;
     flex-shrink: 0;
 }

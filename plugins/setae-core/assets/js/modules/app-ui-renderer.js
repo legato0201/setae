@@ -166,7 +166,15 @@ var SetaeUI = (function ($) {
         // Swipe Actions (Mobile)
         if (SetaeUIActions) {
             $(document).on('touchstart', '.setae-spider-list-row', SetaeUIActions.handleTouchStart);
-            $(document).on('touchmove', '.setae-spider-list-row', SetaeUIActions.handleTouchMove);
+
+            // ▼ 修正: スクロールを阻止(preventDefault)するために、passive: false オプション付きのネイティブイベントとして登録
+            document.addEventListener('touchmove', function (e) {
+                // スワイプ対象の行の上での操作か判定
+                if ($(e.target).closest('.setae-spider-list-row').length) {
+                    SetaeUIActions.handleTouchMove(e);
+                }
+            }, { passive: false });
+
             $(document).on('touchend', '.setae-spider-list-row', SetaeUIActions.handleTouchEnd);
 
             // Desktop Hover Actions is now handled by SetaeUIDesktop (app-ui-desktop.js)
