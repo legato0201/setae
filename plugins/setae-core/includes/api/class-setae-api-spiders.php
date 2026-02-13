@@ -8,12 +8,7 @@ class Setae_API_Spiders
 
     public function register_routes()
     {
-        // Species List
-        register_rest_route('setae/v1', '/species', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_species_list'),
-            'permission_callback' => '__return_true', // Public
-        ));
+
 
         // My Spiders List
         register_rest_route('setae/v1', '/my-spiders', array(
@@ -95,53 +90,7 @@ class Setae_API_Spiders
         ));
     }
 
-    // ==========================================
-    // Species Logic
-    // ==========================================
-    public function get_species_list($request)
-    {
-        $search = $request->get_param('search');
-        $offset = $request->get_param('offset') ?: 0;
 
-        $args = array(
-            'post_type' => 'setae_species',
-            'posts_per_page' => 20,
-            'offset' => $offset,
-            'post_status' => 'publish',
-            'orderby' => 'title',
-            'order' => 'ASC',
-        );
-
-        if (!empty($search)) {
-            $args['s'] = $search;
-        }
-
-        $query = new WP_Query($args);
-        $data = array();
-
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $terms = get_the_terms(get_the_ID(), 'setae_genus');
-                $genus = (!empty($terms) && !is_wp_error($terms)) ? $terms[0]->name : '';
-                // 和名を取得
-                $ja_name = get_post_meta(get_the_ID(), '_setae_common_name_ja', true);
-
-                $data[] = array(
-                    'id' => get_the_ID(),
-                    'title' => get_the_title(),
-                    'ja_name' => $ja_name, // ★ここを追加
-                    'genus' => $genus,
-                    'thumb' => get_the_post_thumbnail_url(get_the_ID(), 'medium'),
-                    'link' => get_permalink(),
-                );
-
-            }
-            wp_reset_postdata();
-        }
-
-        return new WP_REST_Response($data, 200);
-    }
 
     // ==========================================
     // Spider Logic
