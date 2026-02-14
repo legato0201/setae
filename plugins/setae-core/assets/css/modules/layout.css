@@ -93,42 +93,79 @@
     gap: 8px;
 }
 
-.setae-icon-btn {
-    width: 40px;
+
+/* =========================================
+   Primary Add Button (Modern & Professional)
+   ========================================= */
+.setae-add-btn {
+    /* Layout & Sizing */
     height: 40px;
+    padding: 0 20px;
+    /* 横幅に少しゆとりを持たせる */
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
-    border: 1px solid var(--setae-border);
-    background: #fff;
-    color: var(--setae-text-main);
-    cursor: pointer;
-    transition: all 0.2s;
-}
+    gap: 8px;
+    /* アイコンと文字の間隔を調整 */
 
-.setae-icon-btn:hover {
-    background: var(--setae-bg-soft);
-}
-
-.setae-add-btn {
-    height: 40px;
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 10px;
-    border: none;
-    background: var(--setae-primary);
+    /* Visual Style */
+    background: linear-gradient(135deg, #007AFF 0%, #0062cc 100%);
+    /* Apple Blueの微細なグラデーション */
     color: #fff;
-    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    /* 少し角を丸くして親しみやすく */
+
+    /* Typography */
     font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    /* 視認性を高める */
+
+    /* Effects (Depth & Touch) */
     cursor: pointer;
-    transition: opacity 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    /* 色付きの影で浮遊感を演出 */
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Apple風の滑らかな動き */
+
+    /* Rendering Fixes */
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Hover State */
 .setae-add-btn:hover {
-    opacity: 0.9;
+    transform: translateY(-1px);
+    /* ふわりと浮く */
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+    /* 影を強調 */
+    filter: brightness(1.05);
+    /* 少し明るく */
+}
+
+/* Active/Click State */
+.setae-add-btn:active {
+    transform: translateY(0) scale(0.97);
+    /* 押し込み感 */
+    box-shadow: 0 2px 6px rgba(0, 122, 255, 0.25);
+}
+
+/* Icon Polish */
+.setae-add-btn svg {
+    width: 18px;
+    /* サイズを最適化 */
+    height: 18px;
+    stroke-width: 2.5;
+    /* 線を少し太くして力強く */
+    opacity: 0.95;
+    transition: transform 0.3s ease;
+}
+
+/* ホバー時にアイコンを少し動かす（インタラクション） */
+.setae-add-btn:hover svg {
+    transform: scale(1.1);
 }
 
 /* 4. Deck Pills (Filters) */
@@ -195,30 +232,44 @@
     }
 }
 
-/* 5. ナビゲーションバー (修正版) */
-.setae-nav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+/* 5. ナビゲーションバー (Mobile: Floating Style) */
+@media (max-width: 767px) {
+    .setae-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
 
-    /* 変な背景色をリセットし、Glassmorphismを適用 */
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+        /* Floating Positioning: 画面端から浮かせる */
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        width: auto;
+        /* 全幅ではなく、左右マージンに合わせる */
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        /* ホームバーの上に浮かせる */
+        z-index: 2000;
 
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 2000;
-    /* 最前面 */
+        /* Sizing: 高さを確保 */
+        height: 64px;
+        padding-bottom: 0;
+        /* 内部の余白は不要 */
+        box-sizing: border-box;
 
-    padding-bottom: env(safe-area-inset-bottom);
-    height: 60px;
-    box-sizing: content-box;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
-    /* 上向きの影 */
+        /* Visuals: 完全な角丸とGlassmorphism */
+        border-radius: 32px;
+        /* ピル（カプセル）型の角丸 */
+        background: rgba(255, 255, 255, 0.9) !important;
+        /* 背景の透過度を調整 */
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+
+        /* Depth: 浮遊感を出すシャドウとボーダー */
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        box-shadow:
+            0 12px 32px rgba(0, 0, 0, 0.12),
+            0 2px 8px rgba(0, 0, 0, 0.05);
+        /* 奥行きのある影 */
+    }
 }
 
 /* ナビゲーションアイテム */
@@ -257,18 +308,22 @@
 /* 3. Action Buttons (The "Add" Button) */
 /* Unify with Filter design language but distinct */
 .setae-icon-btn {
-    height: 40px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 50%;
     width: 40px;
-    /* Square-ish but rounded */
-    border-radius: 10px;
-    border: none;
-    background-color: #F2F2F7;
-    color: #1D1D1F;
-    cursor: pointer;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+
+}
+
+
+.setae-icon-btn:hover {
+    background: var(--setae-bg-soft);
 }
 
 .setae-icon-btn:active {

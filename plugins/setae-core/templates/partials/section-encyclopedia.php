@@ -22,8 +22,7 @@
             </div>
 
             <div class="setae-actions" style="display:flex; gap:8px;">
-                <button id="btn-enc-sort-menu" class="setae-icon-btn" aria-label="並び替え"
-                    style="background:#fff; border:1px solid #ddd; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                <button id="btn-enc-sort-menu" class="setae-icon-btn" aria-label="並び替え">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 6h16M4 12h10M4 18h7"></path>
                     </svg>
