@@ -51,15 +51,28 @@ class Setae_Ajax
         // --- 2. フィルタリング (タクソノミー変換) ---
         if (!empty($filter_type) && !empty($filter_value) && $filter_type !== 'all') {
             $taxonomy = '';
+            $term_value = $filter_value;
 
             // JSから送られてくる type を 正しいタクソノミー名に変換
             switch ($filter_type) {
                 case 'lifestyle':
                     $taxonomy = 'setae_lifestyle'; // 樹上性・地表性など
+                    // ★修正: 英語の値を日本語スラッグに変換するマップ
+                    // データベース上のスラッグが日本語('樹上性')であることを想定
+                    $slug_map = array(
+                        'arboreal' => '樹上性',
+                        'terrestrial' => '地表性',
+                        'fossorial' => '地中性',
+                    );
+                    if (isset($slug_map[$filter_value])) {
+                        $term_value = $slug_map[$filter_value];
+                    }
                     break;
                 case 'habitat': // HTMLの data-filter="habitat_..." に対応
                 case 'region':  // 念のため region も対応
                     $taxonomy = 'setae_habitat';   // 生息地
+                    // 地域はHTML側ですでに日本語(URLエンコード済)が渡ってくる場合が多いのでデコード済みの $filter_value をそのまま使う
+                    // $term_value = $filter_value; 
                     break;
                 // 必要に応じて他のタクソノミーも追加
             }
@@ -69,36 +82,34 @@ class Setae_Ajax
                     array(
                         'taxonomy' => $taxonomy,
                         'field' => 'slug',
-                        'terms' => $filter_value, // urldecode済み
+                        'terms' => $term_value,
                     ),
                 );
             }
         }
 
-        // --- 3. ソート順設定 ---
+        // --- 3. ソート順 ---
         switch ($sort) {
-            case 'name_asc': // 名前順 (A-Z)
-                $args['orderby'] = 'title';
-                $args['order'] = 'ASC';
-                break;
-
-            case 'count_desc': // 人気順 (Keeping数)
-                // 数値としてソートするために meta_value_num を指定
-                $args['meta_key'] = 'keeping_count'; // ※実際のメタキーを確認してください
+            case 'count_desc': // 人気順
+                // keeping_count というキーで保存されている前提
+                $args['meta_key'] = 'keeping_count';
                 $args['orderby'] = 'meta_value_num';
                 $args['order'] = 'DESC';
                 break;
 
             case 'diff_asc': // 難易度 (易しい順)
-                // 難易度が数値保存されている前提 (1, 2, 3...)
-                $args['meta_key'] = '_setae_difficulty_level'; // ※メタキーを確認
-                $args['orderby'] = 'meta_value_num'; // または 'meta_value'
+                // ★修正: 数値用メタキー '_setae_difficulty_num' を使用して正しくソート
+                // (beginner=1, intermediate=2, expert=3)
+                $args['meta_key'] = '_setae_difficulty_num';
+                $args['orderby'] = 'meta_value_num';
                 $args['order'] = 'ASC';
                 break;
 
+            case 'name_asc':
             default:
                 $args['orderby'] = 'title';
                 $args['order'] = 'ASC';
+                break;
         }
 
         // クエリ実行

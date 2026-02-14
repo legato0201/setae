@@ -167,6 +167,18 @@ class Setae_Species_Meta
             }
         }
 
+        // ★Save numeric difficulty for sorting
+        if (isset($_POST['setae_difficulty'])) {
+            $diff_map = array(
+                'beginner' => 1,
+                'intermediate' => 2,
+                'expert' => 3
+            );
+            $diff_val = sanitize_text_field($_POST['setae_difficulty']);
+            $diff_num = isset($diff_map[$diff_val]) ? $diff_map[$diff_val] : 0;
+            update_post_meta($post_id, '_setae_difficulty_num', $diff_num);
+        }
+
         // Save description field (if it were present in the form, using textarea sanitization)
         if (isset($_POST['setae_description'])) {
             update_post_meta($post_id, '_setae_description', sanitize_textarea_field($_POST['setae_description']));
