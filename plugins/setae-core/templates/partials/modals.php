@@ -269,11 +269,20 @@ $temperaments = get_terms(array(
             </div>
             <div class="setae-form-group">
                 <label>種類 (Species)</label>
-                <select id="edit-spider-species-select" class="setae-input">
-                    <option value="">選択してください...</option>
-                </select>
+
+                <div id="wrapper-edit-species-search" class="setae-autocomplete-wrapper" style="position:relative;">
+                    <input type="text" id="edit-spider-species-search" class="setae-input"
+                        placeholder="学名・和名を入力 (DB検索)..." autocomplete="off">
+                    <input type="hidden" id="edit-spider-species-id">
+
+                    <div id="edit-spider-species-suggestions"
+                        style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ddd; max-height:200px; overflow-y:auto; z-index:1000; display:none; border-radius:0 0 8px 8px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+
                 <input type="text" id="edit-spider-species-custom" class="setae-input" style="display:none;"
                     placeholder="種類名を入力">
+
                 <div style="text-align:right; margin-top:4px;">
                     <span id="btn-toggle-edit-species-input"
                         style="font-size:12px; color:#3498db; cursor:pointer; text-decoration:underline;">手入力に切り替え</span>

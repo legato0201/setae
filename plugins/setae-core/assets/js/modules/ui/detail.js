@@ -540,19 +540,8 @@ var SetaeUIDetail = (function ($) {
     $(document).on('click', '#btn-edit-spider-trigger', function () {
         const spiderId = currentSpiderId;
         if (!spiderId) return;
-
-        // Populate Species Options if empty
-        const $speciesSelect = $('#edit-spider-species-select');
-        if ($speciesSelect.find('option').length <= 1) {
-            SetaeAPI.fetchSpecies('', function (speciesList) {
-                speciesList.forEach(sp => {
-                    $speciesSelect.append(new Option(sp.title, sp.id));
-                });
-                openEditModal(spiderId);
-            });
-        } else {
-            openEditModal(spiderId);
-        }
+        // リスト取得は不要になったので直接開く
+        openEditModal(spiderId);
     });
 
     function openEditModal(spiderId) {
@@ -560,22 +549,30 @@ var SetaeUIDetail = (function ($) {
             $('#edit-spider-id').val(data.id);
             $('#edit-spider-name').val(data.title);
 
-            // ▼ 修正: 種類入力のハンドリング (Select vs Custom)
-            const $select = $('#edit-spider-species-select');
-            const $custom = $('#edit-spider-species-custom');
-            const $toggle = $('#btn-toggle-edit-species-input');
+            // ▼ 修正: 種類入力のハンドリング
+            const $searchWrapper = $('#wrapper-edit-species-search');
+            const $searchInput = $('#edit-spider-species-search');
+            const $hiddenId = $('#edit-spider-species-id');
+            const $customInput = $('#edit-spider-species-custom');
+            const $toggleBtn = $('#btn-toggle-edit-species-input');
 
             // DBに登録された種類IDを持っているか確認
             if (data.species_id && data.species_id != 0) {
-                $select.val(data.species_id).show();
-                $custom.hide().val('');
-                $toggle.text('手入力に切り替え');
+                // DBモード: 検索窓を表示し、初期値をセット
+                $searchWrapper.show();
+                $searchInput.val(data.species_name); // 名前を表示
+                $hiddenId.val(data.species_id);      // IDを裏で保持
+
+                $customInput.hide().val('');
+                $toggleBtn.text('手入力に切り替え');
             } else {
-                // IDがない場合は手入力モード
-                $select.hide().val('');
-                // species_name があればセット
-                $custom.val(data.species_name || data.species || '').show();
-                $toggle.text('リストから選択');
+                // 手入力モード
+                $searchWrapper.hide();
+                $searchInput.val('');
+                $hiddenId.val('');
+
+                $customInput.val(data.species_name || data.species || '').show();
+                $toggleBtn.text('リストから選択');
             }
 
             // Preview Image
@@ -593,17 +590,21 @@ var SetaeUIDetail = (function ($) {
     // ▼ 追加: 種類入力モードの切り替えイベント
     $(document).on('click', '#btn-toggle-edit-species-input', function (e) {
         e.preventDefault();
-        const $select = $('#edit-spider-species-select');
+        const $searchWrapper = $('#wrapper-edit-species-search');
         const $custom = $('#edit-spider-species-custom');
 
-        if ($select.is(':visible')) {
-            $select.hide();
+        if ($searchWrapper.is(':visible')) {
+            $searchWrapper.hide();
             $custom.show().focus();
             $(this).text('リストから選択');
+            // モード切替時はIDをクリア
+            $('#edit-spider-species-id').val('');
         } else {
             $custom.hide();
-            $select.show();
+            $searchWrapper.show();
             $(this).text('手入力に切り替え');
+            // カスタム入力をクリア
+            $('#edit-spider-species-custom').val('');
         }
     });
 
@@ -654,13 +655,26 @@ var SetaeUIDetail = (function ($) {
         // Manual FormData construction for robustness
         const formData = new FormData();
 
-        // ▼ 修正: 表示されている方の種類情報を送信
-        if ($('#edit-spider-species-select').is(':visible')) {
-            const val = $('#edit-spider-species-select').val();
-            if (val) formData.append('species_id', val);
+        // ▼ 修正: バリデーションとデータ取得
+        if ($('#wrapper-edit-species-search').is(':visible')) {
+            // DB検索モードの場合
+            const speciesId = $('#edit-spider-species-id').val();
+
+            // ★必須チェック: IDが空（＝リストから選んでいない）ならエラー
+            if (!speciesId) {
+                SetaeCore.showToast('種類をリストから選択してください', 'warning');
+                return;
+            }
+            formData.append('species_id', speciesId);
+
         } else {
-            const val = $('#edit-spider-species-custom').val();
-            if (val) formData.append('species_name', val);
+            // 手入力モードの場合
+            const customName = $('#edit-spider-species-custom').val();
+            if (!customName) {
+                SetaeCore.showToast('種類名を入力してください', 'warning');
+                return;
+            }
+            formData.append('species_name', customName);
         }
         // ▲ 修正ここまで
         formData.append('name', $('#edit-spider-name').val()); // Matches PHP 'name' expectation (which maps to post_title/nickname)
