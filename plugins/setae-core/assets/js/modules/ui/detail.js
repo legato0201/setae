@@ -68,20 +68,84 @@ var SetaeUIDetail = (function ($) {
 
         $('.section-calendar').remove();
 
-        // 記録ボタンをタイムラインヘッダー横に復活させる
-        const $timelineSection = $('.setae-timeline-section');
-        if ($timelineSection.find('#btn-add-log').length === 0) {
-            const $title = $timelineSection.find('h4');
-            if (!$title.parent().hasClass('timeline-header-flex')) {
-                $title.wrap('<div class="timeline-header-flex" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"></div>');
-            }
-            const btnHtml = `
-                <button id="btn-add-log" class="setae-btn" 
-                    style="background:#2ecc71; color:white; border:none; padding:6px 16px; border-radius:20px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size:14px;">
-                    + Record
-                </button>`;
-            $title.parent().append(btnHtml);
-            $title.css('margin', '0');
+        // ============================================================
+        // ★修正: 記録ボタンを「プロ仕様」のフローティングボタン(FAB)に変更
+        // ============================================================
+
+        // 1. 既存のボタンや古い配置があれば削除 (重複・競合防止)
+        $('#btn-add-log').remove();
+
+        // 2. フローティングボタンのHTML生成
+        const fabBtnHtml = `
+            <button id="btn-add-log" class="setae-fab-record">
+                <span class="fab-icon">＋</span>
+                <span class="fab-text">Record</span>
+            </button>
+        `;
+
+        // 3. 詳細画面コンテナの末尾に追加 (詳細画面が開いている時だけ表示されるようになります)
+        $('#section-my-detail').append(fabBtnHtml);
+
+        // 4. FAB専用スタイルを注入 (CSSファイル編集不要で即反映)
+        if ($('#setae-fab-style').length === 0) {
+            $('head').append(`
+                <style id="setae-fab-style">
+                    .setae-fab-record {
+                        position: fixed; /* 画面に固定 */
+                        bottom: 30px;    /* 下からの距離 */
+                        right: 30px;     /* 右からの距離 */
+                        z-index: 9999;   /* 最前面に表示 */
+                        
+                        /* デザイン */
+                        background: linear-gradient(135deg, #2ecc71, #27ae60);
+                        color: #fff;
+                        border: none;
+                        border-radius: 50px; /* カプセル型 */
+                        padding: 12px 24px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        letter-spacing: 0.5px;
+                        
+                        /* プロ仕様の影と配置 */
+                        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        
+                        /* アニメーション */
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                    }
+
+                    /* ホバー時の浮き上がり演出 */
+                    .setae-fab-record:hover {
+                        transform: translateY(-3px) scale(1.02);
+                        box-shadow: 0 8px 25px rgba(46, 204, 113, 0.6);
+                    }
+
+                    /* クリック時の押し込み演出 */
+                    .setae-fab-record:active {
+                        transform: translateY(1px) scale(0.98);
+                        box-shadow: 0 2px 10px rgba(46, 204, 113, 0.3);
+                    }
+
+                    .setae-fab-record .fab-icon {
+                        font-size: 18px;
+                        line-height: 1;
+                        font-weight: 800;
+                    }
+
+                    /* モバイル調整: ボトムナビゲーション(約60-80px)の上に来るように位置を調整 */
+                    @media (max-width: 480px) {
+                        .setae-fab-record {
+                            bottom: 90px; /* ← 20px から 90px に変更 (ナビゲーションバー回避) */
+                            right: 20px;
+                            padding: 12px 20px;
+                            font-size: 14px;
+                        }
+                    }
+                </style>
+            `);
         }
 
         // Cycle (Status) Visuals
@@ -605,6 +669,71 @@ var SetaeUIDetail = (function ($) {
             $(this).text('手入力に切り替え');
             // カスタム入力をクリア
             $('#edit-spider-species-custom').val('');
+        }
+    });
+
+    // ==========================================
+    // ★追加: 編集モーダル用 オートコンプリート
+    // ==========================================
+    let editSearchTimer = null;
+
+    // ① 入力イベント (検索トリガー)
+    $(document).on('input', '#edit-spider-species-search', function () {
+        const term = $(this).val();
+
+        // 入力内容が変わったら、裏で保持しているIDをクリアする (リストからの再選択を強制)
+        $('#edit-spider-species-id').val('');
+
+        if (editSearchTimer) clearTimeout(editSearchTimer);
+
+        // 2文字未満は検索しない (負荷軽減)
+        if (term.length < 2) {
+            $('#edit-spider-species-suggestions').hide();
+            return;
+        }
+
+        editSearchTimer = setTimeout(function () {
+            // API経由で検索
+            SetaeAPI.searchSpecies(term, function (results) {
+                if (!results || results.length === 0) {
+                    $('#edit-spider-species-suggestions').hide();
+                    return;
+                }
+
+                let html = '';
+                results.forEach(s => {
+                    const jaDisplay = s.ja_name ? `<span style="font-size:12px; color:#666; font-weight:normal; margin-left:8px;">(${s.ja_name})</span>` : '';
+
+                    // ★重要: クラス名を .edit-suggestion-item にして、新規登録用と区別します
+                    html += `<div class="edit-suggestion-item" data-id="${s.id}" data-name="${s.title}" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f0f0f0;">
+                        <div style="font-weight:bold; font-size:14px;">${s.title}${jaDisplay}</div>
+                        <div style="font-size:12px; color:#888;">${s.genus || ''}</div>
+                    </div>`;
+                });
+
+                // 結果を表示
+                $('#edit-spider-species-suggestions').html(html).show();
+            });
+        }, 300); // 0.3秒の遅延 (連打防止)
+    });
+
+    // ② 候補クリック時の処理
+    $(document).on('click', '.edit-suggestion-item', function () {
+        const name = $(this).data('name');
+        const id = $(this).data('id');
+
+        // 選択した名前とIDをセット
+        $('#edit-spider-species-search').val(name);
+        $('#edit-spider-species-id').val(id);
+
+        // サジェストを隠す
+        $('#edit-spider-species-suggestions').hide();
+    });
+
+    // ③ 候補外クリックで閉じる
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#wrapper-edit-species-search').length) {
+            $('#edit-spider-species-suggestions').hide();
         }
     });
 
