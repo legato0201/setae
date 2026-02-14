@@ -104,12 +104,12 @@
     // 2. フィルター (Deck Pills)
     // HTML: data-filter="style_arboreal" or "region_brazil" or "all"
     // section-encyclopedia.php generates: data-filter="style_arboreal"
-    // We need to parse this.
+    // We need to parse this correctly.
     $('#setae-enc-filters').on('click', '.deck-pill', function () {
         $('#setae-enc-filters .deck-pill').removeClass('active');
         $(this).addClass('active');
 
-        const rawFilter = $(this).data('filter'); // e.g. "style_arboreal", "region_brazil", "all"
+        const rawFilter = $(this).data('filter') || 'all'; // Default to 'all' if undefined
 
         if (rawFilter === 'all') {
             state.filterType = 'all';
