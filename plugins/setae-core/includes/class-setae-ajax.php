@@ -148,10 +148,9 @@ class Setae_Ajax
 
         // ソート用 (mt2)
         $sort = isset($this->search_params['sort']) ? $this->search_params['sort'] : '';
-        if ($sort === 'count_desc') {
-            // 人気順: keeping_count (無い場合も考慮してLEFT JOIN)
-            $join .= " LEFT JOIN {$wpdb->postmeta} AS mt2 ON ({$wpdb->posts}.ID = mt2.post_id AND mt2.meta_key = 'keeping_count') ";
-        } elseif ($sort === 'diff_asc' || $sort === 'diff_desc') {
+
+        // ★修正: count_desc (人気順) はJOIN不要のため削除し、難易度順のみ残す
+        if ($sort === 'diff_asc' || $sort === 'diff_desc') {
             // 難易度順: _setae_difficulty
             $join .= " LEFT JOIN {$wpdb->postmeta} AS mt2 ON ({$wpdb->posts}.ID = mt2.post_id AND mt2.meta_key = '_setae_difficulty') ";
         }
@@ -195,9 +194,16 @@ class Setae_Ajax
                 return "{$wpdb->posts}.post_title ASC";
 
             case 'count_desc':
-                // mt2.meta_value を数値化して降順ソート。NULLの場合は 0 扱い。
-                // post_title ASC は同数の場合のサブソート
-                return "CAST(COALESCE(mt2.meta_value, '0') AS UNSIGNED) DESC, {$wpdb->posts}.post_title ASC";
+                // ★修正: mt2を参照せず、サブクエリで直接カウントしてソートする
+                return "(
+                    SELECT COUNT(*)
+                    FROM {$wpdb->postmeta} AS pm_count
+                    INNER JOIN {$wpdb->posts} AS p_spider ON p_spider.ID = pm_count.post_id
+                    WHERE pm_count.meta_key = '_setae_species_id'
+                    AND pm_count.meta_value = {$wpdb->posts}.ID
+                    AND p_spider.post_type = 'setae_spider'
+                    AND p_spider.post_status = 'publish'
+                ) DESC, {$wpdb->posts}.post_title ASC";
 
             case 'diff_asc':
                 // 難易度 (beginner -> intermediate -> expert)

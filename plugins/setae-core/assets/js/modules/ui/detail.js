@@ -396,6 +396,32 @@ var SetaeUIDetail = (function ($) {
     });
 
     /**
+     * Helper to toggle chart data state
+     */
+    function toggleChartDataState(canvasId, hasData) {
+        const $canvas = $('#' + canvasId);
+        const $container = $canvas.parent();
+
+        $container.find('.chart-no-data').remove();
+
+        if (hasData) {
+            $canvas.removeClass('chart-hidden');
+        } else {
+            $canvas.addClass('chart-hidden');
+            const noDataHtml = `
+                <div class="chart-no-data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <span>No Data Available</span>
+                </div>
+            `;
+            $container.append(noDataHtml);
+        }
+    }
+
+    /**
      * 成長グラフと脱皮履歴テーブルを描画
      */
     function renderGrowthChart(logs) {
@@ -424,12 +450,16 @@ var SetaeUIDetail = (function ($) {
             .filter(l => l.sizeVal > 0)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
+        // ★追加: データ有無による表示切り替え
+        const hasData = sizeLogs.length > 0;
+        toggleChartDataState('growthChart', hasData);
+
         // 3. チャート描画 (Chart.js)
         if (window.setaeGrowthChart instanceof Chart) {
             window.setaeGrowthChart.destroy();
         }
 
-        if (sizeLogs.length > 0) {
+        if (hasData) {
             window.setaeGrowthChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
@@ -457,10 +487,8 @@ var SetaeUIDetail = (function ($) {
                     }
                 }
             });
-        } else {
-            const chartInstance = Chart.getChart(ctx);
-            if (chartInstance) chartInstance.destroy();
         }
+
 
         // ==========================================
         // ★脱皮履歴テーブル (Pro View)
@@ -549,31 +577,38 @@ var SetaeUIDetail = (function ($) {
 
         const labels = Object.keys(counts);
         const data = Object.values(counts);
-        const palette = ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c', '#1abc9c', '#34495e'];
 
-        window.setaePreyChart = new Chart(ctx.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: labels.map((_, i) => palette[i % palette.length]),
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } }
+        // ★追加: データ有無による表示切り替え
+        const hasData = labels.length > 0;
+        toggleChartDataState('preyChart', hasData);
+
+        if (hasData) {
+            const palette = ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c', '#1abc9c', '#34495e'];
+
+            window.setaePreyChart = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } }
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     function deleteSpider(id) {
