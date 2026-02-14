@@ -5,10 +5,15 @@
  */
 
 $id = get_the_ID();
-$title_ja = get_the_title(); // 和名想定
-$title_en = get_post_meta($id, 'scientific_name', true); // 学名
-if (!$title_en)
-    $title_en = '-';
+
+// 1. タイトル（学名）と和名の取得ロジックを修正
+$title_en = get_the_title(); // タイトルフィールド = 学名
+$title_ja = get_post_meta($id, '_setae_common_name_ja', true); // 和名フィールド
+
+// 和名が未設定の場合は学名を表示（または '-' ）
+if (!$title_ja) {
+    $title_ja = $title_en;
+}
 
 // 画像
 $thumb_id = get_post_thumbnail_id($id);
@@ -17,10 +22,10 @@ if ($thumb_id) {
     $img_html = wp_get_attachment_image($thumb_id, 'medium', false, array('loading' => 'lazy'));
 }
 
-// スペック（メタデータ）
-$size = get_post_meta($id, 'max_size', true);
-$temp = get_post_meta($id, 'temperature', true);
-$level = get_post_meta($id, 'difficulty', true); // beginner, intermediate, advanced
+// 2. メタデータのキー名を修正 ('_setae_' プレフィックスを付与)
+$size = get_post_meta($id, '_setae_size', true);
+$temp = get_post_meta($id, '_setae_temperature', true);
+$level = get_post_meta($id, '_setae_difficulty', true);
 
 // バッジ（例：Keeping数やタイプ）
 $keeping_count = get_post_meta($id, 'keeping_count', true);
