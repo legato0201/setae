@@ -59,6 +59,7 @@ class Setae_Dashboard
         wp_enqueue_script('setae-ui-profile', SETAE_PLUGIN_URL . 'assets/js/modules/ui/profile.js', $ui_deps, $this->version, true); // New Profile Module
         wp_enqueue_script('setae-ui-add-spider', SETAE_PLUGIN_URL . 'assets/js/modules/ui/add-spider.js', $ui_deps, $this->version, true); // Add Spider Module
         wp_enqueue_script('setae-ui-breeding-loan', SETAE_PLUGIN_URL . 'assets/js/modules/ui/breeding_loan.js', $ui_deps, $this->version, true); // Breeding Loan Module
+        wp_enqueue_script('setae-ui-encyclopedia', SETAE_PLUGIN_URL . 'assets/js/modules/ui/encyclopedia.js', $ui_deps, $this->version, true); // Encyclopedia Module
 
         // 1.5 Desktop Specific Logic
         wp_enqueue_script('setae-ui-desktop', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-desktop.js', array('setae-ui-actions', 'jquery'), $this->version, true);
