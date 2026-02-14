@@ -1,42 +1,127 @@
-(function ($) {
+var SetaeUIEncyclopedia = (function ($) {
     'use strict';
 
+    // 状態管理
     const state = {
         page: 1,
-        maxPage: parseInt($('#setae-max-pages').val()) || 1,
+        maxPage: 1,
         search: '',
         filterType: 'all',
         filterValue: '',
-        sort: 'name_asc', // default sort
+        sort: 'name_asc', // PHP側のデフォルトと合わせる
         isLoading: false
     };
 
-    const $container = $('#setae-species-list-container');
-    const $loader = $('#setae-enc-loader');
+    let observer;
+    let searchTimer;
 
-    // --- データ取得 (AJAX) ---
-    function fetchSpecies(reset = false) {
+    // 初期化関数
+    function init() {
+        if (!$('#section-enc').length) return;
+
+        // 初期ページ数を取得
+        const $maxPageInput = $('#setae-max-pages');
+        if ($maxPageInput.length) {
+            state.maxPage = parseInt($maxPageInput.val()) || 1;
+        }
+
+        // イベントリスナーの登録
+        bindEvents();
+
+        // 監視の開始
+        checkLoaderVisibility();
+        setupObserver();
+    }
+
+    // イベントバインド
+    function bindEvents() {
+        // 1. 検索 (デバウンス処理)
+        $(document).off('input', '#setae-enc-search').on('input', '#setae-enc-search', function () {
+            clearTimeout(searchTimer);
+            state.search = $(this).val().trim();
+            searchTimer = setTimeout(function () {
+                fetchData(true);
+            }, 500);
+        });
+
+        // 2. フィルタボタン
+        $(document).off('click', '#setae-enc-filters .deck-pill').on('click', '#setae-enc-filters .deck-pill', function () {
+            // 見た目の更新
+            $('#setae-enc-filters .deck-pill').removeClass('active');
+            $(this).addClass('active');
+
+            // データ属性の解析 (例: "lifestyle_arboreal" -> type="lifestyle", value="arboreal")
+            const rawFilter = $(this).data('filter') || 'all';
+            parseFilter(rawFilter);
+
+            fetchData(true); // リセットして検索
+        });
+
+        // 3. ソートメニュー開閉
+        $(document).off('click', '#btn-enc-sort-menu').on('click', '#btn-enc-sort-menu', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSortMenu($(this));
+        });
+
+        // 4. ソート実行
+        $(document).off('click', '.enc-sort-option').on('click', '.enc-sort-option', function () {
+            state.sort = $(this).data('sort');
+            $('#setae-enc-sort-menu').remove(); // メニューを閉じる
+            fetchData(true);
+        });
+
+        // メニュー外クリックで閉じる
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#btn-enc-sort-menu').length &&
+                !$(e.target).closest('#setae-enc-sort-menu').length) {
+                $('#setae-enc-sort-menu').remove();
+            }
+        });
+    }
+
+    // フィルタ文字列の解析
+    function parseFilter(rawFilter) {
+        if (rawFilter === 'all') {
+            state.filterType = 'all';
+            state.filterValue = '';
+        } else {
+            // 最初のアンダースコアで分割
+            const separator = rawFilter.indexOf('_');
+            if (separator !== -1) {
+                state.filterType = rawFilter.substring(0, separator);
+                state.filterValue = rawFilter.substring(separator + 1);
+            } else {
+                state.filterType = 'all';
+                state.filterValue = '';
+            }
+        }
+    }
+
+    // データの取得 (AJAX)
+    function fetchData(reset = false) {
         if (state.isLoading) return;
+
+        const $container = $('#setae-species-list-container');
+        const $loader = $('#setae-enc-loader');
 
         if (reset) {
             state.page = 1;
-            $container.css('opacity', '0.5');
+            $container.css('opacity', '0.5'); // 読み込み中の演出
+            // ※ここで全スクロールさせると使いにくい場合があるため削除、必要なら追加
         } else {
-            // これ以上ページがない場合は処理しない
             if (state.page >= state.maxPage) return;
             state.page++;
         }
 
         state.isLoading = true;
+        $loader.css('visibility', 'visible').show();
 
-        // ★修正: displayではなくvisibilityで制御 (Observer対策)
-        $loader.css('visibility', 'visible');
-
-        // nonce取得 (SetaeSettings is localized in class-setae-dashboard.php)
         const nonce = (window.SetaeSettings && window.SetaeSettings.nonce) ? window.SetaeSettings.nonce : '';
+        const ajaxUrl = (window.SetaeSettings && window.SetaeSettings.ajax_url) ? window.SetaeSettings.ajax_url : '/wp-admin/admin-ajax.php';
 
         $.ajax({
-            url: window.SetaeSettings ? window.SetaeSettings.ajax_url : '/wp-admin/admin-ajax.php',
+            url: ajaxUrl,
             type: 'POST',
             data: {
                 action: 'setae_search_species',
@@ -54,154 +139,107 @@
                         $container.css('opacity', '1');
                         state.maxPage = parseInt(res.data.max_page);
 
-                        // ★追加: ページリセット時に監視状態を再評価
-                        checkLoaderVisibility();
+                        // ページ数リセットに伴い監視状態を再設定
+                        if (state.maxPage <= 1) {
+                            if (observer) observer.disconnect();
+                            $loader.hide();
+                        } else {
+                            checkLoaderVisibility();
+                            setupObserver();
+                        }
                     } else {
                         $container.append(res.data.html);
                     }
+                } else {
+                    if (reset) $container.html('<p class="no-results" style="padding:20px; text-align:center; color:#999;">データが見つかりません</p>');
+                    $container.css('opacity', '1');
                 }
             },
             error: function () {
                 $container.css('opacity', '1');
-                state.page--; // エラー時はページ番号を戻す
+                if (!reset) state.page--;
             },
             complete: function () {
                 state.isLoading = false;
-                // ★修正: 読み込み完了後、まだページがあればhidden(監視継続)、なければdisplay:none
                 checkLoaderVisibility();
             }
         });
     }
 
-    // ★追加: ローダーの表示状態を管理するヘルパー関数
+    // ローダー表示制御（無限スクロール用）
     function checkLoaderVisibility() {
+        const $loader = $('#setae-enc-loader');
         if (state.page < state.maxPage) {
-            // 次のページがある -> 領域を確保して監視させる (見えなくて良いのでhidden)
+            // 次のページがあるなら、見えない状態で配置して監視させる
             $loader.css({
                 'display': 'flex',
                 'visibility': 'hidden'
             });
         } else {
-            // 次のページがない -> 完全に消す
-            $loader.css('display', 'none');
+            $loader.hide();
         }
     }
 
-    // --- イベントリスナー ---
-
-    // 1. 検索
-    let searchTimer;
-    $('#setae-enc-search').on('input', function () {
-        const val = $(this).val();
-        clearTimeout(searchTimer);
-        state.search = val;
-
-        searchTimer = setTimeout(() => {
-            fetchSpecies(true);
-        }, 500);
-    });
-
-    // 2. フィルター (Deck Pills)
-    // HTML: data-filter="style_arboreal" or "region_brazil" or "all"
-    // section-encyclopedia.php generates: data-filter="style_arboreal"
-    // We need to parse this correctly.
-    $('#setae-enc-filters').on('click', '.deck-pill', function () {
-        $('#setae-enc-filters .deck-pill').removeClass('active');
-        $(this).addClass('active');
-
-        const rawFilter = $(this).data('filter') || 'all'; // Default to 'all' if undefined
-
-        if (rawFilter === 'all') {
-            state.filterType = 'all';
-            state.filterValue = '';
-        } else {
-            // split by first underscore
-            const parts = rawFilter.split('_');
-            // parts[0] is type, parts[1]... is value. Value might contain underscores? 
-            // e.g. region_south_america.
-            const type = parts.shift();
-            const value = parts.join('_');
-
-            state.filterType = type;
-            state.filterValue = value;
-        }
-
-        fetchSpecies(true);
-    });
-
-    // 3. ソートメニュー
-    // section-encyclopedia.php has #btn-enc-sort-menu
-    // And it generates a popup. 
-    // Updating logic to trigger fetch.
-    $(document).on('click', '.enc-sort-opt', function () {
-        const sortKey = $(this).data('sort');
-        state.sort = sortKey;
-
-        // Popup close logic is already in section-encyclopedia.php inline script?
-        // Wait, I replaced section-encyclopedia.php but I REMOVED the inline script that handled popup logic!
-        // The inline script `jQuery(document).ready...` was at the bottom of the original file.
-        // My replacement REMOVED it.
-        // I need to re-implement the popup logic HERE in this file.
-        $('#setae-enc-sort-popup').remove();
-        fetchSpecies(true);
-    });
-
-    // Sort Menu Popup Logic (Restoring from original)
-    $('#btn-enc-sort-menu').on('click', function (e) {
-        e.stopPropagation();
-        $('#setae-enc-sort-popup').remove();
-        const menuHtml = `
-            <div id="setae-enc-sort-popup" style="position:absolute; background:#fff; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.15); width:200px; z-index:9999; overflow:hidden;">
-                <div class="enc-sort-opt" data-sort="name_asc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔤 学名順 (A-Z)</div>
-                <!-- Note: Complex sorts like count/diff are hard in WP_Query without custom meta setup. Keeping them visually but functionality might fallback to title if server not ready. -->
-                <div class="enc-sort-opt" data-sort="count_desc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔥 飼育数順 (多→少)</div>
-                <div class="enc-sort-opt" data-sort="diff_asc" style="padding:10px 15px; cursor:pointer; border-bottom:1px solid #f5f5f5;">🔰 難易度順 (易→難)</div>
-            </div>
-        `;
-        $('body').append(menuHtml);
-        const rect = this.getBoundingClientRect();
-        // Adjust position logic
-        const top = rect.bottom + window.scrollY + 5;
-        const left = rect.right + window.scrollX - 200;
-
-        $('#setae-enc-sort-popup').css({ top: top + 'px', left: left + 'px' });
-    });
-
-    $(document).on('click', function (e) {
-        if (!$(e.target).closest('#btn-enc-sort-menu').length) $('#setae-enc-sort-popup').remove();
-    });
-
-
-    // --- Infinite Scroll ---
-    let observer;
+    // IntersectionObserverの設定
     function setupObserver() {
+        const $loader = $('#setae-enc-loader');
+        if (!$loader.length) return;
+
         if (observer) observer.disconnect();
 
         const options = {
             root: null,
-            rootMargin: '200px', // 早めに読み込む設定
-            threshold: 0 // 1ピクセルでも入れば発火
+            rootMargin: '200px', // 早めに読み込む
+            threshold: 0
         };
 
         observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                // ★条件追加: intersecting かつ 次のページがある場合
                 if (entry.isIntersecting && !state.isLoading && state.page < state.maxPage) {
-                    fetchSpecies(false);
+                    fetchData(false); // 追加読み込み
                 }
             });
         }, options);
 
-        if ($loader.length) observer.observe($loader[0]);
+        observer.observe($loader[0]);
     }
 
-    // Init
-    $(document).ready(function () {
-        if ($('#section-enc').length) {
-            // ★追加: 初期ロード時にローダーの状態をセット
-            checkLoaderVisibility();
-            setupObserver();
+    // ソートメニューの表示
+    function toggleSortMenu($btn) {
+        const $existing = $('#setae-enc-sort-menu');
+        if ($existing.length) {
+            $existing.remove();
+            return;
         }
-    });
+
+        const menuHtml = `
+            <div id="setae-enc-sort-menu" style="position:absolute; background:#fff; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.15); width:180px; z-index:99999; overflow:hidden; padding:8px 0;">
+                <div class="enc-sort-option ${state.sort === 'name_asc' ? 'active' : ''}" data-sort="name_asc" style="padding:10px 15px; cursor:pointer; font-size:14px;">🔤 名前順 (A-Z)</div>
+                <div class="enc-sort-option ${state.sort === 'count_desc' ? 'active' : ''}" data-sort="count_desc" style="padding:10px 15px; cursor:pointer; font-size:14px;">🔥 人気順</div>
+                <div class="enc-sort-option ${state.sort === 'diff_asc' ? 'active' : ''}" data-sort="diff_asc" style="padding:10px 15px; cursor:pointer; font-size:14px;">🔰 難易度順</div>
+            </div>
+        `;
+
+        $('body').append(menuHtml);
+
+        const rect = $btn[0].getBoundingClientRect();
+        const $menu = $('#setae-enc-sort-menu');
+        $menu.css({
+            top: (rect.bottom + window.scrollY + 5) + 'px',
+            left: Math.max(10, (rect.right + window.scrollX) - 180) + 'px'
+        });
+
+        $('.enc-sort-option.active').css({ fontWeight: 'bold', color: '#2ecc71', background: '#f9f9f9' });
+    }
+
+    // 公開メソッド
+    return {
+        init: init
+    };
 
 })(jQuery);
+
+// ドキュメント読み込み完了時に初期化
+jQuery(document).ready(function () {
+    SetaeUIEncyclopedia.init();
+});
