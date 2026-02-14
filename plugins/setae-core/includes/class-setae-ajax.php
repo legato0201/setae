@@ -21,17 +21,21 @@ class Setae_Ajax
     /**
      * 図鑑の検索・ソート・ページネーション処理
      */
+    /**
+     * 図鑑データの検索・フィルタリング・ページネーション処理
+     */
     public function search_species()
     {
-        check_ajax_referer('wp_rest', 'nonce'); // wp_rest nonce should be used as standardized in this plugin
+        // セキュリティチェック
+        check_ajax_referer('setae_nonce', 'nonce');
 
         $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
         $search_query = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
         $filter_type = isset($_POST['filter_type']) ? sanitize_text_field($_POST['filter_type']) : '';
-        $filter_value = isset($_POST['filter_value']) ? sanitize_text_field($_POST['filter_value']) : '';
-        $sort = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'title_asc';
+        // ★修正: 日本語スラッグ対応のため urldecode する
+        $filter_value = isset($_POST['filter_value']) ? urldecode(sanitize_text_field($_POST['filter_value'])) : '';
+        $sort = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'name_asc';
 
-        // クエリ引数の基本設定
         $args = array(
             'post_type' => 'setae_species',
             'post_status' => 'publish',
@@ -39,115 +43,75 @@ class Setae_Ajax
             'paged' => $paged,
         );
 
-        // キーワード検索
+        // --- 1. キーワード検索 ---
         if (!empty($search_query)) {
             $args['s'] = $search_query;
         }
 
-        // フィルタリング
+        // --- 2. フィルタリング (タクソノミー変換) ---
         if (!empty($filter_type) && !empty($filter_value) && $filter_type !== 'all') {
-            if ($filter_type === 'style') {
-                // ライフスタイル (Taxonomy: setae_lifestyle)
-                // Note: The UI sends 'arboreal', but the slug might be Japanese in DB?
-                // section-encyclopedia.php logic handled conversion. 
-                // However, for taxonomy query, we need the actual term slug.
-                // Assuming terms are registered with English slugs or we need to map them?
-                // Looking at section-encyclopedia.php:
-                // $raw_slug = ... '樹上性' -> 'arboreal'.
-                // So the TERM slug is likely '樹上性' (Japanese) but the UI uses 'arboreal'.
-                // We need to map back if the terms are Japanese.
-                // Let's check how `setae_lifestyle` terms are registered or used.
-                // If I assume standard slug usage, I might miss.
-                // User's plan example used: 'setae_' . $filter_type ('setae_lifestyle').
-                // Let's try to map standard UI keys to known Japanese slugs if needed, or assume English slugs if they exist.
-                // Given the code in `section-encyclopedia.php`:
-                // if ($raw_slug === '樹上性') $style_key = 'arboreal';
-                // This implies the SLUG is '樹上性' (URL encoded).
-                // So if UI sends 'arboreal', query needs '樹上性'.
+            $taxonomy = '';
 
-                $map = [
-                    'arboreal' => '樹上性',
-                    'terrestrial' => '地表性',
-                    'fossorial' => '地中性'
-                ];
-                $term = isset($map[$filter_value]) ? $map[$filter_value] : $filter_value;
+            // JSから送られてくる type を 正しいタクソノミー名に変換
+            switch ($filter_type) {
+                case 'lifestyle':
+                    $taxonomy = 'setae_lifestyle'; // 樹上性・地表性など
+                    break;
+                case 'habitat': // HTMLの data-filter="habitat_..." に対応
+                case 'region':  // 念のため region も対応
+                    $taxonomy = 'setae_habitat';   // 生息地
+                    break;
+                // 必要に応じて他のタクソノミーも追加
+            }
 
+            if ($taxonomy) {
                 $args['tax_query'] = array(
                     array(
-                        'taxonomy' => 'setae_lifestyle',
+                        'taxonomy' => $taxonomy,
                         'field' => 'slug',
-                        'terms' => $term,
-                    ),
-                );
-            } elseif ($filter_type === 'region') {
-                // 地域 (Taxonomy: setae_habitat)
-                // In PHP loop: $region_slug = $regions[0]->slug;
-                // UI receives this slug. So we can use it directly.
-                $args['tax_query'] = array(
-                    array(
-                        'taxonomy' => 'setae_habitat',
-                        'field' => 'slug',
-                        'terms' => $filter_value, // region_brazil etc. passed as just 'brazil'?
-                        // Wait, UI code in section-encyclopedia.php was: data-filter="region_' . $region->slug
-                        // My proposed JS will send filter_type='region', filter_value='slug'.
-                        // So direct usage is correct.
+                        'terms' => $filter_value, // urldecode済み
                     ),
                 );
             }
         }
 
-        // ソート順
+        // --- 3. ソート順設定 ---
         switch ($sort) {
-            case 'count_desc':
-                // 飼育数順 (Meta Query NOT easy for distinct count...)
-                // Direct SQL might be needed or meta key if we cached it.
-                // Since we don't have a cached meta key for count, sorting by it in WP_Query is hard.
-                // For now, let's fallback to title or ignore?
-                // Or maybe we can't offer this sort efficiently server-side without a cached meta field.
-                // User's request plan didn't specify detailed sort logic implementation for complex keys.
-                // "title_asc" is default.
-                // Let's stick to simple sorts for MVP or implement simple meta sorts.
+            case 'name_asc': // 名前順 (A-Z)
                 $args['orderby'] = 'title';
                 $args['order'] = 'ASC';
                 break;
-            case 'diff_asc':
-                $args['meta_key'] = '_setae_difficulty';
-                $args['orderby'] = 'meta_value'; // string comparison 'beginner' < 'expert'? No...
-                // 'beginner', 'intermediate', 'expert'.
-                // B, I, E. Alphabetical: Beginner, Expert, Intermediate. 
-                // Not quite right order (Beg(1), Int(2), Exp(3)).
-                // Converting to numeric in query is hard without numeric meta.
-                // Fallback to title for now to functionality.
-                $args['orderby'] = 'title';
+
+            case 'count_desc': // 人気順 (Keeping数)
+                // 数値としてソートするために meta_value_num を指定
+                $args['meta_key'] = 'keeping_count'; // ※実際のメタキーを確認してください
+                $args['orderby'] = 'meta_value_num';
+                $args['order'] = 'DESC';
+                break;
+
+            case 'diff_asc': // 難易度 (易しい順)
+                // 難易度が数値保存されている前提 (1, 2, 3...)
+                $args['meta_key'] = '_setae_difficulty_level'; // ※メタキーを確認
+                $args['orderby'] = 'meta_value_num'; // または 'meta_value'
                 $args['order'] = 'ASC';
                 break;
-            case 'diff_desc':
-                $args['orderby'] = 'title';
-                $args['order'] = 'ASC';
-                break;
-            case 'name_asc': // button id was name_asc
+
             default:
                 $args['orderby'] = 'title';
                 $args['order'] = 'ASC';
-                break;
         }
 
+        // クエリ実行
         $query = new WP_Query($args);
-        $html = '';
 
         if ($query->have_posts()) {
             ob_start();
             while ($query->have_posts()) {
                 $query->the_post();
-                // Include card template
-                // Need to define variables expected by card-species.php or modify card-species.php to use get_the_ID() internally?
-                // I wrote card-species.php to use get_the_ID() at the top. So it's self-contained!
-                // Include card template
-                // Calculate safe path or use constant
+                // パスは環境に合わせて調整してください
                 if (defined('SETAE_CORE_PATH')) {
                     include(SETAE_CORE_PATH . 'templates/partials/card-species.php');
                 } else {
-                    // Fallback relative path from this file (includes/class-setae-ajax.php)
                     include(plugin_dir_path(dirname(__FILE__)) . 'templates/partials/card-species.php');
                 }
             }
@@ -156,12 +120,12 @@ class Setae_Ajax
             wp_send_json_success(array(
                 'html' => $html,
                 'max_page' => $query->max_num_pages,
-                'found_posts' => $query->found_posts
             ));
         } else {
-            // 0件
+            // 該当なし
+            $html = '';
             if ($paged === 1) {
-                $html = '<p class="no-results" style="padding:20px; text-align:center; color:#999;">条件に一致する種が見つかりませんでした。</p>';
+                $html = '<div class="no-results" style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">条件に一致する種が見つかりませんでした。</div>';
             }
             wp_send_json_success(array('html' => $html, 'max_page' => 0));
         }

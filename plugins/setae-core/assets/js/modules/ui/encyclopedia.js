@@ -82,7 +82,7 @@ var SetaeUIEncyclopedia = (function ($) {
 
     // フィルタ文字列の解析
     function parseFilter(rawFilter) {
-        if (rawFilter === 'all') {
+        if (!rawFilter || rawFilter === 'all') {
             state.filterType = 'all';
             state.filterValue = '';
         } else {
@@ -90,12 +90,23 @@ var SetaeUIEncyclopedia = (function ($) {
             const separator = rawFilter.indexOf('_');
             if (separator !== -1) {
                 state.filterType = rawFilter.substring(0, separator);
-                state.filterValue = rawFilter.substring(separator + 1);
+
+                // ★修正: 値部分をデコードする (例: %e3%... -> ブラジル)
+                // これによりPHP側での不整合を防ぐ
+                const rawValue = rawFilter.substring(separator + 1);
+                try {
+                    state.filterValue = decodeURIComponent(rawValue);
+                } catch (e) {
+                    state.filterValue = rawValue;
+                }
             } else {
                 state.filterType = 'all';
                 state.filterValue = '';
             }
         }
+
+        // デバッグ用（コンソールで確認できます）
+        console.log('Filter set to:', state.filterType, state.filterValue);
     }
 
     // データの取得 (AJAX)
@@ -117,8 +128,25 @@ var SetaeUIEncyclopedia = (function ($) {
         state.isLoading = true;
         $loader.css('visibility', 'visible').show();
 
-        const nonce = (window.SetaeSettings && window.SetaeSettings.nonce) ? window.SetaeSettings.nonce : '';
-        const ajaxUrl = (window.SetaeSettings && window.SetaeSettings.ajax_url) ? window.SetaeSettings.ajax_url : '/wp-admin/admin-ajax.php';
+        // ★修正: 確実に取得できる変数名を使用する
+        // setaecore_vars か SetaeSettings のどちらか存在する方を使う
+        let nonce = '';
+        if (typeof SetaeSettings !== 'undefined') {
+            // Encyclopedia uses 'setae_nonce' if available, fallback to 'nonce' (though likely wrong action)
+            if (SetaeSettings.setae_nonce) {
+                nonce = SetaeSettings.setae_nonce;
+            } else if (SetaeSettings.nonce) {
+                nonce = SetaeSettings.nonce;
+            }
+        } else if (typeof setaecore_vars !== 'undefined' && setaecore_vars.nonce) {
+            nonce = setaecore_vars.nonce;
+        } else {
+            console.error('Setae Nonce not found!');
+        }
+
+        const ajaxUrl = (typeof SetaeSettings !== 'undefined' && SetaeSettings.ajax_url)
+            ? SetaeSettings.ajax_url
+            : ((typeof setaecore_vars !== 'undefined' && setaecore_vars.ajax_url) ? setaecore_vars.ajax_url : '/wp-admin/admin-ajax.php');
 
         $.ajax({
             url: ajaxUrl,

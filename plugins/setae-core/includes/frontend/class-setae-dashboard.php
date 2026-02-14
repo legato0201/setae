@@ -41,6 +41,7 @@ class Setae_Dashboard
         wp_localize_script('setae-app-core', 'SetaeSettings', array(
             'api_root' => esc_url_raw(rest_url()),
             'nonce' => wp_create_nonce('wp_rest'),
+            'setae_nonce' => wp_create_nonce('setae_nonce'), // For Encyclopedia AJAX
             'ajax_url' => admin_url('admin-ajax.php'),
             'logout_url' => wp_logout_url(home_url())
         ));
