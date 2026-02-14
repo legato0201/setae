@@ -195,9 +195,9 @@ class Setae_Ajax
                 return "{$wpdb->posts}.post_title ASC";
 
             case 'count_desc':
-                // Keeping数 (mt2.meta_value) を数値として降順ソート
-                // NULL(未登録)は 0 として扱う
-                return "CAST(COALESCE(mt2.meta_value, 0) AS SIGNED) DESC, {$wpdb->posts}.post_title ASC";
+                // mt2.meta_value を数値化して降順ソート。NULLの場合は 0 扱い。
+                // post_title ASC は同数の場合のサブソート
+                return "CAST(COALESCE(mt2.meta_value, '0') AS UNSIGNED) DESC, {$wpdb->posts}.post_title ASC";
 
             case 'diff_asc':
                 // 難易度 (beginner -> intermediate -> expert)
