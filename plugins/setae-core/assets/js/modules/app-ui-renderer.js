@@ -4,6 +4,18 @@ var SetaeUI = (function ($) {
     // ==========================================
     // Initialization & Event Listeners
     // ==========================================
+
+    // Encyclopedia State
+    const encState = {
+        page: 1,
+        maxPage: 1, // 初期ロード時にHTMLから取得
+        search: '',
+        filterType: 'all',
+        filterValue: '',
+        sort: 'name_asc', // PHP側のデフォルトに合わせる
+        isLoading: false
+    };
+
     $(document).ready(function () {
         // ★追加: 初期表示セクションの制御
         // 現在アクティブなナビゲーションを取得
@@ -103,34 +115,58 @@ var SetaeUI = (function ($) {
         // Search Input
         $(document).on('input', '#setae-spider-search', SetaeUIList.handleSearchInput);
 
-        // --- Encyclopedia Listeners ---
+        // --- Encyclopedia Listeners (AJAX Version) ---
 
-        // 1. Search Input
+        // 1. 検索（入力の遅延実行）
+        let encSearchTimer;
         $(document).on('input', '#setae-enc-search', function () {
-            const val = $(this).val();
-            SetaeCore.state.encSearch = val;
-            localStorage.setItem('setae_enc_search', val);
-            runEncyclopediaFilter();
+            clearTimeout(encSearchTimer);
+            encState.search = $(this).val().trim();
+            encSearchTimer = setTimeout(function () {
+                fetchEncyclopediaData(true); // リセットして検索
+            }, 500);
         });
 
-        // 2. Filter Buttons (Encyclopedia Only)
+        // 2. フィルタボタン
         $(document).on('click', '#setae-enc-filters .deck-pill', function () {
-            const filter = $(this).data('filter');
-            SetaeCore.state.encFilter = filter;
-            localStorage.setItem('setae_enc_filter', filter);
-
-            // UI Update
+            // UI更新
             $('#setae-enc-filters .deck-pill').removeClass('active');
             $(this).addClass('active');
 
-            runEncyclopediaFilter();
+            // data-filter="type_value" を解析
+            const rawFilter = $(this).data('filter') || 'all';
+
+            if (rawFilter === 'all') {
+                encState.filterType = 'all';
+                encState.filterValue = '';
+            } else {
+                // 最初のアンダースコアで分割 (例: habitat_brazil -> type:habitat, value:brazil)
+                const separator = rawFilter.indexOf('_');
+                if (separator !== -1) {
+                    encState.filterType = rawFilter.substring(0, separator);
+                    encState.filterValue = rawFilter.substring(separator + 1);
+                } else {
+                    encState.filterType = 'all';
+                }
+            }
+
+            fetchEncyclopediaData(true); // リセットして検索
         });
 
-        // 3. Sort Menu
-        $(document).on('click', '#btn-enc-sort-menu', toggleEncSortMenu);
-        $(document).on('click', '.enc-sort-option', handleEncSortOptionClick);
+        // 3. ソートメニュー (開閉)
+        $(document).on('click', '#btn-enc-sort-menu', function (e) {
+            e.preventDefault(); e.stopPropagation();
+            toggleEncSortMenu($(this));
+        });
 
-        // Close menu on outside click
+        // 4. ソート実行
+        $(document).on('click', '.enc-sort-option', function () {
+            encState.sort = $(this).data('sort');
+            $('#setae-enc-sort-menu').remove(); // メニュー閉じる
+            fetchEncyclopediaData(true); // リセットして検索
+        });
+
+        // メニュー外クリックで閉じる
         $(document).on('click', function (e) {
             if (!$(e.target).closest('#btn-enc-sort-menu').length && !$(e.target).closest('#setae-enc-sort-menu').length) {
                 $('#setae-enc-sort-menu').remove();
@@ -383,124 +419,143 @@ var SetaeUI = (function ($) {
     }
 
     // ==========================================
-    // Encyclopedia Logic (New Implementation)
+    // Encyclopedia Logic (AJAX Implementation)
     // ==========================================
 
     function initEncyclopedia() {
-        // 1. Restore Search
-        const savedSearch = SetaeCore.state.encSearch;
-        if (savedSearch) {
-            $('#setae-enc-search').val(savedSearch);
+        // 初期状態のセットアップ
+        const $maxPageInput = $('#setae-max-pages');
+        if ($maxPageInput.length) {
+            encState.maxPage = parseInt($maxPageInput.val()) || 1;
         }
 
-        // 2. Restore Filter
-        const savedFilter = SetaeCore.state.encFilter || 'all';
-
-        // Reset only encyclopedia buttons
-        $('#setae-enc-filters .deck-pill').removeClass('active');
-
-        const $targetPill = $(`#setae-enc-filters .deck-pill[data-filter="${savedFilter}"]`);
-        if ($targetPill.length) {
-            $targetPill.addClass('active');
-        } else {
-            $(`#setae-enc-filters .deck-pill[data-filter="all"]`).addClass('active');
-            SetaeCore.state.encFilter = 'all';
-        }
-
-        // 3. Run
-        runEncyclopediaFilter();
+        // 無限スクロールの監視開始
+        setupEncObserver();
     }
 
-    function runEncyclopediaFilter() {
-        const query = (SetaeCore.state.encSearch || '').toLowerCase().trim();
-        const filter = SetaeCore.state.encFilter || 'all';
-        const sort = SetaeCore.state.encSort || 'name';
+    // ★サーバーからデータを取得する関数
+    function fetchEncyclopediaData(reset = false) {
+        if (encState.isLoading) return;
 
         const $container = $('#setae-species-list-container');
-        const $items = $container.find('.js-species-item');
+        const $loader = $('#setae-enc-loader');
 
-        // 1. Filter Logic
-        $items.each(function () {
-            const $el = $(this);
-            let matchSearch = true;
-            let matchFilter = true;
+        if (reset) {
+            encState.page = 1;
+            $container.css('opacity', '0.5'); // ロード中演出
+            window.scrollTo(0, 0); // 上部へ戻す
+        } else {
+            // これ以上ページがないなら終了
+            if (encState.page >= encState.maxPage) return;
+            encState.page++;
+        }
 
-            // Search Filter
-            if (query) {
-                const searchData = ($el.data('search') || '').toString();
-                if (searchData.indexOf(query) === -1) matchSearch = false;
-            }
+        encState.isLoading = true;
+        $loader.css('visibility', 'visible').show();
 
-            // Category/Region Filter
-            if (filter !== 'all') {
-                if (filter.startsWith('style_')) {
-                    if ($el.data('filter-style') !== filter) matchFilter = false;
-                } else if (filter.startsWith('region_')) {
-                    if ($el.data('filter-region') !== filter) matchFilter = false;
+        // AJAXリクエスト
+        $.ajax({
+            url: window.SetaeSettings ? window.SetaeSettings.ajax_url : '/wp-admin/admin-ajax.php',
+            type: 'POST',
+            data: {
+                action: 'setae_search_species',
+                nonce: (window.SetaeSettings && window.SetaeSettings.nonce) ? window.SetaeSettings.nonce : '',
+                paged: encState.page,
+                search: encState.search,
+                filter_type: encState.filterType,
+                filter_value: encState.filterValue,
+                sort: encState.sort
+            },
+            success: function (res) {
+                if (res.success) {
+                    if (reset) {
+                        $container.html(res.data.html);
+                        $container.css('opacity', '1');
+                        encState.maxPage = parseInt(res.data.max_page);
+
+                        // 検索結果が少ない場合は監視を止めるなどの制御
+                        if (encState.maxPage <= 1) {
+                            if (encObserver) encObserver.disconnect();
+                            $loader.hide();
+                        } else {
+                            setupEncObserver(); // 監視再開
+                        }
+                    } else {
+                        $container.append(res.data.html);
+                    }
+                } else {
+                    if (reset) $container.html('<p class="no-results">データが見つかりません</p>');
+                }
+            },
+            complete: function () {
+                encState.isLoading = false;
+                // 次のページがなければローダーを隠す
+                if (encState.page >= encState.maxPage) {
+                    $loader.hide();
+                } else {
+                    $loader.css('visibility', 'hidden'); // 領域は残して監視継続
                 }
             }
-
-            if (matchSearch && matchFilter) {
-                $el.show().addClass('visible-item');
-            } else {
-                $el.hide().removeClass('visible-item');
-            }
         });
-
-        // 2. Sort Logic
-        const $visibleItems = $items.filter('.visible-item');
-
-        $visibleItems.sort(function (a, b) {
-            const $a = $(a);
-            const $b = $(b);
-
-            if (sort === 'keeping') {
-                // Keeping Count (Desc)
-                const countA = parseInt($a.data('sort-count') || 0);
-                const countB = parseInt($b.data('sort-count') || 0);
-                if (countA !== countB) return countB - countA;
-                return ($a.data('sort-name') || '').localeCompare($b.data('sort-name') || '');
-            }
-
-            // Default: Name (Asc)
-            return ($a.data('sort-name') || '').localeCompare($b.data('sort-name') || '');
-        });
-
-        $visibleItems.detach().appendTo($container);
     }
 
-    function toggleEncSortMenu(e) {
-        e.preventDefault(); e.stopPropagation();
+    // 無限スクロール監視用
+    let encObserver;
+    function setupEncObserver() {
+        const $loader = $('#setae-enc-loader');
+        if (!$loader.length) return;
+
+        if (encObserver) encObserver.disconnect();
+
+        const options = {
+            root: null,
+            rootMargin: '200px',
+            threshold: 0
+        };
+
+        encObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !encState.isLoading && encState.page < encState.maxPage) {
+                    fetchEncyclopediaData(false); // 追加読み込み
+                }
+            });
+        }, options);
+
+        encObserver.observe($loader[0]);
+    }
+
+    // ソートメニューの表示（DOM生成）
+    function toggleEncSortMenu($btn) {
         var $existing = $('#setae-enc-sort-menu');
         if ($existing.length > 0) { $existing.remove(); return; }
 
-        const currentSort = SetaeCore.state.encSort || 'name';
+        const currentSort = encState.sort;
         const getActiveClass = (key) => (key === currentSort ? ' active' : '');
 
         var menuDiv = document.createElement('div');
         menuDiv.id = 'setae-enc-sort-menu';
         menuDiv.innerHTML = `
-            <div class="enc-sort-option${getActiveClass('name')}" data-sort="name">🔤 名前順 (A-Z)</div>
-            <div class="enc-sort-option${getActiveClass('keeping')}" data-sort="keeping">🔥 人気順 (Keeping)</div>
+            <div class="enc-sort-option${getActiveClass('name_asc')}" data-sort="name_asc">🔤 名前順 (A-Z)</div>
+            <div class="enc-sort-option${getActiveClass('count_desc')}" data-sort="count_desc">🔥 人気順 (Keeping)</div>
+            <div class="enc-sort-option${getActiveClass('diff_asc')}" data-sort="diff_asc">🔰 難易度 (易しい順)</div>
         `;
         document.body.appendChild(menuDiv);
 
-        var rect = $(this)[0].getBoundingClientRect();
+        var rect = $btn[0].getBoundingClientRect();
         $(menuDiv).css({
-            position: 'fixed', top: (rect.bottom + 10) + 'px', left: Math.max(10, rect.right - 180) + 'px',
-            background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.15)', zIndex: 999999, width: '180px', padding: '8px 0'
+            position: 'fixed',
+            top: (rect.bottom + 10) + 'px',
+            left: Math.max(10, rect.right - 180) + 'px',
+            background: '#fff',
+            border: '1px solid rgba(0,0,0,0.1)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+            zIndex: 999999,
+            width: '180px',
+            padding: '8px 0'
         });
         $('.enc-sort-option').css({ padding: '10px 16px', cursor: 'pointer', fontSize: '14px' });
         $('.enc-sort-option.active').css({ fontWeight: 'bold', color: '#2ecc71', background: '#f9f9f9' });
-    }
-
-    function handleEncSortOptionClick() {
-        const sort = $(this).data('sort');
-        SetaeCore.state.encSort = sort;
-        localStorage.setItem('setae_enc_sort', sort);
-        $('#setae-enc-sort-menu').remove();
-        runEncyclopediaFilter();
     }
 
     // Removed: loadSpeciesBook() - Now handled by PHP in section-encyclopedia.php
