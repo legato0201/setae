@@ -162,6 +162,13 @@ var SetaeUIAddSpider = (function ($) {
 
             // フォームデータの構築
             const formData = new FormData(this);
+
+            // ★追加: ニックネーム入力欄(#spider-name)に name属性がないため、手動で値を取得して追加
+            const nickname = $('#spider-name').val();
+            if (nickname) {
+                formData.append('name', nickname);
+            }
+
             const classification = $('input[name="classification"]:checked').val();
 
             // カテゴリー情報を追加
