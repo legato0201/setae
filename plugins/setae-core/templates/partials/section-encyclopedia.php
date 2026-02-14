@@ -4,7 +4,7 @@
  * Description: サーバーサイド検索・ソート対応版
  */
 ?>
-<div id="section-enc" class="setae-section">
+<div id="section-enc" class="setae-section" style="display: none;">
 
     <div class="setae-toolbar-container sticky-shadow"
         style="position:sticky; top:0; z-index:90; background:#f4f7f6; padding:10px 15px; margin: -16px -16px 16px -16px; width: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">

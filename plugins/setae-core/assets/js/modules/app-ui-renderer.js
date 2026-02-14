@@ -5,6 +5,22 @@ var SetaeUI = (function ($) {
     // Initialization & Event Listeners
     // ==========================================
     $(document).ready(function () {
+        // ★追加: 初期表示セクションの制御
+        // 現在アクティブなナビゲーションを取得
+        const $activeNav = $('.setae-nav-item.active');
+        if ($activeNav.length) {
+            const targetId = $activeNav.data('target');
+            // 全セクションを隠す
+            $('.setae-section').hide();
+            // ターゲットだけ表示
+            $('#' + targetId).show();
+        } else {
+            // アクティブがない場合はデフォルトでMy Spidersを表示（安全策）
+            $('.setae-section').hide();
+            $('#section-my').show();
+            $('.setae-nav-item[data-target="section-my"]').addClass('active');
+        }
+
         initListeners();
         checkInitialLoad();
 
