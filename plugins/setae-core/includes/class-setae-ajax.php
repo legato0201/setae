@@ -21,60 +21,61 @@ class Setae_Ajax
     /**
      * 図鑑の検索・ソート・ページネーション処理
      */
+    // 検索・ソート用の一時パラメータ保持プロパティ
+    private $search_params = [];
+
     /**
      * 図鑑データの検索・フィルタリング・ページネーション処理
      */
     public function search_species()
     {
-        // セキュリティチェック
-        check_ajax_referer('setae_nonce', 'nonce');
+        check_ajax_referer('setae_nonce', 'nonce'); // JS側のnonce名に合わせる
 
         $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
         $search_query = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
         $filter_type = isset($_POST['filter_type']) ? sanitize_text_field($_POST['filter_type']) : '';
-        // ★修正: 日本語スラッグ対応のため urldecode する
         $filter_value = isset($_POST['filter_value']) ? urldecode(sanitize_text_field($_POST['filter_value'])) : '';
         $sort = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'name_asc';
 
+        // 検索パラメータをプロパティにセット（フィルター内で使用）
+        $this->search_params = [
+            'keyword' => $search_query,
+            'sort' => $sort
+        ];
+
+        // 基本クエリ
         $args = array(
             'post_type' => 'setae_species',
             'post_status' => 'publish',
             'posts_per_page' => 12,
             'paged' => $paged,
+            'suppress_filters' => false, // フィルターを有効化
         );
 
-        // --- 1. キーワード検索 ---
-        if (!empty($search_query)) {
-            $args['s'] = $search_query;
-        }
-
-        // --- 2. フィルタリング (タクソノミー変換) ---
+        // --- フィルタリング (Taxonomy) ---
+        // ここはWP_Query標準機能でOK
         if (!empty($filter_type) && !empty($filter_value) && $filter_type !== 'all') {
             $taxonomy = '';
             $term_value = $filter_value;
 
-            // JSから送られてくる type を 正しいタクソノミー名に変換
             switch ($filter_type) {
                 case 'lifestyle':
-                    $taxonomy = 'setae_lifestyle'; // 樹上性・地表性など
-                    // ★修正: 英語の値を日本語スラッグに変換するマップ
-                    // データベース上のスラッグが日本語('樹上性')であることを想定
-                    $slug_map = array(
+                    $taxonomy = 'setae_lifestyle';
+                    // 英語->日本語スラッグ変換マップ
+                    $slug_map = [
                         'arboreal' => '樹上性',
                         'terrestrial' => '地表性',
-                        'fossorial' => '地中性',
-                    );
+                        'fossorial' => '地中性'
+                    ];
                     if (isset($slug_map[$filter_value])) {
                         $term_value = $slug_map[$filter_value];
                     }
                     break;
-                case 'habitat': // HTMLの data-filter="habitat_..." に対応
-                case 'region':  // 念のため region も対応
-                    $taxonomy = 'setae_habitat';   // 生息地
-                    // 地域はHTML側ですでに日本語(URLエンコード済)が渡ってくる場合が多いのでデコード済みの $filter_value をそのまま使う
-                    // $term_value = $filter_value; 
+                case 'habitat':
+                case 'region':
+                    $taxonomy = 'setae_habitat';
+                    // 日本語エンコード対応は上でurldecode済み
                     break;
-                // 必要に応じて他のタクソノミーも追加
             }
 
             if ($taxonomy) {
@@ -88,38 +89,25 @@ class Setae_Ajax
             }
         }
 
-        // --- 3. ソート順 ---
-        switch ($sort) {
-            case 'count_desc': // 人気順
-                // keeping_count というキーで保存されている前提
-                $args['meta_key'] = 'keeping_count';
-                $args['orderby'] = 'meta_value_num';
-                $args['order'] = 'DESC';
-                break;
+        // --- フックの登録 ---
+        add_filter('posts_join', array($this, 'filter_posts_join'), 10, 2);
+        add_filter('posts_where', array($this, 'filter_posts_where'), 10, 2);
+        add_filter('posts_orderby', array($this, 'filter_posts_orderby'), 10, 2);
 
-            case 'diff_asc': // 難易度 (易しい順)
-                // ★修正: 数値用メタキー '_setae_difficulty_num' を使用して正しくソート
-                // (beginner=1, intermediate=2, expert=3)
-                $args['meta_key'] = '_setae_difficulty_num';
-                $args['orderby'] = 'meta_value_num';
-                $args['order'] = 'ASC';
-                break;
-
-            case 'name_asc':
-            default:
-                $args['orderby'] = 'title';
-                $args['order'] = 'ASC';
-                break;
-        }
-
-        // クエリ実行
+        // --- クエリ実行 ---
         $query = new WP_Query($args);
 
+        // --- フックの解除 (他のクエリに影響しないように) ---
+        remove_filter('posts_join', array($this, 'filter_posts_join'), 10);
+        remove_filter('posts_where', array($this, 'filter_posts_where'), 10);
+        remove_filter('posts_orderby', array($this, 'filter_posts_orderby'), 10);
+
+        // 結果出力
         if ($query->have_posts()) {
             ob_start();
             while ($query->have_posts()) {
                 $query->the_post();
-                // パスは環境に合わせて調整してください
+                // パス解決
                 if (defined('SETAE_CORE_PATH')) {
                     include(SETAE_CORE_PATH . 'templates/partials/card-species.php');
                 } else {
@@ -133,15 +121,98 @@ class Setae_Ajax
                 'max_page' => $query->max_num_pages,
             ));
         } else {
-            // 該当なし
             $html = '';
             if ($paged === 1) {
                 $html = '<div class="no-results" style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">条件に一致する種が見つかりませんでした。</div>';
             }
             wp_send_json_success(array('html' => $html, 'max_page' => 0));
         }
-
         wp_die();
+    }
+
+    // ==========================================================
+    //  以下、SQL書き換え用フィルターメソッド
+    // ==========================================================
+
+    /**
+     * JOIN句の追加: メタデータを検索・ソートするためにpostmetaテーブルを結合
+     */
+    public function filter_posts_join($join, $query)
+    {
+        global $wpdb;
+
+        // 和名検索用 (mt1)
+        if (!empty($this->search_params['keyword'])) {
+            $join .= " LEFT JOIN {$wpdb->postmeta} AS mt1 ON ({$wpdb->posts}.ID = mt1.post_id AND mt1.meta_key = '_setae_common_name_ja') ";
+        }
+
+        // ソート用 (mt2)
+        $sort = isset($this->search_params['sort']) ? $this->search_params['sort'] : '';
+        if ($sort === 'count_desc') {
+            // 人気順: keeping_count (無い場合も考慮してLEFT JOIN)
+            $join .= " LEFT JOIN {$wpdb->postmeta} AS mt2 ON ({$wpdb->posts}.ID = mt2.post_id AND mt2.meta_key = 'keeping_count') ";
+        } elseif ($sort === 'diff_asc' || $sort === 'diff_desc') {
+            // 難易度順: _setae_difficulty
+            $join .= " LEFT JOIN {$wpdb->postmeta} AS mt2 ON ({$wpdb->posts}.ID = mt2.post_id AND mt2.meta_key = '_setae_difficulty') ";
+        }
+
+        return $join;
+    }
+
+    /**
+     * WHERE句の追加: タイトル(学名) OR 和名 で検索
+     */
+    public function filter_posts_where($where, $query)
+    {
+        global $wpdb;
+        $keyword = isset($this->search_params['keyword']) ? $this->search_params['keyword'] : '';
+
+        if (!empty($keyword)) {
+            // エスケープ処理
+            $like = '%' . $wpdb->esc_like($keyword) . '%';
+
+            // タイトル OR 和名(mt1.meta_value)
+            // 既存のWHERE句に追加する形にする
+            $where .= $wpdb->prepare(
+                " AND ({$wpdb->posts}.post_title LIKE %s OR mt1.meta_value LIKE %s) ",
+                $like,
+                $like
+            );
+        }
+        return $where;
+    }
+
+    /**
+     * ORDER BY句の書き換え: 特殊なソートロジックを適用
+     */
+    public function filter_posts_orderby($orderby, $query)
+    {
+        global $wpdb;
+        $sort = isset($this->search_params['sort']) ? $this->search_params['sort'] : '';
+
+        switch ($sort) {
+            case 'name_asc':
+                return "{$wpdb->posts}.post_title ASC";
+
+            case 'count_desc':
+                // Keeping数 (mt2.meta_value) を数値として降順ソート
+                // NULL(未登録)は 0 として扱う
+                return "CAST(COALESCE(mt2.meta_value, 0) AS SIGNED) DESC, {$wpdb->posts}.post_title ASC";
+
+            case 'diff_asc':
+                // 難易度 (beginner -> intermediate -> expert)
+                // 文字列なのでCASE文で数値化してソート
+                return "CASE mt2.meta_value 
+                        WHEN 'beginner' THEN 1 
+                        WHEN 'intermediate' THEN 2 
+                        WHEN 'expert' THEN 3 
+                        ELSE 4 END ASC, {$wpdb->posts}.post_title ASC";
+
+            // (必要であれば diff_desc も同様にCASE文で DESC にする)
+
+            default:
+                return $orderby;
+        }
     }
 
 
