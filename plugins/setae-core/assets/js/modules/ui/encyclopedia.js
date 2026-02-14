@@ -20,20 +20,17 @@
 
         if (reset) {
             state.page = 1;
-            // ローディング感
             $container.css('opacity', '0.5');
         } else {
+            // これ以上ページがない場合は処理しない
             if (state.page >= state.maxPage) return;
             state.page++;
         }
 
         state.isLoading = true;
-        if (reset) {
-            // リセット時は上書きするまでローダー出さないか、コンテナ内で表示するか
-            // ここでは opacity で表現し、下部ローダーは追加読み込み用とする
-        } else {
-            $loader.css('display', 'flex');
-        }
+
+        // ★修正: displayではなくvisibilityで制御 (Observer対策)
+        $loader.css('visibility', 'visible');
 
         // nonce取得 (SetaeSettings is localized in class-setae-dashboard.php)
         const nonce = (window.SetaeSettings && window.SetaeSettings.nonce) ? window.SetaeSettings.nonce : '';
@@ -57,27 +54,37 @@
                         $container.css('opacity', '1');
                         state.maxPage = parseInt(res.data.max_page);
 
-                        // 1ページ未満なら監視解除、それ以外なら監視開始
-                        if (state.maxPage <= 1) {
-                            if (observer) observer.disconnect();
-                        } else {
-                            setupObserver(); // 再接続
-                        }
+                        // ★追加: ページリセット時に監視状態を再評価
+                        checkLoaderVisibility();
                     } else {
-                        // 追加
                         $container.append(res.data.html);
                     }
                 }
             },
             error: function () {
-                // エラー処理（トーストなど）
                 $container.css('opacity', '1');
+                state.page--; // エラー時はページ番号を戻す
             },
             complete: function () {
                 state.isLoading = false;
-                $loader.hide();
+                // ★修正: 読み込み完了後、まだページがあればhidden(監視継続)、なければdisplay:none
+                checkLoaderVisibility();
             }
         });
+    }
+
+    // ★追加: ローダーの表示状態を管理するヘルパー関数
+    function checkLoaderVisibility() {
+        if (state.page < state.maxPage) {
+            // 次のページがある -> 領域を確保して監視させる (見えなくて良いのでhidden)
+            $loader.css({
+                'display': 'flex',
+                'visibility': 'hidden'
+            });
+        } else {
+            // 次のページがない -> 完全に消す
+            $loader.css('display', 'none');
+        }
     }
 
     // --- イベントリスナー ---
@@ -172,12 +179,13 @@
 
         const options = {
             root: null,
-            rootMargin: '200px',
-            threshold: 0
+            rootMargin: '200px', // 早めに読み込む設定
+            threshold: 0 // 1ピクセルでも入れば発火
         };
 
         observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
+                // ★条件追加: intersecting かつ 次のページがある場合
                 if (entry.isIntersecting && !state.isLoading && state.page < state.maxPage) {
                     fetchSpecies(false);
                 }
@@ -190,6 +198,8 @@
     // Init
     $(document).ready(function () {
         if ($('#section-enc').length) {
+            // ★追加: 初期ロード時にローダーの状態をセット
+            checkLoaderVisibility();
             setupObserver();
         }
     });

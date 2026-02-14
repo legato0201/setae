@@ -81,8 +81,9 @@
     </div>
 
     <div id="setae-enc-loader"
-        style="width:100%; height:50px; display:none; justify-content:center; align-items:center; margin-top:20px;">
-        <span class="spinner" style="display:inline-block; visibility:visible;"></span> Loading...
+        style="width:100%; height:50px; visibility:hidden; display:flex; justify-content:center; align-items:center; margin-top:20px;">
+        <span class="spinner" style="display:inline-block; margin-right:5px;"></span> <span
+            style="color:#999; font-size:12px;">Loading more...</span>
     </div>
 
     <input type="hidden" id="setae-current-page" value="1">

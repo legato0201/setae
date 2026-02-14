@@ -142,7 +142,14 @@ class Setae_Ajax
                 // Include card template
                 // Need to define variables expected by card-species.php or modify card-species.php to use get_the_ID() internally?
                 // I wrote card-species.php to use get_the_ID() at the top. So it's self-contained!
-                include(SETAE_PLUGIN_DIR . 'templates/partials/card-species.php');
+                // Include card template
+                // Calculate safe path or use constant
+                if (defined('SETAE_CORE_PATH')) {
+                    include(SETAE_CORE_PATH . 'templates/partials/card-species.php');
+                } else {
+                    // Fallback relative path from this file (includes/class-setae-ajax.php)
+                    include(plugin_dir_path(dirname(__FILE__)) . 'templates/partials/card-species.php');
+                }
             }
             $html = ob_get_clean();
 
