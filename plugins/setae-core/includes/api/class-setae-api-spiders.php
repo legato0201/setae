@@ -465,6 +465,12 @@ class Setae_API_Spiders
             'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
             'last_feed' => get_post_meta($spider_id, '_setae_last_feed_date', true),
             'status' => get_post_meta($spider_id, '_setae_status', true) ?: 'normal',
+
+            // ▼▼▼ Added: BL Settings ▼▼▼
+            'bl_status' => get_post_meta($spider_id, '_setae_bl_status', true) ?: 'none',
+            'bl_terms' => get_post_meta($spider_id, '_setae_bl_terms', true) ?: '',
+            // ▲▲▲
+
             'owner_id' => $post->post_author,
             'thumb' => $thumb
         );
