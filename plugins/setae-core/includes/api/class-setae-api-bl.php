@@ -49,13 +49,22 @@ class Setae_API_BL
             $species_id = get_post_meta($post->ID, '_setae_species_id', true);
             $species_name = $species_id ? get_the_title($species_id) : 'Unknown Species';
 
-            // ★修正: 画像取得ロジックを強化 (文字列/JSON/配列 全対応)
-            $img_url = get_the_post_thumbnail_url($post->ID, 'medium');
+            // ★修正: 画像取得ロジックを最適化 (優先順位を設定)
+            $img_url = null;
 
+            // 1. 個体固有のメイン画像 (_setae_spider_image)
+            $img_url = get_post_meta($post->ID, '_setae_spider_image', true);
+
+            // 2. WP標準のアイキャッチ画像
+            if (!$img_url) {
+                $img_url = get_the_post_thumbnail_url($post->ID, 'medium');
+            }
+
+            // 3. レガシー/ギャラリー画像 (_setae_images)
             if (!$img_url) {
                 $meta_img = get_post_meta($post->ID, '_setae_images', true);
 
-                // 1. JSON文字列として保存されている場合のデコード試行
+                // JSONデコード試行
                 if (is_string($meta_img) && strpos($meta_img, '[') === 0) {
                     $decoded = json_decode($meta_img, true);
                     if (is_array($decoded)) {
@@ -63,22 +72,24 @@ class Setae_API_BL
                     }
                 }
 
-                // 2. 形式に応じたURL抽出
+                // URL抽出
                 if (!empty($meta_img)) {
                     if (is_array($meta_img)) {
-                        // 配列なら先頭の要素を取得
                         $first_img = reset($meta_img);
-                        if ($first_img) {
+                        if ($first_img)
                             $img_url = $first_img;
-                        }
                     } elseif (is_string($meta_img)) {
-                        // 文字列(URL)ならそのまま使用
                         $img_url = $meta_img;
                     }
                 }
             }
 
-            // それでも取得できなければデフォルト画像
+            // 4. 個体の写真がない場合、種類の写真を使用 (Fallback to Species Image)
+            if (!$img_url && $species_id) {
+                $img_url = get_the_post_thumbnail_url($species_id, 'medium');
+            }
+
+            // 5. それでもなければデフォルト画像
             if (!$img_url) {
                 $img_url = SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
             }
