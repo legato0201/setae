@@ -495,6 +495,18 @@ class Setae_API_Spiders
             wp_update_post(array('ID' => $spider_id, 'post_title' => $name));
         }
 
+        // ▼▼▼ Added: BL Status & Terms Update ▼▼▼
+        $bl_status = $request->get_param('bl_status');
+        if (isset($bl_status)) {
+            update_post_meta($spider_id, '_setae_bl_status', sanitize_key($bl_status));
+        }
+
+        $bl_terms = $request->get_param('bl_terms');
+        if (isset($bl_terms)) {
+            update_post_meta($spider_id, '_setae_bl_terms', sanitize_textarea_field($bl_terms));
+        }
+        // ▲▲▲ End Added ▲▲▲
+
         // Handle Image Upload
         if (!empty($_FILES['image'])) {
             $image_url = $this->handle_file_upload('image', $spider_id);

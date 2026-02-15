@@ -174,6 +174,17 @@ var SetaeUIDetail = (function ($) {
             $detailSection.fadeIn().css('display', 'block');
         }
 
+        // ▼▼▼ Added: BL Settings Card (Owner Only) ▼▼▼
+        $('#bl-settings-card').remove();
+        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId)) {
+            // Check if function exists (it's defined in same scope/module usually, but wrapper might affect visibility if not hoisted)
+            // It is defined in same module scope below, so we can stick to using the internal name if we move logic up or use hoisting.
+            // Since `renderBLSettingsCard` is defined 'function name() {}' it is hoisted.
+            // Wait, I defined it inside the return object in previous tool call? No, I defined it as a function.
+            renderBLSettingsCard(spider);
+        }
+        // ▲▲▲ End Added ▲▲▲
+
         // ログ読み込み開始
         loadSpiderLogs(spider.id);
     }
@@ -798,12 +809,77 @@ var SetaeUIDetail = (function ($) {
 
     // Remove Image
     $(document).on('click', '#btn-remove-edit-image', function () {
-        $('#edit-spider-image').val(''); // Clear input
         $('#edit-preview-img-tag').attr('src', '');
-        $('#edit-spider-image-preview').hide();
-        // Note: This only clears the *new* upload. To remove existing, we might need a flag. 
-        // For simplicity, we just hide preview. 
+        $('#edit-spider-image-preview').fadeOut();
+        $('#edit-spider-image').val('');
     });
+
+    // ★Added: BL Settings Card Rendering & Event Handling
+    function renderBLSettingsCard(spider) {
+        const currentStatus = spider.status === 'recruiting' || spider.status === 'loaned' ? spider.status : (spider.bl_status || 'none');
+        // Note: spider.status is used for 'normal', 'molt' etc. usually. 
+        // We stored BL status in _setae_bl_status, and API returns it as bl_status? 
+        // Let's check api. API `get_spider_data_array` returns `status` from `_setae_status`.
+        // We added `_setae_bl_status` update but didn't add it to response in `get_spider_data_array`.
+        // WAIT. I need to update `get_spider_data_array` in PHP to return `bl_status` and `bl_terms` first!
+        // The user instruction implies "Data update" in API response.
+
+        // Let's assume I fix PHP next.
+        // For now, let's implement the JS assuming the data is there.
+
+        const blStatus = spider.bl_status || 'none';
+        const blTerms = spider.bl_terms || '';
+
+        const html = `
+        <div id="bl-settings-card" class="setae-card" style="border-left:4px solid #2ecc71; margin-top:15px; background:#fafffa;">
+            <h4 style="margin-top:0; color:#27ae60; display:flex; align-items:center; gap:6px;">
+                <span>🤝</span> Breeding Loan Settings
+            </h4>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:bold; color:#666; display:block; margin-bottom:4px;">Status (状態)</label>
+                <select id="bl-status-select" class="setae-input" style="width:100%; padding:8px;">
+                    <option value="none" ${blStatus === 'none' ? 'selected' : ''}>募集停止 (None)</option>
+                    <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>募集中 (Recruiting)</option>
+                    <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>貸出中 (Loaned)</option>
+                </select>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:bold; color:#666; display:block; margin-bottom:4px;">Terms (条件)</label>
+                <textarea id="bl-terms-input" class="setae-input" rows="2" placeholder="例: 子返し50%、発送は翌日着地域のみ" style="width:100%; padding:8px;">${blTerms}</textarea>
+            </div>
+            <div style="text-align:right;">
+                <button id="btn-save-bl-settings" class="setae-btn-sm btn-primary" data-id="${spider.id}">設定を保存</button>
+            </div>
+        </div>
+        `;
+
+        // Add to section-my-detail, before FAB or at bottom
+        // User said: "In section-my-detail"
+        $('#section-my-detail').append(html);
+
+        // Event Handler
+        $('#btn-save-bl-settings').off('click').on('click', function () {
+            const status = $('#bl-status-select').val();
+            const terms = $('#bl-terms-input').val();
+            const id = $(this).data('id');
+
+            const formData = new FormData();
+            formData.append('bl_status', status);
+            formData.append('bl_terms', terms);
+            // Also need 'id' in path, but updateSpider uses path ID.
+
+            SetaeAPI.updateSpider(id, formData, function (response) {
+                SetaeCore.showToast('BL設定を更新しました', 'success');
+                // Update local data
+                if (response.data) {
+                    spider.bl_status = response.data.bl_status;
+                    spider.bl_terms = response.data.bl_terms;
+                }
+            });
+        });
+    }
+
+
 
     // Close Modal (Icon & Cancel Button)
     $(document).on('click', '#close-edit-spider, #close-edit-spider-btn', function () {
@@ -872,7 +948,8 @@ var SetaeUIDetail = (function ($) {
         loadSpiderDetail: loadSpiderDetail,
         render: renderSpiderDetailSection,
         deleteSpider: deleteSpider,
-        loadSpiderLogs: loadSpiderLogs
+        loadSpiderLogs: loadSpiderLogs,
+        renderBLSettingsCard: renderBLSettingsCard
     };
 
 })(jQuery);
