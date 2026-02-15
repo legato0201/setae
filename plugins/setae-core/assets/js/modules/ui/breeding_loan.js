@@ -65,13 +65,17 @@ var SetaeUIBL = (function ($) {
 
         let html = '';
 
-        // 1. 自分の募集 (My Listings)
+        // 1. 自分の募集 (My Listings) - 折りたたみ機能付き
         if (mySpiders.length > 0) {
             html += `
-                <div class="bl-section-header">
-                    <h4>My Listings <span class="count-badge">${mySpiders.length}</span></h4>
+                <div class="bl-section-header toggle-my-listings" data-target="#my-listings-wrapper">
+                    <h4>
+                        <span class="toggle-icon">▶</span> 
+                        My Listings <span class="count-badge">${mySpiders.length}</span>
+                    </h4>
+                    <span class="header-hint">Show/Hide</span>
                 </div>
-                <div class="setae-grid my-listings-grid">
+                <div id="my-listings-wrapper" class="setae-grid my-listings-grid" style="display:none;">
                     ${mySpiders.map(s => createSpiderCard(s, true)).join('')}
                 </div>
             `;
@@ -80,7 +84,7 @@ var SetaeUIBL = (function ($) {
         // 2. コミュニティの募集
         if (otherSpiders.length > 0) {
             html += `
-                <div class="bl-section-header" style="${mySpiders.length > 0 ? 'margin-top:30px;' : ''}">
+                <div class="bl-section-header" style="${mySpiders.length > 0 ? 'margin-top:20px;' : ''}">
                     <h4>Community Listings <span class="count-badge">${otherSpiders.length}</span></h4>
                 </div>
                 <div class="setae-grid community-listings-grid">
@@ -137,6 +141,13 @@ var SetaeUIBL = (function ($) {
 
     // イベントバインドの分離
     function bindCardEvents() {
+        // セクション開閉 (My Listings)
+        $('.toggle-my-listings').off('click').on('click', function () {
+            const target = $(this).data('target');
+            $(target).slideToggle(200);
+            $(this).find('.toggle-icon').toggleClass('open');
+        });
+
         // 詳細ボタン
         $('.btn-view-bl-detail').off('click').on('click', function () {
             const data = {

@@ -544,12 +544,15 @@
 .btn-wide:active {
     transform: translateY(1px);
 }
+
 /* =========================================
    Section Headers (My Listings / Community)
    ========================================= */
 .bl-section-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    /* 両端揃え */
     padding-bottom: 10px;
     border-bottom: 2px solid #f0f0f0;
     margin-bottom: 15px;
@@ -562,6 +565,37 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* Toggle Styles */
+.toggle-my-listings {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.toggle-my-listings:hover {
+    background-color: #f8f9fa;
+}
+
+.toggle-icon {
+    display: inline-block;
+    font-size: 10px;
+    color: #999;
+    transition: transform 0.2s ease;
+    margin-right: 5px;
+}
+
+.toggle-icon.open {
+    transform: rotate(90deg);
+}
+
+.header-hint {
+    font-size: 11px;
+    color: #bbb;
+    font-weight: normal;
 }
 
 .count-badge {
@@ -583,10 +617,47 @@
 /* =========================================
    Card Styles Adjustments
    ========================================= */
-/* 自分のカード用スタイル */
+/* 自分のカード用スタイル (Compact View) */
 .bl-card.is-mine {
-    border-left-color: #2ecc71; /* 緑色のアクセント */
+    border-left-color: #2ecc71;
+    /* 緑色のアクセント */
     background: #fafffa;
+}
+
+/* My Listings Compact Override */
+.my-listings-grid .bl-card {
+    padding: 10px;
+    /* パディング縮小 */
+    min-height: auto;
+}
+
+.my-listings-grid .bl-content {
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.my-listings-grid .bl-img {
+    width: 40px;
+    /* 画像サイズ縮小 */
+    height: 40px;
+    border-radius: 50%;
+    /* 丸くして省スペース感 */
+}
+
+.my-listings-grid .bl-name {
+    font-size: 14px;
+    /* フォントサイズ調整 */
+    margin-bottom: 2px;
+}
+
+.my-listings-grid .bl-species {
+    font-size: 10px;
+}
+
+.my-listings-grid .setae-btn-sm {
+    padding: 4px 0;
+    /* ボタンも少し小さく */
+    font-size: 11px;
 }
 
 .my-tag {
@@ -650,6 +721,7 @@
     padding: 8px 20px;
     font-weight: 600;
 }
+
 .btn-secondary:hover {
     background: #bdc3c7;
     color: #2c3e50;
