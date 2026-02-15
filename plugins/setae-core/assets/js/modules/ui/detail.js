@@ -174,9 +174,9 @@ var SetaeUIDetail = (function ($) {
             $detailSection.fadeIn().css('display', 'block');
         }
 
-        // ▼▼▼ Added: BL Settings Card (Owner Only) ▼▼▼
+        // ▼▼▼ Added: BL Settings Card (Owner Only & Tarantula Only) ▼▼▼
         $('#bl-settings-card').remove();
-        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId)) {
+        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId) && spider.classification === 'tarantula') {
             // Check if function exists (it's defined in same scope/module usually, but wrapper might affect visibility if not hoisted)
             // It is defined in same module scope below, so we can stick to using the internal name if we move logic up or use hoisting.
             // Since `renderBLSettingsCard` is defined 'function name() {}' it is hoisted.
@@ -685,6 +685,10 @@ var SetaeUIDetail = (function ($) {
                 $toggleBtn.text('リストから選択');
             }
 
+            // Gender
+            const gender = data.gender || 'unknown';
+            $(`input[name="edit_spider_gender"][value="${gender}"]`).prop('checked', true);
+
             // Preview Image
             if (data.thumb) {
                 $('#edit-preview-img-tag').attr('src', data.thumb);
@@ -918,6 +922,7 @@ var SetaeUIDetail = (function ($) {
         }
         // ▲ 修正ここまで
         formData.append('name', $('#edit-spider-name').val()); // Matches PHP 'name' expectation (which maps to post_title/nickname)
+        formData.append('gender', $('input[name="edit_spider_gender"]:checked').val()); // ★Adde: Gender
 
         // [Fix] Check for file input manually since it might lack 'name' attribute or be outside form context
         const imageFile = $('#edit-spider-image')[0].files[0];

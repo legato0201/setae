@@ -41,6 +41,19 @@ class Setae_Spider_Meta
                 </td>
             </tr>
             <tr>
+                <th><label for="setae_gender">Gender</label></th>
+                <td>
+                    <select name="setae_gender" id="setae_gender">
+                        <option value="unknown" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'unknown'); ?>>
+                            Unknown (不明)</option>
+                        <option value="female" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'female'); ?>>
+                            Female (メス ♀)</option>
+                        <option value="male" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'male'); ?>>Male
+                            (オス ♂)</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <th><label for="setae_last_molt_date">Last Molt</label></th>
                 <td><input type="date" name="setae_last_molt_date" id="setae_last_molt_date"
                         value="<?php echo esc_attr($molt_date); ?>" /></td>
@@ -86,6 +99,10 @@ class Setae_Spider_Meta
 
         if (isset($_POST['setae_species_id']))
             update_post_meta($post_id, '_setae_species_id', sanitize_text_field($_POST['setae_species_id']));
+
+        if (isset($_POST['setae_gender']))
+            update_post_meta($post_id, '_setae_gender', sanitize_text_field($_POST['setae_gender']));
+
         if (isset($_POST['setae_last_molt_date']))
             update_post_meta($post_id, '_setae_last_molt_date', sanitize_text_field($_POST['setae_last_molt_date']));
         if (isset($_POST['setae_last_feed_date']))
@@ -113,6 +130,7 @@ class Setae_Spider_Meta
                 return array(
                     'species_id' => $species_id,
                     'species_name' => $species_name,
+                    'gender' => get_post_meta($object['id'], '_setae_gender', true) ?: 'unknown',
                     'last_molt' => get_post_meta($object['id'], '_setae_last_molt_date', true),
                     'last_feed' => get_post_meta($object['id'], '_setae_last_feed_date', true),
                     'bl_status' => get_post_meta($object['id'], '_setae_bl_status', true),
@@ -126,6 +144,9 @@ class Setae_Spider_Meta
                 }
                 if (isset($meta_value['species_id'])) {
                     update_post_meta($object->ID, '_setae_species_id', sanitize_text_field($meta_value['species_id']));
+                }
+                if (isset($meta_value['gender'])) {
+                    update_post_meta($object->ID, '_setae_gender', sanitize_text_field($meta_value['gender']));
                 }
                 if (isset($meta_value['last_molt'])) {
                     update_post_meta($object->ID, '_setae_last_molt_date', sanitize_text_field($meta_value['last_molt']));

@@ -69,7 +69,10 @@ var SetaeUIBL = (function ($) {
                     <div class="bl-img" style="background-image:url('${spider.image || ''}')"></div>
                     <div class="bl-info">
                         <div class="bl-species">${spider.species}</div>
-                        <div class="bl-name">${spider.title}</div>
+                        <div class="bl-name">
+                            ${spider.title} 
+                            <span class="gender-icon ${gender}">${gender === 'female' ? '♀' : (gender === 'male' ? '♂' : '?')}</span>
+                        </div>
                         <div class="bl-meta">
                             <span>Owner: ${spider.owner_name}</span>
                         </div>

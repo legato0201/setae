@@ -461,6 +461,7 @@ class Setae_API_Spiders
             'species_id' => $species_id,
             'species_name' => $species_name,
             'classification' => $classification, // ★追加
+            'gender' => get_post_meta($spider_id, '_setae_gender', true) ?: 'unknown', // ★Added: Gender
             'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
             'last_feed' => get_post_meta($spider_id, '_setae_last_feed_date', true),
             'status' => get_post_meta($spider_id, '_setae_status', true) ?: 'normal',
@@ -494,6 +495,13 @@ class Setae_API_Spiders
         if ($name) {
             wp_update_post(array('ID' => $spider_id, 'post_title' => $name));
         }
+
+        // ▼▼▼ Added: Gender Update by API ▼▼▼
+        $gender = $request->get_param('gender');
+        if ($gender) {
+            update_post_meta($spider_id, '_setae_gender', sanitize_key($gender));
+        }
+        // ▲▲▲ End Added ▲▲▲
 
         // ▼▼▼ Added: BL Status & Terms Update ▼▼▼
         $bl_status = $request->get_param('bl_status');

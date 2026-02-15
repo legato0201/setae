@@ -111,7 +111,10 @@ class Setae_BL_Contracts
                     'species' => $species_name,
                     'gender' => get_post_meta($spider_id, '_setae_spider_gender', true),
                     'image' => get_the_post_thumbnail_url($spider_id, 'medium') ?: SETAE_PLUGIN_URL . 'assets/images/default-spider.png',
+                    'image' => get_the_post_thumbnail_url($spider_id, 'medium') ?: SETAE_PLUGIN_URL . 'assets/images/default-spider.png',
                     'author_name' => get_the_author_meta('display_name'),
+                    'owner_name' => get_the_author_meta('display_name'), // ★Added for JS compatibility
+                    'gender' => get_post_meta($spider_id, '_setae_gender', true) ?: 'unknown', // ★Added
                     'terms' => get_post_meta($spider_id, '_setae_bl_terms', true),
                     'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
                     'is_proven' => $is_proven

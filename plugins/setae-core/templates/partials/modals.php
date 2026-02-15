@@ -268,6 +268,16 @@ $temperaments = get_terms(array(
                 </div>
             </div>
             <div class="setae-form-group">
+                <label>性別 (Gender)</label>
+                <div class="setae-radio-group">
+                    <label style="margin-right:10px;"><input type="radio" name="edit_spider_gender" value="unknown"
+                            checked> 不明</label>
+                    <label style="margin-right:10px;"><input type="radio" name="edit_spider_gender" value="female"> ♀
+                        メス</label>
+                    <label><input type="radio" name="edit_spider_gender" value="male"> ♂ オス</label>
+                </div>
+            </div>
+            <div class="setae-form-group">
                 <label>種類 (Species)</label>
 
                 <div id="wrapper-edit-species-search" class="setae-autocomplete-wrapper" style="position:relative;">
