@@ -117,22 +117,93 @@ var SetaeUI = (function ($) {
             $('#comment-image-preview').hide();
         });
 
-        // 送信処理
+
+        // ==========================================
+        // コメント制御用: 文字数カウンター & ページネーション
+        // ==========================================
+
+        // 文字数カウンターイベント
+        $(document).on('input', '#comment-content', function () {
+            const max = 1000;
+            const current = $(this).val().length;
+            const $counter = $('#comment-char-count');
+
+            $counter.text(`${current} / ${max}`);
+
+            if (current > max) {
+                $counter.css('color', '#e74c3c'); // 赤色
+                $('.btn-send-comment').prop('disabled', true);
+            } else {
+                $counter.css('color', '#aaa');
+                $('.btn-send-comment').prop('disabled', false);
+            }
+        });
+
+        // 「もっと見る」クリックイベント
+        $(document).on('click', '#btn-load-more-comments', function () {
+            const nextPage = $(this).data('next');
+            // ボタンをローディング表示に
+            $(this).text('読み込み中...').prop('disabled', true);
+
+            loadComments(currentTopicId, nextPage);
+        });
+
+        // 送信処理 (文字数チェック追加)
         $(document).on('submit', '#setae-comment-form', function (e) {
             e.preventDefault();
-            const topicId = $('#comment-post-id').val();
-            const content = $('#comment-content').val();
-            const file = $('#comment-image-input')[0].files[0]; // ファイルを取得
 
+            const $form = $(this);
+            const $btn = $form.find('button[type="submit"]');
+            const $input = $('#comment-content');
+
+            // 二重送信防止
+            if ($btn.prop('disabled')) return;
+
+            const topicId = $('#comment-post-id').val();
+            const content = $input.val().trim();
+            const file = $('#comment-image-input')[0].files[0];
+
+            // 文字数チェック
+            if (content.length > 1000) {
+                SetaeCore.showToast('コメントは1000文字以内で入力してください', 'error');
+                return;
+            }
+
+            // 空送信防止
             if (!content && !file) return;
 
-            SetaeAPI.postComment(topicId, content, file, function () {
-                $('#comment-content').val('');
-                $('#comment-image-input').val(''); // inputクリア
-                $('#comment-image-preview').hide(); // プレビュー非表示
-                openTopicDetail(topicId); // 再読み込み
-                SetaeCore.showToast('書き込みました', 'success');
+            // 1. 送信中状態にする (ローディング表示)
+            const originalIcon = $btn.html();
+            $btn.prop('disabled', true).html('<div class="spinner-icon"></div>');
+            $input.prop('disabled', true);
+
+            // 2. API送信
+            SetaeAPI.postComment(topicId, content, file, function (res) {
+                // --- 成功時の処理 ---
+
+                // フォームのリセット
+                $input.val('').prop('disabled', false).focus();
+                $('#comment-image-input').val('');
+                $('#comment-image-preview').hide().css('display', 'none'); // hide()だけだとflexが残る場合があるので念のため
+
+                // 文字数カウンターリセット
+                $('#comment-char-count').text('0 / 1000').css('color', '#aaa');
+
+                // ボタンを元に戻す
+                $btn.prop('disabled', false).html(originalIcon);
+
+                openTopicDetail(topicId); // 再読み込み (これは1ページ目に戻る)
+                SetaeCore.showToast('コメントを投稿しました', 'success');
             });
+
+            // ★重要: エラー時やタイムアウト時にボタンが戻らないのを防ぐため
+            setTimeout(function () {
+                if ($btn.prop('disabled')) {
+                    // 10秒経ってもdisabledのままなら強制復帰
+                    $btn.prop('disabled', false).html(originalIcon);
+                    $input.prop('disabled', false);
+                }
+            }, 10000);
         });
 
         // Deck Filters (My Spiders Only)
@@ -373,31 +444,65 @@ var SetaeUI = (function ($) {
         });
     }
 
+    // ==========================================
+    // コメント制御用 変数
+    // ==========================================
+    let currentTopicPage = 1;
+    let currentTopicId = null;
+
     function openTopicDetail(id) {
+        currentTopicId = id;
+        currentTopicPage = 1; // ページリセット
+
         $('#section-com').hide();
         $('#section-com-detail').show().scrollTop(0);
         $('#topic-detail-content').html('<p>Loading...</p>');
         $('#topic-comments-list').empty();
+        $('#btn-load-more-comments').remove(); // 前のボタンがあれば削除
 
-        SetaeAPI.getTopicDetail(id, function (data) {
-            // ヘッダー設定
-            $('#detail-header-title').text(data.title);
-            $('#comment-post-id').val(data.id);
+        loadComments(id, 1);
+    }
 
-            // 本文描画
-            $('#topic-detail-content').html(`
-                <div class="setae-card" style="margin-bottom:20px; padding:15px; background:#fff;">
-                    <div style="font-size:12px; color:#666; margin-bottom:10px;">
-                        👤 ${data.author_name} / 📅 ${data.date}
+    // コメント読み込み関数
+    function loadComments(id, page) {
+        SetaeAPI.getTopicDetail(id, page, function (data) {
+            // 初回ロード時はトピック本文などを描画
+            if (page === 1) {
+                // ヘッダー設定
+                $('#detail-header-title').text(data.title);
+                $('#comment-post-id').val(data.id);
+
+                // 本文描画
+                $('#topic-detail-content').html(`
+                    <div class="setae-card" style="margin-bottom:20px; padding:15px; background:#fff;">
+                        <div style="font-size:12px; color:#666; margin-bottom:10px;">
+                            👤 ${data.author_name} / 📅 ${data.date}
+                        </div>
+                        <div style="line-height:1.6; white-space:pre-wrap;">${data.content}</div>
                     </div>
-                    <div style="line-height:1.6; white-space:pre-wrap;">${data.content}</div>
-                </div>
-            `);
+                `);
+
+                // ★追加: 文字数カウンター用のSpanを挿入 (フォームはPHP側にある想定だが、JSで動的に入れるならここ)
+                // input要素の親Divに相対配置で入れる
+                const $inputWrapper = $('#comment-content').parent();
+                if ($('#comment-char-count').length === 0) {
+                    $inputWrapper.css('position', 'relative');
+                    $inputWrapper.append('<span id="comment-char-count" style="position:absolute; bottom:-18px; right:0; font-size:10px; color:#aaa;">0 / 1000</span>');
+                    // フォームの下パディングを増やす
+                    $('#setae-comment-form').css('padding-bottom', '24px');
+                }
+            }
 
             // コメント描画
             const commentsContainer = $('#topic-comments-list');
-            commentsContainer.empty();
 
+            // ページ1でコメントがない場合
+            if (page === 1 && (!data.comments || data.comments.length === 0)) {
+                commentsContainer.html('<p style="text-align:center; color:#ccc; margin-top:20px;">まだコメントはありません</p>');
+                return;
+            }
+
+            // コメント追加
             if (data.comments && data.comments.length > 0) {
                 data.comments.forEach(comment => {
                     let imageHtml = '';
@@ -417,8 +522,16 @@ var SetaeUI = (function ($) {
                         </div>
                     `);
                 });
-            } else {
-                commentsContainer.html('<p style="text-align:center; color:#ccc; margin-top:20px;">まだコメントはありません</p>');
+            }
+
+            // 「もっと見る」ボタンの制御
+            $('#btn-load-more-comments').remove();
+            if (data.has_next) {
+                commentsContainer.after(`
+                    <button id="btn-load-more-comments" data-next="${page + 1}" class="setae-btn-secondary" style="width:100%; margin-top:10px; padding:10px; border-radius:8px;">
+                        もっと見る
+                    </button>
+                `);
             }
         });
     }

@@ -648,6 +648,8 @@
     background: #fff;
     border: 1px solid #ddd;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+
     color: #999;
     cursor: pointer;
     width: 24px;
@@ -792,4 +794,149 @@
     width: 40px;
     height: 40px;
     flex-shrink: 0;
+}
+
+/* =========================================
+   Community Comment Form Styles
+   ========================================= */
+#setae-comment-form {
+    margin-top: 20px;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    background: #fff;
+    /* 背景を白に */
+    padding: 12px 16px 24px 16px;
+    /* カウンター用余白 */
+    border-radius: 24px;
+    /* 丸みを持たせる */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    /* 浮き上がるような影 */
+    border: 1px solid #eee;
+    transition: box-shadow 0.3s ease;
+}
+
+#setae-comment-form:focus-within {
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.15);
+    /* フォーカス時に緑の光 */
+    border-color: #2ecc71;
+}
+
+/* テキスト入力エリア */
+#comment-content {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    flex-grow: 1;
+    padding: 8px 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #333;
+    min-height: 24px;
+}
+
+#comment-content:focus {
+    outline: none;
+}
+
+#comment-content::placeholder {
+    color: #aaa;
+}
+
+/* 画像添付ボタン */
+#btn-trigger-comment-image {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: #999;
+    transition: color 0.2s;
+    border-radius: 50%;
+}
+
+#btn-trigger-comment-image:hover {
+    color: #2ecc71;
+    background: #f0fdf4;
+}
+
+/* 送信ボタン */
+.btn-send-comment {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    /* 真ん丸ボタン */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(46, 204, 113, 0.3);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    flex-shrink: 0;
+}
+
+.btn-send-comment:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn-send-comment:active {
+    transform: scale(0.95);
+}
+
+.btn-send-comment:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* ローディングスピナー */
+.spinner-icon {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 画像プレビュー */
+#comment-image-preview {
+    position: relative;
+    padding: 4px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+#btn-clear-comment-image {
+    transition: transform 0.2s;
+}
+
+#btn-clear-comment-image:hover {
+    transform: scale(1.1);
+}
+
+/* 「もっと見る」ボタン */
+#btn-load-more-comments {
+    background: #f5f5f5;
+    color: #666;
+    border: none;
+    transition: background 0.2s;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#btn-load-more-comments:hover {
+    background: #e0e0e0;
 }

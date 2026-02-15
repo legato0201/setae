@@ -190,10 +190,17 @@ var SetaeAPI = (function ($) {
         });
     }
 
-    function getTopicDetail(id, callback) {
+    function getTopicDetail(id, page, callback) {
+        // 第2引数が関数の場合の互換性維持
+        if (typeof page === 'function') {
+            callback = page;
+            page = 1;
+        }
+
         $.ajax({
             url: root + '/topics/' + id,
             method: 'GET',
+            data: { page: page || 1 }, // ページ番号を送信
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
             success: function (data) { if (callback) callback(data); },
             error: function () { SetaeCore.showToast('トピック詳細の取得に失敗しました', 'error'); }

@@ -149,12 +149,24 @@ class Setae_API_Topics
             return new WP_Error('not_found', 'トピックが見つかりません', array('status' => 404));
         }
 
+
+        // ▼ 追加: ページネーションパラメータ
+        $page = $request->get_param('page') ? intval($request->get_param('page')) : 1;
+        $per_page = 20; // 1回に読み込む件数
+        $offset = ($page - 1) * $per_page;
+
         $comments_query = get_comments(array(
             'post_id' => $id,
             'status' => 'approve',
             'orderby' => 'comment_date',
-            'order' => 'ASC'
+            'order' => 'ASC',
+            'number' => $per_page, // 取得数制限
+            'offset' => $offset    // オフセット
         ));
+
+        // ▼ 追加: 次のページがあるか確認
+        $total_comments = get_comments(array('post_id' => $id, 'status' => 'approve', 'count' => true));
+        $has_next = $total_comments > ($offset + $per_page);
 
         $comments_data = array();
         foreach ($comments_query as $c) {
@@ -179,7 +191,9 @@ class Setae_API_Topics
             'date' => $post->post_date,
             'author_name' => get_the_author_meta('display_name', $post->post_author),
             'type' => $type,
-            'comments' => $comments_data
+            'comments' => $comments_data,
+            'has_next' => $has_next, // ▼ 追加: 次ページフラグ
+            'page' => $page          // ▼ 追加: 現在ページ
         );
 
         return new WP_REST_Response($data, 200);
@@ -199,6 +213,11 @@ class Setae_API_Topics
 
         $id = $request['id'];
         $content = sanitize_textarea_field($request->get_param('content'));
+
+        // ▼ 追加: 文字数制限 (1000文字)
+        if (mb_strlen($content) > 1000) {
+            return new WP_Error('content_too_long', 'コメントは1000文字以内で入力してください', array('status' => 400));
+        }
 
         // コンテンツも画像もない場合はエラー
         if (empty($content) && empty($_FILES['image']['name'])) {
