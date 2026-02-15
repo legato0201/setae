@@ -30,11 +30,8 @@
         <input type="file" id="comment-image-input" accept="image/*" style="display:none;">
 
         <button type="button" id="btn-trigger-comment-image" title="画像を添付">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2-2z"></path>
-                <circle cx="12" cy="13" r="4"></circle>
-            </svg>
+            <img draggable="false" role="img" class="emoji" alt="📸"
+                src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4f8.svg">
         </button>
 
         <div id="comment-image-preview" style="display:none;">
