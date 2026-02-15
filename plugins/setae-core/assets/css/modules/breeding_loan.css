@@ -243,3 +243,196 @@
     margin: 10px 0;
     font-size: 0.9rem;
 }
+
+/* =========================================
+   Pro Button Styling (BL Settings)
+   ========================================= */
+#btn-save-bl-settings {
+    /* グラデーションと基本スタイル */
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    /* 太字で視認性アップ */
+    padding: 12px 36px;
+    /* 横幅を広めに */
+    border-radius: 50px;
+    /* 角丸（カプセル型） */
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    /* 文字間隔を少し広げる */
+
+    /* リッチな影（発光感） */
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+
+    /* 滑らかなアニメーション */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ホバー時の浮き上がり効果 */
+#btn-save-bl-settings:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(46, 204, 113, 0.5);
+    /* 影を濃く・広く */
+}
+
+/* クリック時の押し込み効果 */
+#btn-save-bl-settings:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.2);
+}
+
+/* 保存中（disabled）の状態 */
+#btn-save-bl-settings:disabled {
+    background: #bdc3c7;
+    /* グレーアウト */
+    color: #ecf0f1;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* =========================================
+   BL Settings Panel (Pro Design)
+   ========================================= */
+.bl-settings-panel {
+    border: 1px solid #e1e4e8;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Header Area */
+.bl-panel-header {
+    background: #f8f9fa;
+    padding: 20px 24px;
+    border-bottom: 1px solid #eaecef;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bl-icon-box {
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #2ecc71;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.bl-header-text h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #24292e;
+    letter-spacing: -0.3px;
+}
+
+.bl-header-text p {
+    margin: 4px 0 0 0;
+    font-size: 12px;
+    color: #586069;
+    line-height: 1.4;
+}
+
+/* Body Area */
+.bl-panel-body {
+    padding: 24px;
+}
+
+.bl-form-group {
+    margin-bottom: 24px;
+}
+
+.bl-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.bl-form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #24292e;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Custom Select & Inputs */
+.setae-input-wrapper {
+    position: relative;
+}
+
+.setae-input-wrapper select,
+.setae-input-wrapper textarea {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #24292e;
+    background-color: #fff;
+    border: 1px solid #d1d5da;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.setae-input-wrapper select {
+    appearance: none;
+    /* デフォルトの矢印を消す */
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236a737d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.setae-input-wrapper textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.setae-input-wrapper select:focus,
+.setae-input-wrapper textarea:focus {
+    border-color: #2ecc71;
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.15);
+}
+
+.input-helper {
+    font-size: 11px;
+    color: #6a737d;
+    margin-top: 6px;
+    display: block;
+}
+
+/* Footer & Button */
+.bl-panel-footer {
+    padding: 16px 24px;
+    background: #fff;
+    border-top: 1px solid #eaecef;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-wide {
+    padding-left: 32px;
+    padding-right: 32px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.25);
+    transition: transform 0.1s;
+}
+
+.btn-wide:active {
+    transform: translateY(1px);
+}

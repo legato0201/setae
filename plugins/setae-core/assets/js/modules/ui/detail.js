@@ -801,47 +801,64 @@ var SetaeUIDetail = (function ($) {
         $('#edit-spider-image').val('');
     });
 
-    // ★Added: BL Settings Card Rendering & Event Handling (Updated for Tabs)
-    function renderBLSettingsCard(spider, targetSelector = '#section-my-detail') {
+    // ★修正版: プロ仕様のBL設定カード描画
+    function renderBLSettingsCard(spider, targetSelector) {
+        // 現在の値を正しく取得
         const blStatus = spider.bl_status || 'none';
         const blTerms = spider.bl_terms || '';
 
+        // 新しいHTML構造
         const html = `
-        <div id="bl-settings-card" class="setae-card" style="border-left:4px solid #2ecc71; margin-top:10px; background:#fafffa;">
-            <h4 style="margin-top:0; color:#27ae60; display:flex; align-items:center; gap:6px;">
-                <span>🤝</span> Breeding Loan Settings
-            </h4>
-            <p style="font-size:12px; color:#666; margin-bottom:15px;">
-                この個体をブリーディングローン(BL)候補として公開設定します。<br>
-                「募集中」にすると、コミュニティのBLボードに掲載されます。
-            </p>
-            <div style="margin-bottom:15px;">
-                <label style="font-size:12px; font-weight:bold; color:#333; display:block; margin-bottom:6px;">Status</label>
-                <select id="bl-status-select" class="setae-input" style="width:100%; padding:10px;">
-                    <option value="none" ${blStatus === 'none' ? 'selected' : ''}>⛔ 募集停止 (Private)</option>
-                    <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>✅ 募集中 (Recruiting)</option>
-                    <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>🤝 貸出中 (Loaned)</option>
-                </select>
+        <div class="bl-settings-panel">
+            <div class="bl-panel-header">
+                <div class="bl-icon-box">🤝</div>
+                <div class="bl-header-text">
+                    <h4>Breeding Loan Settings</h4>
+                    <p>Manage availability and terms for community breeding projects.</p>
+                </div>
             </div>
-            <div style="margin-bottom:15px;">
-                <label style="font-size:12px; font-weight:bold; color:#333; display:block; margin-bottom:6px;">Terms & Conditions</label>
-                <textarea id="bl-terms-input" class="setae-input" rows="4" placeholder="条件を入力 (例: 子返し50%、発送は翌日着地域のみ、死着保証なし等)" style="width:100%; padding:10px;">${blTerms}</textarea>
+
+            <div class="bl-panel-body">
+                <div class="bl-form-group">
+                    <label for="bl-status-select">Current Status</label>
+                    <div class="setae-input-wrapper">
+                        <select id="bl-status-select">
+                            <option value="none" ${blStatus === 'none' ? 'selected' : ''}>⛔ Private (Not Listed)</option>
+                            <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>✅ Recruiting (Public)</option>
+                            <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>⏳ Loaned Out</option>
+                        </select>
+                    </div>
+                    <span class="input-helper">Select "Recruiting" to display this spider on the community board.</span>
+                </div>
+
+                <div class="bl-form-group">
+                    <label for="bl-terms-input">Terms & Conditions</label>
+                    <div class="setae-input-wrapper">
+                        <textarea id="bl-terms-input" placeholder="例: 子返し50%、発送は翌日着地域のみ、死着保証なし等">${blTerms}</textarea>
+                    </div>
+                    <span class="input-helper">Provide clear details about the loan agreement to avoid disputes.</span>
+                </div>
             </div>
-            <div style="text-align:right;">
-                <button id="btn-save-bl-settings" class="setae-btn-sm btn-primary" data-id="${spider.id}" style="width:100%;">設定を保存</button>
+
+            <div class="bl-panel-footer">
+                <button id="btn-save-bl-settings" class="setae-btn-sm btn-primary btn-wide" data-id="${spider.id}">
+                    Save Settings
+                </button>
             </div>
         </div>
         `;
 
-        // Check if append to specific target or default
-        if (targetSelector === '#section-my-detail') {
-            $('#section-my-detail').append(html);
-        } else {
-            $(targetSelector).append(html);
-        }
+        // 描画
+        $(targetSelector).html(html);
 
-        // Event Handler
+        // イベントハンドラ (保存処理)
         $('#btn-save-bl-settings').off('click').on('click', function () {
+            const $btn = $(this);
+            const originalText = $btn.text();
+
+            // ローディング表示
+            $btn.text('Saving...').prop('disabled', true);
+
             const status = $('#bl-status-select').val();
             const terms = $('#bl-terms-input').val();
             const id = $(this).data('id');
@@ -851,12 +868,14 @@ var SetaeUIDetail = (function ($) {
             formData.append('bl_terms', terms);
 
             SetaeAPI.updateSpider(id, formData, function (response) {
-                SetaeCore.showToast('BL設定を更新しました', 'success');
-                // Update local data
-                if (response.data) {
-                    spider.bl_status = response.data.bl_status;
-                    spider.bl_terms = response.data.bl_terms;
-                }
+                SetaeCore.showToast('Settings saved successfully', 'success');
+
+                // ボタンを戻す
+                $btn.text(originalText).prop('disabled', false);
+
+                // ローカルデータを更新 (リロードなしで反映させるため重要)
+                spider.bl_status = status;
+                spider.bl_terms = terms;
             });
         });
     }
