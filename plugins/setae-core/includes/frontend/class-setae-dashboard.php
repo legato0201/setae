@@ -43,7 +43,8 @@ class Setae_Dashboard
             'nonce' => wp_create_nonce('wp_rest'),
             'setae_nonce' => wp_create_nonce('setae_nonce'), // For Encyclopedia AJAX
             'ajax_url' => admin_url('admin-ajax.php'),
-            'logout_url' => wp_logout_url(home_url())
+            'logout_url' => wp_logout_url(home_url()),
+            'current_user_id' => get_current_user_id() // ★Added: Pass User ID
         ));
 
         // Enqueue API Module (Depends on Core)

@@ -5,6 +5,7 @@ var SetaeCore = (function ($) {
     let state = {
         apiRoot: (typeof SetaeSettings !== 'undefined') ? SetaeSettings.api_root + 'setae/v1' : '',
         nonce: (typeof SetaeSettings !== 'undefined') ? SetaeSettings.nonce : '',
+        currentUserId: (typeof SetaeSettings !== 'undefined') ? SetaeSettings.current_user_id : 0, // ★Added: Store User ID
         cachedSpiders: [],
         currentDeck: localStorage.getItem('setae_my_deck') || 'all',
         currentViewMode: localStorage.getItem('setae_my_view') || 'list',
