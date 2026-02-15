@@ -46,18 +46,33 @@ var SetaeUI = (function ($) {
             $('#setae-create-topic-modal').fadeOut(200);
         });
 
+        // カテゴリフィルタボタン
+        $(document).on('click', '.com-filter-btn', function () {
+            $('.com-filter-btn').removeClass('active').css({ background: '#fff', color: '#666' });
+            $(this).addClass('active').css({ background: '#eee', color: '#333' }); // 簡易スタイル適用
+
+            const type = $(this).data('type');
+            loadTopics(type);
+        });
+
         // 3. 新規トピック作成フォーム送信
         $(document).on('submit', '#setae-topic-form', function (e) {
             e.preventDefault();
             const title = $('#topic-title').val();
             const content = $('#topic-content').val();
+            const type = $('#topic-type').val(); // カテゴリ取得
 
-            SetaeAPI.createTopic({ title: title, content: content }, function () {
+            // ボタンを無効化して二重送信防止
+            const $btn = $(this).find('button[type="submit"]');
+            $btn.prop('disabled', true).text('送信中...');
+
+            SetaeAPI.createTopic({ title: title, content: content, type: type }, function (res) {
+                $btn.prop('disabled', false).text('投稿する');
                 $('#setae-create-topic-modal').fadeOut();
                 $('#topic-title').val('');
                 $('#topic-content').val('');
                 SetaeCore.showToast('トピックを作成しました', 'success');
-                loadTopics(); // リスト再読み込み
+                loadTopics(); // リスト再読み込み（デフォルトはAll）
             });
         });
 
@@ -279,28 +294,46 @@ var SetaeUI = (function ($) {
 
     // --- Community Functions (追記) ---
 
-    function loadTopics() {
-        $('#setae-topic-list').html('<p style="text-align:center;">読み込み中...</p>');
-        SetaeAPI.fetchTopics(function (data) {
+    function loadTopics(type = 'all') {
+        $('#setae-topic-list').html('<p style="text-align:center; padding:20px; color:#999;"><span class="spinner"></span> 読み込み中...</p>');
+
+        SetaeAPI.fetchTopics({ type: type }, function (data) {
             const container = $('#setae-topic-list');
             container.empty();
 
             if (!data || data.length === 0) {
-                container.html('<div style="text-align:center; padding:20px; color:#999;">トピックがありません</div>');
+                container.html('<div style="text-align:center; padding:40px; color:#999;">トピックがありません。<br>最初の投稿を作成してみましょう！</div>');
                 return;
             }
 
             data.forEach(topic => {
-                // クラス名 .setae-topic-row をクリックイベントのフックに使用
+                // カテゴリごとのバッジ色設定
+                let typeLabel = 'その他';
+                let typeColor = '#999';
+                switch (topic.type) {
+                    case 'question': typeLabel = '質問'; typeColor = '#e74c3c'; break;
+                    case 'chat': typeLabel = '雑談'; typeColor = '#2ecc71'; break;
+                    case 'breeding': typeLabel = 'ブリード'; typeColor = '#9b59b6'; break;
+                }
+
                 const html = `
-                    <div class="setae-topic-row setae-card" data-id="${topic.id}" style="cursor:pointer; margin-bottom:10px; padding:15px;">
-                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">${topic.title}</div>
-                        <div style="font-size:12px; color:#666; display:flex; justify-content:space-between;">
-                            <span>👤 ${topic.author_name || 'Anonymous'}</span>
-                            <span>📅 ${SetaeCore.formatRelativeDate(topic.date)}</span>
+                    <div class="setae-topic-row setae-card" data-id="${topic.id}" style="cursor:pointer; margin-bottom:10px; padding:15px; position:relative;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                            <span style="background:${typeColor}; color:#fff; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:bold;">${typeLabel}</span>
+                            <span style="font-size:11px; color:#999;">${SetaeCore.formatRelativeDate(topic.date)}</span>
                         </div>
-                        <div style="font-size:12px; color:#888; margin-top:5px;">
-                            💬 ${topic.comment_count || 0} comments
+                        
+                        <div style="font-weight:bold; font-size:16px; margin-bottom:8px; line-height:1.4;">${topic.title}</div>
+                        
+                        <div style="font-size:13px; color:#666; margin-bottom:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${topic.excerpt}
+                        </div>
+
+                        <div style="font-size:12px; color:#888; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5; padding-top:8px;">
+                            <span>👤 ${topic.author_name || 'Anonymous'}</span>
+                            <span style="display:flex; align-items:center;">
+                                💬 <span style="margin-left:4px; font-weight:bold; color:${topic.comment_count > 0 ? '#333' : '#ccc'}">${topic.comment_count}</span>
+                            </span>
                         </div>
                     </div>
                 `;

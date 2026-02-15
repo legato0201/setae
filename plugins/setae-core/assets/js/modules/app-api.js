@@ -162,10 +162,17 @@ var SetaeAPI = (function ($) {
 
     // --- Community API Start ---
 
-    function fetchTopics(callback) {
+    function fetchTopics(params, callback) {
+        // Handle optional params
+        if (typeof params === 'function') {
+            callback = params;
+            params = {};
+        }
+
         $.ajax({
             url: root + '/topics', // エンドポイントはサーバー実装に合わせて調整してください
             method: 'GET',
+            data: params,
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
             success: function (data) { if (callback) callback(data); },
             error: function () { SetaeCore.showToast('トピックの読み込みに失敗しました', 'error'); }
