@@ -195,149 +195,167 @@
 }
 
 
-/* Contract List Styles */
+/* =========================================
+   Contracts Grid Layout
+   ========================================= */
+
+/* 契約カードの基本スタイル（募集カードと統一感を持たせる） */
 .contract-card {
+    background: #fff;
+    border-radius: var(--setae-radius-lg, 16px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    border-left: 4px solid #ccc;
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
+.contract-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ヘッダー: ステータスと日付 */
 .contract-header {
+    padding: 12px 16px;
+    background: #fcfcfc;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
     display: flex;
     justify-content: space-between;
-    font-size: 0.85rem;
-    color: #666;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #f0f0f0;
+    align-items: center;
 }
 
+.contract-date {
+    font-size: 11px;
+    color: #999;
+    font-family: var(--setae-font-main);
+}
+
+/* ステータスバッジ（カプセル型） */
+.contract-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ステータス別カラー */
+.badge-REQUESTED {
+    background: #fff8e1;
+    color: #f5a623;
+}
+
+/* 黄 */
+.badge-APPROVED {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+
+/* 青 */
+.badge-PAIRED {
+    background: #f3e5f5;
+    color: #9c27b0;
+}
+
+/* 紫 */
+.badge-SUCCESS {
+    background: #e8f5e9;
+    color: #4caf50;
+}
+
+/* 緑 */
+.badge-FAIL,
+.badge-REJECTED {
+    background: #ffebee;
+    color: #f44336;
+}
+
+/* 赤 */
+
+/* コンテンツボディ */
 .contract-body {
+    padding: 16px;
     display: flex;
     gap: 12px;
-    margin-top: 8px;
+    flex: 1;
+    /* 高さを揃えるため */
 }
 
+/* サムネイル */
 .c-thumb {
-    width: 60px;
-    height: 60px;
-    border-radius: 6px;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
     background-size: cover;
     background-position: center;
-    background-color: #eee;
+    background-color: #f2f2f7;
+    border: 1px solid rgba(0, 0, 0, 0.05);
     flex-shrink: 0;
 }
 
+/* 詳細テキスト */
 .c-details {
-    flex-grow: 1;
+    flex: 1;
+    min-width: 0;
+}
+
+.c-details strong {
+    display: block;
+    font-size: 15px;
+    color: var(--setae-text, #1c1c1e);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .c-meta {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 4px;
+    font-size: 11px;
+    color: #8e8e93;
+    margin-bottom: 8px;
 }
 
+/* メッセージ吹き出し */
 .c-message {
-    background: #f9f9f9;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: 12px;
     color: #555;
-    margin-top: 4px;
-    font-style: italic;
+    background: #f4f4f4;
+    padding: 8px 10px;
+    border-radius: 0 8px 8px 8px;
+    /* 左上だけ直角 */
+    position: relative;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* 2行まで表示 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
+/* アクションフッター */
 .contract-actions {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
     display: flex;
-    gap: 10px;
+    gap: 8px;
     justify-content: flex-end;
-    border-top: 1px solid #f0f0f0;
-    padding-top: 10px;
-    margin-top: 5px;
+    /* 右寄せ */
+    align-items: center;
+    background: #fff;
 }
 
-/* Status Colors */
-.status-requested {
-    border-left-color: #f1c40f;
-}
-
-.status-approved {
-    border-left-color: #3498db;
-}
-
-.status-paired {
-    border-left-color: #9b59b6;
-}
-
-.status-success {
-    border-left-color: #2ecc71;
-}
-
-.status-fail {
-    border-left-color: #e74c3c;
-}
-
-.badge-REQUESTED {
-    color: #f39c12;
-    font-weight: bold;
-}
-
-.badge-APPROVED {
-    color: #3498db;
-    font-weight: bold;
-}
-
-.badge-PAIRED {
-    color: #9b59b6;
-    font-weight: bold;
-}
-
-.badge-SUCCESS {
-    color: #2ecc71;
-    font-weight: bold;
-}
-
-.badge-FAIL {
-    color: #e74c3c;
-    font-weight: bold;
-}
-
-/* BL Card Content Layout (New) */
-.bl-content {
+/* チャットボタン */
+.btn-open-chat {
+    margin-right: auto;
+    /* 左端に寄せる */
+    padding: 6px 12px;
+    font-size: 12px;
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.bl-img {
-    width: 80px;
-    height: 80px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 8px;
-    background-color: #eee;
-}
-
-.bl-info {
-    flex: 1;
-}
-
-/* Empty State Style */
-.empty-msg {
-    text-align: center;
-    padding: 40px 20px;
-    color: #999;
-    background: #f9f9f9;
-    border-radius: 8px;
-    border: 2px dashed #eee;
-    margin: 10px 0;
-    font-size: 0.9rem;
+    align-items: center;
+    gap: 4px;
 }
 
 /* =========================================

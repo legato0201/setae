@@ -295,92 +295,112 @@ var SetaeUIBL = (function ($) {
         container.empty();
 
         if (!contracts || contracts.length === 0) {
-            container.html('<p class="empty-msg">現在、進行中のBL契約はありません。</p>');
+            container.html('<div class="empty-state"><p>現在、進行中のBL契約はありません。</p></div>');
             return;
         }
 
-        // セクション分け: 受信リクエスト (Action Required) / 送信済み (Waiting)
-        const incoming = contracts.filter(c => c.is_owner);
-        const outgoing = contracts.filter(c => !c.is_owner);
+        // 分類
+        const incoming = contracts.filter(c => c.is_owner); // 自分に来た依頼
+        const outgoing = contracts.filter(c => !c.is_owner); // 自分が出した依頼
 
         let html = '';
 
-        // 1. あなたへの依頼 (Incoming)
+        // 1. 受信リクエスト (Incoming)
         if (incoming.length > 0) {
-            html += `<h4>受信リクエスト (あなたの個体への応募)</h4>`;
-            incoming.forEach(c => html += createContractCard(c, true));
+            html += `
+                <div class="bl-section-header">
+                    <h4>Requests Received <span class="count-badge">${incoming.length}</span></h4>
+                    <span class="header-hint" style="background:none; color:#999; font-weight:normal;">Action Required</span>
+                </div>
+                <div class="setae-grid" style="margin-bottom: 30px;">
+                    ${incoming.map(c => createContractCard(c, true)).join('')}
+                </div>
+            `;
         }
 
-        // 2. あなたからの依頼 (Outgoing)
+        // 2. 送信リクエスト (Outgoing)
         if (outgoing.length > 0) {
-            html += `<h4 style="margin-top:20px;">送信リクエスト (あなたが応募)</h4>`;
-            outgoing.forEach(c => html += createContractCard(c, false));
+            html += `
+                <div class="bl-section-header">
+                    <h4>Requests Sent <span class="count-badge">${outgoing.length}</span></h4>
+                    <span class="header-hint" style="background:none; color:#999; font-weight:normal;">Waiting</span>
+                </div>
+                <div class="setae-grid">
+                    ${outgoing.map(c => createContractCard(c, false)).join('')}
+                </div>
+            `;
         }
 
         container.html(html);
 
-        // Events for Actions
-        $('.btn-bl-action').off('click').on('click', function () {
-            const id = $(this).data('id');
-            const action = $(this).data('action');
-            updateContractStatus(id, action);
-        });
-
-        // ★追加: チャットボタンイベント (修正)
-        $('.btn-open-chat').off('click').on('click', function () {
-            const id = $(this).data('id');
-            const title = $(this).data('spider');
-            openChatModal(id, title);
-        });
+        // イベントバインド
+        bindContractEvents();
     }
 
     function createContractCard(c, isOwner) {
         let actions = '';
 
-        // オーナー側のアクション: 申請が来たら「承認」「拒否」
+        // ステータスに応じたアクションボタン
         if (isOwner && c.status === 'REQUESTED') {
             actions = `
                 <button class="setae-btn-sm btn-primary btn-bl-action" data-id="${c.id}" data-action="APPROVED">承認</button>
                 <button class="setae-btn-sm btn-danger btn-bl-action" data-id="${c.id}" data-action="REJECTED">拒否</button>
             `;
-        }
-        // 成立後のステータス変更（例: ブリーダーが受け取ったら「ペアリング開始」など）
-        else if (c.status === 'APPROVED') {
-            // どちらか一方が進行ステータスを押せると仮定、あるいはオーナーが「発送済」にするなど
-            // ここではシンプルに「進行中(PAIRED)にする」ボタンを置く
-            actions = `<button class="setae-btn-sm btn-bl-action" data-id="${c.id}" data-action="PAIRED">ペアリング開始を報告</button>`;
-        }
-        else if (c.status === 'PAIRED') {
+        } else if (c.status === 'APPROVED') {
+            actions = `<button class="setae-btn-sm btn-glass btn-bl-action" data-id="${c.id}" data-action="PAIRED">ペアリング開始</button>`;
+        } else if (c.status === 'PAIRED') {
             actions = `
-                <button class="setae-btn-sm btn-primary btn-bl-action" data-id="${c.id}" data-action="SUCCESS">成功報告</button>
-                <button class="setae-btn-sm btn-danger btn-bl-action" data-id="${c.id}" data-action="FAIL">失敗報告</button>
+                <button class="setae-btn-sm btn-primary btn-bl-action" data-id="${c.id}" data-action="SUCCESS">成功</button>
+                <button class="setae-btn-sm btn-danger btn-bl-action" data-id="${c.id}" data-action="FAIL">失敗</button>
             `;
         }
 
-        // ★追加: チャットボタン (常に表示)
-        const chatBtn = `<button class="setae-btn-sm btn-glass btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}" style="margin-right:auto;">💬 メッセージ</button>`;
+        // チャットボタン
+        const chatBtn = `
+            <button class="setae-btn-sm btn-glass btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}">
+                💬 Message
+            </button>
+        `;
+
+        // ステータス表示名の整形
+        const statusLabel = c.display_status || c.status;
+        const dateStr = c.created_at.substring(0, 10).replace(/-/g, '/');
 
         return `
-        <div class="setae-card contract-card status-${c.status.toLowerCase()}">
+        <div class="setae-card contract-card">
             <div class="contract-header">
-                <span class="contract-status badge-${c.status}">${c.display_status || c.status}</span>
-                <span class="contract-date">${c.created_at.substring(0, 10)}</span>
+                <span class="contract-status badge-${c.status}">${statusLabel}</span>
+                <span class="contract-date">${dateStr}</span>
             </div>
             <div class="contract-body">
                 <div class="c-thumb" style="background-image:url('${c.spider_image}')"></div>
                 <div class="c-details">
                     <strong>${c.spider_name}</strong>
                     <div class="c-meta">
-                        ${isOwner ? `Applicant: ${c.breeder_name}` : `Owner: ${c.owner_name}`}
+                        ${isOwner ? `From: ${c.breeder_name}` : `Owner: ${c.owner_name}`}
                     </div>
                     <div class="c-message">"${c.message}"</div>
                 </div>
             </div>
             <div class="contract-actions">
                 ${chatBtn}
-                ${actions}
+                <div style="display:flex; gap:6px;">${actions}</div>
             </div>
         </div>`;
+    }
+
+    function bindContractEvents() {
+        $('.btn-bl-action').off('click').on('click', function () {
+            const id = $(this).data('id');
+            const action = $(this).data('action');
+            updateContractStatus(id, action);
+        });
+
+        $('.btn-open-chat').off('click').on('click', function () {
+            const id = $(this).data('id');
+            const title = $(this).data('spider');
+            openChatModal(id, title);
+        });
     }
 
     function updateContractStatus(id, status) {
