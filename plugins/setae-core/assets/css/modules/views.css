@@ -797,9 +797,54 @@
 }
 
 /* =========================================
-   Community Comment Form Styles
+   Detail Tabs
    ========================================= */
-#setae-comment-form {
+.setae-detail-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+    background: #fff;
+    position: sticky;
+    top: 60px;
+    /* Adjust according to header height */
+    z-index: 10;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    color: #2ecc71;
+    border-bottom-color: #2ecc71;
+}
+
+.detail-tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+=========================================*/ #setae-comment-form {
     margin-top: 20px;
     display: flex;
     align-items: flex-end;

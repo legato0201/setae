@@ -40,130 +40,89 @@ var SetaeUIDetail = (function ($) {
         $('#detail-spider-species').text(spider.species_name || spider.scientific_name || 'Unknown Species');
         $('#detail-spider-id-badge').text(`#${spider.id}`);
 
-        $('#detail-spider-molt').text(spider.last_molt || '-');
-        $('#detail-spider-feed').text(spider.last_feed || '-');
+        // --- Tabs Implementation (Fix Step 2) ---
+        const $container = $('.setae-detail-container');
+        $container.empty(); // Clear existing content
 
-        // ▼ 追加: 植物用UI切り替えロジック
-        const isPlant = (currentClassification === 'plant');
-
-        if (isPlant) {
-            // ラベルの書き換え
-            $('.status-label:contains("Last Molt")').text("Last Repot");
-            $('.status-label:contains("Last Feed")').text("Last Water");
-
-            // 餌グラフ (Prey Preferences) を隠す
-            $('#preyChart').closest('.dashboard-card').hide();
-
-            // 履歴タイトルの書き換え (JSで書き換え or CSS)
-            // 後ほど renderGrowthChart でも書き換えますが、ここでも初期状態でやっておく
-            // $('.molt-history-container div:first').text("REPOT HISTORY");
-        } else {
-            // デフォルトに戻す (他の個体を見た後に植物が残らないように)
-            $('.status-label:contains("Last Repot")').text("Last Molt");
-            $('.status-label:contains("Last Water")').text("Last Feed");
-            $('#preyChart').closest('.dashboard-card').show();
-            // $('.molt-history-container div:first').text("MOLT HISTORY");
-        }
-        // ▲ 追加ここまで
-
-        $('.section-calendar').remove();
-
-        // ============================================================
-        // ★修正: 記録ボタンを「プロ仕様」のフローティングボタン(FAB)に変更
-        // ============================================================
-
-        // 1. 既存のボタンや古い配置があれば削除 (重複・競合防止)
-        $('#btn-add-log').remove();
-
-        // 2. フローティングボタンのHTML生成
-        const fabBtnHtml = `
-            <button id="btn-add-log" class="setae-fab-record">
-                <span class="fab-icon">＋</span>
-                <span class="fab-text">Record</span>
-            </button>
+        // Tab Navigation HTML
+        const tabsHtml = `
+            <div class="setae-detail-tabs">
+                <button class="tab-btn active" data-target="tab-overview">Overview</button>
+                <button class="tab-btn" data-target="tab-history">History</button>
+                ${(String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') ? '<button class="tab-btn" data-target="tab-settings">Settings / BL</button>' : ''}
+            </div>
+            
+            <div id="tab-overview" class="detail-tab-content active"></div>
+            <div id="tab-history" class="detail-tab-content" style="display:none;"></div>
+            <div id="tab-settings" class="detail-tab-content" style="display:none;"></div>
         `;
+        $container.append(tabsHtml);
 
-        // 3. 詳細画面コンテナの末尾に追加 (詳細画面が開いている時だけ表示されるようになります)
-        $('#section-my-detail').append(fabBtnHtml);
-
-        // 4. FAB専用スタイルを注入 (CSSファイル編集不要で即反映)
-        if ($('#setae-fab-style').length === 0) {
-            $('head').append(`
-                <style id="setae-fab-style">
-                    .setae-fab-record {
-                        position: fixed; /* 画面に固定 */
-                        bottom: 30px;    /* 下からの距離 */
-                        right: 30px;     /* 右からの距離 */
-                        z-index: 9999;   /* 最前面に表示 */
-                        
-                        /* デザイン */
-                        background: linear-gradient(135deg, #2ecc71, #27ae60);
-                        color: #fff;
-                        border: none;
-                        border-radius: 50px; /* カプセル型 */
-                        padding: 12px 24px;
-                        font-size: 16px;
-                        font-weight: bold;
-                        letter-spacing: 0.5px;
-                        
-                        /* プロ仕様の影と配置 */
-                        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        
-                        /* アニメーション */
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    }
-
-                    /* ホバー時の浮き上がり演出 */
-                    .setae-fab-record:hover {
-                        transform: translateY(-3px) scale(1.02);
-                        box-shadow: 0 8px 25px rgba(46, 204, 113, 0.6);
-                    }
-
-                    /* クリック時の押し込み演出 */
-                    .setae-fab-record:active {
-                        transform: translateY(1px) scale(0.98);
-                        box-shadow: 0 2px 10px rgba(46, 204, 113, 0.3);
-                    }
-
-                    .setae-fab-record .fab-icon {
-                        font-size: 18px;
-                        line-height: 1;
-                        font-weight: 800;
-                    }
-
-                    /* モバイル調整: ボトムナビゲーション(約60-80px)の上に来るように位置を調整 */
-                    @media (max-width: 480px) {
-                        .setae-fab-record {
-                            bottom: 90px; /* ← 20px から 90px に変更 (ナビゲーションバー回避) */
-                            right: 20px;
-                            padding: 12px 20px;
-                            font-size: 14px;
-                        }
-                    }
-                </style>
-            `);
-        }
-
-        // Cycle (Status) Visuals
+        // --- Tab 1: Overview (Status + Charts) ---
+        // Helper for cycle color
         const statusMap = {
-            'normal': { label: 'Normal', color: '#2c3e50', bg: '#ecf0f1' },
-            'fasting': { label: 'Fasting', color: '#d35400', bg: '#fadbd8' },
-            'pre_molt': { label: 'Pre-molt', color: '#c0392b', bg: '#fdedec' },
-            'post_molt': { label: 'Post-molt', color: '#2980b9', bg: '#d4e6f1' },
+            'normal': { label: 'Normal', color: '#2c3e50' },
+            'fasting': { label: 'Fasting', color: '#d35400' },
+            'pre_molt': { label: 'Pre-molt', color: '#c0392b' },
+            'post_molt': { label: 'Post-molt', color: '#2980b9' },
         };
-        const currentStatus = statusMap[spider.status] || statusMap['normal'];
+        const st = statusMap[spider.status] || statusMap['normal'];
 
-        let $cycleBadge = $('#detail-spider-cycle');
-        if ($cycleBadge.length === 0) {
-            $cycleBadge = $('.status-label:contains("Cycle")').next('strong');
+        // Determine labels based on classification
+        const isPlant = (currentClassification === 'plant');
+        const labelMolt = isPlant ? "Last Repot" : "Last Molt";
+        const labelFeed = isPlant ? "Last Water" : "Last Feed";
+
+        const overviewHtml = `
+            <div class="status-grid">
+                <div class="status-item"><span class="status-label">${labelMolt}</span><strong id="detail-spider-molt">${spider.last_molt || '-'}</strong></div>
+                <div class="status-item"><span class="status-label">${labelFeed}</span><strong id="detail-spider-feed">${spider.last_feed || '-'}</strong></div>
+                <div class="status-item"><span class="status-label">Cycle</span><strong id="detail-spider-cycle" style="color:${st.color}">${st.label}</strong></div>
+            </div>
+            <div class="setae-grid-dashboard">
+                <div class="setae-card dashboard-card">
+                    <h4>Growth Log</h4>
+                    <div class="chart-container"><canvas id="growthChart"></canvas></div>
+                </div>
+                ${!isPlant ? `
+                <div class="setae-card dashboard-card">
+                    <h4>Prey Preferences</h4>
+                    <div class="chart-container"><canvas id="preyChart"></canvas></div>
+                </div>` : ''}
+            </div>
+        `;
+        $('#tab-overview').html(overviewHtml);
+
+        // --- Tab 2: History (Timeline) ---
+        const historyHtml = `
+            <div class="setae-timeline-section" style="margin-top:0;">
+                <div id="setae-log-list" class="timeline-container"></div>
+                <div id="log-sentinel"></div>
+            </div>
+        `;
+        $('#tab-history').html(historyHtml);
+
+        // --- Tab 3: Settings (BL Settings) ---
+        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') {
+            renderBLSettingsCard(spider, '#tab-settings'); // Pass target selector
         }
 
-        $cycleBadge.text(currentStatus.label);
-        $cycleBadge.css({ 'color': currentStatus.color });
+        // --- Tab Switch Event ---
+        $('.tab-btn').on('click', function () {
+            $('.tab-btn').removeClass('active');
+            $(this).addClass('active');
+            $('.detail-tab-content').hide();
+            $('#' + $(this).data('target')).fadeIn(200);
+        });
+
+        // Load Logs (Render to #setae-log-list)
+        loadSpiderLogs(spider.id);
+
+        // Setup FAB
+        setupFabButton();
+
+        // Remove old elements if any remain
+        $('.section-calendar').remove();
 
         // Show Section
         const $detailSection = $('#section-my-detail');
@@ -173,20 +132,44 @@ var SetaeUIDetail = (function ($) {
             $('#section-my').hide();
             $detailSection.fadeIn().css('display', 'block');
         }
+    }
 
-        // ▼▼▼ Added: BL Settings Card (Owner Only & Tarantula Only) ▼▼▼
-        $('#bl-settings-card').remove();
-        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId) && spider.classification === 'tarantula') {
-            // Check if function exists (it's defined in same scope/module usually, but wrapper might affect visibility if not hoisted)
-            // It is defined in same module scope below, so we can stick to using the internal name if we move logic up or use hoisting.
-            // Since `renderBLSettingsCard` is defined 'function name() {}' it is hoisted.
-            // Wait, I defined it inside the return object in previous tool call? No, I defined it as a function.
-            renderBLSettingsCard(spider);
+    // ★ Helper: FAB Button (Moved out to function)
+    function setupFabButton() {
+        $('#btn-add-log').remove();
+        const fabBtnHtml = `
+            <button id="btn-add-log" class="setae-fab-record">
+                <span class="fab-icon">＋</span>
+                <span class="fab-text">Record</span>
+            </button>
+        `;
+        $('#section-my-detail').append(fabBtnHtml);
+
+        // CSS injection handled by initial check in previous implementations or can be added here if missing
+        if ($('#setae-fab-style').length === 0) {
+            // ... (Same CSS as before, simplified for brevity as it's likely already injected or can be added to views.css)
+            // For now assuming existing CSS injection in head works or is present. 
+            // actually I should include the CSS injection block if I removed it from the main flow.
+            // To be safe, let's keep the CSS injection block.
+            $('head').append(`
+                <style id="setae-fab-style">
+                    .setae-fab-record {
+                        position: fixed; bottom: 30px; right: 30px; z-index: 9999;
+                        background: linear-gradient(135deg, #2ecc71, #27ae60);
+                        color: #fff; border: none; border-radius: 50px; padding: 12px 24px;
+                        font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+                        cursor: pointer; display: flex; align-items: center; gap: 8px;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                    }
+                    .setae-fab-record:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 25px rgba(46, 204, 113, 0.6); }
+                    .setae-fab-record:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 10px rgba(46, 204, 113, 0.3); }
+                    .setae-fab-record .fab-icon { font-size: 18px; line-height: 1; font-weight: 800; }
+                    @media (max-width: 480px) {
+                        .setae-fab-record { bottom: 90px; right: 20px; padding: 12px 20px; font-size: 14px; }
+                    }
+                </style>
+            `);
         }
-        // ▲▲▲ End Added ▲▲▲
-
-        // ログ読み込み開始
-        loadSpiderLogs(spider.id);
     }
 
     // デザイン用CSSの注入関数
@@ -818,48 +801,44 @@ var SetaeUIDetail = (function ($) {
         $('#edit-spider-image').val('');
     });
 
-    // ★Added: BL Settings Card Rendering & Event Handling
-    function renderBLSettingsCard(spider) {
-        const currentStatus = spider.status === 'recruiting' || spider.status === 'loaned' ? spider.status : (spider.bl_status || 'none');
-        // Note: spider.status is used for 'normal', 'molt' etc. usually. 
-        // We stored BL status in _setae_bl_status, and API returns it as bl_status? 
-        // Let's check api. API `get_spider_data_array` returns `status` from `_setae_status`.
-        // We added `_setae_bl_status` update but didn't add it to response in `get_spider_data_array`.
-        // WAIT. I need to update `get_spider_data_array` in PHP to return `bl_status` and `bl_terms` first!
-        // The user instruction implies "Data update" in API response.
-
-        // Let's assume I fix PHP next.
-        // For now, let's implement the JS assuming the data is there.
-
+    // ★Added: BL Settings Card Rendering & Event Handling (Updated for Tabs)
+    function renderBLSettingsCard(spider, targetSelector = '#section-my-detail') {
         const blStatus = spider.bl_status || 'none';
         const blTerms = spider.bl_terms || '';
 
         const html = `
-        <div id="bl-settings-card" class="setae-card" style="border-left:4px solid #2ecc71; margin-top:15px; background:#fafffa;">
+        <div id="bl-settings-card" class="setae-card" style="border-left:4px solid #2ecc71; margin-top:10px; background:#fafffa;">
             <h4 style="margin-top:0; color:#27ae60; display:flex; align-items:center; gap:6px;">
                 <span>🤝</span> Breeding Loan Settings
             </h4>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:bold; color:#666; display:block; margin-bottom:4px;">Status (状態)</label>
-                <select id="bl-status-select" class="setae-input" style="width:100%; padding:8px;">
-                    <option value="none" ${blStatus === 'none' ? 'selected' : ''}>募集停止 (None)</option>
-                    <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>募集中 (Recruiting)</option>
-                    <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>貸出中 (Loaned)</option>
+            <p style="font-size:12px; color:#666; margin-bottom:15px;">
+                この個体をブリーディングローン(BL)候補として公開設定します。<br>
+                「募集中」にすると、コミュニティのBLボードに掲載されます。
+            </p>
+            <div style="margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold; color:#333; display:block; margin-bottom:6px;">Status</label>
+                <select id="bl-status-select" class="setae-input" style="width:100%; padding:10px;">
+                    <option value="none" ${blStatus === 'none' ? 'selected' : ''}>⛔ 募集停止 (Private)</option>
+                    <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>✅ 募集中 (Recruiting)</option>
+                    <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>🤝 貸出中 (Loaned)</option>
                 </select>
             </div>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:bold; color:#666; display:block; margin-bottom:4px;">Terms (条件)</label>
-                <textarea id="bl-terms-input" class="setae-input" rows="2" placeholder="例: 子返し50%、発送は翌日着地域のみ" style="width:100%; padding:8px;">${blTerms}</textarea>
+            <div style="margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold; color:#333; display:block; margin-bottom:6px;">Terms & Conditions</label>
+                <textarea id="bl-terms-input" class="setae-input" rows="4" placeholder="条件を入力 (例: 子返し50%、発送は翌日着地域のみ、死着保証なし等)" style="width:100%; padding:10px;">${blTerms}</textarea>
             </div>
             <div style="text-align:right;">
-                <button id="btn-save-bl-settings" class="setae-btn-sm btn-primary" data-id="${spider.id}">設定を保存</button>
+                <button id="btn-save-bl-settings" class="setae-btn-sm btn-primary" data-id="${spider.id}" style="width:100%;">設定を保存</button>
             </div>
         </div>
         `;
 
-        // Add to section-my-detail, before FAB or at bottom
-        // User said: "In section-my-detail"
-        $('#section-my-detail').append(html);
+        // Check if append to specific target or default
+        if (targetSelector === '#section-my-detail') {
+            $('#section-my-detail').append(html);
+        } else {
+            $(targetSelector).append(html);
+        }
 
         // Event Handler
         $('#btn-save-bl-settings').off('click').on('click', function () {
@@ -870,7 +849,6 @@ var SetaeUIDetail = (function ($) {
             const formData = new FormData();
             formData.append('bl_status', status);
             formData.append('bl_terms', terms);
-            // Also need 'id' in path, but updateSpider uses path ID.
 
             SetaeAPI.updateSpider(id, formData, function (response) {
                 SetaeCore.showToast('BL設定を更新しました', 'success');
