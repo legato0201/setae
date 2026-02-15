@@ -158,11 +158,15 @@ class Setae_API_Topics
 
         $comments_data = array();
         foreach ($comments_query as $c) {
+            // ★追加: 画像URLを取得
+            $image_url = get_comment_meta($c->comment_ID, 'setae_comment_image_url', true);
+
             $comments_data[] = array(
                 'id' => $c->comment_ID,
                 'author_name' => $c->comment_author,
                 'date' => $c->comment_date,
                 'content' => wpautop($c->comment_content),
+                'image' => $image_url, // ★追加: レスポンスに含める
             );
         }
 
@@ -196,8 +200,9 @@ class Setae_API_Topics
         $id = $request['id'];
         $content = sanitize_textarea_field($request->get_param('content'));
 
-        if (empty($content)) {
-            return new WP_Error('missing_content', 'コメント内容を入力してください', array('status' => 400));
+        // コンテンツも画像もない場合はエラー
+        if (empty($content) && empty($_FILES['image']['name'])) {
+            return new WP_Error('missing_content', 'コメントまたは画像を入力してください', array('status' => 400));
         }
 
         $comment_data = array(
@@ -214,6 +219,24 @@ class Setae_API_Topics
         if (!$comment_id) {
             return new WP_Error('save_error', 'コメントの保存に失敗しました', array('status' => 500));
         }
+
+        // ▼ 追加: 画像アップロード処理 ===========================
+        if (!empty($_FILES['image']['name'])) {
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+            // メディアライブラリへアップロード
+            $attachment_id = media_handle_upload('image', 0);
+
+            if (!is_wp_error($attachment_id)) {
+                $image_url = wp_get_attachment_url($attachment_id);
+                // コメントメタとして保存
+                add_comment_meta($comment_id, 'setae_comment_image_id', $attachment_id);
+                add_comment_meta($comment_id, 'setae_comment_image_url', $image_url);
+            }
+        }
+        // ▲ 追加ここまで =========================================
 
         // 活性化: 親トピックの更新日時を更新して一覧の上位に上げる
         wp_update_post(array(

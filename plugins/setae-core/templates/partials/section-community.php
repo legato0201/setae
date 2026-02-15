@@ -38,32 +38,3 @@
         +
     </button>
 </div>
-
-<div id="setae-create-topic-modal" class="setae-modal" style="display:none;">
-    <div class="setae-modal-content" style="max-width:500px;">
-        <span class="setae-close" id="close-topic-modal">&times;</span>
-        <h3>新しいトピックを作成</h3>
-        <form id="setae-topic-form">
-            <div style="margin-bottom:15px;">
-                <label style="display:block; font-size:12px; margin-bottom:5px;">カテゴリ</label>
-                <select id="topic-type" class="setae-input" style="width:100%;">
-                    <option value="question">質問・相談</option>
-                    <option value="chat">雑談・報告</option>
-                    <option value="breeding">ブリード記録</option>
-                    <option value="other">その他</option>
-                </select>
-            </div>
-            <div style="margin-bottom:15px;">
-                <label style="display:block; font-size:12px; margin-bottom:5px;">タイトル</label>
-                <input type="text" id="topic-title" class="setae-input" required placeholder="わかりやすいタイトルを"
-                    style="width:100%;">
-            </div>
-            <div style="margin-bottom:15px;">
-                <label style="display:block; font-size:12px; margin-bottom:5px;">内容</label>
-                <textarea id="topic-content" class="setae-input" rows="5" required placeholder="内容を入力してください..."
-                    style="width:100%;"></textarea>
-            </div>
-            <button type="submit" class="setae-btn setae-btn-primary" style="width:100%;">投稿する</button>
-        </form>
-    </div>
-</div>

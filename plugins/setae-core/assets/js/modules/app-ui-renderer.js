@@ -38,12 +38,12 @@ var SetaeUI = (function ($) {
 
         // 1. 新規トピックモーダルを開く
         $(document).on('click', '#btn-create-topic', function () {
-            $('#setae-create-topic-modal').fadeIn(200);
+            $('#modal-new-topic').fadeIn(200);
         });
 
         // 2. 新規トピックモーダルを閉じる
         $(document).on('click', '#close-topic-modal', function () {
-            $('#setae-create-topic-modal').fadeOut(200);
+            $('#modal-new-topic').fadeOut(200);
         });
 
         // カテゴリフィルタボタン
@@ -68,7 +68,7 @@ var SetaeUI = (function ($) {
 
             SetaeAPI.createTopic({ title: title, content: content, type: type }, function (res) {
                 $btn.prop('disabled', false).text('投稿する');
-                $('#setae-create-topic-modal').fadeOut();
+                $('#modal-new-topic').fadeOut();
                 $('#topic-title').val('');
                 $('#topic-content').val('');
                 SetaeCore.showToast('トピックを作成しました', 'success');
@@ -90,16 +90,47 @@ var SetaeUI = (function ($) {
         });
 
         // 6. コメント投稿
+        // -----------------------------
+        // 画像添付用イベントハンドラ
+        // -----------------------------
+        // カメラアイコンクリックでファイル選択
+        $(document).on('click', '#btn-trigger-comment-image', function () {
+            $('#comment-image-input').click();
+        });
+
+        // 画像選択時のプレビュー表示
+        $(document).on('change', '#comment-image-input', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    $('#comment-image-preview img').attr('src', ev.target.result);
+                    $('#comment-image-preview').fadeIn();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // プレビュー削除ボタン
+        $(document).on('click', '#btn-clear-comment-image', function () {
+            $('#comment-image-input').val('');
+            $('#comment-image-preview').hide();
+        });
+
+        // 送信処理
         $(document).on('submit', '#setae-comment-form', function (e) {
             e.preventDefault();
             const topicId = $('#comment-post-id').val();
             const content = $('#comment-content').val();
+            const file = $('#comment-image-input')[0].files[0]; // ファイルを取得
 
-            if (!content) return;
+            if (!content && !file) return;
 
-            SetaeAPI.postComment(topicId, content, function () {
+            SetaeAPI.postComment(topicId, content, file, function () {
                 $('#comment-content').val('');
-                openTopicDetail(topicId); // コメント反映のため再読み込み
+                $('#comment-image-input').val(''); // inputクリア
+                $('#comment-image-preview').hide(); // プレビュー非表示
+                openTopicDetail(topicId); // 再読み込み
                 SetaeCore.showToast('書き込みました', 'success');
             });
         });
@@ -369,12 +400,20 @@ var SetaeUI = (function ($) {
 
             if (data.comments && data.comments.length > 0) {
                 data.comments.forEach(comment => {
+                    let imageHtml = '';
+                    if (comment.image) {
+                        imageHtml = `<div style="margin-top:5px;"><img src="${comment.image}" style="max-width:100px; max-height:100px; border-radius:4px; cursor:pointer;" onclick="window.open(this.src, '_blank')"></div>`;
+                    }
+
                     commentsContainer.append(`
                         <div class="setae-comment-row" style="border-bottom:1px solid #eee; padding:10px 0;">
                             <div style="font-size:12px; color:#888; margin-bottom:4px;">
                                 <strong>${comment.author_name}</strong> - ${SetaeCore.formatRelativeDate(comment.date)}
                             </div>
-                            <div style="font-size:14px;">${comment.content}</div>
+                            <div style="font-size:14px;">
+                                ${comment.content}
+                                ${imageHtml}
+                            </div>
                         </div>
                     `);
                 });

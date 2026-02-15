@@ -380,20 +380,32 @@ $temperaments = get_terms(array(
 </div>
 
 <!-- Create Topic Modal -->
-<div id="setae-create-topic-modal" class="setae-modal" style="display:none;">
-    <div class="setae-modal-content">
+<!-- Create Topic Modal (Updated & Renamed) -->
+<div id="modal-new-topic" class="setae-modal" style="display:none;">
+    <div class="setae-modal-content" style="max-width:500px;">
         <span class="setae-close" id="close-topic-modal">×</span>
-        <h3>新規トピック</h3>
+        <h3>新しいトピックを作成</h3>
         <form id="setae-topic-form">
-            <div class="setae-form-group">
-                <label>タイトル</label>
-                <input type="text" id="topic-title" class="setae-input" required="">
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; margin-bottom:5px;">カテゴリ</label>
+                <select id="topic-type" class="setae-input" style="width:100%;">
+                    <option value="question">質問・相談</option>
+                    <option value="chat">雑談・報告</option>
+                    <option value="breeding">ブリード記録</option>
+                    <option value="other">その他</option>
+                </select>
             </div>
-            <div class="setae-form-group">
-                <label>内容</label>
-                <textarea id="topic-content" class="setae-input" rows="5" required=""></textarea>
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; margin-bottom:5px;">タイトル</label>
+                <input type="text" id="topic-title" class="setae-input" required placeholder="わかりやすいタイトルを"
+                    style="width:100%;">
             </div>
-            <button type="submit" class="setae-btn setae-btn-primary">投稿</button>
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; margin-bottom:5px;">内容</label>
+                <textarea id="topic-content" class="setae-input" rows="5" required placeholder="内容を入力してください..."
+                    style="width:100%;"></textarea>
+            </div>
+            <button type="submit" class="setae-btn setae-btn-primary" style="width:100%;">投稿する</button>
         </form>
     </div>
 </div>

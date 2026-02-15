@@ -200,11 +200,22 @@ var SetaeAPI = (function ($) {
         });
     }
 
-    function postComment(topicId, content, callback) {
+    function postComment(topicId, content, file, callback) {
+        // FormDataを作成
+        const formData = new FormData();
+        formData.append('content', content);
+
+        // ファイルがある場合のみ追加
+        if (file) {
+            formData.append('image', file);
+        }
+
         $.ajax({
             url: root + '/topics/' + topicId + '/comments',
             method: 'POST',
-            data: { content: content },
+            data: formData,    // ★変更: オブジェクトではなくFormDataを送信
+            processData: false, // ★追加: FormData送信に必須
+            contentType: false, // ★追加: FormData送信に必須
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
             success: function (res) { if (callback) callback(res); },
             error: function () { SetaeCore.showToast('コメント投稿に失敗しました', 'error'); }
