@@ -70,6 +70,11 @@ class Setae_BL_Contracts
      *
      * @return array List of spider data
      */
+    /**
+     * Get list of spiders recruiting for BL
+     *
+     * @return array List of spider data
+     */
     public function get_recruiting_spiders()
     {
         $args = array(
@@ -92,25 +97,39 @@ class Setae_BL_Contracts
                 $query->the_post();
                 $spider_id = get_the_ID();
 
-                // 自分の個体は除外するなどのロジックもここに記述可能
-
                 // Get Species Name
                 $species_id = get_post_meta($spider_id, '_setae_species_id', true);
                 $species_name = $species_id ? get_the_title($species_id) : 'Unknown Species';
 
+                // Check Proven Status
+                $is_proven = $this->check_is_proven($spider_id);
+
                 $spiders[] = array(
                     'id' => $spider_id,
+                    'title' => get_the_title(), // Changed from 'name' to 'title' to match JS usage in some places, or keep consistent
                     'name' => get_the_title(),
                     'species' => $species_name,
-                    'gender' => get_post_meta($spider_id, '_setae_spider_gender', true),   // Assuming this meta exists or will be added
-                    'image' => get_the_post_thumbnail_url($spider_id, 'medium'),
+                    'gender' => get_post_meta($spider_id, '_setae_spider_gender', true),
+                    'image' => get_the_post_thumbnail_url($spider_id, 'medium') ?: SETAE_PLUGIN_URL . 'assets/images/default-spider.png',
                     'author_name' => get_the_author_meta('display_name'),
-                    'terms' => get_post_meta($spider_id, '_setae_bl_terms', true)
+                    'terms' => get_post_meta($spider_id, '_setae_bl_terms', true),
+                    'last_molt' => get_post_meta($spider_id, '_setae_last_molt_date', true),
+                    'is_proven' => $is_proven
                 );
             }
             wp_reset_postdata();
         }
         return $spiders;
+    }
+
+    public function check_is_proven($spider_id)
+    {
+        global $wpdb;
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $this->table_name WHERE spider_id = %d AND status = 'SUCCESS'",
+            $spider_id
+        ));
+        return $count > 0;
     }
 
 }

@@ -21,6 +21,20 @@
     /* Default recruiting */
 }
 
+.bl-badge-proven {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    /* Opposite side of recruiting badge */
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #8e44ad;
+    /* Purple for Proven */
+    z-index: 2;
+}
+
 .bl-species {
     font-size: 12px;
     color: #666;
@@ -57,6 +71,19 @@
 
 .bl-badge.loaned {
     background: #f39c12;
+}
+
+.bl-badge-proven {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #8e44ad;
+    /* Purple for Proven */
+    z-index: 2;
 }
 
 /* Gender Styles */
@@ -203,4 +230,16 @@
 
 .bl-info {
     flex: 1;
+}
+
+/* Empty State Style */
+.empty-msg {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 2px dashed #eee;
+    margin: 10px 0;
+    font-size: 0.9rem;
 }

@@ -110,6 +110,34 @@ class Setae_API_BL
         }
 
         $result = $db->update_status($id, $status);
+
+        // Auto-create Lineage Thread on SUCCESS
+        if ($result && $status === 'SUCCESS') {
+            $this->create_lineage_thread($contract);
+        }
+
         return new WP_REST_Response(array('success' => !!$result), 200);
+    }
+
+    private function create_lineage_thread($contract)
+    {
+        $spider_title = get_the_title($contract->spider_id);
+        $post_data = array(
+            'post_title' => '繁殖レポート: ' . $spider_title,
+            'post_content' => "<!-- wp:paragraph -->\n繁殖成功！\n\n**ペアリング情報**\n- 親個体: {$spider_title}\n- パートナー: (未記入)\n- 成功日: " . date('Y-m-d') . "\n\n詳細な記録をここに追記してください。\n<!-- /wp:paragraph -->",
+            'post_status' => 'publish',
+            'post_type' => 'setae_topic',
+            'post_author' => $contract->breeder_id // Note: Usually the breeder creates the report? Or owner? Request says "User". Breeder makes sense as they have the egg sac.
+        );
+
+        $topic_id = wp_insert_post($post_data);
+
+        if ($topic_id && !is_wp_error($topic_id)) {
+            // Set type to 'breeding' (assuming taxonomy or meta)
+            // For now, let's assume 'type' generic meta used in Topics API
+            update_post_meta($topic_id, '_setae_topic_type', 'breeding');
+            // Link to contract
+            update_post_meta($topic_id, '_setae_bl_contract_id', $contract->id);
+        }
     }
 }

@@ -12,7 +12,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Define Plugin Constants
-define('SETAE_VERSION', '1.0.35');
+// Define Plugin Constants
+define('SETAE_VERSION', '1.0.36');
 define('SETAE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SETAE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
