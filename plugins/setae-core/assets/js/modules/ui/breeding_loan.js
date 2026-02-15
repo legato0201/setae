@@ -190,7 +190,7 @@ var SetaeUIBL = (function ($) {
 
     // --- 申請モーダル (Pro仕様) ---
 
-    // ★修正: リッチな申請モーダル
+    // ★修正: リッチな申請モーダル (デザイン刷新)
     function openRequestModal(spiderId, spiderName) {
         // 既存削除
         $('#bl-request-modal').remove();
@@ -232,7 +232,7 @@ var SetaeUIBL = (function ($) {
         $modal.find('#btn-submit-request').on('click', function () {
             const message = $('#request-message').val();
             if (!message.trim()) {
-                alert('メッセージを入力してください。');
+                SetaeCore.showToast('メッセージを入力してください。', 'error'); // alertから変更
                 return;
             }
             // 送信処理実行
@@ -241,6 +241,7 @@ var SetaeUIBL = (function ($) {
         });
     }
 
+    // ★修正: 送信完了時にToast通知を使用
     function sendRequest(spiderId, message) {
         $.ajax({
             url: SetaeSettings.api_root + 'setae/v1/contracts',
@@ -248,11 +249,14 @@ var SetaeUIBL = (function ($) {
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
             data: { spider_id: spiderId, message: message },
             success: function () {
-                alert("申請を送信しました。");
+                // alert("申請を送信しました。"); // 削除
+                SetaeCore.showToast("申請を送信しました。", "success"); // Toastに変更
                 switchView('contracts'); // 契約画面へ遷移
             },
             error: function (xhr) {
-                alert("エラー: " + (xhr.responseJSON?.message || "申請できませんでした"));
+                // alert("エラー: " + ...); // 削除
+                const msg = xhr.responseJSON?.message || "申請できませんでした";
+                SetaeCore.showToast("エラー: " + msg, "error"); // Toastに変更
             }
         });
     }
