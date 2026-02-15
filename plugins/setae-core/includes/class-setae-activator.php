@@ -32,6 +32,21 @@ class Setae_Activator
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
 
+        // ▼▼▼ 追加: チャット用テーブルの作成 (ここを追加) ▼▼▼
+        $chat_table_name = $wpdb->prefix . 'setae_bl_chat';
+
+        $chat_sql = "CREATE TABLE $chat_table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            contract_id mediumint(9) NOT NULL,
+            user_id bigint(20) NOT NULL,
+            message text NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        dbDelta($chat_sql);
+        // ▲▲▲ 追加終了 ▲▲▲
+
         // Add Custom Role for App Users
         add_role(
             'setae_user',

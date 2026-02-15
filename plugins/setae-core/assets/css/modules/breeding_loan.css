@@ -650,9 +650,10 @@
     margin-bottom: 2px;
 }
 
-padding: 4px 0;
-/* ボタンも少し小さく */
-font-size: 11px;
+.my-listings-grid .setae-btn-sm {
+    padding: 4px 0;
+    /* ボタンも少し小さく */
+    font-size: 11px;
 }
 
 .my-tag {
@@ -889,7 +890,60 @@ font-size: 11px;
     font-weight: 600;
 }
 
+
 .btn-secondary:hover {
     background: #bdc3c7;
     color: #2c3e50;
+}
+
+/* ▼▼▼ Breeding Loan Toolbar Design ▼▼▼ */
+
+/* ツールバー全体をカプセル化 */
+.setae-toolbar {
+    display: flex;
+    background: #eef2f5;
+    /* 薄いグレーの背景 */
+    padding: 4px;
+    /* 内側の余白 */
+    border-radius: 30px;
+    /* 全体を丸く */
+    margin-top: 15px !important;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* 内側に僅かな影 */
+}
+
+/* ボタンの共通スタイル（リセット & 配置） */
+.setae-toolbar .setae-btn-sm {
+    flex: 1;
+    /* 2つのボタンを等幅に */
+    text-align: center;
+    background: transparent;
+    /* 非アクティブ時は透明 */
+    color: #95a5a6;
+    /* 非アクティブ時の文字色（グレー） */
+    border-radius: 25px;
+    padding: 8px 0;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: none;
+    /* デフォルトの影を消す */
+}
+
+/* ホバー時の挙動 */
+.setae-toolbar .setae-btn-sm:hover:not(.active) {
+    color: #7f8c8d;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* アクティブ（選択中）のデザイン */
+.setae-toolbar .setae-btn-sm.active {
+    background: #ffffff;
+    /* 白背景で浮き上がらせる */
+    color: var(--primary-color);
+    /* メインカラー（緑） */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* ふんわりとした影 */
+    transform: scale(1.02);
+    /* ほんの少し大きく強調 */
 }

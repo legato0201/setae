@@ -321,10 +321,17 @@ var SetaeUIBL = (function ($) {
         container.html(html);
 
         // Events for Actions
-        $('.btn-bl-action').on('click', function () {
+        $('.btn-bl-action').off('click').on('click', function () {
             const id = $(this).data('id');
             const action = $(this).data('action');
             updateContractStatus(id, action);
+        });
+
+        // ★追加: チャットボタンイベント (修正)
+        $('.btn-open-chat').off('click').on('click', function () {
+            const id = $(this).data('id');
+            const title = $(this).data('spider');
+            openChatModal(id, title);
         });
     }
 
