@@ -149,8 +149,53 @@ class Setae_API_BL
             $contracts = $db->get_contracts_by_user($user_id);
             foreach ($contracts as $c) {
                 $c->spider_name = get_the_title($c->spider_id);
-                // 画像取得を追加
-                $c->spider_image = get_the_post_thumbnail_url($c->spider_id, 'thumbnail') ?: SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
+
+                // ★修正: 画像取得ロジックの強化 (Candidatesと同様の優先順位を適用)
+                $img_url = null;
+                $spider_id = $c->spider_id;
+
+                // 1. 個体固有のメイン画像
+                $img_url = get_post_meta($spider_id, '_setae_spider_image', true);
+
+                // 2. WP標準のアイキャッチ画像
+                if (!$img_url) {
+                    $img_url = get_the_post_thumbnail_url($spider_id, 'thumbnail'); // List用なのでthumbnailサイズ
+                }
+
+                // 3. レガシー/ギャラリー画像
+                if (!$img_url) {
+                    $meta_img = get_post_meta($spider_id, '_setae_images', true);
+                    if (is_string($meta_img) && strpos($meta_img, '[') === 0) {
+                        $decoded = json_decode($meta_img, true);
+                        if (is_array($decoded))
+                            $meta_img = $decoded;
+                    }
+                    if (!empty($meta_img)) {
+                        if (is_array($meta_img)) {
+                            $first_img = reset($meta_img);
+                            if ($first_img)
+                                $img_url = $first_img;
+                        } elseif (is_string($meta_img)) {
+                            $img_url = $meta_img;
+                        }
+                    }
+                }
+
+                // 4. 種類の写真 (Fallback)
+                if (!$img_url) {
+                    $species_id = get_post_meta($spider_id, '_setae_species_id', true);
+                    if ($species_id) {
+                        $img_url = get_the_post_thumbnail_url($species_id, 'thumbnail');
+                    }
+                }
+
+                // 5. デフォルト
+                if (!$img_url) {
+                    $img_url = SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
+                }
+
+                $c->spider_image = $img_url;
+
                 $c->owner_name = get_the_author_meta('display_name', $c->owner_id);
                 $c->breeder_name = get_the_author_meta('display_name', $c->breeder_id);
 
