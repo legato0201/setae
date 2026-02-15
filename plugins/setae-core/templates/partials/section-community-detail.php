@@ -4,14 +4,16 @@
  */
 ?>
 <div id="section-com-detail" class="setae-section" style="display:none;">
-    <div class="setae-header-bar"
-        style="display:flex; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-        <button class="setae-btn-text" id="btn-back-to-topics"
-            style="margin-right:15px; font-size:18px; color:var(--setae-primary); border:none; background:none; cursor:pointer;">
-            ← Back
+    <div class="setae-detail-header">
+        <button type="button" class="setae-btn-back" id="btn-back-to-topics">
+            <svg viewBox="0 0 24 24">
+                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+            </svg>
         </button>
-        <h4 style="margin:0; flex-grow:1; text-align:center;" id="detail-header-title">Topic</h4>
-        <div style="width:50px;"></div> <!-- Spacer for center alignment -->
+
+        <h4 id="detail-header-title">Topic</h4>
+
+        <div class="header-action-spacer"></div>
     </div>
 
     <div id="topic-detail-content">

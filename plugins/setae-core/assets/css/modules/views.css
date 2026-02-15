@@ -747,3 +747,49 @@
 .chart-hidden {
     display: none !important;
 }
+
+/* Community Detail Header - Professional Style */
+.setae-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 16px 4px;
+    /* アイコンのクリック領域を考慮したパディング */
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    /* 繊細なボーダー */
+}
+
+/* タイトルのスタイル */
+.setae-detail-header h4 {
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+    font-size: 17px;
+    /* iOS標準に近いサイズ */
+    font-weight: 600;
+    color: var(--setae-text, #1c1c1e);
+    letter-spacing: -0.01em;
+
+    /* 長いタイトル対応 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 10px;
+}
+
+/* 戻るボタンの微調整（必要であれば） */
+.setae-detail-header .setae-btn-back {
+    margin-right: 0;
+    /* フレックス配置なのでマージンリセット */
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+/* 右側のスペーサー（戻るボタンとのバランス用） */
+.header-action-spacer {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
