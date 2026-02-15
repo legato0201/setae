@@ -67,11 +67,30 @@ class Setae_API_BL
             $contracts = $db->get_contracts_by_user($user_id);
             foreach ($contracts as $c) {
                 $c->spider_name = get_the_title($c->spider_id);
+                // 画像取得を追加
+                $c->spider_image = get_the_post_thumbnail_url($c->spider_id, 'thumbnail') ?: SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
                 $c->owner_name = get_the_author_meta('display_name', $c->owner_id);
                 $c->breeder_name = get_the_author_meta('display_name', $c->breeder_id);
+
+                // 自分がどちらの立場か判定フラグ
+                $c->is_owner = ($c->owner_id == $user_id);
+                $c->display_status = $this->get_status_label($c->status);
             }
             return new WP_REST_Response($contracts, 200);
         }
+    }
+
+    private function get_status_label($status)
+    {
+        $labels = [
+            'REQUESTED' => '申請中',
+            'APPROVED' => '承認済',
+            'REJECTED' => '却下',
+            'PAIRED' => 'ペアリング中',
+            'SUCCESS' => '繁殖成功',
+            'FAIL' => '繁殖失敗'
+        ];
+        return isset($labels[$status]) ? $labels[$status] : $status;
     }
 
     public function update_contract_status($request)

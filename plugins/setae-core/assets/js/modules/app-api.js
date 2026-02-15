@@ -169,8 +169,13 @@ var SetaeAPI = (function ($) {
             params = {};
         }
 
+        // Default params
+        params = params || {};
+        if (!params.page) params.page = 1;
+        if (!params.type) params.type = 'all';
+
         $.ajax({
-            url: root + '/topics', // エンドポイントはサーバー実装に合わせて調整してください
+            url: root + '/topics',
             method: 'GET',
             data: params,
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },

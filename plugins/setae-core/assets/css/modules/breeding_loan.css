@@ -71,3 +71,136 @@
 .bl-card.gender-unknown {
     border-left: 5px solid #95a5a6;
 }
+
+/* Contract List Styles */
+.contract-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-left: 4px solid #ccc;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.contract-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #666;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.contract-body {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.c-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+    background-color: #eee;
+    flex-shrink: 0;
+}
+
+.c-details {
+    flex-grow: 1;
+}
+
+.c-meta {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.c-message {
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.contract-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 10px;
+    margin-top: 5px;
+}
+
+/* Status Colors */
+.status-requested {
+    border-left-color: #f1c40f;
+}
+
+.status-approved {
+    border-left-color: #3498db;
+}
+
+.status-paired {
+    border-left-color: #9b59b6;
+}
+
+.status-success {
+    border-left-color: #2ecc71;
+}
+
+.status-fail {
+    border-left-color: #e74c3c;
+}
+
+.badge-REQUESTED {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.badge-APPROVED {
+    color: #3498db;
+    font-weight: bold;
+}
+
+.badge-PAIRED {
+    color: #9b59b6;
+    font-weight: bold;
+}
+
+.badge-SUCCESS {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.badge-FAIL {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* BL Card Content Layout (New) */
+.bl-content {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.bl-img {
+    width: 80px;
+    height: 80px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    background-color: #eee;
+}
+
+.bl-info {
+    flex: 1;
+}

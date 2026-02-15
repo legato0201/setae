@@ -28,8 +28,22 @@
     </div>
 
     <div id="setae-topic-list">
-        <div class="setae-card">
-            <p style="text-align:center;">読み込み中...</p>
+        <!-- JS will populate this -->
+        <div class="setae-card" style="text-align:center; padding:20px; color:#999;">
+            <span class="spinner"></span> 読み込み中...
+        </div>
+    </div>
+
+    <!-- Load More Button & Spinner -->
+    <div id="setae-topic-load-more" style="text-align:center; margin:20px 0; display:none;">
+        <button id="btn-load-more-topics" class="setae-btn-secondary"
+            style="background:#fff; border:1px solid #ddd; color:#666; padding:8px 20px; border-radius:20px; cursor:pointer;">
+            もっと見る
+        </button>
+        <div id="loader-topics" style="display:none; color:#999; margin-top:10px;">
+            <span class="spinner-icon"
+                style="display:inline-block; width:16px; height:16px; border:2px solid #ccc; border-top-color:#333; border-radius:50%; animation:spin 1s linear infinite;"></span>
+            読み込み中...
         </div>
     </div>
 

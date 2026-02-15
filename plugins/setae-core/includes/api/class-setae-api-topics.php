@@ -59,12 +59,15 @@ class Setae_API_Topics
     public function get_topics($request)
     {
         $type = $request->get_param('type'); // カテゴリフィルタ
+        $page = $request->get_param('page') ? intval($request->get_param('page')) : 1; // ★追加: ページ番号
+        $per_page = 20; // ★設定: 1ページあたりの表示件数
 
         $args = array(
             'post_type' => 'setae_topic',
-            'posts_per_page' => 50, // 表示数を増やす
+            'posts_per_page' => $per_page, // ★変更: 固定50から変数へ
+            'paged' => $page, // ★追加: オフセット計算をWPに任せる
             'post_status' => 'publish',
-            'orderby' => 'modified', // 更新順（コメントがつくと上がる）
+            'orderby' => 'modified',
             'order' => 'DESC',
         );
 
@@ -103,7 +106,15 @@ class Setae_API_Topics
             wp_reset_postdata();
         }
 
-        return new WP_REST_Response($data, 200);
+        // ★追加: 次のページがあるか判定
+        $has_next = $query->max_num_pages > $page;
+
+        // ★変更: データとメタデータをラップして返す
+        return new WP_REST_Response(array(
+            'items' => $data,
+            'has_next' => $has_next,
+            'page' => $page
+        ), 200);
     }
 
     public function create_topic($request)

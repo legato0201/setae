@@ -55,6 +55,11 @@ var SetaeUI = (function ($) {
             loadTopics(type);
         });
 
+        // "もっと見る" ボタン (トピック一覧)
+        $(document).on('click', '#btn-load-more-topics', function () {
+            loadTopics(null, true); // type=null (維持), isLoadMore=true
+        });
+
         // 3. 新規トピック作成フォーム送信
         $(document).on('submit', '#setae-topic-form', function (e) {
             e.preventDefault();
@@ -394,21 +399,57 @@ var SetaeUI = (function ($) {
         // section-enc is now server-side rendered, no need to fetch API
     }
 
-    // --- Community Functions (追記) ---
+    // ==========================================
+    // トピック一覧 (Community)
+    // ==========================================
+    let currentTopicListPage = 1;
+    let currentTopicListType = 'all';
+    let isTopicListLoading = false;
 
-    function loadTopics(type = 'all') {
-        $('#setae-topic-list').html('<p style="text-align:center; padding:20px; color:#999;"><span class="spinner"></span> 読み込み中...</p>');
+    function loadTopics(type = null, isLoadMore = false) {
+        if (isTopicListLoading) return;
+        isTopicListLoading = true;
 
-        SetaeAPI.fetchTopics({ type: type }, function (data) {
+        if (type) {
+            currentTopicListType = type;
+        }
+
+        if (!isLoadMore) {
+            currentTopicListPage = 1;
+            $('#setae-topic-list').html('<p style="text-align:center; padding:20px; color:#999;"><span class="spinner"></span> 読み込み中...</p>');
+            $('#setae-topic-load-more').hide();
+        } else {
+            $('#btn-load-more-topics').hide();
+            $('#loader-topics').show();
+        }
+
+        SetaeAPI.fetchTopics({
+            type: currentTopicListType,
+            page: currentTopicListPage
+        }, function (response) {
+            isTopicListLoading = false;
             const container = $('#setae-topic-list');
-            container.empty();
 
-            if (!data || data.length === 0) {
-                container.html('<div style="text-align:center; padding:40px; color:#999;">トピックがありません。<br>最初の投稿を作成してみましょう！</div>');
+            // APIレスポンス形式 { items: [...], has_next: true/false } に対応
+            // 古い形式(配列のみ)の場合は items = response
+            const topics = response.items || response;
+            const hasNext = response.has_next || false;
+
+            if (!isLoadMore) {
+                container.empty();
+            } else {
+                $('#loader-topics').hide();
+            }
+
+            if (!topics || topics.length === 0) {
+                if (!isLoadMore) {
+                    container.html('<div style="text-align:center; padding:40px; color:#999;">トピックがありません。<br>最初の投稿を作成してみましょう！</div>');
+                }
+                $('#setae-topic-load-more').hide();
                 return;
             }
 
-            data.forEach(topic => {
+            topics.forEach(topic => {
                 // カテゴリごとのバッジ色設定
                 let typeLabel = 'その他';
                 let typeColor = '#999';
@@ -441,6 +482,18 @@ var SetaeUI = (function ($) {
                 `;
                 container.append(html);
             });
+
+            // 次のページがあるなら「もっと見る」を表示
+            if (hasNext) {
+                $('#setae-topic-load-more').show();
+                $('#btn-load-more-topics').show();
+            } else {
+                $('#setae-topic-load-more').hide();
+            }
+
+            if (hasNext) {
+                currentTopicListPage++;
+            }
         });
     }
 
@@ -488,8 +541,6 @@ var SetaeUI = (function ($) {
                 if ($('#comment-char-count').length === 0) {
                     $inputWrapper.css('position', 'relative');
                     $inputWrapper.append('<span id="comment-char-count" style="position:absolute; bottom:-18px; right:0; font-size:10px; color:#aaa;">0 / 1000</span>');
-                    // フォームの下パディングを増やす
-                    $('#setae-comment-form').css('padding-bottom', '24px');
                 }
             }
 
