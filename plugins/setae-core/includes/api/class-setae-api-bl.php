@@ -28,6 +28,80 @@ class Setae_API_BL
                 return is_user_logged_in();
             },
         ));
+
+        // ▼▼▼ 追加: チャット用ルート ▼▼▼
+
+        // Get Messages
+        register_rest_route('setae/v1', '/contracts/(?P<id>\d+)/messages', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_contract_messages'),
+            'permission_callback' => function () {
+                return is_user_logged_in(); },
+        ));
+
+        // Send Message
+        register_rest_route('setae/v1', '/contracts/(?P<id>\d+)/messages', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'send_contract_message'),
+            'permission_callback' => function () {
+                return is_user_logged_in(); },
+        ));
+    }
+
+    // ▼▼▼ 追加: チャット用コールバック関数 ▼▼▼
+
+    public function get_contract_messages($request)
+    {
+        $contract_id = $request['id'];
+        $db = new Setae_BL_Contracts();
+
+        // 権限チェック (自分が関わっている契約か？)
+        $contract = $db->get_contract($contract_id);
+        $user_id = get_current_user_id();
+        if (!$contract || ($contract->owner_id != $user_id && $contract->breeder_id != $user_id)) {
+            return new WP_Error('forbidden', 'Access denied', array('status' => 403));
+        }
+
+        $messages = $db->get_chat_history($contract_id);
+
+        // 整形
+        $data = array_map(function ($m) use ($user_id) {
+            return array(
+                'id' => $m->id,
+                'message' => $m->message,
+                'is_mine' => ($m->user_id == $user_id),
+                'sender_name' => get_the_author_meta('display_name', $m->user_id),
+                'avatar' => get_avatar_url($m->user_id),
+                'date' => date('m/d H:i', strtotime($m->created_at))
+            );
+        }, $messages);
+
+        return new WP_REST_Response($data, 200);
+    }
+
+    public function send_contract_message($request)
+    {
+        $contract_id = $request['id'];
+        $message = sanitize_textarea_field($request->get_param('message'));
+
+        if (empty($message)) {
+            return new WP_Error('empty_message', 'Message cannot be empty', array('status' => 400));
+        }
+
+        $db = new Setae_BL_Contracts();
+        $contract = $db->get_contract($contract_id);
+        $user_id = get_current_user_id();
+
+        if (!$contract || ($contract->owner_id != $user_id && $contract->breeder_id != $user_id)) {
+            return new WP_Error('forbidden', 'Access denied', array('status' => 403));
+        }
+
+        $result = $db->send_chat_message($contract_id, $user_id, $message);
+
+        if ($result) {
+            return new WP_REST_Response(array('success' => true), 201);
+        }
+        return new WP_Error('db_error', 'Could not send message', array('status' => 500));
     }
 
     public function get_bl_candidates($request)

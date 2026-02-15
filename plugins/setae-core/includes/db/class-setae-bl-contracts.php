@@ -4,11 +4,46 @@ class Setae_BL_Contracts
 {
 
     private $table_name;
+    private $chat_table_name; // 追加
 
     public function __construct()
     {
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'setae_bl_contracts';
+        $this->chat_table_name = $wpdb->prefix . 'setae_bl_chat'; // 追加
+    }
+
+    // ▼▼▼ 追加: チャット機能用メソッド ▼▼▼
+
+    /**
+     * チャットメッセージを送信（保存）
+     */
+    public function send_chat_message($contract_id, $user_id, $message)
+    {
+        global $wpdb;
+        return $wpdb->insert(
+            $this->chat_table_name,
+            array(
+                'contract_id' => $contract_id,
+                'user_id' => $user_id,
+                'message' => $message,
+                'created_at' => current_time('mysql')
+            ),
+            array('%d', '%d', '%s', '%s')
+        );
+    }
+
+    /**
+     * 契約に関連するメッセージ履歴を取得
+     */
+    public function get_chat_history($contract_id)
+    {
+        global $wpdb;
+        $sql = $wpdb->prepare(
+            "SELECT * FROM {$this->chat_table_name} WHERE contract_id = %d ORDER BY created_at ASC",
+            $contract_id
+        );
+        return $wpdb->get_results($sql);
     }
 
     public function create_request($owner_id, $breeder_id, $spider_id, $message = '')

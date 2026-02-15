@@ -351,6 +351,9 @@ var SetaeUIBL = (function ($) {
             `;
         }
 
+        // ★追加: チャットボタン (常に表示)
+        const chatBtn = `<button class="setae-btn-sm btn-glass btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}" style="margin-right:auto;">💬 メッセージ</button>`;
+
         return `
         <div class="setae-card contract-card status-${c.status.toLowerCase()}">
             <div class="contract-header">
@@ -368,6 +371,7 @@ var SetaeUIBL = (function ($) {
                 </div>
             </div>
             <div class="contract-actions">
+                ${chatBtn}
                 ${actions}
             </div>
         </div>`;
@@ -386,6 +390,101 @@ var SetaeUIBL = (function ($) {
             },
             error: function () {
                 alert('更新に失敗しました。');
+            }
+        });
+    }
+
+    // ▼▼▼ 追加: チャット機能の実装 ▼▼▼
+
+    function openChatModal(contractId, title) {
+        // モーダルHTML
+        const html = `
+        <div class="setae-modal-overlay active" id="bl-chat-modal">
+            <div class="setae-modal-content chat-modal">
+                <div class="chat-header">
+                    <h3>${title} <small>Messaging</small></h3>
+                    <button class="btn-close-modal">×</button>
+                </div>
+                <div class="chat-body" id="chat-messages-area">
+                    <div class="setae-loading">Loading messages...</div>
+                </div>
+                <div class="chat-footer">
+                    <textarea id="chat-input" placeholder="メッセージを入力... (発送先、日程など)"></textarea>
+                    <button id="btn-send-chat" class="btn-send">➤</button>
+                </div>
+            </div>
+        </div>`;
+
+        $('body').append(html);
+        loadChatMessages(contractId);
+
+        // イベント
+        const $modal = $('#bl-chat-modal');
+        $modal.find('.btn-close-modal').on('click', () => $modal.remove());
+
+        // 送信
+        $modal.find('#btn-send-chat').on('click', () => sendChatMessage(contractId));
+    }
+
+    function loadChatMessages(contractId) {
+        $.ajax({
+            url: SetaeSettings.api_root + `setae/v1/contracts/${contractId}/messages`,
+            method: 'GET',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
+            success: function (response) {
+                renderChatMessages(response);
+            }
+        });
+    }
+
+    function renderChatMessages(messages) {
+        const $area = $('#chat-messages-area');
+        $area.empty();
+
+        if (messages.length === 0) {
+            $area.html('<div class="chat-empty">まだメッセージはありません。<br>挨拶や発送の相談を始めましょう。</div>');
+            return;
+        }
+
+        let html = '';
+        messages.forEach(m => {
+            const type = m.is_mine ? 'mine' : 'partner';
+            html += `
+            <div class="chat-bubble-row ${type}">
+                ${!m.is_mine ? `<div class="chat-avatar" style="background-image:url('${m.avatar}')"></div>` : ''}
+                <div class="chat-content">
+                    <div class="chat-bubble ${type}">
+                        ${m.message.replace(/\n/g, '<br>')}
+                    </div>
+                    <div class="chat-meta">${m.date}</div>
+                </div>
+            </div>`;
+        });
+
+        $area.html(html);
+        // 最下部へスクロール
+        $area.scrollTop($area[0].scrollHeight);
+    }
+
+    function sendChatMessage(contractId) {
+        const $input = $('#chat-input');
+        const msg = $input.val().trim();
+        if (!msg) return;
+
+        // 送信中は無効化
+        $('#btn-send-chat').prop('disabled', true);
+
+        $.ajax({
+            url: SetaeSettings.api_root + `setae/v1/contracts/${contractId}/messages`,
+            method: 'POST',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
+            data: { message: msg },
+            success: function () {
+                $input.val(''); // クリア
+                loadChatMessages(contractId); // リロード
+            },
+            complete: function () {
+                $('#btn-send-chat').prop('disabled', false);
             }
         });
     }
