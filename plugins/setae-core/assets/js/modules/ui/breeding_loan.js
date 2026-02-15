@@ -48,58 +48,97 @@ var SetaeUIBL = (function ($) {
         });
     }
 
+    // ★修正: リスト描画ロジックの刷新
     function renderGrid(spiders) {
         const container = $('#setae-bl-grid');
         container.empty();
 
         if (!spiders || spiders.length === 0) {
-            container.html('<p class="empty-msg">現在、BL募集中 (Recruiting) の個体はいません。</p>');
+            container.html('<div class="empty-state"><p>現在、BL募集中 (Recruiting) の個体はいません。</p></div>');
             return;
         }
 
-        spiders.forEach(spider => {
-            const gender = spider.gender || 'unknown';
-            const isMine = (String(spider.owner_id) === String(SetaeCore.state.currentUserId));
+        // データを分類
+        const currentUserId = String(SetaeCore.state.currentUserId);
+        const mySpiders = spiders.filter(s => String(s.owner_id) === currentUserId);
+        const otherSpiders = spiders.filter(s => String(s.owner_id) !== currentUserId);
 
-            // ★修正: APIから来た画像を確実に使用
-            const bgImage = spider.image;
+        let html = '';
 
-            // 性別アイコン
-            let genderIcon = '<span class="gender-icon unknown">?</span>';
-            if (gender === 'male') genderIcon = '<span class="gender-icon male">♂</span>';
-            if (gender === 'female') genderIcon = '<span class="gender-icon female">♀</span>';
+        // 1. 自分の募集 (My Listings)
+        if (mySpiders.length > 0) {
+            html += `
+                <div class="bl-section-header">
+                    <h4>My Listings <span class="count-badge">${mySpiders.length}</span></h4>
+                </div>
+                <div class="setae-grid my-listings-grid">
+                    ${mySpiders.map(s => createSpiderCard(s, true)).join('')}
+                </div>
+            `;
+        }
 
-            const card = `
-            <div class="setae-card bl-card gender-${gender}">
-                <div class="bl-badge">Recruiting</div>
-                <div class="bl-content">
-                    <div class="bl-img" style="background-image:url('${bgImage}')"></div>
-                    <div class="bl-info">
-                        <div class="bl-species">${spider.species}</div>
-                        <div class="bl-name">
-                            ${spider.name} ${genderIcon}
-                        </div>
-                        <div class="bl-meta">
-                            <span>Owner: ${spider.owner_name}</span>
-                        </div>
+        // 2. コミュニティの募集
+        if (otherSpiders.length > 0) {
+            html += `
+                <div class="bl-section-header" style="${mySpiders.length > 0 ? 'margin-top:30px;' : ''}">
+                    <h4>Community Listings <span class="count-badge">${otherSpiders.length}</span></h4>
+                </div>
+                <div class="setae-grid community-listings-grid">
+                    ${otherSpiders.map(s => createSpiderCard(s, false)).join('')}
+                </div>
+            `;
+        } else if (mySpiders.length > 0) {
+            html += `<p class="empty-sub-msg">他のユーザーからの募集はまだありません。</p>`;
+        }
+
+        container.html(html);
+
+        // イベントバインド
+        bindCardEvents();
+    }
+
+    // ★追加: カードHTML生成ヘルパー
+    function createSpiderCard(spider, isMine) {
+        const gender = spider.gender || 'unknown';
+        const bgImage = spider.image;
+
+        let genderIcon = '<span class="gender-icon unknown">?</span>';
+        if (gender === 'male') genderIcon = '<span class="gender-icon male">♂</span>';
+        if (gender === 'female') genderIcon = '<span class="gender-icon female">♀</span>';
+
+        return `
+        <div class="setae-card bl-card gender-${gender} ${isMine ? 'is-mine' : ''}">
+            <div class="bl-badge">Recruiting</div>
+            <div class="bl-content">
+                <div class="bl-img" style="background-image:url('${bgImage}')"></div>
+                <div class="bl-info">
+                    <div class="bl-species">${spider.species}</div>
+                    <div class="bl-name">${spider.name} ${genderIcon}</div>
+                    <div class="bl-meta">
+                        ${isMine
+                ? `<span class="meta-tag my-tag">Your Listing</span>`
+                : `<span>Owner: ${spider.owner_name}</span>`
+            }
                     </div>
                 </div>
-                <div class="bl-actions">
-                    <button class="setae-btn-sm btn-glass btn-view-bl-detail" 
-                        data-name="${spider.name}"
-                        data-molt="${spider.last_molt || '-'}"
-                        data-terms="${encodeURIComponent(spider.bl_terms || '')}">
-                        詳細
-                    </button>
-                    ${!isMine ? `<button class="setae-btn-sm btn-primary btn-shine btn-request-loan" data-id="${spider.id}">申請する</button>` : ''}
-                </div>
             </div>
-            `;
-            container.append(card);
-        });
+            <div class="bl-actions">
+                <button class="setae-btn-sm btn-glass btn-view-bl-detail" 
+                    data-name="${spider.name}"
+                    data-molt="${spider.last_molt || '-'}"
+                    data-terms="${encodeURIComponent(spider.bl_terms || '')}">
+                    詳細
+                </button>
+                ${!isMine ? `<button class="setae-btn-sm btn-primary btn-shine btn-request-loan" data-id="${spider.id}" data-name="${spider.name}">申請する</button>` : ''}
+            </div>
+        </div>
+        `;
+    }
 
-        // Event: 詳細ボタン (モーダルを開く)
-        $('.btn-view-bl-detail').on('click', function () {
+    // イベントバインドの分離
+    function bindCardEvents() {
+        // 詳細ボタン
+        $('.btn-view-bl-detail').off('click').on('click', function () {
             const data = {
                 name: $(this).data('name'),
                 molt: $(this).data('molt'),
@@ -108,10 +147,11 @@ var SetaeUIBL = (function ($) {
             openBLDetailModal(data);
         });
 
-        // Event: 申請ボタン
-        $('.btn-request-loan').on('click', function () {
+        // 申請ボタン (修正)
+        $('.btn-request-loan').off('click').on('click', function () {
             const id = $(this).data('id');
-            openRequestModal(id);
+            const name = $(this).data('name');
+            openRequestModal(id, name); // 名前も渡す
         });
     }
 
@@ -148,14 +188,57 @@ var SetaeUIBL = (function ($) {
         });
     }
 
-    // --- 申請モーダル (簡易実装) ---
+    // --- 申請モーダル (Pro仕様) ---
 
-    function openRequestModal(spiderId) {
-        // ※ 本来は汎用モーダルを使うべきですが、簡易的にpromptを使用、または専用DOMを生成
-        const message = prompt("ブリーダーへのメッセージを入力してください（飼育環境や経験など）:", "BL希望です。よろしくお願いします。");
-        if (message !== null && message.trim() !== "") {
+    // ★修正: リッチな申請モーダル
+    function openRequestModal(spiderId, spiderName) {
+        // 既存削除
+        $('#bl-request-modal').remove();
+
+        const html = `
+        <div class="setae-modal-overlay active" id="bl-request-modal">
+            <div class="setae-modal-content request-modal">
+                <div class="modal-header">
+                    <h3>Request Breeding Loan</h3>
+                    <button class="btn-close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="request-target-info">
+                        <span class="label">Applying for:</span>
+                        <strong class="target-name">${spiderName}</strong>
+                    </div>
+                    <div class="form-group" style="margin-top:15px;">
+                        <label style="display:block; font-size:12px; font-weight:bold; color:#666; margin-bottom:5px;">Message to Owner</label>
+                        <textarea id="request-message" class="setae-input" rows="5" placeholder="飼育環境、経験、条件への同意などを記入してください..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding-top:15px; text-align:right; border-top:1px solid #eee;">
+                    <button class="setae-btn-sm btn-secondary btn-close-modal" style="margin-right:10px;">Cancel</button>
+                    <button id="btn-submit-request" class="setae-btn-sm btn-primary btn-shine">Send Request</button>
+                </div>
+            </div>
+        </div>
+        `;
+
+        $('body').append(html);
+
+        // Events
+        const $modal = $('#bl-request-modal');
+
+        $modal.find('.btn-close-modal').on('click', function () {
+            $modal.remove();
+        });
+
+        $modal.find('#btn-submit-request').on('click', function () {
+            const message = $('#request-message').val();
+            if (!message.trim()) {
+                alert('メッセージを入力してください。');
+                return;
+            }
+            // 送信処理実行
             sendRequest(spiderId, message);
-        }
+            $modal.remove();
+        });
     }
 
     function sendRequest(spiderId, message) {
