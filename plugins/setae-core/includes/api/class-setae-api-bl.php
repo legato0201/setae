@@ -49,15 +49,36 @@ class Setae_API_BL
             $species_id = get_post_meta($post->ID, '_setae_species_id', true);
             $species_name = $species_id ? get_the_title($species_id) : 'Unknown Species';
 
-            // ★修正: 画像取得ロジックを強化
+            // ★修正: 画像取得ロジックを強化 (文字列/JSON/配列 全対応)
             $img_url = get_the_post_thumbnail_url($post->ID, 'medium');
+
             if (!$img_url) {
-                // Fallback to meta if needed, or default
-                $meta_img = get_post_meta($post->ID, '_setae_images', true); // Potentially array
-                if (!empty($meta_img) && is_array($meta_img)) {
-                    $img_url = $meta_img[0];
+                $meta_img = get_post_meta($post->ID, '_setae_images', true);
+
+                // 1. JSON文字列として保存されている場合のデコード試行
+                if (is_string($meta_img) && strpos($meta_img, '[') === 0) {
+                    $decoded = json_decode($meta_img, true);
+                    if (is_array($decoded)) {
+                        $meta_img = $decoded;
+                    }
+                }
+
+                // 2. 形式に応じたURL抽出
+                if (!empty($meta_img)) {
+                    if (is_array($meta_img)) {
+                        // 配列なら先頭の要素を取得
+                        $first_img = reset($meta_img);
+                        if ($first_img) {
+                            $img_url = $first_img;
+                        }
+                    } elseif (is_string($meta_img)) {
+                        // 文字列(URL)ならそのまま使用
+                        $img_url = $meta_img;
+                    }
                 }
             }
+
+            // それでも取得できなければデフォルト画像
             if (!$img_url) {
                 $img_url = SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
             }
