@@ -806,7 +806,7 @@
     gap: 12px;
     background: #fff;
     /* 背景を白に */
-    padding: 12px 16px 24px 16px;
+    padding: 12px 16px 12px 16px;
     /* カウンター用余白 */
     border-radius: 24px;
     /* 丸みを持たせる */
@@ -844,6 +844,7 @@
 }
 
 /* 画像添付ボタン */
+/* 画像添付ボタン */
 #btn-trigger-comment-image {
     background: none;
     border: none;
@@ -852,6 +853,18 @@
     color: #999;
     transition: color 0.2s;
     border-radius: 50%;
+    /* アイコン位置の調整 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 絵文字サイズの強制適用 (WP標準のスタイルを上書き) */
+#btn-trigger-comment-image img {
+    width: 26px !important;
+    height: 26px !important;
+    object-fit: contain;
+    vertical-align: middle;
 }
 
 #btn-trigger-comment-image:hover {
