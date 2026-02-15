@@ -59,19 +59,25 @@ var SetaeUIBL = (function ($) {
 
         spiders.forEach(spider => {
             const gender = spider.gender || 'unknown';
-            // 自分の個体にはリクエストボタンを表示しない
-            const isMine = (spider.author_id == SetaeSettings.current_user_id);
+            const isMine = (String(spider.owner_id) === String(SetaeCore.state.currentUserId));
+
+            // ★修正: APIから来た画像を確実に使用
+            const bgImage = spider.image;
+
+            // 性別アイコン
+            let genderIcon = '<span class="gender-icon unknown">?</span>';
+            if (gender === 'male') genderIcon = '<span class="gender-icon male">♂</span>';
+            if (gender === 'female') genderIcon = '<span class="gender-icon female">♀</span>';
 
             const card = `
-            <div class="setae-card bl-card gender-${gender}" data-id="${spider.id}">
+            <div class="setae-card bl-card gender-${gender}">
                 <div class="bl-badge">Recruiting</div>
                 <div class="bl-content">
-                    <div class="bl-img" style="background-image:url('${spider.image || ''}')"></div>
+                    <div class="bl-img" style="background-image:url('${bgImage}')"></div>
                     <div class="bl-info">
                         <div class="bl-species">${spider.species}</div>
                         <div class="bl-name">
-                            ${spider.title} 
-                            <span class="gender-icon ${gender}">${gender === 'female' ? '♀' : (gender === 'male' ? '♂' : '?')}</span>
+                            ${spider.name} ${genderIcon}
                         </div>
                         <div class="bl-meta">
                             <span>Owner: ${spider.owner_name}</span>
@@ -79,23 +85,66 @@ var SetaeUIBL = (function ($) {
                     </div>
                 </div>
                 <div class="bl-actions">
-                    <button class="setae-btn-sm btn-view-detail" data-id="${spider.id}">詳細</button>
-                    ${!isMine ? `<button class="setae-btn-sm btn-primary btn-request-loan" data-id="${spider.id}">申請する</button>` : ''}
+                    <button class="setae-btn-sm btn-glass btn-view-bl-detail" 
+                        data-name="${spider.name}"
+                        data-molt="${spider.last_molt || '-'}"
+                        data-terms="${encodeURIComponent(spider.bl_terms || '')}">
+                        詳細
+                    </button>
+                    ${!isMine ? `<button class="setae-btn-sm btn-primary btn-shine btn-request-loan" data-id="${spider.id}">申請する</button>` : ''}
                 </div>
             </div>
             `;
             container.append(card);
         });
 
-        // Events
-        $('.btn-view-detail').on('click', function () {
-            const id = $(this).data('id');
-            if (window.SetaeUIDetail) SetaeUIDetail.loadSpiderDetail(id);
+        // Event: 詳細ボタン (モーダルを開く)
+        $('.btn-view-bl-detail').on('click', function () {
+            const data = {
+                name: $(this).data('name'),
+                molt: $(this).data('molt'),
+                terms: decodeURIComponent($(this).data('terms'))
+            };
+            openBLDetailModal(data);
         });
 
+        // Event: 申請ボタン
         $('.btn-request-loan').on('click', function () {
             const id = $(this).data('id');
             openRequestModal(id);
+        });
+    }
+
+    // ★追加: BL詳細モーダル
+    function openBLDetailModal(data) {
+        const modalHtml = `
+        <div class="setae-modal-overlay active" id="bl-detail-modal">
+            <div class="setae-modal-content sm-modal">
+                <div class="modal-header">
+                    <h3>${data.name}</h3>
+                    <button class="btn-close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="bl-detail-row">
+                        <label>Last Molt (最終脱皮日)</label>
+                        <div class="detail-value highlight">${data.molt}</div>
+                    </div>
+                    <div class="bl-detail-row">
+                        <label>Terms & Conditions (条件)</label>
+                        <div class="detail-value text-block">${data.terms}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        $('body').append(modalHtml);
+
+        // 閉じる処理
+        $('#bl-detail-modal .btn-close-modal, #bl-detail-modal').on('click', function (e) {
+            if (e.target === this || $(e.target).hasClass('btn-close-modal')) {
+                $('#bl-detail-modal').remove();
+            }
         });
     }
 

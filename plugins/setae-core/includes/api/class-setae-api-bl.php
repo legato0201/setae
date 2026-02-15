@@ -32,9 +32,59 @@ class Setae_API_BL
 
     public function get_bl_candidates($request)
     {
-        $db = new Setae_BL_Contracts();
-        $data = $db->get_recruiting_spiders();
-        return new WP_REST_Response($data, 200);
+        $args = array(
+            'post_type' => 'setae_spider',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                array(
+                    'key' => '_setae_bl_status',
+                    'value' => 'recruiting',
+                ),
+            ),
+        );
+        $posts = get_posts($args);
+        $candidates = array();
+
+        foreach ($posts as $post) {
+            $species_id = get_post_meta($post->ID, '_setae_species_id', true);
+            $species_name = $species_id ? get_the_title($species_id) : 'Unknown Species';
+
+            // ★修正: 画像取得ロジックを強化
+            $img_url = get_the_post_thumbnail_url($post->ID, 'medium');
+            if (!$img_url) {
+                // Fallback to meta if needed, or default
+                $meta_img = get_post_meta($post->ID, '_setae_images', true); // Potentially array
+                if (!empty($meta_img) && is_array($meta_img)) {
+                    $img_url = $meta_img[0];
+                }
+            }
+            if (!$img_url) {
+                $img_url = SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
+            }
+
+            // ★追加: モーダル表示用データ
+            $last_molt = get_post_meta($post->ID, 'last_molt_date', true); // Try simple key first
+            if (!$last_molt)
+                $last_molt = get_post_meta($post->ID, '_setae_last_molt_date', true) ?: '-';
+
+            $bl_terms = get_post_meta($post->ID, '_setae_bl_terms', true) ?: 'No specific terms provided.';
+
+            $candidates[] = array(
+                'id' => $post->ID,
+                'name' => $post->post_title,
+                'title' => $post->post_title, // Keep title for compatibility
+                'species' => $species_name,
+                'image' => $img_url,
+                'gender' => get_post_meta($post->ID, '_setae_gender', true) ?: 'unknown',
+                'owner_id' => $post->post_author,
+                'owner_name' => get_the_author_meta('display_name', $post->post_author),
+                // ▼追加データ
+                'last_molt' => $last_molt,
+                'bl_terms' => $bl_terms
+            );
+        }
+
+        return new WP_REST_Response($candidates, 200);
     }
 
     public function handle_contracts($request)
