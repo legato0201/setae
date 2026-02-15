@@ -70,7 +70,6 @@ var SetaeUIBL = (function ($) {
             html += `
                 <div class="bl-section-header toggle-my-listings" data-target="#my-listings-wrapper">
                     <h4>
-                        <span class="toggle-icon">▶</span> 
                         My Listings <span class="count-badge">${mySpiders.length}</span>
                     </h4>
                     <span class="header-hint">Show/Hide</span>

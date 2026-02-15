@@ -194,18 +194,6 @@
     z-index: 2;
 }
 
-/* Gender Styles */
-.bl-card.gender-male {
-    border-left: 5px solid #3498db;
-}
-
-.bl-card.gender-female {
-    border-left: 5px solid #e74c3c;
-}
-
-.bl-card.gender-unknown {
-    border-left: 5px solid #95a5a6;
-}
 
 /* Contract List Styles */
 .contract-card {
@@ -546,125 +534,302 @@
 }
 
 /* =========================================
-   Section Headers (My Listings / Community)
+   Section Headers (Modern iOS Style)
    ========================================= */
 .bl-section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 両端揃え */
-    padding-bottom: 10px;
-    border-bottom: 2px solid #f0f0f0;
-    margin-bottom: 15px;
+    padding: 10px 4px 10px 4px;
+    margin-bottom: 12px;
+    border-bottom: none;
+    /* 罫線を削除し、余白で区切る */
 }
 
+/* My Listingsの見出し */
 .bl-section-header h4 {
     margin: 0;
-    font-size: 16px;
-    color: #2c3e50;
+    font-size: 20px;
+    /* 少し大きくして明確な見出しに */
+    font-weight: 700;
+    color: var(--setae-text, #1c1c1e);
     display: flex;
     align-items: center;
     gap: 8px;
+    letter-spacing: -0.5px;
 }
 
-/* Toggle Styles */
+/* カウントバッジ */
+.count-badge {
+    background: rgba(142, 142, 147, 0.2);
+    /* システムグレーの薄い色 */
+    color: var(--setae-text-light, #8e8e93);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* トグルエリア全体 */
 .toggle-my-listings {
     cursor: pointer;
     user-select: none;
-    transition: background-color 0.2s;
-    border-radius: 4px;
-    padding: 5px;
+    transition: opacity 0.2s;
+    /* クリックエリアを広げる */
+    padding: 8px 0;
 }
 
-.toggle-my-listings:hover {
-    background-color: #f8f9fa;
+.toggle-my-listings:active {
+    opacity: 0.6;
 }
 
+/* 開閉アイコン */
 .toggle-icon {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
     font-size: 10px;
-    color: #999;
-    transition: transform 0.2s ease;
-    margin-right: 5px;
+    color: var(--setae-text-light, #8e8e93);
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    margin-right: 6px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toggle-icon.open {
     transform: rotate(90deg);
+    background: var(--setae-primary, #2c3e50);
+    color: #fff;
 }
 
+/* Show/Hide ラベル */
 .header-hint {
-    font-size: 11px;
-    color: #bbb;
-    font-weight: normal;
-}
-
-.count-badge {
-    background: #eee;
-    color: #666;
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-
-.empty-sub-msg {
-    color: #999;
-    font-size: 13px;
-    font-style: italic;
-    padding: 20px;
-    text-align: center;
+    font-size: 12px;
+    color: var(--setae-accent, #007aff);
+    font-weight: 500;
+    background: rgba(0, 122, 255, 0.1);
+    padding: 4px 10px;
+    border-radius: 14px;
 }
 
 /* =========================================
-   Card Styles Adjustments
+   Card Styles (Unified & Refined)
    ========================================= */
-/* 自分のカード用スタイル (Compact View) */
-.bl-card.is-mine {
-    border-left-color: #2ecc71;
-    /* 緑色のアクセント */
-    background: #fafffa;
+
+/* Grid Layout */
+.setae-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    /* 幅を少し広めに確保 */
+    gap: 16px;
 }
 
-/* My Listings Compact Override */
-.my-listings-grid .bl-card {
-    padding: 10px;
-    /* パディング縮小 */
-    min-height: auto;
+/* Base BL Card */
+.bl-card {
+    background: #fff;
+    border-radius: var(--setae-radius-lg, 16px);
+    padding: 16px;
+    position: relative;
+    /* 柔らかい影のみで境界を表現（ボーダーレス） */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
 }
 
-.my-listings-grid .bl-content {
-    margin-bottom: 5px;
-    align-items: center;
+.bl-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-.my-listings-grid .bl-img {
-    width: 40px;
-    /* 画像サイズ縮小 */
-    height: 40px;
-    border-radius: 50%;
-    /* 丸くして省スペース感 */
+/* Card Content Layout */
+.bl-content {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
 }
 
-.my-listings-grid .bl-name {
-    font-size: 14px;
-    /* フォントサイズ調整 */
-    margin-bottom: 2px;
+/* Image Styling */
+.bl-img {
+    width: 72px;
+    height: 72px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 14px;
+    /* iOSアプリアイコンのような丸み */
+    background-color: #f2f2f7;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
-.my-listings-grid .setae-btn-sm {
-    padding: 4px 0;
-    /* ボタンも少し小さく */
+/* Info Text */
+.bl-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    /* 文字切れ防止 */
+}
+
+.bl-species {
     font-size: 11px;
-}
-
-.my-tag {
-    background: #e8f5e9;
-    color: #2ecc71;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
+    color: var(--setae-text-light, #8e8e93);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.bl-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--setae-text, #1c1c1e);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Meta Info (Owner, Tag) */
+.bl-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* 自分のリストのデザイン（より上品に） */
+.bl-card.is-mine {
+    background: #fdfdfd;
+    /* ほんの少しグレーを入れて区別 */
+}
+
+/* 左側のアクセントライン（太すぎないように） */
+.bl-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    background: #e5e5ea;
+    /* デフォルト */
+}
+
+.bl-card.is-mine::before {
+    background: var(--setae-primary, #2c3e50);
+    /* 自分のリスト */
+}
+
+/* Gender Colors for Accent Line */
+.bl-card.gender-male::before {
+    background: #5ac8fa;
+}
+
+.bl-card.gender-female::before {
+    background: #ff3b30;
+}
+
+.bl-card.gender-unknown::before {
+    background: #8e8e93;
+}
+
+/* "Your Listing" Tag */
+.my-tag {
+    background: rgba(44, 62, 80, 0.08);
+    color: var(--setae-primary, #2c3e50);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Badges (Position adjustment) */
+.bl-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    background: #34c759;
+    /* iOS Green */
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(52, 199, 89, 0.25);
+    z-index: 10;
+}
+
+/* =========================================
+   Actions (Buttons inside Card)
+   ========================================= */
+.bl-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    /* 薄い区切り線 */
+    padding-top: 12px;
+}
+
+.bl-actions button {
+    flex: 1;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* 詳細ボタン (Glass style refined) */
+.btn-glass {
+    background: rgba(242, 242, 247, 0.8);
+    /* iOS System Gray 6 */
+    color: var(--setae-text, #1c1c1e);
+    border: none;
+}
+
+.btn-glass:hover {
+    background: rgba(229, 229, 234, 1);
+    transform: translateY(-1px);
+}
+
+/* 申請ボタン (Primary Action) */
+.btn-shine {
+    background: var(--setae-primary, #2c3e50);
+    /* ブランドカラー */
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
+}
+
+.btn-shine:hover {
+    background: #34495e;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(44, 62, 80, 0.3);
+}
+
+/* 空の状態のメッセージ */
+.empty-sub-msg {
+    color: var(--setae-text-light);
+    font-size: 13px;
+    text-align: center;
+    padding: 30px 0;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    border: 1px dashed rgba(0, 0, 0, 0.1);
 }
 
 /* =========================================
@@ -896,54 +1061,58 @@
     color: #2c3e50;
 }
 
-/* ▼▼▼ Breeding Loan Toolbar Design ▼▼▼ */
+/* ▼▼▼ Breeding Loan Toolbar Design (Refined) ▼▼▼ */
 
-/* ツールバー全体をカプセル化 */
+/* ツールバー全体（コンテナ） */
 .setae-toolbar {
     display: flex;
-    background: #eef2f5;
-    /* 薄いグレーの背景 */
+    /* iOS標準に近い背景色と透明度 */
+    background-color: rgba(118, 118, 128, 0.12);
     padding: 4px;
-    /* 内側の余白 */
-    border-radius: 30px;
-    /* 全体を丸く */
+    /* globalの角丸ルールに準拠 */
+    border-radius: var(--setae-radius-md, 12px);
     margin-top: 15px !important;
     margin-bottom: 20px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    /* 内側に僅かな影 */
+    /* 境界線をなくし、よりモダンに */
+    border: none;
+    box-shadow: none;
+    /* remove previous shadow if any */
 }
 
-/* ボタンの共通スタイル（リセット & 配置） */
+/* ボタン共通スタイル */
 .setae-toolbar .setae-btn-sm {
     flex: 1;
-    /* 2つのボタンを等幅に */
     text-align: center;
     background: transparent;
-    /* 非アクティブ時は透明 */
-    color: #95a5a6;
-    /* 非アクティブ時の文字色（グレー） */
-    border-radius: 25px;
+    /* グローバルの薄いテキスト色を使用 */
+    color: var(--setae-text-light, #8e8e93);
+    /* 内側のボタンの角丸はコンテナより少し小さく */
+    border-radius: 9px;
     padding: 8px 0;
+    /* フォント設定を継承 */
+    font-family: var(--setae-font-main);
     font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: none;
-    /* デフォルトの影を消す */
+    line-height: 1.4;
 }
 
-/* ホバー時の挙動 */
+/* ホバー時の挙動（非アクティブ時のみ） */
 .setae-toolbar .setae-btn-sm:hover:not(.active) {
-    color: #7f8c8d;
-    background: rgba(255, 255, 255, 0.5);
+    color: var(--setae-text, #1c1c1e);
+    background: rgba(255, 255, 255, 0.4);
 }
 
 /* アクティブ（選択中）のデザイン */
 .setae-toolbar .setae-btn-sm.active {
     background: #ffffff;
-    /* 白背景で浮き上がらせる */
-    color: var(--primary-color);
-    /* メインカラー（緑） */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    /* ふんわりとした影 */
-    transform: scale(1.02);
-    /* ほんの少し大きく強調 */
+    /* ブランドカラー（濃紺）で引き締め */
+    color: var(--setae-primary, #2c3e50);
+    /* 浮き上がるようなシャドウ */
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+    transform: none;
+    /* 拡大はせず、色と影で階層を表現 */
 }
