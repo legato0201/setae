@@ -635,6 +635,37 @@
 }
 
 /* =========================================
+   Grid Layout (Refined)
+   ========================================= */
+
+/* 外枠コンテナ：ここはGridにせず、ブロック要素として縦積みにする */
+#setae-bl-grid {
+    display: block !important;
+    width: 100%;
+}
+
+/* 内部のカードリストのみGridレイアウトを適用 */
+.setae-grid {
+    display: grid;
+    /* 300px以上の幅があれば列を増やす（スマホは1列、PCは2列~3列に可変） */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* セクションごとの余白調整 */
+.my-listings-grid {
+    margin-bottom: 30px;
+    /* 次のセクションとの間隔 */
+}
+
+/* 空のグリッドでもレイアウトが崩れないように */
+.setae-grid:empty {
+    display: none;
+}
+
+/* =========================================
    Card Styles (Unified & Refined)
    ========================================= */
 

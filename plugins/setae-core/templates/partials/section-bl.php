@@ -13,7 +13,7 @@
     </div>
 
     <div id="bl-board-view">
-        <div id="setae-bl-grid" class="setae-grid">
+        <div id="setae-bl-grid">
             <!-- JS Populated -->
         </div>
     </div>

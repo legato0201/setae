@@ -844,100 +844,116 @@
     }
 }
 
-=========================================*/ #setae-comment-form {
+
+/* =========================================
+   Comment Form (Chat Style - Pro)
+   ========================================= */
+
+/* フォーム全体（コンテナ） */
+#setae-comment-form {
+    position: relative;
     margin-top: 20px;
     display: flex;
-    align-items: flex-end;
-    gap: 12px;
+    align-items: center;
+    /* 垂直方向中央揃え */
+    gap: 10px;
+    /* 要素間のスペース */
     background: #fff;
-    /* 背景を白に */
-    padding: 12px 16px 12px 16px;
-    /* カウンター用余白 */
-    border-radius: 24px;
-    /* 丸みを持たせる */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    /* 浮き上がるような影 */
+    padding: 8px 12px;
+    /* コンパクトな内側余白 */
+    border-radius: 30px;
+    /* カプセル型の丸み */
     border: 1px solid #eee;
-    transition: box-shadow 0.3s ease;
+
+    /* 浮き上がるような影 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    width: 100%;
+    box-sizing: border-box;
 }
 
+/* 入力中のフォーカススタイル */
 #setae-comment-form:focus-within {
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.15);
-    /* フォーカス時に緑の光 */
     border-color: #2ecc71;
+    /* アクセントカラー */
+    box-shadow: 0 8px 25px rgba(46, 204, 113, 0.15);
+    transform: translateY(-1px);
 }
 
 /* テキスト入力エリア */
 #comment-content {
+    flex-grow: 1;
+    /* 横幅いっぱいに広げる */
     border: none;
     background: transparent;
     box-shadow: none;
-    flex-grow: 1;
-    padding: 8px 0;
+    padding: 10px 5px;
     font-size: 15px;
     line-height: 1.5;
     color: #333;
     min-height: 24px;
-}
-
-#comment-content:focus {
     outline: none;
+    /* デフォルトの枠線を消す */
 }
 
 #comment-content::placeholder {
-    color: #aaa;
+    color: #bbb;
+    font-weight: 500;
 }
 
 /* 画像添付ボタン */
-/* 画像添付ボタン */
 #btn-trigger-comment-image {
-    background: none;
+    flex-shrink: 0;
+    /* 縮まないように固定 */
+    background: #f7f9fa;
     border: none;
     cursor: pointer;
-    padding: 6px;
-    color: #999;
-    transition: color 0.2s;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    /* アイコン位置の調整 */
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
 }
 
-/* 絵文字サイズの強制適用 (WP標準のスタイルを上書き) */
+#btn-trigger-comment-image:hover {
+    background: #e8f5e9;
+    transform: scale(1.1);
+}
+
+/* 絵文字アイコンのサイズ調整 */
 #btn-trigger-comment-image img {
-    width: 26px !important;
-    height: 26px !important;
+    width: 20px !important;
+    height: 20px !important;
     object-fit: contain;
     vertical-align: middle;
 }
 
-#btn-trigger-comment-image:hover {
-    color: #2ecc71;
-    background: #f0fdf4;
-}
-
 /* 送信ボタン */
 .btn-send-comment {
+    flex-shrink: 0;
     background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: #fff;
     border: none;
     border-radius: 50%;
-    /* 真ん丸ボタン */
     width: 40px;
+    /* 入力欄より少し大きくして強調 */
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(46, 204, 113, 0.3);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-left: 4px;
 }
 
 .btn-send-comment:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+    transform: scale(1.05) rotate(-10deg);
+    /* 遊び心のある動き */
+    box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
 }
 
 .btn-send-comment:active {
@@ -945,153 +961,45 @@
 }
 
 .btn-send-comment:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+    background: #e0e0e0;
     box-shadow: none;
+    cursor: not-allowed;
     transform: none;
 }
 
-/* ローディングスピナー */
-.spinner-icon {
+/* 送信アイコンSVG */
+.send-icon {
     width: 18px;
     height: 18px;
-    border: 2px solid #fff;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    stroke-width: 2.5;
 }
 
-@keyframes spin {
+/* 画像プレビュー（表示時） */
+#comment-image-preview {
+    position: relative;
+    padding: 0;
+    margin-right: 8px;
+    border: none;
+    background: transparent;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* プレビュー表示時のアニメーション */
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
     to {
-        transform: rotate(360deg);
+        transform: scale(1);
+        opacity: 1;
     }
 }
 
-/* 画像プレビュー */
-#comment-image-preview {
-    position: relative;
-    padding: 4px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background: #fafafa;
-}
-
-#btn-clear-comment-image {
-    transition: transform 0.2s;
-}
-
-#btn-clear-comment-image:hover {
-    transform: scale(1.1);
-}
-
-/* 「もっと見る」ボタン */
-#btn-load-more-comments {
-    background: #f5f5f5;
-    color: #666;
-    border: none;
-    transition: background 0.2s;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-#btn-load-more-comments:hover {
-    background: #e0e0e0;
-}
-
-/* BL Settings Card - Pro Design */
-.bl-settings-container {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 24px;
-    margin-top: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-}
-
-.bl-settings-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.bl-settings-header .icon-box {
-    width: 48px;
-    height: 48px;
-    background: #f0fdf4;
-    /* 薄い緑 */
-    color: #2ecc71;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-}
-
-.bl-settings-header .header-text h4 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #2c3e50;
-}
-
-.bl-settings-header .header-text p {
-    margin: 4px 0 0;
-    font-size: 12px;
-    color: #95a5a6;
-}
-
-.bl-form-group {
-    margin-bottom: 20px;
-}
-
-.bl-form-group label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #7f8c8d;
-    margin-bottom: 8px;
-}
-
-.bl-form-group .setae-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-    /* パディングを含める */
-}
-
-.bl-form-group .setae-input:focus {
-    border-color: #2ecc71;
-    outline: none;
-    background: #fafffb;
-}
-
-.bl-form-actions {
-    text-align: right;
-    padding-top: 10px;
-}
-
-/* Select Box Customization */
-.setae-select-wrapper {
-    position: relative;
-}
-
-.setae-select-wrapper::after {
-    content: "▼";
-    font-size: 10px;
-    color: #999;
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
+/* 文字数カウント（位置調整） */
+#comment-char-count {
     pointer-events: none;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
