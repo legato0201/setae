@@ -5,92 +5,177 @@ var SetaeUIProfile = (function ($) {
         // 1. プロフィールモーダルを開く
         $(document).on('click', '#setae-profile-trigger', function (e) {
             e.preventDefault();
-            $('#setae-profile-modal').fadeIn(200);
+            // SetaeSettingsから現在ユーザー情報を取得してモーダルを開く
+            if (SetaeSettings && SetaeSettings.current_user) {
+                openProfileModal(SetaeSettings.current_user);
+            } else {
+                console.error('User data not found in SetaeSettings');
+            }
+        });
+    }
+
+    /**
+     * プロフィールモーダルを動的に生成して表示
+     */
+    function openProfileModal(currentUser) {
+        // 既存のモーダルがあれば削除
+        $('#setae-profile-modal').remove();
+
+        // 画像がない場合のフォールバック
+        const avatarUrl = currentUser.avatar || SetaeSettings.plugin_url + 'assets/images/default-avatar.png';
+        const displayName = currentUser.display_name || '';
+        const email = currentUser.email || '';
+
+        const html = `
+        <div class="setae-modal-overlay active" id="setae-profile-modal" style="display:flex;">
+            <div class="setae-modal-content" style="max-width: 420px;">
+                
+                <div class="profile-header">
+                    <h3>Profile Settings</h3>
+                    <span class="setae-close" id="close-profile-modal">&times;</span>
+                </div>
+
+                <form id="setae-profile-form">
+                    <div class="profile-avatar-section">
+                        <div class="avatar-wrapper" id="trigger-avatar-upload" title="写真・アイコンを変更">
+                            <div class="profile-avatar-preview" id="profile-avatar-preview-container">
+                                <img src="${avatarUrl}" alt="Avatar">
+                            </div>
+                            <div class="avatar-edit-badge">📷</div>
+                        </div>
+                        <input type="file" id="prof-icon" accept="image/*" style="display:none;">
+                    </div>
+
+                    <div class="setae-form-group">
+                        <label>Display Name</label>
+                        <input type="text" id="prof-display-name" class="setae-input" value="${displayName}" placeholder="ニックネーム">
+                    </div>
+
+                    <div class="setae-form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="prof-email" class="setae-input" value="${email}" placeholder="example@mail.com">
+                    </div>
+
+                    <div class="setae-form-group">
+                        <label>New Password <small style="font-weight:normal; text-transform:none;">(Leave empty to keep current)</small></label>
+                        <input type="password" id="prof-password" class="setae-input" placeholder="********" autocomplete="new-password">
+                    </div>
+
+                    <div class="setae-form-actions">
+                        <button type="button" class="setae-btn setae-btn-danger-ghost" id="setae-logout-btn">
+                            <span>↪</span> Logout
+                        </button>
+                        
+                        <div class="actions-right">
+                            <button type="button" class="setae-btn setae-btn-secondary" id="close-profile-modal-btn">Cancel</button>
+                            <button type="submit" class="setae-btn setae-btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>`;
+
+        $('body').append(html);
+
+        // --- イベントリスナーの設定 ---
+
+        // モーダルを閉じる (オーバーレイクリック、×ボタン、Cancelボタン)
+        $('#setae-profile-modal, #close-profile-modal, #close-profile-modal-btn').on('click', function (e) {
+            if (e.target !== this) return; // バブリング防止 (オーバーレイのみ)
+            $('#setae-profile-modal').fadeOut(200, function () {
+                $(this).remove();
+            });
         });
 
-        // 2. モーダルを閉じる
-        $(document).on('click', '#close-profile-modal', function () {
-            $('#setae-profile-modal').fadeOut(200);
-        });
-
-        // 3. 画像アップロードの連動
-        $(document).on('click', '#btn-trigger-prof-upload', function () {
+        // アバター画像クリックでファイル選択を開く
+        $('#trigger-avatar-upload').on('click', function () {
             $('#prof-icon').click();
         });
 
-        $(document).on('change', '#prof-icon', function (e) {
+        // ファイル選択時のプレビュー更新
+        $('#prof-icon').on('change', function (e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     $('#profile-avatar-preview-container img').attr('src', e.target.result);
-                };
+                }
                 reader.readAsDataURL(file);
             }
         });
 
-        // 4. プロフィール保存処理
-        $(document).on('submit', '#setae-profile-form', function (e) {
+        // 保存処理
+        $('#setae-profile-form').on('submit', function (e) {
             e.preventDefault();
-
-            // UIに即時反映（表示名）
-            const newName = $('#prof-display-name').val();
-
-            // Prepare Data
-            const formData = new FormData();
-            formData.append('action', 'setae_update_profile');
-            formData.append('nonce', SetaeSettings.nonce);
-            formData.append('display_name', newName);
-            formData.append('email', $('#prof-email').val());
-            formData.append('password', $('#prof-password').val());
-
-            const file = $('#prof-icon')[0].files[0];
-            if (file) {
-                formData.append('profile_image', file);
-            }
-
-            $.ajax({
-                url: SetaeSettings.ajax_url,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    if (response.success) {
-                        $('#header-user-name').text(newName);
-
-                        // --- 修正箇所：アバター画像の反映 ---
-                        let newAvatarUrl = null;
-                        if (response.data && response.data.avatar_url) {
-                            newAvatarUrl = response.data.avatar_url;
-                        } else {
-                            // フォールバック: プレビュー画像を使用
-                            newAvatarUrl = $('#profile-avatar-preview-container img').attr('src');
-                        }
-
-                        if (newAvatarUrl) {
-                            $('.setae-profile-avatar img').attr('src', newAvatarUrl);
-                            $('.header-user-icon').attr('src', newAvatarUrl);
-                            $('.avatar').attr('src', newAvatarUrl); // ページ内すべてのWordPress標準アバターを更新
-                        }
-                        // ---------------------------------------------------
-
-                        SetaeCore.showToast('プロフィールを更新しました', 'success');
-                        $('#setae-profile-modal').fadeOut(200);
-                    } else {
-                        SetaeCore.showToast('更新に失敗しました: ' + (response.data || 'Unknown error'), 'error');
-                    }
-                },
-                error: function () {
-                    SetaeCore.showToast('通信エラーが発生しました', 'error');
-                }
-            });
+            updateProfile();
         });
 
-        // 5. ログアウト処理
-        $(document).on('click', '#setae-logout-btn', function (e) {
+        // ログアウト処理
+        $('#setae-logout-btn').on('click', function () {
             if (confirm('ログアウトしますか？')) {
                 window.location.href = SetaeSettings.logout_url;
+            }
+        });
+    }
+
+    function updateProfile() {
+        // UIに即時反映（表示名）
+        const newName = $('#prof-display-name').val();
+
+        // Prepare Data
+        const formData = new FormData();
+        formData.append('action', 'setae_update_profile');
+        formData.append('nonce', SetaeSettings.nonce);
+        formData.append('display_name', newName);
+        formData.append('email', $('#prof-email').val());
+        formData.append('password', $('#prof-password').val());
+
+        const file = $('#prof-icon')[0].files[0];
+        if (file) {
+            formData.append('profile_image', file);
+        }
+
+        $.ajax({
+            url: SetaeSettings.ajax_url,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.success) {
+                    $('#header-user-name').text(newName);
+
+                    // --- アバター画像の反映 ---
+                    let newAvatarUrl = null;
+                    if (response.data && response.data.avatar_url) {
+                        newAvatarUrl = response.data.avatar_url;
+                    } else {
+                        // フォールバック: プレビュー画像を使用
+                        newAvatarUrl = $('#profile-avatar-preview-container img').attr('src');
+                    }
+
+                    if (newAvatarUrl) {
+                        $('.setae-profile-avatar img').attr('src', newAvatarUrl);
+                        $('.header-user-icon').attr('src', newAvatarUrl);
+                        $('.avatar').attr('src', newAvatarUrl); // ページ内すべてのWordPress標準アバターを更新
+
+                        // SetaeSettingsのキャッシュも更新しておく
+                        if (SetaeSettings.current_user) {
+                            SetaeSettings.current_user.avatar = newAvatarUrl;
+                            SetaeSettings.current_user.display_name = newName;
+                            SetaeSettings.current_user.email = $('#prof-email').val();
+                        }
+                    }
+                    // ---------------------------------------------------
+
+                    SetaeCore.showToast('プロフィールを更新しました', 'success');
+                    $('#setae-profile-modal').fadeOut(200, function () { $(this).remove(); });
+                } else {
+                    SetaeCore.showToast('更新に失敗しました: ' + (response.data || 'Unknown error'), 'error');
+                }
+            },
+            error: function () {
+                SetaeCore.showToast('通信エラーが発生しました', 'error');
             }
         });
     }

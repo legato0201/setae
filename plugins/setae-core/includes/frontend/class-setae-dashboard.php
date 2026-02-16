@@ -44,7 +44,13 @@ class Setae_Dashboard
             'setae_nonce' => wp_create_nonce('setae_nonce'), // For Encyclopedia AJAX
             'ajax_url' => admin_url('admin-ajax.php'),
             'logout_url' => wp_logout_url(home_url()),
-            'current_user_id' => get_current_user_id() // ★Added: Pass User ID
+            'current_user_id' => get_current_user_id(),
+            'plugin_url' => SETAE_PLUGIN_URL, // Added for default images
+            'current_user' => array(
+                'display_name' => wp_get_current_user()->display_name,
+                'email' => wp_get_current_user()->user_email,
+                'avatar' => get_avatar_url(get_current_user_id()),
+            )
         ));
 
         // Enqueue API Module (Depends on Core)

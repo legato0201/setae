@@ -145,18 +145,43 @@ class Setae_Core
         $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 10, 2);
     }
 
+    /**
+     * ★追加: アバター画像URLを確実に取得するヘルパーメソッド
+     * サムネイル -> フルサイズ -> ファイル直リンク の順で取得を試みる
+     */
+    private function get_custom_avatar_url($user_id)
+    {
+        $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
+        if (!$attachment_id) {
+            return false;
+        }
+
+        // 1. まずサムネイルサイズ (推奨)
+        $url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
+
+        // 2. 失敗ならフルサイズ
+        if (!$url) {
+            $url = wp_get_attachment_image_url($attachment_id, 'full');
+        }
+
+        // 3. それでも失敗ならファイル自体のURL (メタデータ不整合への対策)
+        if (!$url) {
+            $url = wp_get_attachment_url($attachment_id);
+        }
+
+        return $url;
+    }
+
     public function custom_avatar_filter($avatar, $id_or_email, $size, $default, $alt)
     {
         $user_id = $this->get_user_id_from_mixed($id_or_email);
-
         if ($user_id) {
-            // 保存した attachment_id を取得
-            $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
-            if ($attachment_id) {
-                $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
-                if ($img_url) {
-                    $avatar = "<img alt='{$alt}' src='{$img_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' style='object-fit:cover; border-radius:50%;'>";
-                }
+            // ヘルパーメソッドを使用
+            $img_url = $this->get_custom_avatar_url($user_id);
+
+            if ($img_url) {
+                // クラス名なども整形して返す
+                $avatar = "<img alt='{$alt}' src='{$img_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' style='object-fit:cover; border-radius:50%;'>";
             }
         }
         return $avatar;
@@ -166,24 +191,10 @@ class Setae_Core
     {
         $user_id = $this->get_user_id_from_mixed($id_or_email);
         if ($user_id) {
-            $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
-            if ($attachment_id) {
-                // 1. まずサムネイルサイズの取得を試みる
-                $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
-
-                // 2. サムネイルがない場合（生成失敗やSVG等）、フルサイズを試みる
-                if (!$img_url) {
-                    $img_url = wp_get_attachment_image_url($attachment_id, 'full');
-                }
-
-                // 3. それでも取得できない場合、直接ファイルURLを取得
-                if (!$img_url) {
-                    $img_url = wp_get_attachment_url($attachment_id);
-                }
-
-                if ($img_url) {
-                    return $img_url;
-                }
+            // ヘルパーメソッドを使用
+            $img_url = $this->get_custom_avatar_url($user_id);
+            if ($img_url) {
+                return $img_url;
             }
         }
         return $url;
@@ -193,12 +204,10 @@ class Setae_Core
     {
         $user_id = $this->get_user_id_from_mixed($id_or_email);
         if ($user_id) {
-            $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
-            if ($attachment_id) {
-                $img_url = wp_get_attachment_url($attachment_id);
-                if ($img_url) {
-                    $args['url'] = $img_url;
-                }
+            // ヘルパーメソッドを使用
+            $img_url = $this->get_custom_avatar_url($user_id);
+            if ($img_url) {
+                $args['url'] = $img_url;
             }
         }
         return $args;
