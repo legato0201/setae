@@ -126,13 +126,17 @@ var SetaeUIBL = (function ($) {
                 </div>
             </div>
             <div class="bl-actions">
-                <button class="setae-btn-sm btn-glass btn-view-bl-detail" 
-                    data-name="${spider.name}"
-                    data-molt="${spider.last_molt || '-'}"
-                    data-terms="${encodeURIComponent(spider.bl_terms || '')}">
-                    詳細
                 </button>
-                ${!isMine ? `<button class="setae-btn-sm btn-primary btn-shine btn-request-loan" data-id="${spider.id}" data-name="${spider.name}">申請する</button>` : ''}
+                ${!isMine ? `
+                    <button class="setae-btn-sm btn-primary btn-shine btn-request-loan" 
+                        data-id="${spider.id}" 
+                        data-name="${spider.name}"
+                        data-species="${spider.species}"
+                        data-image="${spider.image}"
+                        data-owner="${spider.owner_name}">
+                        申請する
+                    </button>
+                ` : ''}
             </div>
         </div>
         `;
@@ -159,9 +163,14 @@ var SetaeUIBL = (function ($) {
 
         // 申請ボタン (修正)
         $('.btn-request-loan').off('click').on('click', function () {
-            const id = $(this).data('id');
-            const name = $(this).data('name');
-            openRequestModal(id, name); // 名前も渡す
+            const data = {
+                id: $(this).data('id'),
+                name: $(this).data('name'),
+                species: $(this).data('species'),
+                image: $(this).data('image'),
+                owner: $(this).data('owner')
+            };
+            openRequestModal(data); // オブジェクトごと渡す
         });
     }
 
@@ -201,9 +210,12 @@ var SetaeUIBL = (function ($) {
     // --- 申請モーダル (Pro仕様) ---
 
     // ★修正: リッチな申請モーダル (デザイン刷新)
-    function openRequestModal(spiderId, spiderName) {
+    function openRequestModal(data) {
         // 既存削除
         $('#bl-request-modal').remove();
+
+        // 画像がない場合のフォールバック
+        const bgImage = data.image || SetaeSettings.plugin_url + 'assets/images/default-spider.png';
 
         const html = `
         <div class="setae-modal-overlay active" id="bl-request-modal">
@@ -213,18 +225,26 @@ var SetaeUIBL = (function ($) {
                     <button class="btn-close-modal">×</button>
                 </div>
                 <div class="modal-body">
-                    <div class="request-target-info">
-                        <span class="label">Applying for:</span>
-                        <strong class="target-name">${spiderName}</strong>
+                    <div class="request-target-wrapper">
+                        <div class="req-thumb" style="background-image:url('${bgImage}')"></div>
+                        <div class="req-info">
+                            <span class="req-label">Applying For</span>
+                            <span class="req-name">${data.name}</span>
+                            <span class="req-species">${data.species}</span>
+                            <div class="req-owner">
+                                <span class="owner-icon">👤</span> ${data.owner}
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-top:15px;">
-                        <label style="display:block; font-size:12px; font-weight:bold; color:#666; margin-bottom:5px;">Message to Owner</label>
-                        <textarea id="request-message" class="setae-input" rows="5" placeholder="飼育環境、経験、条件への同意などを記入してください..."></textarea>
+
+                    <div class="form-group">
+                        <label class="request-form-label">Message to Owner</label>
+                        <textarea id="request-message" rows="5" placeholder="飼育環境、経験、条件への同意などを記入してください...&#10;例: 経験3年あり、条件確認しました。ぜひお願いします。"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer" style="padding-top:15px; text-align:right; border-top:1px solid #eee;">
-                    <button class="setae-btn-sm btn-secondary btn-close-modal" style="margin-right:10px;">Cancel</button>
-                    <button id="btn-submit-request" class="setae-btn-sm btn-primary btn-shine">Send Request</button>
+                <div class="modal-footer-actions">
+                    <button class="btn-cancel btn-close-modal">Cancel</button>
+                    <button id="btn-submit-request" class="btn-submit-req">Send Request</button>
                 </div>
             </div>
         </div>
@@ -242,11 +262,11 @@ var SetaeUIBL = (function ($) {
         $modal.find('#btn-submit-request').on('click', function () {
             const message = $('#request-message').val();
             if (!message.trim()) {
-                SetaeCore.showToast('メッセージを入力してください。', 'error'); // alertから変更
+                SetaeCore.showToast('メッセージを入力してください。', 'error');
                 return;
             }
-            // 送信処理実行
-            sendRequest(spiderId, message);
+            // 送信処理実行 (data.id を使用)
+            sendRequest(data.id, message);
             $modal.remove();
         });
     }
@@ -337,6 +357,7 @@ var SetaeUIBL = (function ($) {
         bindContractEvents();
     }
 
+    // カード生成ロジックの修正
     function createContractCard(c, isOwner) {
         let actions = '';
 
@@ -355,21 +376,30 @@ var SetaeUIBL = (function ($) {
             `;
         }
 
-        // チャットボタン
+        // チャットボタン（アイコン付き）
         const chatBtn = `
-            <button class="setae-btn-sm btn-glass btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}">
-                💬 Message
+            <button class="setae-btn-sm btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}">
+                <span>💬</span> Message
             </button>
         `;
 
-        // ステータス表示名の整形
-        const statusLabel = c.display_status || c.status;
+        // 日付整形
         const dateStr = c.created_at.substring(0, 10).replace(/-/g, '/');
+
+        // ステータス表示
+        const statusLabel = c.display_status || c.status;
+
+        // メタ情報 (From / Owner)
+        const metaInfo = isOwner
+            ? `<span style="color:#007aff;">From:</span> ${c.breeder_name}`
+            : `<span style="color:#8e8e93;">Owner:</span> ${c.owner_name}`;
 
         return `
         <div class="setae-card contract-card">
             <div class="contract-header">
-                <span class="contract-status badge-${c.status}">${statusLabel}</span>
+                <span class="contract-status badge-${c.status}">
+                    ${statusLabel}
+                </span>
                 <span class="contract-date">${dateStr}</span>
             </div>
             <div class="contract-body">
@@ -377,14 +407,14 @@ var SetaeUIBL = (function ($) {
                 <div class="c-details">
                     <strong>${c.spider_name}</strong>
                     <div class="c-meta">
-                        ${isOwner ? `From: ${c.breeder_name}` : `Owner: ${c.owner_name}`}
+                        ${metaInfo}
                     </div>
-                    <div class="c-message">"${c.message}"</div>
+                    <div class="c-message">${c.message}</div>
                 </div>
             </div>
             <div class="contract-actions">
                 ${chatBtn}
-                <div style="display:flex; gap:6px;">${actions}</div>
+                <div class="action-group">${actions}</div>
             </div>
         </div>`;
     }
@@ -420,7 +450,7 @@ var SetaeUIBL = (function ($) {
         });
     }
 
-    // ▼▼▼ 追加: チャット機能の実装 ▼▼▼
+    // ▼▼▼ チャットモーダル（SVGアイコン対応版） ▼▼▼
 
     function openChatModal(contractId, title) {
         // モーダルHTML
@@ -436,7 +466,12 @@ var SetaeUIBL = (function ($) {
                 </div>
                 <div class="chat-footer">
                     <textarea id="chat-input" placeholder="メッセージを入力... (発送先、日程など)"></textarea>
-                    <button id="btn-send-chat" class="btn-send">➤</button>
+                    <button id="btn-send-chat" class="btn-send">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>`;
@@ -475,16 +510,7 @@ var SetaeUIBL = (function ($) {
         let html = '';
         messages.forEach(m => {
             const type = m.is_mine ? 'mine' : 'partner';
-            html += `
-            <div class="chat-bubble-row ${type}">
-                ${!m.is_mine ? `<div class="chat-avatar" style="background-image:url('${m.avatar}')"></div>` : ''}
-                <div class="chat-content">
-                    <div class="chat-bubble ${type}">
-                        ${m.message.replace(/\n/g, '<br>')}
-                    </div>
-                    <div class="chat-meta">${m.date}</div>
-                </div>
-            </div>`;
+            html += `<div class="chat-bubble-row ${type}">${!m.is_mine ? `<div class="chat-avatar" style="background-image:url('${m.avatar}')"></div>` : ''}<div class="chat-content"><div class="chat-bubble ${type}">${m.message}</div><div class="chat-meta">${m.date}</div></div></div>`;
         });
 
         $area.html(html);

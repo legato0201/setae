@@ -199,28 +199,34 @@
    Contracts Grid Layout
    ========================================= */
 
-/* 契約カードの基本スタイル（募集カードと統一感を持たせる） */
+/* =========================================
+   Contracts Grid Layout (Pro Unified)
+   ========================================= */
+
+/* カード本体 */
 .contract-card {
     background: #fff;
-    border-radius: var(--setae-radius-lg, 16px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border-radius: 16px;
+    /* 境界線をなくし、影で階層を表現 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s;
+    border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .contract-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* ヘッダー: ステータスと日付 */
 .contract-header {
     padding: 12px 16px;
-    background: #fcfcfc;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    background: #fff;
+    /* 白背景で統一 */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -228,85 +234,89 @@
 
 .contract-date {
     font-size: 11px;
-    color: #999;
+    color: #aeaeb2;
+    font-weight: 500;
     font-family: var(--setae-font-main);
 }
 
-/* ステータスバッジ（カプセル型） */
+/* ステータスバッジ（モダンなパステルスタイル） */
 .contract-status {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     padding: 4px 10px;
-    border-radius: 12px;
+    border-radius: 20px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
-/* ステータス別カラー */
+/* ステータス別カラー設定 */
 .badge-REQUESTED {
     background: #fff8e1;
     color: #f5a623;
+    border: 1px solid rgba(245, 166, 35, 0.1);
 }
 
-/* 黄 */
 .badge-APPROVED {
     background: #e3f2fd;
-    color: #2196f3;
+    color: #007aff;
+    border: 1px solid rgba(0, 122, 255, 0.1);
 }
 
-/* 青 */
 .badge-PAIRED {
     background: #f3e5f5;
-    color: #9c27b0;
+    color: #af52de;
+    border: 1px solid rgba(175, 82, 222, 0.1);
 }
 
-/* 紫 */
 .badge-SUCCESS {
     background: #e8f5e9;
-    color: #4caf50;
+    color: #34c759;
+    border: 1px solid rgba(52, 199, 89, 0.1);
 }
 
-/* 緑 */
 .badge-FAIL,
 .badge-REJECTED {
     background: #ffebee;
-    color: #f44336;
+    color: #ff3b30;
+    border: 1px solid rgba(255, 59, 48, 0.1);
 }
 
-/* 赤 */
-
-/* コンテンツボディ */
+/* コンテンツエリア */
 .contract-body {
     padding: 16px;
     display: flex;
-    gap: 12px;
+    gap: 14px;
     flex: 1;
-    /* 高さを揃えるため */
 }
 
-/* サムネイル */
+/* サムネイル画像 */
 .c-thumb {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     border-radius: 12px;
     background-size: cover;
     background-position: center;
     background-color: #f2f2f7;
     border: 1px solid rgba(0, 0, 0, 0.05);
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* 詳細テキスト */
+/* 詳細テキストラッパー */
 .c-details {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .c-details strong {
-    display: block;
     font-size: 15px;
     color: var(--setae-text, #1c1c1e);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -315,47 +325,80 @@
 .c-meta {
     font-size: 11px;
     color: #8e8e93;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-/* メッセージ吹き出し */
+/* メッセージ吹き出し（引用デザイン） */
 .c-message {
     font-size: 12px;
-    color: #555;
-    background: #f4f4f4;
-    padding: 8px 10px;
-    border-radius: 0 8px 8px 8px;
-    /* 左上だけ直角 */
-    position: relative;
+    color: #48484a;
+    background: #f2f2f7;
+    /* iOS System Gray 6 */
+    padding: 8px 12px;
+    border-radius: 0 12px 12px 12px;
+    /* 左上を直角にして吹き出し感を出す */
     line-height: 1.4;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+
+    /* 2行制限 */
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    /* 2行まで表示 */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* アクションフッター */
+/* フッターアクション */
 .contract-actions {
     padding: 12px 16px;
-    border-top: 1px solid rgba(0, 0, 0, 0.03);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    align-items: center;
     justify-content: flex-end;
     /* 右寄せ */
-    align-items: center;
-    background: #fff;
+    background: #fcfcfc;
+    /* ほんの少しグレー */
 }
 
 /* チャットボタン */
 .btn-open-chat {
     margin-right: auto;
     /* 左端に寄せる */
-    padding: 6px 12px;
+    padding: 6px 14px;
     font-size: 12px;
-    display: flex;
+    font-weight: 600;
+    border-radius: 18px;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #d1d1d6;
+    color: #1c1c1e;
+    transition: all 0.2s;
+}
+
+.btn-open-chat:hover {
+    background: #f2f2f7;
+    border-color: #aeaeb2;
+    transform: translateY(-1px);
+}
+
+/* アイコンサイズ補正 */
+.btn-open-chat img {
+    width: 14px !important;
+    height: 14px !important;
+    vertical-align: middle;
+    margin-top: -2px;
+}
+
+/* 右側のアクションボタン群 */
+.contract-actions .action-group {
+    display: flex;
+    gap: 8px;
 }
 
 /* =========================================
@@ -882,133 +925,265 @@
 }
 
 /* =========================================
-   Chat Modal (Pro Design)
+   Chat Modal (Pro Design Refined)
    ========================================= */
+
+/* モーダルコンテンツ設定（縦幅確保） */
 .chat-modal {
-    max-width: 500px;
-    width: 95%;
-    height: 80vh;
-    /* 縦長に見せる */
     display: flex;
     flex-direction: column;
-    padding: 0 !important;
-    /* コンテンツエリアを最大化 */
+    height: 80vh;
+    /* 画面の80%を使用 */
+    max-height: 700px;
     background: #fff;
-    border-radius: 16px;
+    padding: 0 !important;
+    /* デフォルトのpaddingをリセット */
     overflow: hidden;
+    border-radius: 16px;
 }
 
+/* ヘッダー */
 .chat-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
-    background: #f8f9fa;
+    flex-shrink: 0;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.95);
+    /* すりガラス効果用ベース */
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
+    z-index: 10;
 }
 
 .chat-header h3 {
     margin: 0;
     font-size: 16px;
-    color: #2c3e50;
+    color: #1c1c1e;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
 }
 
 .chat-header h3 small {
-    color: #999;
-    font-weight: normal;
-    font-size: 12px;
+    font-size: 11px;
+    color: #8e8e93;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
 }
 
+/* メッセージエリア（スクロール部分） */
 .chat-body {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    background: #fcfcfc;
+    background-color: #f2f2f7;
+    /* iOS背景色 */
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 8px;
+    /* 気泡間の隙間 */
+    scroll-behavior: smooth;
 }
 
-.chat-footer {
-    padding: 15px;
-    background: #fff;
-    border-top: 1px solid #eee;
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    flex-shrink: 0;
+/* 空の状態 */
+.chat-empty {
+    text-align: center;
+    color: #8e8e93;
+    font-size: 13px;
+    margin-top: auto;
+    margin-bottom: auto;
+    line-height: 1.6;
 }
 
-#chat-input {
-    flex: 1;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    padding: 10px 15px;
-    height: 44px;
-    /* 初期高さ */
-    max-height: 100px;
-    resize: none;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-#chat-input:focus {
-    border-color: #2ecc71;
-}
-
-.btn-send {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #2ecc71;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.btn-send:hover {
-    background: #27ae60;
-}
-
-/* Chat Bubbles */
+/* チャット行（アバター＋気泡） */
 .chat-bubble-row {
     display: flex;
     gap: 10px;
     max-width: 85%;
+    margin-bottom: 4px;
 }
 
+/* 自分のメッセージ（右寄せ） */
 .chat-bubble-row.mine {
     align-self: flex-end;
-    /* 自分は右寄せ */
     flex-direction: row-reverse;
 }
 
+/* 相手のメッセージ（左寄せ） */
 .chat-bubble-row.partner {
     align-self: flex-start;
-    /* 相手は左寄せ */
 }
 
+/* アバター画像 */
 .chat-avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     background-size: cover;
-    background-color: #eee;
+    background-position: center;
     flex-shrink: 0;
-    margin-top: auto;
+    align-self: flex-end;
     /* 下揃え */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
 }
 
+/* コンテンツラッパー（ここが重要：Flex化して配置を制御） */
 .chat-content {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+/* 自分のメッセージ配置（右寄せ・幅自動） */
+.chat-bubble-row.mine .chat-content {
+    align-items: flex-end;
+    /* 右端に寄せつつ、幅を中身に合わせる */
+}
+
+/* 相手のメッセージ配置（左寄せ・幅自動） */
+.chat-bubble-row.partner .chat-content {
+    align-items: flex-start;
+    /* 左端に寄せつつ、幅を中身に合わせる */
+}
+
+/* 気泡デザイン（共通） */
+.chat-bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+
+    /* 幅の制御（念のため fit-content も残す） */
+    width: fit-content;
+    max-width: 100%;
+}
+
+/* 自分の気泡色 */
+.chat-bubble.mine {
+    background: linear-gradient(135deg, var(--setae-primary, #2c3e50), #34495e);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    /* 明示的にサイズ合わせを指定 */
+    align-self: flex-end;
+}
+
+/* 相手の気泡色 */
+.chat-bubble.partner {
+    background: #fff;
+    color: #1c1c1e;
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* 明示的にサイズ合わせを指定 */
+    align-self: flex-start;
+}
+
+/* 日時メタ情報 */
+.chat-meta {
+    font-size: 10px;
+    color: #aeaeb2;
+    margin-top: 4px;
+    padding: 0 2px;
+}
+
+.chat-bubble-row.mine .chat-meta {
+    text-align: right;
+    align-self: flex-end;
+    /* 日付も右寄せ */
+}
+
+.chat-bubble-row.partner .chat-meta {
+    text-align: left;
+    align-self: flex-start;
+    /* 日付も左寄せ */
+}
+
+/* フッター（入力エリア） */
+.chat-footer {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: flex-end;
+    /* 下揃え */
+    gap: 10px;
+}
+
+/* 入力欄 */
+#chat-input {
+    flex: 1;
+    border: 1px solid #e5e5ea;
+    background: #f9f9f9;
+    border-radius: 20px;
+    /* カプセル型 */
+    padding: 10px 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    max-height: 100px;
+    min-height: 40px;
+    resize: none;
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+#chat-input:focus {
+    background: #fff;
+    border-color: var(--setae-primary, #2c3e50);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 送信ボタン（アイコン化） */
+.btn-send {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--setae-primary, #2c3e50);
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.btn-send:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: #34495e;
+}
+
+.btn-send:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.btn-send:disabled {
+    background: #d1d1d6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-send svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    margin-left: 2px;
+    /* 視覚的な中心調整 */
 }
 
 .chat-bubble {
@@ -1054,60 +1229,162 @@
 }
 
 /* =========================================
-   Request Modal (Pro Design)
+   Request Modal (Pro Design Refined)
    ========================================= */
-.request-modal {
-    max-width: 450px;
-    width: 90%;
+
+/* モーダル内のターゲット情報カード */
+.request-target-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 20px;
 }
 
-.request-target-info {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 8px;
-    border-left: 3px solid #3498db;
-    font-size: 13px;
-    color: #555;
+/* サムネイル画像 */
+.req-thumb {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f2f2f7;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.request-target-info .target-name {
-    display: block;
-    font-size: 15px;
+/* テキスト情報 */
+.req-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.req-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #999;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.req-species {
+    font-size: 11px;
+    color: #8e8e93;
+    font-style: italic;
+    margin-bottom: 2px;
+}
+
+.req-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1c1c1e;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+
+/* オーナー情報バッジ */
+.req-owner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #e5e5ea;
+    font-size: 11px;
     color: #333;
-    margin-top: 2px;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.owner-icon {
+    font-size: 10px;
+}
+
+/* フォームエリア */
+.request-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1c1c1e;
+    margin-bottom: 8px;
+    padding-left: 4px;
 }
 
 #request-message {
     width: 100%;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1px solid #d1d1d6;
+    border-radius: 12px;
     padding: 12px;
     font-size: 14px;
     line-height: 1.5;
-    resize: vertical;
-    transition: border-color 0.2s;
+    resize: none;
+    transition: all 0.2s;
     box-sizing: border-box;
+    background: #fff;
 }
 
 #request-message:focus {
-    border-color: #3498db;
+    border-color: var(--setae-primary, #2c3e50);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
 }
 
-.btn-secondary {
-    background: #ecf0f1;
-    color: #7f8c8d;
-    border: none;
-    border-radius: 50px;
-    padding: 8px 20px;
+/* フッターボタンエリア (統一デザイン) */
+.modal-footer-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 20px;
+    margin-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.modal-footer-actions button {
+    flex: 1;
+    border-radius: 12px;
+    padding: 12px 0;
+    font-size: 14px;
     font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
 }
 
+/* キャンセルボタン */
+.btn-cancel {
+    background: #f2f2f7;
+    /* iOS System Gray */
+    color: #1c1c1e;
+    border: none;
+}
 
-.btn-secondary:hover {
-    background: #bdc3c7;
-    color: #2c3e50;
+.btn-cancel:hover {
+    background: #e5e5ea;
+}
+
+/* 送信ボタン（メイン） */
+.btn-submit-req {
+    background: var(--setae-primary, #2c3e50);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+}
+
+.btn-submit-req:hover {
+    background: #34495e;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(44, 62, 80, 0.3);
+}
+
+.btn-submit-req:active {
+    transform: scale(0.98);
 }
 
 /* ▼▼▼ Breeding Loan Toolbar Design (Refined) ▼▼▼ */
