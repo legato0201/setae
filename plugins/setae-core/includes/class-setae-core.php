@@ -168,9 +168,22 @@ class Setae_Core
         if ($user_id) {
             $attachment_id = get_user_meta($user_id, 'setae_user_avatar', true);
             if ($attachment_id) {
+                // 1. まずサムネイルサイズの取得を試みる
                 $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
-                if ($img_url)
+
+                // 2. サムネイルがない場合（生成失敗やSVG等）、フルサイズを試みる
+                if (!$img_url) {
+                    $img_url = wp_get_attachment_image_url($attachment_id, 'full');
+                }
+
+                // 3. それでも取得できない場合、直接ファイルURLを取得
+                if (!$img_url) {
+                    $img_url = wp_get_attachment_url($attachment_id);
+                }
+
+                if ($img_url) {
                     return $img_url;
+                }
             }
         }
         return $url;
