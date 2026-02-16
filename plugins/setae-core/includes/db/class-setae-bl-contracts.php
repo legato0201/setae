@@ -46,6 +46,20 @@ class Setae_BL_Contracts
         return $wpdb->get_results($sql);
     }
 
+    /**
+     * ★追加: 特定ユーザーからの最新メッセージを取得
+     */
+    public function get_latest_chat_from_user($contract_id, $user_id)
+    {
+        global $wpdb;
+        $sql = $wpdb->prepare(
+            "SELECT message, created_at FROM {$this->chat_table_name} WHERE contract_id = %d AND user_id = %d ORDER BY created_at DESC LIMIT 1",
+            $contract_id,
+            $user_id
+        );
+        return $wpdb->get_row($sql);
+    }
+
     public function create_request($owner_id, $breeder_id, $spider_id, $message = '')
     {
         global $wpdb;

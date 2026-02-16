@@ -36,7 +36,8 @@ class Setae_API_BL
             'methods' => 'GET',
             'callback' => array($this, 'get_contract_messages'),
             'permission_callback' => function () {
-                return is_user_logged_in(); },
+                return is_user_logged_in();
+            },
         ));
 
         // Send Message
@@ -44,7 +45,8 @@ class Setae_API_BL
             'methods' => 'POST',
             'callback' => array($this, 'send_contract_message'),
             'permission_callback' => function () {
-                return is_user_logged_in(); },
+                return is_user_logged_in();
+            },
         ));
     }
 
@@ -276,6 +278,15 @@ class Setae_API_BL
                 // 自分がどちらの立場か判定フラグ
                 $c->is_owner = ($c->owner_id == $user_id);
                 $c->display_status = $this->get_status_label($c->status);
+
+                // ★追加: 相手からの最新チャットメッセージがあれば取得して上書き表示
+                $partner_id = $c->is_owner ? $c->breeder_id : $c->owner_id;
+                $latest_chat = $db->get_latest_chat_from_user($c->id, $partner_id);
+
+                if ($latest_chat && !empty($latest_chat->message)) {
+                    // 最新のチャットメッセージで上書き
+                    $c->message = $latest_chat->message;
+                }
             }
             return new WP_REST_Response($contracts, 200);
         }
