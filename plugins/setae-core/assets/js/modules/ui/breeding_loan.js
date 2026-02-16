@@ -104,39 +104,50 @@ var SetaeUIBL = (function ($) {
     function createSpiderCard(spider, isMine) {
         const gender = spider.gender || 'unknown';
         const bgImage = spider.image;
+        // 条件文言の取得（未設定時のフォールバック付き）
+        const terms = spider.bl_terms ? spider.bl_terms : '条件の記載なし';
 
         let genderIcon = '<span class="gender-icon unknown">?</span>';
         if (gender === 'male') genderIcon = '<span class="gender-icon male">♂</span>';
         if (gender === 'female') genderIcon = '<span class="gender-icon female">♀</span>';
 
+        // 契約管理カード（contract-card）のデザイン構造を流用
         return `
-        <div class="setae-card bl-card gender-${gender} ${isMine ? 'is-mine' : ''}">
-            <div class="bl-badge">Recruiting</div>
-            <div class="bl-content">
-                <div class="bl-img" style="background-image:url('${bgImage}')"></div>
-                <div class="bl-info">
-                    <div class="bl-species">${spider.species}</div>
-                    <div class="bl-name">${spider.name} ${genderIcon}</div>
-                    <div class="bl-meta">
+        <div class="setae-card contract-card ${isMine ? 'is-mine' : ''}">
+            <div class="contract-header">
+                <span class="contract-status" style="background: #e8f5e9; color: #34c759; border: 1px solid rgba(52, 199, 89, 0.1);">
+                    Recruiting
+                </span>
+                <span class="contract-date">ID: ${spider.id}</span>
+            </div>
+            <div class="contract-body">
+                <div class="c-thumb" style="background-image:url('${bgImage}')"></div>
+                <div class="c-details">
+                    <strong>${spider.name} ${genderIcon}</strong>
+                    <div class="c-meta">
+                        <span style="color:#8e8e93;">${spider.species}</span>
+                    </div>
+                    <div class="c-meta">
                         ${isMine
                 ? `<span class="meta-tag my-tag">Your Listing</span>`
-                : `<span>Owner: ${spider.owner_name}</span>`
+                : `<span style="color:#8e8e93;">Owner:</span> ${spider.owner_name}`
             }
                     </div>
+                    <div class="c-message">${terms}</div>
                 </div>
             </div>
-            <div class="bl-actions">
-                </button>
+            <div class="contract-actions">
                 ${!isMine ? `
-                    <button class="setae-btn-sm btn-primary btn-shine btn-request-loan" 
+                    <button class="setae-btn-sm btn-shine btn-request-loan" 
+                        style="padding: 0 20px; min-width: 110px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.25);"
                         data-id="${spider.id}" 
                         data-name="${spider.name}"
                         data-species="${spider.species}"
                         data-image="${spider.image}"
                         data-owner="${spider.owner_name}">
-                        申請する
+                        <span style="margin-right: 4px; font-size: 1.1em; vertical-align: -1px;">🚀</span> 申請する
                     </button>
-                ` : ''}
+                ` : '<span style="font-size:11px; color:#8e8e93; font-weight:600; padding-right:4px;">募集中 (Recruiting)</span>'}
             </div>
         </div>
         `;
