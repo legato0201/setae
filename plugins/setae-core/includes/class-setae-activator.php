@@ -40,6 +40,7 @@ class Setae_Activator
             contract_id mediumint(9) NOT NULL,
             user_id bigint(20) NOT NULL,
             message text NOT NULL,
+            is_read tinyint(1) DEFAULT 0 NOT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id)
         ) $charset_collate;";

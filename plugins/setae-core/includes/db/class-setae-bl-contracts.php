@@ -60,6 +60,36 @@ class Setae_BL_Contracts
         return $wpdb->get_row($sql);
     }
 
+    /**
+     * ★追加: 未読メッセージ数をカウント
+     * (相手からのメッセージで、まだ読んでいないもの)
+     */
+    public function count_unread_messages($contract_id, $current_user_id)
+    {
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->chat_table_name} 
+             WHERE contract_id = %d AND user_id != %d AND is_read = 0",
+            $contract_id,
+            $current_user_id
+        ));
+    }
+
+    /**
+     * ★追加: メッセージを既読にする
+     */
+    public function mark_messages_read($contract_id, $current_user_id)
+    {
+        global $wpdb;
+        // 自分宛て（送信者が自分でない）の未読メッセージを既読にする
+        return $wpdb->query($wpdb->prepare(
+            "UPDATE {$this->chat_table_name} SET is_read = 1 
+             WHERE contract_id = %d AND user_id != %d AND is_read = 0",
+            $contract_id,
+            $current_user_id
+        ));
+    }
+
     public function create_request($owner_id, $breeder_id, $spider_id, $message = '')
     {
         global $wpdb;
