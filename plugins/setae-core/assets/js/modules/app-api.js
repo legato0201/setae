@@ -88,6 +88,21 @@ var SetaeAPI = (function ($) {
         });
     }
 
+    function updateLog(logId, data, callback) {
+        $.ajax({
+            url: root + '/logs/' + logId,
+            method: 'POST',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', nonce); },
+            data: data,
+            success: function (res) {
+                if (callback) callback(res);
+            },
+            error: function () {
+                SetaeCore.showToast('ログの更新に失敗しました', 'error');
+            }
+        });
+    }
+
     function fetchSpecies(search, callback) {
         $.ajax({
             url: root + '/species',
@@ -253,6 +268,7 @@ var SetaeAPI = (function ($) {
         },
         logEvent: logEvent,
         deleteLog: deleteLog,
+        updateLog: updateLog,
         fetchSpecies: fetchSpecies,
         searchSpecies: fetchSpecies, // Alias
         getSpeciesStats: getSpeciesStats, // Add to public interface

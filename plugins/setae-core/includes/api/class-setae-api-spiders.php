@@ -88,6 +88,15 @@ class Setae_API_Spiders
                 return is_user_logged_in();
             },
         ));
+
+        // Update Log Event (拒食フラグ更新用)
+        register_rest_route('setae/v1', '/logs/(?P<id>\d+)', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'update_log'),
+            'permission_callback' => function () {
+                return is_user_logged_in();
+            },
+        ));
     }
 
 
@@ -455,6 +464,37 @@ class Setae_API_Spiders
             $thumb = get_the_post_thumbnail_url($species_id, 'medium');
         }
 
+        // 履歴の取得 (直近10件)
+        $history = array();
+        $logs = get_posts(array(
+            'post_type' => 'setae_log',
+            'posts_per_page' => 10,
+            'meta_query' => array(
+                array(
+                    'key' => '_setae_log_spider_id',
+                    'value' => $spider_id
+                )
+            ),
+            'orderby' => 'meta_value',
+            'meta_key' => '_setae_log_date',
+            'order' => 'DESC'
+        ));
+
+        foreach ($logs as $log) {
+            $raw_json = get_post_meta($log->ID, '_setae_log_data', true);
+            $log_data = is_string($raw_json) ? json_decode($raw_json, true) : (array) $raw_json;
+            // refusedフラグを展開してプロパティとしてアクセスしやすくする
+            $is_refused = !empty($log_data['refused']);
+
+            $history[] = array(
+                'id' => $log->ID,
+                'type' => get_post_meta($log->ID, '_setae_log_type', true),
+                'date' => get_post_meta($log->ID, '_setae_log_date', true),
+                'refused' => $is_refused,
+                'data' => $log_data,
+            );
+        }
+
         return array(
             'id' => $spider_id,
             'title' => $post->post_title,
@@ -472,7 +512,8 @@ class Setae_API_Spiders
             // ▲▲▲
 
             'owner_id' => $post->post_author,
-            'thumb' => $thumb
+            'thumb' => $thumb,
+            'history' => $history // ★追加
         );
     }
 
@@ -806,6 +847,40 @@ class Setae_API_Spiders
             return new WP_Error('delete_failed', 'Could not delete log', array('status' => 500));
         }
 
-        return new WP_REST_Response(array('success' => true, 'id' => $log_id), 200);
+        return new WP_REST_Response(array('success' => true), 200);
+    }
+
+    // ▼ 新規追加: ログ更新用メソッド
+    public function update_log($request)
+    {
+        $user_id = get_current_user_id();
+        $log_id = $request['id'];
+
+        $post = get_post($log_id);
+        if (!$post || $post->post_type !== 'setae_log') {
+            return new WP_Error('not_found', 'Log not found', array('status' => 404));
+        }
+
+        if ($post->post_author != $user_id) {
+            return new WP_Error('forbidden', 'Permission denied', array('status' => 403));
+        }
+
+        // 既存データの取得・デコード
+        $raw_json = get_post_meta($log_id, '_setae_log_data', true);
+        $data = is_string($raw_json) ? json_decode($raw_json, true) : (array) $raw_json;
+        if (!is_array($data))
+            $data = array();
+
+        // 送信されたパラメータをマージ (refusedフラグなど)
+        $params = $request->get_params();
+        if (isset($params['refused'])) {
+            $data['refused'] = filter_var($params['refused'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        // 保存
+        update_post_meta($log_id, '_setae_log_data', json_encode($data));
+
+        return new WP_REST_Response(array('success' => true, 'data' => $data), 200);
     }
 }
+

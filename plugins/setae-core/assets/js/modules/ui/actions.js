@@ -57,7 +57,7 @@ var SetaeUIActions = (function ($) {
             toastMsg = '給餌を記録しました';
         } else if (action === 'refused') {
             nextStatus = 'fasting';
-            toastMsg = '拒食・様子見モードへ移行します';
+            toastMsg = ''; // メッセージはAPI成功後に表示または処理内でハンドリング
             toastType = 'warning';
         } else if (action === 'ate') {
             action = 'feed';
@@ -96,6 +96,7 @@ var SetaeUIActions = (function ($) {
         if (toastMsg) SetaeCore.showToast(toastMsg, toastType);
 
         // API Call
+        // API Call
         if (action === 'signs') {
             SetaeAPI.updateSpiderStatus(id, 'pre_molt');
         } else if (action === 'measure') {
@@ -104,13 +105,30 @@ var SetaeUIActions = (function ($) {
                 SetaeUILogModal.openLogModal(id, 'growth');
             }
             toastMsg = '計測しましょう';
-        } else if (action === 'feed' || action === 'refused' || action === 'molt') {
-            const isRefused = (action === 'refused');
+        } else if (action === 'refused') {
+            // Refused logic: Update existing log instead of creating new one
+            SetaeAPI.getSpiderDetail(id, function (detailData) {
+                const logs = detailData.history || [];
+                // Find latest feed log that is not yet refused
+                const targetLog = logs.find(l => l.type === 'feed' && !l.refused);
+
+                if (targetLog) {
+                    SetaeAPI.updateLog(targetLog.id, { refused: true }, () => {
+                        SetaeAPI.updateSpiderStatus(id, nextStatus);
+                        SetaeCore.showToast('拒食・様子見モードへ移行します', 'warning');
+                    });
+                } else {
+                    SetaeCore.showToast('更新対象の給餌記録が見つかりませんでした', 'error');
+                    // Reload list to fix UI inconsistency
+                    if (window.SetaeUIList) SetaeUIList.refresh();
+                }
+            });
+        } else if (action === 'feed' || action === 'molt') {
             const logType = (action === 'molt') ? 'molt' : 'feed';
 
             const payload = {
                 prey_type: data.prey || 'Cricket',
-                refused: isRefused
+                refused: false
             };
 
             SetaeAPI.logEvent(id, logType, today, payload, () => {
@@ -153,6 +171,27 @@ var SetaeUIActions = (function ($) {
                 if (window.SetaeUILogModal) SetaeUILogModal.openLogModal(id, 'molt');
             }
         } else {
+            // Validation for Refused action
+            if (actionType === 'refused') {
+                const spider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
+
+                // 1. Log existence check
+                if (!spider || !spider.last_feed) {
+                    SetaeCore.showToast('給餌記録がありません', 'error');
+                    return; // Abort
+                }
+
+                // 2. 48 hours check
+                const lastFeedDate = new Date(spider.last_feed);
+                const now = new Date();
+                const diffHours = (now - lastFeedDate) / (1000 * 60 * 60);
+
+                if (diffHours > 48) {
+                    SetaeCore.showToast('直近（48時間以内）の給餌記録がありません', 'error');
+                    return; // Abort
+                }
+            }
+
             // Default behavior (Quick Action / current logic)
             console.log(`🚀 Executing: ${actionType} -> New Status: ${newStatus} `);
 
