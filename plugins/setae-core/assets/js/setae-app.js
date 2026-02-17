@@ -8,6 +8,12 @@ jQuery(document).ready(function ($) {
         SetaeUIDesktop.init();
     }
 
+    // ▼▼▼ 追加: チュートリアル初期化 ▼▼▼
+    if (typeof SetaeTutorial !== 'undefined') {
+        SetaeTutorial.init();
+    }
+    // ▲▲▲ 追加終了 ▲▲▲
+
     // Note: SetaeUI (Renderer) auto-initializes on document.ready in app-ui-renderer.js
     // SetaeUIActions binds touch events automatically in app-ui-renderer.js
 

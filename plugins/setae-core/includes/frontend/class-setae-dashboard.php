@@ -23,7 +23,10 @@ class Setae_Dashboard
         wp_enqueue_style('setae-layout', SETAE_PLUGIN_URL . 'assets/css/modules/layout.css', $deps, $this->version, 'all');
         wp_enqueue_style('setae-cards', SETAE_PLUGIN_URL . 'assets/css/modules/cards.css', $deps, $this->version, 'all');
         wp_enqueue_style('setae-modals', SETAE_PLUGIN_URL . 'assets/css/modules/modals.css', $deps, $this->version, 'all');
+        wp_enqueue_style('setae-modals', SETAE_PLUGIN_URL . 'assets/css/modules/modals.css', $deps, $this->version, 'all');
         wp_enqueue_style('setae-bl', SETAE_PLUGIN_URL . 'assets/css/modules/breeding_loan.css', $deps, $this->version, 'all'); // Breeding Loan CSS
+        // ▼ 追加: チュートリアル用CSS
+        wp_enqueue_style('setae-tutorial', SETAE_PLUGIN_URL . 'assets/css/modules/tutorial.css', $deps, $this->version, 'all');
 
         // 残りのビュー専用スタイル (Chat, Kanban, etc.)
         wp_enqueue_style('setae-views', SETAE_PLUGIN_URL . 'assets/css/modules/views.css', $deps, $this->version, 'all');
@@ -71,6 +74,9 @@ class Setae_Dashboard
 
         // 1.5 Desktop Specific Logic
         wp_enqueue_script('setae-ui-desktop', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-desktop.js', array('setae-ui-actions', 'jquery'), $this->version, true);
+
+        // ▼ 追加: チュートリアルモジュール
+        wp_enqueue_script('setae-app-tutorial', SETAE_PLUGIN_URL . 'assets/js/modules/app-tutorial.js', array('jquery'), $this->version, true);
 
         // 2. Controller (Renderer)
         // 2. Controller (Renderer)
