@@ -724,7 +724,8 @@ class Setae_API_Spiders
         update_post_meta($log_id, '_setae_log_spider_id', $spider_id);
         update_post_meta($log_id, '_setae_log_type', $type);
         update_post_meta($log_id, '_setae_log_date', $date);
-        update_post_meta($log_id, '_setae_log_data', $data_json); // Store raw JSON string or serialized array
+        $parsed_input = is_string($data_json) ? json_decode($data_json, true) : $data_json;
+        update_post_meta($log_id, '_setae_log_data', json_encode($parsed_input, JSON_UNESCAPED_UNICODE));
 
         // [Optim] Save Link to Species for efficient querying
         $species_id = get_post_meta($spider_id, '_setae_species_id', true);
@@ -878,7 +879,7 @@ class Setae_API_Spiders
         }
 
         // 保存
-        update_post_meta($log_id, '_setae_log_data', json_encode($data));
+        update_post_meta($log_id, '_setae_log_data', json_encode($data, JSON_UNESCAPED_UNICODE));
 
         return new WP_REST_Response(array('success' => true, 'data' => $data), 200);
     }

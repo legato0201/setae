@@ -55,6 +55,16 @@ var SetaeUIActions = (function ($) {
         if (action === 'feed') {
             nextStatus = 'normal';
             toastMsg = '給餌を記録しました';
+
+            // キャッシュデータの更新（Refused判定用）
+            if (SetaeCore.state.cachedSpiders) {
+                const cachedSpider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
+                if (cachedSpider) {
+                    cachedSpider.last_feed = today; // 今日の日付で更新
+                    cachedSpider.is_hungry = false;
+                    cachedSpider.status = 'normal';
+                }
+            }
         } else if (action === 'refused') {
             nextStatus = 'fasting';
             toastMsg = ''; // メッセージはAPI成功後に表示または処理内でハンドリング
