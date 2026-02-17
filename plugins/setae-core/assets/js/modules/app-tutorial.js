@@ -5,13 +5,9 @@
 var SetaeTutorial = (function ($) {
     'use strict';
 
-    const STORAGE_KEY = 'setae_tutorial_seen_v1'; // バージョン管理用にv1をつける
+    const STORAGE_KEY = 'setae_tutorial_seen_v1';
 
     // チュートリアルのステップ定義
-    // target: ハイライトする要素のセレクタ (nullの場合は画面中央)
-    // title: タイトル
-    // text: 説明文
-    // position: 吹き出しの位置 ('bottom', 'top', 'center')
     const steps = [
         {
             target: null,
@@ -26,7 +22,8 @@ var SetaeTutorial = (function ($) {
             position: 'bottom'
         },
         {
-            target: '.setae-decks-scroll',
+            // 修正: :visible をつけて表示中の要素（マイリスト側）だけを狙う
+            target: '.setae-decks-scroll:visible',
             title: 'フィルタリング',
             text: '「空腹」「脱皮前」などのステータスで<br>個体をすばやく絞り込むことができます。',
             position: 'bottom'
@@ -38,10 +35,11 @@ var SetaeTutorial = (function ($) {
             position: 'bottom'
         },
         {
-            target: '#btn-bl-board',
+            // 修正: ボタン自体が非表示エリアにあるため、targetをnull(中央表示)に変更して確実に読ませる
+            target: null,
             title: 'ブリーディングローン',
-            text: 'BL掲示板では、お婿さんやお嫁さんを<br>募集・検索することができます。',
-            position: 'top' // 下の方にあるボタンと想定
+            text: 'BL掲示板機能も搭載。<br>お婿さんやお嫁さんを募集・検索して、繁殖のパートナーを見つけましょう。',
+            position: 'center'
         },
         {
             target: null,
@@ -52,24 +50,19 @@ var SetaeTutorial = (function ($) {
     ];
 
     let currentStepIndex = 0;
-
-    // --- DOM Elements ---
     let $overlay, $spotlight, $tooltip;
 
     /**
      * 初期化処理
      */
     function init() {
-        // すでに閲覧済みなら実行しない
         if (localStorage.getItem(STORAGE_KEY)) {
             console.log('Tutorial already seen.');
             return;
         }
 
-        // DOMの準備が整ってから開始（少し遅延させるとUIの崩れを防げます）
         setTimeout(() => {
-            // 現在 "My Spiders" (#section-my) が表示されているか確認
-            // ※チュートリアルはメイン画面で開始することを想定
+            // マイリストが表示されている場合のみ開始
             if ($('#section-my').is(':visible')) {
                 createElements();
                 showStep(0);
@@ -78,13 +71,12 @@ var SetaeTutorial = (function ($) {
     }
 
     /**
-     * 必要なHTML要素を生成してbodyに追加
+     * 要素生成
      */
     function createElements() {
-        // 1. スポットライト（ハイライト用）
-        $spotlight = $('<div id="setae-tutorial-spotlight"></div>');
+        if ($('#setae-tutorial-spotlight').length) return; // 二重生成防止
 
-        // 2. ツールチップ（説明文用）
+        $spotlight = $('<div id="setae-tutorial-spotlight"></div>');
         $tooltip = $(`
             <div id="setae-tutorial-tooltip">
                 <div class="st-content">
@@ -103,18 +95,28 @@ var SetaeTutorial = (function ($) {
 
         $('body').append($spotlight, $tooltip);
 
-        // イベントハンドラ
-        $('#st-btn-next').on('click', nextStep);
-        $('#st-btn-skip').on('click', endTutorial);
+        // イベントバインド（offしてからonで重複防止）
+        $(document).off('click', '#st-btn-next').on('click', '#st-btn-next', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            nextStep();
+        });
 
-        // ウィンドウリサイズ時に位置調整
+        $(document).off('click', '#st-btn-skip').on('click', '#st-btn-skip', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            endTutorial();
+        });
+
         $(window).on('resize.setaeTutorial', () => {
-            if (currentStepIndex >= 0) showStep(currentStepIndex);
+            if (currentStepIndex >= 0 && $tooltip && $tooltip.is(':visible')) {
+                showStep(currentStepIndex);
+            }
         });
     }
 
     /**
-     * ステップを表示
+     * ステップ表示
      */
     function showStep(index) {
         if (index >= steps.length) {
@@ -123,51 +125,49 @@ var SetaeTutorial = (function ($) {
         }
 
         const step = steps[index];
-        const $target = step.target ? $(step.target) : null;
+        // ターゲット指定があり、かつjQueryで見つかり、かつ表示されているか？
+        const $target = (step.target) ? $(step.target).filter(':visible').first() : null;
 
-        // ターゲットが指定されているが存在しない、または非表示の場合はスキップ
-        if (step.target && (!$target.length || !$target.is(':visible'))) {
-            console.warn(`Tutorial target not found: ${step.target}`);
-            nextStep();
+        // ターゲット指定があるのに見つからない場合はスキップ
+        if (step.target && (!$target || !$target.length)) {
+            console.warn(`Tutorial target skipped: ${step.target}`);
+            // 再帰呼び出しになるため、少し遅延させてスタックあふれ防止
+            setTimeout(() => showStep(index + 1), 10);
             return;
         }
 
         currentStepIndex = index;
 
-        // --- テキスト更新 ---
+        // テキスト更新
         $('#st-title').text(step.title);
         $('#st-text').html(step.text);
         $('#st-counter').text(`${index + 1} / ${steps.length}`);
         $('#st-btn-next').text(index === steps.length - 1 ? 'Finish' : 'Next');
 
-        // --- スポットライトとツールチップの位置計算 ---
-        if ($target) {
-            // 要素をハイライトする場合
+        // 位置合わせ
+        if ($target && $target.length) {
             const offset = $target.offset();
             const width = $target.outerWidth();
             const height = $target.outerHeight();
 
-            // スポットライトを要素に合わせる
-            // box-shadowを使って周囲を暗くするテクニック
+            // スポットライト表示
             $spotlight.css({
-                top: offset.top - 5, // 少し余白
+                top: offset.top - 5,
                 left: offset.left - 5,
                 width: width + 10,
                 height: height + 10,
                 display: 'block',
                 position: 'absolute',
                 borderRadius: '8px',
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75)', // これが暗幕になる
+                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75)',
                 zIndex: 10000,
-                pointerEvents: 'none', // クリックは通さない（チュートリアル中は操作させない場合）
+                pointerEvents: 'none',
                 transition: 'all 0.3s ease'
             });
 
-            // ツールチップの位置
             placeTooltip(offset.top, offset.left, width, height, step.position);
-
         } else {
-            // 画面中央（Welcomeメッセージなど）
+            // 中央表示モード
             $spotlight.css({
                 top: '50%',
                 left: '50%',
@@ -176,44 +176,39 @@ var SetaeTutorial = (function ($) {
                 boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75)'
             });
 
-            // ツールチップを中央配置
             $tooltip.css({
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
                 zIndex: 10001
-            });
-
-            // 矢印を消す
-            $tooltip.removeClass('arrow-top arrow-bottom');
+            }).removeClass('arrow-top arrow-bottom');
         }
 
         $tooltip.fadeIn(200);
     }
 
-    /**
-     * ツールチップの配置計算
-     */
     function placeTooltip(targetTop, targetLeft, targetW, targetH, position) {
-        const tooltipW = 280; // CSSで設定する幅と合わせる
-        // const tooltipH = $tooltip.outerHeight(); // 可変なので計算時に取得も可だが、簡易計算する
-
-        let top, left;
+        const tooltipW = 280;
         const spacing = 15;
-
-        // モバイル対応: 画面幅からはみ出さないように調整
         let screenW = $(window).width();
-        left = targetLeft + (targetW / 2) - (tooltipW / 2);
 
-        // 画面左端・右端のガード
+        // 横位置の計算（画面端配慮）
+        let left = targetLeft + (targetW / 2) - (tooltipW / 2);
         if (left < 10) left = 10;
         if (left + tooltipW > screenW - 10) left = screenW - tooltipW - 10;
 
         $tooltip.removeClass('arrow-top arrow-bottom');
+        let top;
 
         if (position === 'top') {
             top = targetTop - $tooltip.outerHeight() - spacing;
-            $tooltip.addClass('arrow-bottom');
+            // 上に見切れる場合は下に表示
+            if (top < 10) {
+                top = targetTop + targetH + spacing;
+                $tooltip.addClass('arrow-top');
+            } else {
+                $tooltip.addClass('arrow-bottom');
+            }
         } else {
             // default to bottom
             top = targetTop + targetH + spacing;
@@ -233,17 +228,16 @@ var SetaeTutorial = (function ($) {
     }
 
     function endTutorial() {
-        $spotlight.fadeOut(300, function () { $(this).remove(); });
-        $tooltip.fadeOut(300, function () { $(this).remove(); });
+        if ($spotlight) $spotlight.fadeOut(300, function () { $(this).remove(); });
+        if ($tooltip) $tooltip.fadeOut(300, function () { $(this).remove(); });
         $(window).off('resize.setaeTutorial');
-
-        // 次回から表示しないように記録
         localStorage.setItem(STORAGE_KEY, 'true');
     }
 
-    // デバッグ用: 強制的にチュートリアルを開始するメソッド
     function resetAndStart() {
         localStorage.removeItem(STORAGE_KEY);
+        // 要素が残っていれば消す
+        $('#setae-tutorial-spotlight, #setae-tutorial-tooltip').remove();
         init();
     }
 
