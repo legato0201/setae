@@ -1467,3 +1467,392 @@
     transform: none;
     /* 拡大はせず、色と影で階層を表現 */
 }
+
+
+/* =========================================
+   Pro Spec: List View & Tabs (New Addition)
+   ========================================= */
+
+/* --- 1. Segmented Control (タブ) --- */
+.setae-segment-nav {
+    display: flex;
+    background: #eef0f2;
+    /* 薄いグレー背景 */
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.segment-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6e7781;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.segment-btn:hover {
+    color: #24292f;
+}
+
+.segment-btn.active {
+    background: #fff;
+    color: #24292f;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.03);
+}
+
+.count-badge-inline {
+    background: rgba(27, 31, 35, 0.08);
+    color: #57606a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    line-height: 1.4;
+}
+
+.segment-btn.active .count-badge-inline {
+    background: #2c3e50;
+    color: #fff;
+}
+
+/* --- 2. List Header (PC Only) --- */
+.setae-list-header {
+    display: flex;
+    padding: 0 16px 10px 16px;
+    border-bottom: 2px solid #f0f2f5;
+    color: #8c959f;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.col-status {
+    width: 110px;
+}
+
+.col-main {
+    flex: 1;
+}
+
+.col-actions {
+    width: 140px;
+    text-align: right;
+}
+
+/* --- 3. List Item (Rows) --- */
+.setae-list-group {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e1e4e8;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.setae-list-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eaecef;
+    transition: background-color 0.15s;
+    background: #fff;
+}
+
+.setae-list-item:last-child {
+    border-bottom: none;
+}
+
+.setae-list-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Status Column */
+.list-col-status {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background: #cbd5e1;
+}
+
+/* Status Colors (Consistent with badges) */
+.status-dot.status-REQUESTED {
+    background: #f5a623;
+}
+
+.status-dot.status-APPROVED {
+    background: #007aff;
+}
+
+.status-dot.status-PAIRED {
+    background: #af52de;
+}
+
+.status-dot.status-SUCCESS {
+    background: #34c759;
+}
+
+.status-dot.status-REJECTED,
+.status-dot.status-FAIL {
+    background: #ff3b30;
+}
+
+.status-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #24292f;
+    display: flex;
+    align-items: center;
+}
+
+.list-date {
+    font-size: 11px;
+    color: #8c959f;
+    margin-top: 2px;
+    padding-left: 14px;
+    /* Align with text after dot */
+}
+
+/* Main Column (Thumb + Info) */
+.list-col-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    /* Enable truncation */
+}
+
+.list-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f6f8fa;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+}
+
+.list-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.list-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #24292f;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.list-meta {
+    font-size: 12px;
+    color: #57606a;
+    line-height: 1.4;
+}
+
+.list-msg {
+    font-size: 12px;
+    color: #8c959f;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+/* Actions Column */
+.list-col-actions {
+    width: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Small Buttons in List */
+.setae-btn-xs {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: #2c3e50;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #34495e;
+}
+
+.btn-danger {
+    background: #fff;
+    color: #cf222e;
+    border-color: rgba(207, 34, 46, 0.3);
+}
+
+.btn-danger:hover {
+    background: #ffebe9;
+}
+
+.btn-glass {
+    background: transparent;
+    color: #24292f;
+    border-color: #d0d7de;
+}
+
+.btn-glass:hover {
+    background: #f3f4f6;
+}
+
+/* Chat Icon Button */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    background: #f6f8fa;
+    color: #57606a;
+    border: 1px solid transparent;
+}
+
+.btn-icon:hover {
+    background: #eaeef2;
+    color: #24292f;
+}
+
+.btn-icon .icon img {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+
+/* --- Mobile Responsive --- */
+@media (max-width: 768px) {
+    .setae-list-header {
+        display: none;
+    }
+
+    .setae-list-item {
+        flex-wrap: wrap;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .list-col-status {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+
+    .status-text {
+        order: 1;
+    }
+
+    .status-dot {
+        order: 0;
+    }
+
+    .list-date {
+        order: 2;
+        margin-left: auto;
+        padding-left: 0;
+    }
+
+    .list-col-main {
+        width: 100%;
+    }
+
+    .list-col-actions {
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 12px;
+        border-top: 1px dashed #eaecef;
+        margin-top: 4px;
+    }
+
+    /* モバイルではメッセージを少し長く表示 */
+    .list-msg {
+        max-width: none;
+    }
+}
+/* ▼ 追加: Recruiting Status Dot Color */
+.status-dot.status-RECRUITING {
+    background: #34c759; /* Green */
+}
+
+/* Gender Mark in List Title */
+.gender-mark {
+    font-size: 12px;
+    margin-left: 4px;
+    font-weight: 700;
+}
+.gender-mark.male { color: #007aff; }
+.gender-mark.female { color: #ff3b30; }
+.gender-mark.unknown { color: #8e8e93; }
+
+/* Meta Divider */
+.list-meta .divider {
+    color: #d1d1d6;
+    margin: 0 6px;
+}
+
+/* Badge for My Listing */
+.badge-mine {
+    font-size: 10px;
+    font-weight: 700;
+    color: #8e8e93;
+    background: #f2f2f7;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* Empty Message in Tab */
+.empty-tab-msg {
+    text-align: center;
+    padding: 40px;
+    color: #8e8e93;
+    font-size: 13px;
+}

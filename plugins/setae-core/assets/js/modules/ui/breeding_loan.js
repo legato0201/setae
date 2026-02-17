@@ -43,7 +43,8 @@ var SetaeUIBL = (function ($) {
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
             success: function (response) {
                 currentCandidates = response;
-                renderGrid(response);
+                // ▼ 変更: グリッドではなくリスト描画関数を呼ぶ
+                renderRecruitsList(response);
             },
             error: function () {
                 container.html('<p class="error-msg">データの読み込みに失敗しました。</p>');
@@ -51,8 +52,8 @@ var SetaeUIBL = (function ($) {
         });
     }
 
-    // ★修正: リスト描画ロジックの刷新
-    function renderGrid(spiders) {
+    // ★修正: リスト表示 + タブ切り替えロジック
+    function renderRecruitsList(spiders) {
         const container = $('#setae-bl-grid');
         container.empty();
 
@@ -66,91 +67,118 @@ var SetaeUIBL = (function ($) {
         const mySpiders = spiders.filter(s => String(s.owner_id) === currentUserId);
         const otherSpiders = spiders.filter(s => String(s.owner_id) !== currentUserId);
 
-        let html = '';
+        // 1. タブナビゲーション
+        const tabsHtml = `
+            <div class="setae-segment-nav">
+                <button class="segment-btn active" data-target="tab-community-list">
+                    Community Listings <span class="count-badge-inline">${otherSpiders.length}</span>
+                </button>
+                <button class="segment-btn" data-target="tab-mylistings-list">
+                    My Listings <span class="count-badge-inline">${mySpiders.length}</span>
+                </button>
+            </div>
+        `;
 
-        // 1. 自分の募集 (My Listings) - 折りたたみ機能付き
-        if (mySpiders.length > 0) {
-            html += `
-                <div class="bl-section-header toggle-my-listings" data-target="#my-listings-wrapper">
-                    <h4>
-                        My Listings <span class="count-badge">${mySpiders.length}</span>
-                    </h4>
-                    <span class="header-hint">Show/Hide</span>
+        // 2. リストコンテナ
+        const contentHtml = `
+            <div id="tab-community-list" class="bl-tab-pane active">
+                <div class="setae-list-header">
+                    <span class="col-status">Status</span>
+                    <span class="col-main">Details</span>
+                    <span class="col-actions">Actions</span>
                 </div>
-                <div id="my-listings-wrapper" class="setae-grid my-listings-grid" style="display:none;">
-                    ${mySpiders.map(s => createSpiderCard(s, true)).join('')}
+                <div class="setae-list-group">
+                    ${otherSpiders.length > 0
+                ? otherSpiders.map(s => createRecruitRow(s, false)).join('')
+                : '<div class="empty-tab-msg">募集中の個体はありません</div>'}
                 </div>
-            `;
-        }
+            </div>
+            
+            <div id="tab-mylistings-list" class="bl-tab-pane" style="display:none;">
+                <div class="setae-list-header">
+                    <span class="col-status">Status</span>
+                    <span class="col-main">Details</span>
+                    <span class="col-actions">Actions</span>
+                </div>
+                <div class="setae-list-group">
+                    ${mySpiders.length > 0
+                ? mySpiders.map(s => createRecruitRow(s, true)).join('')
+                : '<div class="empty-tab-msg">あなたの募集はありません</div>'}
+                </div>
+            </div>
+        `;
 
-        // 2. コミュニティの募集
-        if (otherSpiders.length > 0) {
-            html += `
-                <div class="bl-section-header" style="${mySpiders.length > 0 ? 'margin-top:20px;' : ''}">
-                    <h4>Community Listings <span class="count-badge">${otherSpiders.length}</span></h4>
-                </div>
-                <div class="setae-grid community-listings-grid">
-                    ${otherSpiders.map(s => createSpiderCard(s, false)).join('')}
-                </div>
-            `;
-        } else if (mySpiders.length > 0) {
-            html += `<p class="empty-sub-msg">他のユーザーからの募集はまだありません。</p>`;
-        }
+        container.html(tabsHtml + contentHtml);
 
-        container.html(html);
+        // タブイベント (既存のContractsと競合しないよう、ID指定で制御)
+        $('#setae-bl-grid .segment-btn').on('click', function () {
+            $(this).siblings().removeClass('active');
+            $(this).addClass('active');
+            const target = $(this).data('target');
+            $('#setae-bl-grid .bl-tab-pane').hide();
+            $('#' + target).fadeIn(200);
+        });
 
-        // イベントバインド
         bindCardEvents();
     }
 
-    // ★追加: カードHTML生成ヘルパー
-    function createSpiderCard(spider, isMine) {
+    // ★修正: リスト行のHTML生成
+    function createRecruitRow(spider, isMine) {
         const gender = spider.gender || 'unknown';
-        const bgImage = spider.image;
-        // 条件文言の取得（未設定時のフォールバック付き）
-        const terms = spider.bl_terms ? spider.bl_terms : '条件の記載なし';
+        const bgImage = spider.image || SetaeSettings.plugin_url + 'assets/images/default-spider.png';
 
-        let genderIcon = '<span class="gender-icon unknown">?</span>';
-        if (gender === 'male') genderIcon = '<span class="gender-icon male">♂</span>';
-        if (gender === 'female') genderIcon = '<span class="gender-icon female">♀</span>';
+        // 条件文言 (長い場合は省略)
+        let terms = spider.bl_terms ? spider.bl_terms : '条件の記載なし';
+        if (terms.length > 30) terms = terms.substring(0, 30) + '...';
 
-        // 契約管理カード（contract-card）のデザイン構造を流用
+        let genderIcon = '?';
+        if (gender === 'male') genderIcon = '♂';
+        if (gender === 'female') genderIcon = '♀';
+
+        // アクションボタン
+        let actionBtn = '';
+        if (!isMine) {
+            actionBtn = `
+                <button class="setae-btn-xs btn-primary btn-request-loan" 
+                    data-id="${spider.id}" 
+                    data-name="${spider.name}"
+                    data-species="${spider.species}"
+                    data-image="${bgImage}"
+                    data-owner="${spider.owner_name}">
+                    🚀 申請
+                </button>
+            `;
+        } else {
+            actionBtn = `<span class="badge-mine">Your Listing</span>`;
+        }
+
+        const dateStr = 'ID: ' + spider.id;
+
         return `
-        <div class="setae-card contract-card ${isMine ? 'is-mine' : ''}">
-            <div class="contract-header">
-                <span class="contract-status" style="background: #e8f5e9; color: #34c759; border: 1px solid rgba(52, 199, 89, 0.1);">
-                    Recruiting
-                </span>
-                <span class="contract-date">ID: ${spider.id}</span>
+        <div class="setae-list-item status-RECRUITING">
+            <div class="list-col-status">
+                <span class="status-dot status-RECRUITING"></span>
+                <span class="status-text">募集中</span>
+                <span class="list-date">${dateStr}</span>
             </div>
-            <div class="contract-body">
-                <div class="c-thumb" style="background-image:url('${bgImage}')"></div>
-                <div class="c-details">
-                    <strong>${spider.name} ${genderIcon}</strong>
-                    <div class="c-meta">
-                        <span style="color:#8e8e93;">${spider.species}</span>
-                    </div>
-                    <div class="c-meta">
-                        ${isMine
-                ? `<span class="meta-tag my-tag">Your Listing</span>`
-                : `<span style="color:#8e8e93;">Owner:</span> ${spider.owner_name}`
-            }
-                    </div>
-                    <div class="c-message">${terms}</div>
+            
+            <div class="list-col-main">
+                <div class="list-thumb" style="background-image:url('${bgImage}')"></div>
+                <div class="list-info">
+                    <div class="list-title">${spider.name} <span class="gender-mark ${gender}">${genderIcon}</span></div>
+                    <div class="list-meta">${spider.species} <span class="divider">|</span> Owner: ${spider.owner_name}</div>
+                    <div class="list-msg">${terms}</div>
                 </div>
             </div>
-            <div class="contract-actions">
-                ${!isMine ? `
-                    <button class="setae-btn-sm btn-shine btn-request-loan" 
-                        style="padding: 0 20px; min-width: 110px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.25);"
-                        data-id="${spider.id}" 
-                        data-name="${spider.name}"
-                        data-species="${spider.species}"
-                        data-image="${spider.image}"
-                        data-owner="${spider.owner_name}">
-                        <span style="margin-right: 4px; font-size: 1.1em; vertical-align: -1px;">🚀</span> 申請する
-                    </button>
-                ` : '<span style="font-size:11px; color:#8e8e93; font-weight:600; padding-right:4px;">募集中 (Recruiting)</span>'}
+
+            <div class="list-col-actions">
+                ${actionBtn}
+                <button class="setae-btn-xs btn-icon btn-view-bl-detail" 
+                    data-name="${spider.name}" 
+                    data-molt="${spider.last_molt_date || '-'}" 
+                    data-terms="${encodeURIComponent(spider.bl_terms || '')}">
+                    <span class="icon">ℹ️</span>
+                </button>
             </div>
         </div>
         `;
