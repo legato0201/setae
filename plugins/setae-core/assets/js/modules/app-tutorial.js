@@ -22,7 +22,7 @@ var SetaeTutorial = (function ($) {
             position: 'bottom'
         },
         {
-            // 修正: :visible をつけて表示中の要素（マイリスト側）だけを狙う
+            // 表示中のフィルタリングバーを対象にする
             target: '.setae-decks-scroll:visible',
             title: 'フィルタリング',
             text: '「空腹」「脱皮前」などのステータスで<br>個体をすばやく絞り込むことができます。',
@@ -35,11 +35,23 @@ var SetaeTutorial = (function ($) {
             position: 'bottom'
         },
         {
-            // 修正: ボタン自体が非表示エリアにあるため、targetをnull(中央表示)に変更して確実に読ませる
-            target: null,
-            title: 'ブリーディングローン',
-            text: 'BL掲示板機能も搭載。<br>お婿さんやお嫁さんを募集・検索して、繁殖のパートナーを見つけましょう。',
-            position: 'center'
+            target: '.setae-nav-item[data-target="section-enc"]',
+            title: 'みんなで作る図鑑',
+            text: 'ここから図鑑にアクセスできます。<br>あなたの個体の写真や飼育情報を送って、<br>一緒に図鑑を充実させていきましょう！',
+            position: 'top' // ナビバーの上に出す
+        },
+        {
+            // ▼▼▼ 追加: コミュニティタブの案内 ▼▼▼
+            target: '.setae-nav-item[data-target="section-com"]',
+            title: '交流掲示板',
+            text: '飼育の質問や雑談はこちらから。<br>他のユーザーと交流して、<br>悩みを解決したり情報をシェアしましょう。',
+            position: 'top' // ナビバーの上に出す
+        },
+        {
+            target: '.setae-nav-item[data-target="section-bl"]',
+            title: 'BL Match',
+            text: 'ブリーディングローン（繁殖貸与）の<br>パートナー募集や検索はこちらから。<br>新しい繁殖の機会を見つけましょう。',
+            position: 'top' // ナビバーの上に出す
         },
         {
             target: null,
@@ -95,7 +107,7 @@ var SetaeTutorial = (function ($) {
 
         $('body').append($spotlight, $tooltip);
 
-        // イベントバインド（offしてからonで重複防止）
+        // イベントバインド
         $(document).off('click', '#st-btn-next').on('click', '#st-btn-next', function (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -128,10 +140,9 @@ var SetaeTutorial = (function ($) {
         // ターゲット指定があり、かつjQueryで見つかり、かつ表示されているか？
         const $target = (step.target) ? $(step.target).filter(':visible').first() : null;
 
-        // ターゲット指定があるのに見つからない場合はスキップ
+        // ターゲット指定があるのに見つからない場合はスキップ（安全装置）
         if (step.target && (!$target || !$target.length)) {
             console.warn(`Tutorial target skipped: ${step.target}`);
-            // 再帰呼び出しになるため、少し遅延させてスタックあふれ防止
             setTimeout(() => showStep(index + 1), 10);
             return;
         }
@@ -201,8 +212,10 @@ var SetaeTutorial = (function ($) {
         let top;
 
         if (position === 'top') {
+            // ターゲットの上側に表示
             top = targetTop - $tooltip.outerHeight() - spacing;
-            // 上に見切れる場合は下に表示
+
+            // 上に見切れる場合は下側に回す
             if (top < 10) {
                 top = targetTop + targetH + spacing;
                 $tooltip.addClass('arrow-top');
@@ -210,7 +223,7 @@ var SetaeTutorial = (function ($) {
                 $tooltip.addClass('arrow-bottom');
             }
         } else {
-            // default to bottom
+            // デフォルトはターゲットの下側
             top = targetTop + targetH + spacing;
             $tooltip.addClass('arrow-top');
         }
@@ -236,7 +249,6 @@ var SetaeTutorial = (function ($) {
 
     function resetAndStart() {
         localStorage.removeItem(STORAGE_KEY);
-        // 要素が残っていれば消す
         $('#setae-tutorial-spotlight, #setae-tutorial-tooltip').remove();
         init();
     }
