@@ -22,7 +22,11 @@ $partials_path = plugin_dir_path(__FILE__) . 'partials/';
             <span class="setae-nav-icon">🕷️</span> <span class="setae-nav-label">My Spiders</span>
         </div>
         <div class="setae-nav-item" data-target="section-bl">
-            <span class="setae-nav-icon">🤝</span> <span class="setae-nav-label">BL Match</span>
+            <span class="setae-nav-icon">
+                🤝
+                <span class="setae-badge-count" style="display: none;">0</span>
+            </span>
+            <span class="setae-nav-label">BL Match</span>
         </div>
         <div class="setae-nav-item" data-target="section-com">
             <span class="setae-nav-icon">💬</span> <span class="setae-nav-label">Community</span>

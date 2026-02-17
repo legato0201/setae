@@ -132,10 +132,27 @@ class Setae_BL_Contracts
     {
         global $wpdb;
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $this->table_name WHERE owner_id = %d OR breeder_id = %d ORDER BY created_at DESC",
+            "SELECT * FROM {$this->table_name} WHERE owner_id = %d OR breeder_id = %d ORDER BY created_at DESC",
             $user_id,
             $user_id
         ));
+    }
+
+    /**
+     * ★追加: ユーザーの全未読メッセージ数をカウント
+     */
+    public function get_total_unread_count($user_id)
+    {
+        global $wpdb;
+        $sql = "
+            SELECT COUNT(m.id)
+            FROM {$this->chat_table_name} m
+            INNER JOIN {$this->table_name} c ON m.contract_id = c.id
+            WHERE (c.owner_id = %d OR c.breeder_id = %d)
+            AND m.user_id != %d
+            AND m.is_read = 0
+        ";
+        return $wpdb->get_var($wpdb->prepare($sql, $user_id, $user_id, $user_id));
     }
 
     public function get_contract($id)

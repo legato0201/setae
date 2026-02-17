@@ -286,6 +286,39 @@
     background: transparent !important;
     /* 個別の背景を消す */
     border: none !important;
+    /* ▼ 追加: バッジ位置調整の基準点 */
+    position: relative;
+}
+
+/* ▼ 追加: 未読バッジのスタイル */
+.setae-badge-count {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    background-color: #ff3b30;
+    /* Apple Red */
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    line-height: 1;
+}
+
+/* Mobile調整 (アイコンの上に配置) */
+@media (max-width: 767px) {
+    .setae-badge-count {
+        top: 4px;
+        right: 25%;
+        /* アイコンの右肩付近 */
+    }
 }
 
 .setae-nav-item .setae-nav-icon {
