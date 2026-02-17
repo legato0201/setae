@@ -16,6 +16,10 @@ var SetaeUIAddSpider = (function ($) {
             $('#spider-image-preview').hide();
             $('#btn-trigger-upload-add').show();
             $('#spider-species-suggestions').hide();
+
+            if (typeof SetaeTutorial !== 'undefined') {
+                SetaeTutorial.initAddSpider();
+            }
         });
 
         // モーダルを閉じる (共通クラスで処理される場合もあるが、念のため)

@@ -115,6 +115,11 @@ var SetaeUIList = (function ($) {
             }
             container.append(renderSmartListItem(spider));
         });
+
+        // ▼▼▼ チュートリアル呼び出し ▼▼▼
+        if (typeof SetaeTutorial !== 'undefined') {
+            SetaeTutorial.initSwipe();
+        }
     }
 
     function updateDeckCounts() {

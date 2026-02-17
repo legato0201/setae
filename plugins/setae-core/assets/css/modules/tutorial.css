@@ -1,31 +1,31 @@
 /* Setae Tutorial Styles */
 
-/* スポットライト（ハイライト領域） */
 #setae-tutorial-spotlight {
     position: absolute;
     border-radius: 8px;
     pointer-events: none;
-    /* 下にある要素のクリックを防ぐ場合は auto にする */
     z-index: 10000;
-    /* transitionはJS側で制御しますが、補完的に入れておく */
     transition: all 0.3s ease-out;
 }
 
-/* ツールチップ本体 */
 #setae-tutorial-tooltip {
     position: absolute;
     width: 280px;
+    /* デフォルト幅 */
+    max-width: 95vw;
+    /* 安全策 */
     background: #fff;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     z-index: 10001;
     display: none;
-    /* 初期状態は非表示 */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    /* 矢印位置のデフォルト変数 */
+    --st-arrow-left: 50%;
 }
 
-/* ツールチップ内のコンテンツ */
 #setae-tutorial-tooltip h3 {
     margin: 0 0 10px 0;
     font-size: 18px;
@@ -40,7 +40,6 @@
     color: #666;
 }
 
-/* フッター（ボタンエリア） */
 .st-footer {
     display: flex;
     justify-content: space-between;
@@ -60,7 +59,6 @@
     gap: 10px;
 }
 
-/* ボタンデザイン */
 #st-btn-skip {
     background: transparent;
     border: none;
@@ -72,7 +70,6 @@
 
 #st-btn-next {
     background: #2ecc71;
-    /* Setaeのテーマカラーに合わせて変更してください */
     color: #fff;
     border: none;
     border-radius: 20px;
@@ -87,29 +84,34 @@
     background: #27ae60;
 }
 
-/* 吹き出しの矢印（CSS三角形） */
-#setae-tutorial-tooltip.arrow-top::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    /* 上側に配置 */
-    left: 50%;
-    margin-left: -8px;
-    border-width: 8px;
-    border-style: solid;
-    border-color: transparent transparent #fff transparent;
-}
+/* --- Dynamic Arrows --- */
 
+/* 下向きの矢印（本体は上にある） */
 #setae-tutorial-tooltip.arrow-bottom::after {
     content: "";
     position: absolute;
     top: 100%;
-    /* 下側に配置 */
-    left: 50%;
+    /* JSで計算された位置を使用 */
+    left: var(--st-arrow-left, 50%);
     margin-left: -8px;
     border-width: 8px;
     border-style: solid;
     border-color: #fff transparent transparent transparent;
+    pointer-events: none;
+}
+
+/* 上向きの矢印（本体は下にある） */
+#setae-tutorial-tooltip.arrow-top::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    /* JSで計算された位置を使用 */
+    left: var(--st-arrow-left, 50%);
+    margin-left: -8px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent #fff transparent;
+    pointer-events: none;
 }
 
 /* モバイル調整 */
