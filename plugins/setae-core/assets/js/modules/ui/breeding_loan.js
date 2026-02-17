@@ -391,9 +391,17 @@ var SetaeUIBL = (function ($) {
         }
 
         // チャットボタン（アイコン付き）
+        // ▼ 追加: 未読バッジのHTML生成
+        let badgeHtml = '';
+        if (c.unread_count && c.unread_count > 0) {
+            badgeHtml = `<span class="bl-chat-badge">${c.unread_count}</span>`;
+        }
+
+        // ▼ 変更: チャットボタンに position: relative を追加し、バッジを挿入
         const chatBtn = `
-            <button class="setae-btn-sm btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}">
+            <button class="setae-btn-sm btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}" style="position: relative;">
                 <span>💬</span> Message
+                ${badgeHtml}
             </button>
         `;
 

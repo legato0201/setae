@@ -401,6 +401,31 @@
     gap: 8px;
 }
 
+/* ▼ 追加: チャットボタン用未読バッジ */
+.bl-chat-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: #ff3b30;
+    /* Apple Red */
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    /* 背景に溶け込まないよう白フチ */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    line-height: 1;
+    padding: 0 3px;
+    box-sizing: border-box;
+}
+
 /* =========================================
    Pro Button Styling (BL Settings)
    ========================================= */

@@ -241,6 +241,8 @@ class Setae_API_BL
             return new WP_Error('db_error', 'Could not create contract', array('status' => 500));
 
         } else {
+            // ▼ 変更: $wpdb を使用するためにグローバル宣言を追加
+            global $wpdb;
             $contracts = $db->get_contracts_by_user($user_id);
             foreach ($contracts as $c) {
                 $c->spider_name = get_the_title($c->spider_id);
@@ -297,6 +299,16 @@ class Setae_API_BL
                 // 自分がどちらの立場か判定フラグ
                 $c->is_owner = ($c->owner_id == $user_id);
                 $c->display_status = $this->get_status_label($c->status);
+
+                // ▼ 追加: この契約内の未読メッセージ数をカウント
+                $table_chat = $wpdb->prefix . 'setae_bl_chat';
+                $unread_count = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM $table_chat WHERE contract_id = %d AND user_id != %d AND is_read = 0",
+                    $c->id,
+                    $user_id
+                ));
+                $c->unread_count = (int) $unread_count;
+                // ▲ 追加ここまで
 
                 // ★追加: 相手からの最新チャットメッセージがあれば取得して上書き表示
                 $partner_id = $c->is_owner ? $c->breeder_id : $c->owner_id;
