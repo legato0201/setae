@@ -44,6 +44,19 @@ if (!is_user_logged_in()) {
                         <label>パスワード</label>
                         <input type="password" id="reg-password" class="setae-input" required minlength="6">
                     </div>
+
+                    <?php $tos_url = get_option('setae_tos_url', '#'); ?>
+                    <div class="setae-form-group" style="margin-top: 15px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px; line-height: 1.4;">
+                            <input type="checkbox" id="reg-tos-agree" required
+                                style="margin-right: 8px; transform: scale(1.1); cursor: pointer;">
+                            <span>
+                                <a href="<?php echo esc_url($tos_url); ?>" target="_blank"
+                                    style="color: #3498db; text-decoration: underline;">利用規約</a>
+                                に同意します
+                            </span>
+                        </label>
+                    </div>
                     <div class="setae-form-actions">
                         <button type="button" class="setae-btn setae-btn-secondary" id="close-register-modal">キャンセル</button>
                         <button type="submit" class="setae-btn setae-btn-primary">登録</button>

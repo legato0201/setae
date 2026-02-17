@@ -39,6 +39,8 @@ class Setae_Admin_Settings {
 
         // Registration Settings
         register_setting('setae_options_group', 'setae_enable_registration');
+        // ▼ 追加: 利用規約URLの設定
+        register_setting('setae_options_group', 'setae_tos_url');
 
         add_settings_section(
             'setae_general_section',
@@ -58,6 +60,29 @@ class Setae_Admin_Settings {
                 'description' => 'ログイン画面に「新規登録」ボタンを表示し、登録を受け付ける'
             )
         );
+
+        // ▼ 追加: 利用規約URLフィールドの表示
+        add_settings_field(
+            'setae_tos_url',
+            '利用規約ページURL',
+            array($this, 'render_input_field'), // 汎用入力メソッドを使用
+            'setae_options_group',
+            'setae_general_section',
+            array(
+                'label_for' => 'setae_tos_url',
+                'description' => '新規登録画面のリンク先となる利用規約ページのURL（例: /terms/）'
+            )
+        );
+    }
+
+    // ▼ 追加: テキスト入力フィールド描画用
+    public function render_input_field($args) {
+        $option_name = $args['label_for'];
+        $value = get_option($option_name);
+        echo '<input type="text" id="' . esc_attr($option_name) . '" name="' . esc_attr($option_name) . '" value="' . esc_attr($value) . '" class="regular-text" />';
+        if (isset($args['description'])) {
+            echo '<p class="description">' . esc_html($args['description']) . '</p>';
+        }
     }
 
     public function render_checkbox_field($args) {
