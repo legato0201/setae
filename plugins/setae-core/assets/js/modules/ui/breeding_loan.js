@@ -11,6 +11,9 @@ var SetaeUIBL = (function ($) {
 
         // 初期ロード
         loadRecruits();
+
+        // ▼ 追加: 未読チェック
+        checkUnreadBadge();
     }
 
     function switchView(view) {
@@ -505,6 +508,8 @@ var SetaeUIBL = (function ($) {
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
             success: function (response) {
                 renderChatMessages(response);
+                // ▼ 追加: 既読になったはずなのでバッジを再取得
+                checkUnreadBadge();
             }
         });
     }
@@ -548,6 +553,25 @@ var SetaeUIBL = (function ($) {
             },
             complete: function () {
                 $('#btn-send-chat').prop('disabled', false);
+            }
+        });
+    }
+
+    // ▼ 追加: バッジ更新関数
+    function checkUnreadBadge() {
+        $.ajax({
+            url: SetaeSettings.api_root + 'setae/v1/bl/unread-count',
+            method: 'GET',
+            beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
+            success: function (response) {
+                const count = response.unread_count;
+                const $badge = $('.setae-nav-item[data-target="section-bl"] .setae-badge-count');
+
+                if (count > 0) {
+                    $badge.text(count > 99 ? '99+' : count).fadeIn(200);
+                } else {
+                    $badge.fadeOut(200);
+                }
             }
         });
     }

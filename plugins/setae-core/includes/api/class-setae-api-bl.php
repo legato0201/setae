@@ -48,6 +48,15 @@ class Setae_API_BL
                 return is_user_logged_in();
             },
         ));
+
+        // ▼ 追加: 未読数カウント取得
+        register_rest_route('setae/v1', '/bl/unread-count', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_unread_count'),
+            'permission_callback' => function () {
+                return is_user_logged_in();
+            },
+        ));
     }
 
     // ▼▼▼ 追加: チャット用コールバック関数 ▼▼▼
@@ -63,6 +72,16 @@ class Setae_API_BL
         if (!$contract || ($contract->owner_id != $user_id && $contract->breeder_id != $user_id)) {
             return new WP_Error('forbidden', 'Access denied', array('status' => 403));
         }
+
+        // ▼ 追加: 相手からのメッセージを既読にする
+        global $wpdb;
+        $table_chat = $wpdb->prefix . 'setae_bl_chat';
+        $wpdb->query($wpdb->prepare(
+            "UPDATE $table_chat SET is_read = 1 WHERE contract_id = %d AND user_id != %d AND is_read = 0",
+            $contract_id,
+            $user_id
+        ));
+        // ▲ ここまで
 
         $messages = $db->get_chat_history($contract_id);
 

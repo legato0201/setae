@@ -293,8 +293,8 @@
 /* ▼ 追加: 未読バッジのスタイル */
 .setae-badge-count {
     position: absolute;
-    top: -2px;
-    right: -6px;
+    top: -5px;
+    right: -8px;
     background-color: #ff3b30;
     /* Apple Red */
     color: #fff;
@@ -303,6 +303,7 @@
     min-width: 16px;
     height: 16px;
     border-radius: 8px;
+    /* 丸くする */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -312,12 +313,11 @@
     line-height: 1;
 }
 
-/* Mobile調整 (アイコンの上に配置) */
+/* モバイル時の微調整 */
 @media (max-width: 767px) {
     .setae-badge-count {
-        top: 4px;
-        right: 25%;
-        /* アイコンの右肩付近 */
+        top: 2px;
+        right: 20%;
     }
 }
 
