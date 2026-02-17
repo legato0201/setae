@@ -324,6 +324,7 @@ var SetaeUIBL = (function ($) {
         });
     }
 
+    // ★修正: タブ切り替え + リスト表示への変更
     function renderContracts(contracts) {
         const container = $('#setae-contracts-list');
         container.empty();
@@ -337,108 +338,128 @@ var SetaeUIBL = (function ($) {
         const incoming = contracts.filter(c => c.is_owner); // 自分に来た依頼
         const outgoing = contracts.filter(c => !c.is_owner); // 自分が出した依頼
 
-        let html = '';
+        // 1. タブナビゲーション
+        const tabsHtml = `
+            <div class="setae-segment-nav">
+                <button class="segment-btn active" data-target="tab-incoming">
+                    Requests Received <span class="count-badge-inline">${incoming.length}</span>
+                </button>
+                <button class="segment-btn" data-target="tab-outgoing">
+                    Requests Sent <span class="count-badge-inline">${outgoing.length}</span>
+                </button>
+            </div>
+        `;
 
-        // 1. 受信リクエスト (Incoming)
-        if (incoming.length > 0) {
-            html += `
-                <div class="bl-section-header">
-                    <h4>Requests Received <span class="count-badge">${incoming.length}</span></h4>
-                    <span class="header-hint" style="background:none; color:#999; font-weight:normal;">Action Required</span>
+        // 2. リストコンテナ (Incoming / Outgoing)
+        const contentHtml = `
+            <div id="tab-incoming" class="bl-tab-pane active">
+                <div class="setae-list-header">
+                    <span class="col-status">Status</span>
+                    <span class="col-main">Details</span>
+                    <span class="col-actions">Actions</span>
                 </div>
-                <div class="setae-grid" style="margin-bottom: 30px;">
-                    ${incoming.map(c => createContractCard(c, true)).join('')}
+                <div class="setae-list-group">
+                    ${incoming.length > 0
+                ? incoming.map(c => createContractRow(c, true)).join('')
+                : '<div class="empty-tab-msg">受信したリクエストはありません</div>'}
                 </div>
-            `;
-        }
+            </div>
+            
+            <div id="tab-outgoing" class="bl-tab-pane" style="display:none;">
+                <div class="setae-list-header">
+                    <span class="col-status">Status</span>
+                    <span class="col-main">Details</span>
+                    <span class="col-actions">Actions</span>
+                </div>
+                <div class="setae-list-group">
+                    ${outgoing.length > 0
+                ? outgoing.map(c => createContractRow(c, false)).join('')
+                : '<div class="empty-tab-msg">送信したリクエストはありません</div>'}
+                </div>
+            </div>
+        `;
 
-        // 2. 送信リクエスト (Outgoing)
-        if (outgoing.length > 0) {
-            html += `
-                <div class="bl-section-header">
-                    <h4>Requests Sent <span class="count-badge">${outgoing.length}</span></h4>
-                    <span class="header-hint" style="background:none; color:#999; font-weight:normal;">Waiting</span>
-                </div>
-                <div class="setae-grid">
-                    ${outgoing.map(c => createContractCard(c, false)).join('')}
-                </div>
-            `;
-        }
+        container.html(tabsHtml + contentHtml);
 
-        container.html(html);
+        // タブ切り替えイベント
+        $('.segment-btn').on('click', function () {
+            $('.segment-btn').removeClass('active');
+            $(this).addClass('active');
+            $('.bl-tab-pane').hide();
+            $('#' + $(this).data('target')).fadeIn(200);
+        });
 
-        // イベントバインド
+        // ボタン等のイベントバインド
         bindContractEvents();
     }
 
-    // カード生成ロジックの修正
-    function createContractCard(c, isOwner) {
+    // ★修正: カードではなく「行（Row）」を生成
+    function createContractRow(c, isOwner) {
         let actions = '';
 
-        // ステータスに応じたアクションボタン
+        // アクションボタン生成（ロジックは以前と同じ）
         if (isOwner && c.status === 'REQUESTED') {
             actions = `
-                <button class="setae-btn-sm btn-primary btn-bl-action" data-id="${c.id}" data-action="APPROVED">承認</button>
-                <button class="setae-btn-sm btn-danger btn-bl-action" data-id="${c.id}" data-action="REJECTED">拒否</button>
+                <button class="setae-btn-xs btn-primary btn-bl-action" data-id="${c.id}" data-action="APPROVED">承認</button>
+                <button class="setae-btn-xs btn-danger btn-bl-action" data-id="${c.id}" data-action="REJECTED">拒否</button>
             `;
         } else if (c.status === 'APPROVED') {
-            actions = `<button class="setae-btn-sm btn-glass btn-bl-action" data-id="${c.id}" data-action="PAIRED">ペアリング開始</button>`;
+            actions = `<button class="setae-btn-xs btn-glass btn-bl-action" data-id="${c.id}" data-action="PAIRED">ペアリング開始</button>`;
         } else if (c.status === 'PAIRED') {
             actions = `
-                <button class="setae-btn-sm btn-primary btn-bl-action" data-id="${c.id}" data-action="SUCCESS">成功</button>
-                <button class="setae-btn-sm btn-danger btn-bl-action" data-id="${c.id}" data-action="FAIL">失敗</button>
+                <button class="setae-btn-xs btn-primary btn-bl-action" data-id="${c.id}" data-action="SUCCESS">成功</button>
+                <button class="setae-btn-xs btn-danger btn-bl-action" data-id="${c.id}" data-action="FAIL">失敗</button>
             `;
         }
 
-        // チャットボタン（アイコン付き）
-        // ▼ 追加: 未読バッジのHTML生成
+        // 未読バッジ
         let badgeHtml = '';
         if (c.unread_count && c.unread_count > 0) {
             badgeHtml = `<span class="bl-chat-badge">${c.unread_count}</span>`;
         }
 
-        // ▼ 変更: チャットボタンに position: relative を追加し、バッジを挿入
+        // チャットボタン
         const chatBtn = `
-            <button class="setae-btn-sm btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}" style="position: relative;">
-                <span>💬</span> Message
+            <button class="setae-btn-xs btn-icon btn-open-chat" data-id="${c.id}" data-spider="${c.spider_name}" style="position: relative;">
+                <span class="icon">💬</span>
                 ${badgeHtml}
             </button>
         `;
 
-        // 日付整形
-        const dateStr = c.created_at.substring(0, 10).replace(/-/g, '/');
-
-        // ステータス表示
+        // 日付・ステータス
+        const dateStr = c.created_at.substring(5, 10).replace('-', '/');
         const statusLabel = c.display_status || c.status;
 
-        // メタ情報 (From / Owner)
-        const metaInfo = isOwner
-            ? `<span style="color:#007aff;">From:</span> ${c.breeder_name}`
-            : `<span style="color:#8e8e93;">Owner:</span> ${c.owner_name}`;
+        // 相手の名前
+        const partnerLabel = isOwner ? 'From: ' + c.breeder_name : 'Owner: ' + c.owner_name;
+
+        // 最新メッセージ（長い場合は省略）
+        let msgSnippet = c.message || '';
+        if (msgSnippet.length > 20) msgSnippet = msgSnippet.substring(0, 20) + '...';
 
         return `
-        <div class="setae-card contract-card">
-            <div class="contract-header">
-                <span class="contract-status badge-${c.status}">
-                    ${statusLabel}
-                </span>
-                <span class="contract-date">${dateStr}</span>
+        <div class="setae-list-item status-${c.status}">
+            <div class="list-col-status">
+                <span class="status-dot status-${c.status}"></span>
+                <span class="status-text">${statusLabel}</span>
+                <span class="list-date">${dateStr}</span>
             </div>
-            <div class="contract-body">
-                <div class="c-thumb" style="background-image:url('${c.spider_image}')"></div>
-                <div class="c-details">
-                    <strong>${c.spider_name}</strong>
-                    <div class="c-meta">
-                        ${metaInfo}
-                    </div>
-                    <div class="c-message">${c.message}</div>
+            
+            <div class="list-col-main">
+                <div class="list-thumb" style="background-image:url('${c.spider_image}')"></div>
+                <div class="list-info">
+                    <div class="list-title">${c.spider_name}</div>
+                    <div class="list-meta">${partnerLabel}</div>
+                    <div class="list-msg">${msgSnippet}</div>
                 </div>
             </div>
-            <div class="contract-actions">
+
+            <div class="list-col-actions">
+                ${actions}
                 ${chatBtn}
-                <div class="action-group">${actions}</div>
             </div>
-        </div>`;
+        </div>
+        `;
     }
 
     function bindContractEvents() {
