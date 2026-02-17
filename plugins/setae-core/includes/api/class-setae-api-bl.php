@@ -371,4 +371,34 @@ class Setae_API_BL
             update_post_meta($topic_id, '_setae_bl_contract_id', $contract->id);
         }
     }
+
+    // ▼▼▼ この関数を追加してください ▼▼▼
+    public function get_unread_count($request)
+    {
+        global $wpdb;
+        $user_id = get_current_user_id();
+
+        // テーブル名の定義
+        $table_contracts = $wpdb->prefix . 'setae_bl_contracts';
+        $table_chat = $wpdb->prefix . 'setae_bl_chat';
+
+        // 自分が関わっている契約(Owner or Breeder)の中で、
+        // 自分以外が送信した、未読(is_read=0)のメッセージ数をカウント
+        $sql = "
+            SELECT COUNT(m.id)
+            FROM $table_chat m
+            INNER JOIN $table_contracts c ON m.contract_id = c.id
+            WHERE (c.owner_id = %d OR c.breeder_id = %d)
+            AND m.user_id != %d
+            AND m.is_read = 0
+        ";
+
+        $count = $wpdb->get_var($wpdb->prepare($sql, $user_id, $user_id, $user_id));
+
+        return new WP_REST_Response(array(
+            'unread_count' => (int) $count
+        ), 200);
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
+
 }
