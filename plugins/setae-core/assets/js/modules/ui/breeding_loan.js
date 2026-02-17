@@ -516,8 +516,15 @@ var SetaeUIBL = (function ($) {
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeSettings.nonce); },
             success: function (response) {
                 renderChatMessages(response);
-                // ▼ 追加: 既読になったはずなのでバッジを再取得
+
+                // 1. ナビゲーションバーの全体バッジを更新
                 checkUnreadBadge();
+
+                // 2. ▼ 追加: 個別のMessageボタン上のバッジを消す
+                const $btn = $(`.btn-open-chat[data-id="${contractId}"]`);
+                $btn.find('.bl-chat-badge').fadeOut(200, function () {
+                    $(this).remove();
+                });
             }
         });
     }
