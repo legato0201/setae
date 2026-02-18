@@ -227,8 +227,9 @@
 /* Mobile Tweaks */
 @media (max-width: 767px) {
     .setae-toolbar-container {
-        top: 0;
-        padding-top: max(16px, env(safe-area-inset-top));
+        /* PWA: Respect Top Safe Area */
+        top: env(safe-area-inset-top);
+        padding-top: 16px;
     }
 }
 
@@ -245,7 +246,10 @@
         right: 16px;
         width: auto;
         /* 全幅ではなく、左右マージンに合わせる */
+
+        /* PWA: Respect Bottom Safe Area */
         bottom: calc(16px + env(safe-area-inset-bottom));
+
         /* ホームバーの上に浮かせる */
         z-index: 2000;
 

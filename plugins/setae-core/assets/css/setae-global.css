@@ -15,6 +15,17 @@
 
     /* Font */
     --setae-font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    /* iOS Safe Area */
+    --safe-area-top: env(safe-area-inset-top, 20px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* PWA Base Styles */
+html {
+    background-color: #f5f7fa;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
 }
 
 *,
@@ -31,6 +42,21 @@ body {
     -webkit-font-smoothing: antialiased;
     margin: 0;
     min-height: 100vh;
+
+    /* PWA Behaviors */
+    overscroll-behavior-y: none;
+    -webkit-user-select: none;
+    user-select: none;
+    padding-top: var(--safe-area-top);
+}
+
+/* Allow text selection in inputs */
+input,
+textarea,
+[contenteditable="true"],
+.selectable-text {
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 h1,
