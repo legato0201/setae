@@ -506,52 +506,59 @@
 .pipeline-step.active[data-step="post_molt"] .pipeline-dot {
     background-color: #9c27b0;
 }
+
+/* =========================================
 /* =========================================
    List Row Hover Effect (PC Only / iOS Pro Style)
    ========================================= */
 
-/* --- ベースのアニメーション設定 --- */
+/* --- ベースの設定 --- */
 .setae-spider-list-row {
     position: relative;
     cursor: pointer;
-    /* 浮き上がりと影の滑らかなトランジション */
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    
-    /* 浮き上がった時の角丸を統一（既存の角丸サイズに合わせて適宜調整してください） */
-    border-radius: 16px; 
+    border-radius: 16px;
 }
 
-/* 中のリストコンテンツも一緒にトランジションをかける */
+/* カード本体（実体）に影と移動のトランジションをまとめる */
 .setae-list-content {
-    transition: border-color 0.3s ease, background-color 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        border-color 0.3s ease,
+        background-color 0.3s ease !important;
+}
+
+/* スワイプ背景のチラつき防止用トランジション */
+.setae-swipe-bg {
+    transition: opacity 0.2s ease;
 }
 
 /* --- PCサイズ（幅769px以上）かつ、ホバー可能なデバイスのみ適用 --- */
 @media (min-width: 769px) and (hover: hover) {
-    .setae-spider-list-row:hover {
-        /* 上に4px浮かせる */
-        transform: translateY(-4px);
-        
-        /* Apple風の広がりを持った多重シャドウ（高級感） */
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08), 
-                    0 4px 10px rgba(0, 0, 0, 0.03);
-                    
-        /* 浮き上がった時に他のリストの下に隠れないように手前へ */
-        z-index: 10; 
+
+    /* ホバー時：透明な親ではなく「中の白いカード」だけを浮かす */
+    .setae-spider-list-row:hover .setae-list-content {
+        transform: translateY(-4px) !important;
+
+        /* Apple風の広がりを持った多重シャドウ */
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08),
+            0 4px 10px rgba(0, 0, 0, 0.03) !important;
+
+        border-color: rgba(0, 0, 0, 0.08);
+        z-index: 10;
     }
 
-    /* ホバー時、中のコンテンツのボーダーをわずかに濃くして立体感を強調 */
-    .setae-spider-list-row:hover .setae-list-content {
-        border-color: rgba(0, 0, 0, 0.08);
+    /* 安全対策：ホバー中は裏側のスワイプ背景を完全に透明にして隠す */
+    .setae-spider-list-row:hover .setae-swipe-bg {
+        opacity: 0 !important;
+        visibility: hidden !important;
     }
 }
 
-/* --- クリック（押し込み）時のマイクロインタラクション（任意） --- */
+/* --- クリック（押し込み）時のマイクロインタラクション --- */
 @media (min-width: 769px) {
-    .setae-spider-list-row:active {
+    .setae-spider-list-row:active .setae-list-content {
         /* クリックすると少し沈み込む */
-        transform: translateY(-1px) scale(0.99);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px) scale(0.99) !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
     }
 }
