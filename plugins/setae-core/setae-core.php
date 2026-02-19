@@ -53,6 +53,21 @@ register_deactivation_hook(__FILE__, 'deactivate_setae_core');
 require_once SETAE_PLUGIN_DIR . 'includes/class-setae-core.php';
 
 /**
+ * プラグインのテキストドメイン（翻訳ファイル）を読み込む
+ */
+function setae_core_load_textdomain()
+{
+	// 'setae-core' がテキストドメイン、'setae-core/languages' がフォルダパス
+	load_plugin_textdomain(
+		'setae-core',
+		false,
+		dirname(plugin_basename(__FILE__)) . '/languages/'
+	);
+}
+// plugins_loaded フックで実行する
+add_action('plugins_loaded', 'setae_core_load_textdomain');
+
+/**
  * Begins execution of the plugin.
  */
 function run_setae_core()

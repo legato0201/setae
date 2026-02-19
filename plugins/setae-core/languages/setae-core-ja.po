@@ -1,0 +1,62 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Setae Core\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-19 12:00+0900\n"
+"PO-Revision-Date: 2026-02-19 12:00+0900\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.4\n"
+
+# templates/partials/view-detail.php
+msgid "Loading..."
+msgstr "読み込み中..."
+
+msgid "Genus"
+msgstr "属"
+
+msgid "Species Title"
+msgstr "種名"
+
+msgid "Keeping"
+msgstr "飼育数"
+
+msgid "Species Info"
+msgstr "種別情報"
+
+msgid "Lifestyle"
+msgstr "生活様式"
+
+msgid "Temp"
+msgstr "温度"
+
+msgid "Humidity"
+msgstr "湿度"
+
+msgid "Lifespan"
+msgstr "寿命"
+
+msgid "Max Legspan"
+msgstr "最大レッグスパン"
+
+msgid "Best Shots Gallery"
+msgstr "ベストショットギャラリー"
+
+msgid "No community photos yet."
+msgstr "コミュニティの写真はまだありません。"
+
+# templates/partials/section-bl.php
+msgid "Breeding Loan Match"
+msgstr "ブリーディングローン マッチング"
+
+# ※補足: ソースコード側で日本語をベースにした場合は以下のように定義されます
+msgid "募集中"
+msgstr "募集中"
+
+msgid "契約管理"
+msgstr "契約管理"
