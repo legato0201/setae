@@ -45,18 +45,47 @@ var SetaeCore = (function ($) {
 
     function formatRelativeDate(dateStr) {
         if (!dateStr) return '-';
-        const date = new Date(dateStr);
+
+        // Safari/iOS対策: "YYYY-MM-DD" を "YYYY/MM/DD" に置換してからパースする
+        const safeDateStr = dateStr.replace(/-/g, '/');
+        const date = new Date(safeDateStr);
+
         if (isNaN(date.getTime())) return '-';
 
+        const i18n = (typeof setaeI18n !== 'undefined') ? setaeI18n : {};
         const now = new Date();
-        const diffTime = Math.abs(now - date);
+
+        // 1. 時刻情報が含まれているか判定 (例: "2026-02-19 14:30:00" なら length > 10)
+        // 時刻が含まれているデータ（ログやコメントなど）にのみ、細かい時間表記を適用する
+        const hasTime = dateStr.trim().length > 10;
+
+        if (hasTime) {
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+
+            // 未来の時間が渡された場合の保護（端末の時計ズレなど）
+            if (diffSec >= 0) {
+                if (diffSec < 60) return i18n.just_now || 'たった今';
+                if (diffMin < 60) return diffMin + (i18n.mins_ago || '分前');
+                if (diffHour < 24) return diffHour + (i18n.hours_ago || '時間前');
+            }
+        }
+
+        // 2. 日付のみのデータ、または24時間以上経過したデータは、時刻を0時にして「日数差」を出す
+        now.setHours(0, 0, 0, 0);
+        const targetDate = new Date(date);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = Math.abs(now - targetDate);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return setaeI18n.today || '今日';
-        if (diffDays === 1) return setaeI18n.yesterday || '昨日';
-        if (diffDays < 30) return diffDays + '日前';
-        if (diffDays < 365) return Math.floor(diffDays / 30) + 'ヶ月前';
-        return Math.floor(diffDays / 365) + '年前';
+        if (diffDays === 0) return i18n.today || '今日';
+        if (diffDays === 1) return i18n.yesterday || '昨日';
+        if (diffDays < 30) return diffDays + (i18n.days_ago || '日前');
+        if (diffDays < 365) return Math.floor(diffDays / 30) + (i18n.months_ago || 'ヶ月前');
+        return Math.floor(diffDays / 365) + (i18n.years_ago || '年前');
     }
 
     // Public Interface

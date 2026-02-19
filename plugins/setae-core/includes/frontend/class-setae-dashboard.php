@@ -76,8 +76,12 @@ class Setae_Dashboard
             // Dates
             'today' => esc_html__('Today', 'setae-core'),
             'yesterday' => esc_html__('Yesterday', 'setae-core'),
-            'days_ago' => esc_html__('%d Days ago', 'setae-core'),
-            'months_ago' => esc_html__('%d Months ago', 'setae-core'),
+            'just_now' => esc_html__('たった今', 'setae-core'),
+            'mins_ago' => esc_html__('分前', 'setae-core'),
+            'hours_ago' => esc_html__('時間前', 'setae-core'),
+            'days_ago' => esc_html__('日前', 'setae-core'),
+            'months_ago' => esc_html__('ヶ月前', 'setae-core'),
+            'years_ago' => esc_html__('年前', 'setae-core'),
 
             // Tabs & UI
             'overview' => esc_html__('Overview', 'setae-core'),

@@ -190,3 +190,12 @@ msgstr "%d 日前"
 
 msgid "%d Months ago"
 msgstr "%d ヶ月前"
+
+msgid "Just Now"
+msgstr "たった今"
+
+msgid "%d mins ago"
+msgstr "%d 分前"
+
+msgid "%d hours ago"
+msgstr "%d 時間前"
