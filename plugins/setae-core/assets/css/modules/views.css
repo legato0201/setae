@@ -804,7 +804,7 @@
     border-bottom: 1px solid #eee;
     margin-bottom: 15px;
     background: #fff;
-    position: sticky;
+
     top: 60px;
     /* Adjust according to header height */
     z-index: 10;

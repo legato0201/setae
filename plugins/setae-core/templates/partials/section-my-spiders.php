@@ -5,20 +5,17 @@
 ?>
 <div id="section-my" class="setae-section">
     <!-- Advanced Control Bar -->
-    <div class="setae-toolbar-container" style="width: auto; margin: -16px -16px 16px -16px;">
-        <div class="setae-toolbar-header"
-            style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
-            <div class="setae-search-wrapper" style="position:relative; flex-grow:1;">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:18px; height:18px; color:#999;">
+    <div class="setae-toolbar-container">
+        <div class="setae-toolbar-header">
+            <div class="setae-search-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="setae-spider-search" class="setae-search-input" placeholder="検索..."
-                    style="width:100%; padding:10px 10px 10px 38px; border-radius:20px; border:1px solid #ddd; font-size:14px; background:#fff;">
+                <input type="text" id="setae-spider-search" class="setae-search-input" placeholder="検索...">
             </div>
 
-            <div class="setae-actions" style="display:flex; gap:8px;">
+            <div class="setae-actions">
                 <button id="btn-sort-menu" class="setae-icon-btn" aria-label="並び替え">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 6h16M4 12h10M4 18h7"></path>
