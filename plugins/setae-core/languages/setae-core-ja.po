@@ -100,7 +100,7 @@ msgid "Settings / BL"
 msgstr "設定 / BL"
 
 msgid "Fasting"
-msgstr "絶食期"
+msgstr "拒食"
 
 msgid "MOLT HISTORY"
 msgstr "脱皮履歴"
@@ -161,3 +161,32 @@ msgstr "トラブルを避けるため、貸出に関する条件を明確に記
 
 msgid "Save Settings"
 msgstr "設定を保存"
+
+
+msgid "Last Repot"
+msgstr "最終植え替え"
+
+msgid "Last Water"
+msgstr "最終水やり"
+
+msgid "Pre-molt"
+msgstr "脱皮前"
+
+msgid "Post-molt"
+msgstr "脱皮後"
+
+
+msgid "REPOT HISTORY"
+msgstr "植え替え履歴"
+
+msgid "Today"
+msgstr "今日"
+
+msgid "Yesterday"
+msgstr "昨日"
+
+msgid "%d Days ago"
+msgstr "%d 日前"
+
+msgid "%d Months ago"
+msgstr "%d ヶ月前"

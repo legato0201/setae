@@ -204,55 +204,48 @@ var SetaeUIList = (function ($) {
 
         // --- 分類ごとのUI設定 ---
         let steps = [];
-        let labelFeed = 'Feed';
-        let labelMolt = 'Molt';
+        let labelFeed = setaeI18n.feed || 'Feed';
+        let labelMolt = setaeI18n.molt || 'Molt';
         let icon = ''; // 必要に応じて種別アイコンを表示
 
         switch (cls) {
             case 'plant':
-                // 植物: パイプラインなし、ラベル変更
                 steps = [];
-                labelFeed = 'Water';
-                labelMolt = 'Repot';
+                labelFeed = setaeI18n.water || 'Water';
+                labelMolt = setaeI18n.repot || 'Repot';
                 icon = '🌿';
                 break;
 
             case 'reptile':
-                // 爬虫類: サイクル簡略化
-                // 修正: ラベルを日本語化 (Refused -> 拒食, Shedding -> 脱皮前)
                 steps = [
-                    { id: 'normal', label: '通常' },
-                    { id: 'fasting', label: '拒食' },
-                    { id: 'pre_molt', label: '脱皮前' }
+                    { id: 'normal', label: setaeI18n.status_normal || 'Normal' },
+                    { id: 'fasting', label: setaeI18n.status_fasting || 'Fasting' },
+                    { id: 'pre_molt', label: setaeI18n.status_pre_molt || 'Pre-molt' }
                 ];
-                labelFeed = 'Feed';
-                labelMolt = 'Shed';
+                labelFeed = setaeI18n.feed || 'Feed';
+                labelMolt = setaeI18n.shed || 'Shed';
                 icon = '🦎';
                 break;
 
             case 'scorpion':
-                // サソリ: タランチュラと同じだがアイコン変更
-                // 修正: ラベルを日本語化
                 steps = [
-                    { id: 'normal', label: '通常' },
-                    { id: 'fasting', label: '拒食' },
-                    { id: 'pre_molt', label: '脱皮前' },
-                    { id: 'post_molt', label: '脱皮後' }
+                    { id: 'normal', label: setaeI18n.status_normal || 'Normal' },
+                    { id: 'fasting', label: setaeI18n.status_fasting || 'Fasting' },
+                    { id: 'pre_molt', label: setaeI18n.status_pre_molt || 'Pre-molt' },
+                    { id: 'post_molt', label: setaeI18n.status_post_molt || 'Post-molt' }
                 ];
                 icon = '🦂';
                 break;
 
             case 'tarantula':
             default:
-                // タランチュラ (デフォルト)
-                // 修正: ラベルを日本語化
                 steps = [
-                    { id: 'normal', label: '通常' },
-                    { id: 'fasting', label: '拒食' },
-                    { id: 'pre_molt', label: '脱皮前' },
-                    { id: 'post_molt', label: '脱皮後' }
+                    { id: 'normal', label: setaeI18n.status_normal || 'Normal' },
+                    { id: 'fasting', label: setaeI18n.status_fasting || 'Fasting' },
+                    { id: 'pre_molt', label: setaeI18n.status_pre_molt || 'Pre-molt' },
+                    { id: 'post_molt', label: setaeI18n.status_post_molt || 'Post-molt' }
                 ];
-                icon = ''; // 写真があればアイコン不要、または 🕷️
+                icon = '';
                 break;
         }
 
@@ -288,7 +281,7 @@ var SetaeUIList = (function ($) {
                     </div>
 
                     <div class="setae-info-column">
-                        <div class="setae-scientific-name"><i>${spider.species_name || 'Unidentified'}</i></div>
+                        <div class="setae-scientific-name"><i>${spider.species_name || setaeI18n.unidentified || 'Unidentified'}</i></div>
                         <div class="setae-nickname-row">
                             <span class="setae-nickname">${spider.title}</span>
                         </div>

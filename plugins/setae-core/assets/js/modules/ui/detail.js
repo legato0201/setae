@@ -63,32 +63,32 @@ var SetaeUIDetail = (function ($) {
         // --- Tab 1: Overview (Status + Charts) ---
         // Helper for cycle color
         const statusMap = {
-            'normal': { label: 'Normal', color: '#2c3e50' },
-            'fasting': { label: 'Fasting', color: '#d35400' },
-            'pre_molt': { label: 'Pre-molt', color: '#c0392b' },
-            'post_molt': { label: 'Post-molt', color: '#2980b9' },
+            'normal': { label: setaeI18n.status_normal || 'Normal', color: '#2c3e50' },
+            'fasting': { label: setaeI18n.status_fasting || 'Fasting', color: '#d35400' },
+            'pre_molt': { label: setaeI18n.status_pre_molt || 'Pre-molt', color: '#c0392b' },
+            'post_molt': { label: setaeI18n.status_post_molt || 'Post-molt', color: '#2980b9' },
         };
         const st = statusMap[spider.status] || statusMap['normal'];
 
         // Determine labels based on classification
         const isPlant = (currentClassification === 'plant');
-        const labelMolt = isPlant ? "Last Repot" : "Last Molt";
-        const labelFeed = isPlant ? "Last Water" : "Last Feed";
+        const labelMolt = isPlant ? (setaeI18n.last_repot || "Last Repot") : (setaeI18n.last_molt || "Last Molt");
+        const labelFeed = isPlant ? (setaeI18n.last_water || "Last Water") : (setaeI18n.last_feed || "Last Feed");
 
         const overviewHtml = `
             <div class="status-grid">
                 <div class="status-item"><span class="status-label">${labelMolt}</span><strong id="detail-spider-molt">${spider.last_molt || '-'}</strong></div>
                 <div class="status-item"><span class="status-label">${labelFeed}</span><strong id="detail-spider-feed">${spider.last_feed || '-'}</strong></div>
-                <div class="status-item"><span class="status-label">Cycle</span><strong id="detail-spider-cycle" style="color:${st.color}">${st.label}</strong></div>
+                <div class="status-item"><span class="status-label">${setaeI18n.cycle || 'Cycle'}</span><strong id="detail-spider-cycle" style="color:${st.color}">${st.label}</strong></div>
             </div>
             <div class="setae-grid-dashboard">
                 <div class="setae-card dashboard-card">
-                    <h4>Growth Log</h4>
+                    <h4>${setaeI18n.growth_log || 'Growth Log'}</h4>
                     <div class="chart-container"><canvas id="growthChart"></canvas></div>
                 </div>
                 ${!isPlant ? `
                 <div class="setae-card dashboard-card">
-                    <h4>Prey Preferences</h4>
+                    <h4>${setaeI18n.prey_preferences || 'Prey Preferences'}</h4>
                     <div class="chart-container"><canvas id="preyChart"></canvas></div>
                 </div>` : ''}
             </div>
@@ -468,7 +468,7 @@ var SetaeUIDetail = (function ($) {
             });
 
             // ▼ 追加: タイトル切り替え
-            const historyTitle = (currentClassification === 'plant') ? 'REPOT HISTORY' : 'MOLT HISTORY';
+            const historyTitle = (currentClassification === 'plant') ? (setaeI18n.repot_history || 'REPOT HISTORY') : (setaeI18n.molt_history || 'MOLT HISTORY');
 
             const tableHtml = `
                 <div class="molt-history-container" style="margin-top:24px; border-top:2px solid #f5f5f5; padding-top:16px;">
@@ -476,9 +476,9 @@ var SetaeUIDetail = (function ($) {
                     <table style="width:100%; border-collapse:collapse; font-size:13px; line-height:1.4;">
                         <thead>
                             <tr style="text-align:left; color:#aaa; font-size:11px; border-bottom:1px solid #eee;">
-                                <th style="padding:4px 8px; font-weight:normal;">DATE</th>
-                                <th style="padding:4px 8px; font-weight:normal;">INTERVAL</th>
-                                <th style="padding:4px 8px; font-weight:normal;">NO.</th>
+                                <th style="padding:4px 8px; font-weight:normal;">${setaeI18n.date || 'DATE'}</th>
+                                <th style="padding:4px 8px; font-weight:normal;">${setaeI18n.interval || 'INTERVAL'}</th>
+                                <th style="padding:4px 8px; font-weight:normal;">${setaeI18n.no || 'NO.'}</th>
                             </tr>
                         </thead>
                         <tbody>

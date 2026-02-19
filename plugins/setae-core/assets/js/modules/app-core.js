@@ -46,14 +46,17 @@ var SetaeCore = (function ($) {
     function formatRelativeDate(dateStr) {
         if (!dateStr) return '-';
         const date = new Date(dateStr);
-        const diff = new Date() - date;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        if (isNaN(date.getTime())) return '-';
 
-        if (days === 0) return 'Today';
-        if (days === 1) return 'Yesterday';
-        if (days < 30) return `${days}d ago`;
-        if (days < 365) return `${Math.floor(days / 30)}m ago`;
-        return `${Math.floor(days / 365)}y ago`;
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) return setaeI18n.today || '今日';
+        if (diffDays === 1) return setaeI18n.yesterday || '昨日';
+        if (diffDays < 30) return diffDays + '日前';
+        if (diffDays < 365) return Math.floor(diffDays / 30) + 'ヶ月前';
+        return Math.floor(diffDays / 365) + '年前';
     }
 
     // Public Interface

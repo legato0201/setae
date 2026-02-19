@@ -97,6 +97,32 @@ class Setae_Dashboard
             'terms_conditions' => esc_html__('Terms & Conditions', 'setae-core'),
             'bl_terms_helper' => esc_html__('Provide clear details about the loan agreement to avoid disputes.', 'setae-core'),
             'save_settings' => esc_html__('Save Settings', 'setae-core'),
+
+            // ▼ Overview & History
+            'last_molt' => esc_html__('Last Molt', 'setae-core'),
+            'last_feed' => esc_html__('Last Feed', 'setae-core'),
+            'last_repot' => esc_html__('Last Repot', 'setae-core'),
+            'last_water' => esc_html__('Last Water', 'setae-core'),
+            'cycle' => esc_html__('Cycle', 'setae-core'),
+            'status_normal' => esc_html__('Normal', 'setae-core'),
+            'status_fasting' => esc_html__('Fasting', 'setae-core'),
+            'status_pre_molt' => esc_html__('Pre-molt', 'setae-core'),
+            'status_post_molt' => esc_html__('Post-molt', 'setae-core'),
+            'growth_log' => esc_html__('Growth Log', 'setae-core'),
+            'prey_preferences' => esc_html__('Prey Preferences', 'setae-core'),
+            'molt_history' => esc_html__('MOLT HISTORY', 'setae-core'),
+            'repot_history' => esc_html__('REPOT HISTORY', 'setae-core'),
+            'date' => esc_html__('DATE', 'setae-core'),
+            'interval' => esc_html__('INTERVAL', 'setae-core'),
+            'no' => esc_html__('NO.', 'setae-core'),
+
+            // ▼ List Labels
+            'feed' => esc_html__('給餌', 'setae-core'),
+            'molt' => esc_html__('脱皮', 'setae-core'),
+            'water' => esc_html__('水やり', 'setae-core'),
+            'repot' => esc_html__('植え替え', 'setae-core'),
+            'shed' => esc_html__('脱皮', 'setae-core'),
+            'unidentified' => esc_html__('未同定', 'setae-core'),
         );
         wp_localize_script('setae-app-core', 'setaeI18n', $setae_i18n);
 
