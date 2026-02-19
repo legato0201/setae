@@ -1272,3 +1272,172 @@
         font-size: 18px;
     }
 }
+
+/* =========================================
+   Breeding Loan Settings Panel (iOS Pro Style)
+   ========================================= */
+
+/* --- パネル全体のコンテナ --- */
+.bl-settings-panel {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    margin: 15px 5px 30px 5px;
+    overflow: hidden;
+}
+
+/* モバイル表示時の余白調整 */
+@media (max-width: 768px) {
+    .bl-settings-panel {
+        padding: 20px 16px;
+    }
+}
+
+/* --- ヘッダー領域 --- */
+.bl-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.bl-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(52, 152, 219, 0.1); /* Primaryカラーの淡いブルー */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.bl-icon-box img.emoji {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.bl-header-text h4 {
+    margin: 0 0 4px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--setae-text, #1c1c1e);
+    letter-spacing: -0.01em;
+}
+
+.bl-header-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #8e8e93;
+    line-height: 1.4;
+}
+
+/* --- フォーム領域 --- */
+.bl-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bl-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bl-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--setae-primary, #2c3e50);
+}
+
+/* 入力フィールドの共通スタイル */
+.setae-input-wrapper select,
+.setae-input-wrapper textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: #f9f9fa; /* うっすらグレー */
+    font-size: 15px;
+    color: var(--setae-text, #1c1c1e);
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* セレクトボックスのカスタマイズ（ネイティブの矢印を消してモダンなSVGに変更） */
+.setae-input-wrapper select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* フォーカス時のハイライト（Apple風のフォーカスリング） */
+.setae-input-wrapper select:focus,
+.setae-input-wrapper textarea:focus {
+    outline: none;
+    border-color: var(--setae-primary, #2c3e50);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+}
+
+/* テキストエリアの調整 */
+.setae-input-wrapper textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.setae-input-wrapper textarea::placeholder {
+    color: #c7c7cc;
+}
+
+/* ヘルパーテキスト */
+.input-helper {
+    font-size: 12px;
+    color: #8e8e93;
+    margin-top: 2px;
+    display: block;
+}
+
+/* --- フッター＆保存ボタン --- */
+.bl-panel-footer {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#btn-save-bl-settings {
+    width: 100%;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: #ffffff;
+    border: none;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+#btn-save-bl-settings:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+}
+
+#btn-save-bl-settings:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.2);
+}
