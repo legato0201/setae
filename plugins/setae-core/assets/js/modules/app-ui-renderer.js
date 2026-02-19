@@ -1,6 +1,5 @@
 var SetaeUI = (function ($) {
     'use strict';
-    const { __, sprintf } = wp.i18n;
 
     // ==========================================
     // Initialization & Event Listeners
@@ -70,14 +69,14 @@ var SetaeUI = (function ($) {
 
             // ボタンを無効化して二重送信防止
             const $btn = $(this).find('button[type="submit"]');
-            $btn.prop('disabled', true).text(__('送信中...', 'setae-core'));
+            $btn.prop('disabled', true).text(setaeI18n.sending);
 
             SetaeAPI.createTopic({ title: title, content: content, type: type }, function (res) {
-                $btn.prop('disabled', false).text(__('投稿する', 'setae-core'));
+                $btn.prop('disabled', false).text(setaeI18n.post);
                 $('#modal-new-topic').fadeOut();
                 $('#topic-title').val('');
                 $('#topic-content').val('');
-                SetaeCore.showToast(__('トピックを作成しました', 'setae-core'), 'success');
+                SetaeCore.showToast(setaeI18n.topic_created, 'success');
                 loadTopics(); // リスト再読み込み（デフォルトはAll）
             });
         });
@@ -134,11 +133,13 @@ var SetaeUI = (function ($) {
             const current = $(this).val().length;
             const $counter = $('#comment-char-count');
 
+            $counter.text(`${current} / ${max}`);
+
             if (current > max) {
-                $counter.text(`${current} / ${max}`).css('color', '#e74c3c'); // 赤色
+                $counter.css('color', '#e74c3c'); // 赤色
                 $('.btn-send-comment').prop('disabled', true);
             } else {
-                $counter.text(`${current} / ${max}`).css('color', '#aaa');
+                $counter.css('color', '#aaa');
                 $('.btn-send-comment').prop('disabled', false);
             }
         });
@@ -147,7 +148,7 @@ var SetaeUI = (function ($) {
         $(document).on('click', '#btn-load-more-comments', function () {
             const nextPage = $(this).data('next');
             // ボタンをローディング表示に
-            $(this).text(__('読み込み中...', 'setae-core')).prop('disabled', true);
+            $(this).text(setaeI18n.loading).prop('disabled', true);
 
             loadComments(currentTopicId, nextPage);
         });
@@ -168,9 +169,8 @@ var SetaeUI = (function ($) {
             const file = $('#comment-image-input')[0].files[0];
 
             // 文字数チェック
-            // 文字数チェック
             if (content.length > 1000) {
-                SetaeCore.showToast(__('コメントは1000文字以内で入力してください', 'setae-core'), 'error');
+                SetaeCore.showToast(setaeI18n.comment_limit, 'error');
                 return;
             }
 
@@ -198,7 +198,7 @@ var SetaeUI = (function ($) {
                 $btn.prop('disabled', false).html(originalIcon);
 
                 openTopicDetail(topicId); // 再読み込み (これは1ページ目に戻る)
-                SetaeCore.showToast(__('コメントを投稿しました', 'setae-core'), 'success');
+                SetaeCore.showToast(setaeI18n.comment_posted, 'success');
             });
 
             // ★重要: エラー時やタイムアウト時にボタンが戻らないのを防ぐため
@@ -306,9 +306,8 @@ var SetaeUI = (function ($) {
     function openSpeciesDetail(id) {
         $('#section-enc').hide();
         $('#section-enc-detail').show().scrollTop(0);
-        $('#section-enc-detail').show().scrollTop(0);
-        $('#enc-detail-title').text(__('Loading...', 'setae-core'));
-        $('#enc-gallery-grid').html(`<p style="text-align:center;">${__('Loading...', 'setae-core')}</p>`);
+        $('#enc-detail-title').text(setaeI18n.loading);
+        $('#enc-gallery-grid').html(`<p style="text-align:center;">${setaeI18n.loading}</p>`);
 
         SetaeAPI.getSpeciesDetail(id, function (data) {
             const displayName = data.ja_name ? data.ja_name : data.title;
@@ -417,7 +416,7 @@ var SetaeUI = (function ($) {
 
         if (!isLoadMore) {
             currentTopicListPage = 1;
-            $('#setae-topic-list').html(`<p style="text-align:center; padding:20px; color:#999;"><span class="spinner"></span> ${__('読み込み中...', 'setae-core')}</p>`);
+            $('#setae-topic-list').html(`<p style="text-align:center; padding:20px; color:#999;"><span class="spinner"></span> ${setaeI18n.loading}</p>`);
             $('#setae-topic-load-more').hide();
         } else {
             $('#btn-load-more-topics').hide();
@@ -444,7 +443,7 @@ var SetaeUI = (function ($) {
 
             if (!topics || topics.length === 0) {
                 if (!isLoadMore) {
-                    container.html(`<div style="text-align:center; padding:40px; color:#999;">${__('トピックがありません。<br>最初の投稿を作成してみましょう！', 'setae-core')}</div>`);
+                    $('#setae-topic-list').html(`<div style="text-align:center; padding:40px; color:#999;">${setaeI18n.no_topics}</div>`);
                 }
                 $('#setae-topic-load-more').hide();
                 return;
@@ -510,9 +509,7 @@ var SetaeUI = (function ($) {
 
         $('#section-com').hide();
         $('#section-com-detail').show().scrollTop(0);
-        $('#section-com-detail').show().scrollTop(0);
-        $('#topic-detail-content').html(`<p>${__('Loading...', 'setae-core')}</p>`);
-        $('#topic-comments-list').empty();
+        $('#topic-detail-content').html(`<p>${setaeI18n.loading}</p>`);
         $('#topic-comments-list').empty();
         $('#btn-load-more-comments').remove(); // 前のボタンがあれば削除
 

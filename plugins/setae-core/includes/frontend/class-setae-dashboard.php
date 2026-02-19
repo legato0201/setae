@@ -56,17 +56,47 @@ class Setae_Dashboard
             )
         ));
 
+        // ★追加: JS翻訳用のデータを渡す (wp_localize_script)
+        // wp.i18n (JSON) が使えない環境でも確実に翻訳を適用するため
+        $setae_i18n = array(
+            // Generic
+            'loading' => esc_html__('Loading...', 'setae-core'),
+            'sending' => esc_html__('送信中...', 'setae-core'),
+            'post' => esc_html__('投稿する', 'setae-core'),
+            'save' => esc_html__('保存中...', 'setae-core'),
+            'delete' => esc_html__('削除しました', 'setae-core'),
+            'confirm_delete' => esc_html__('本当に削除しますか？', 'setae-core'),
+
+            // Topics & Comments
+            'topic_created' => esc_html__('トピックを作成しました', 'setae-core'),
+            'no_topics' => __('トピックがありません。<br>最初の投稿を作成してみましょう！', 'setae-core'), // HTML含むため esc_html__ は避けるか、JS側で .html() するなら注意
+            'comment_limit' => esc_html__('コメントは1000文字以内で入力してください', 'setae-core'),
+            'comment_posted' => esc_html__('コメントを投稿しました', 'setae-core'),
+
+            // Dates
+            'today' => esc_html__('Today', 'setae-core'),
+            'yesterday' => esc_html__('Yesterday', 'setae-core'),
+            'days_ago' => esc_html__('%d Days ago', 'setae-core'),
+            'months_ago' => esc_html__('%d Months ago', 'setae-core'),
+
+            // Tabs & UI
+            'overview' => esc_html__('Overview', 'setae-core'),
+            'history' => esc_html__('History', 'setae-core'),
+            'settings_bl' => esc_html__('Settings / BL', 'setae-core'),
+            'settings_saved' => esc_html__('Settings saved successfully', 'setae-core'),
+            'spider_deleted' => esc_html__('削除しました', 'setae-core'), // 重複だが明示
+        );
+        wp_localize_script('setae-app-core', 'setaeI18n', $setae_i18n);
+
         // Enqueue API Module (Depends on Core)
         wp_enqueue_script('setae-app-api', SETAE_PLUGIN_URL . 'assets/js/modules/app-api.js', array('jquery', 'setae-app-core'), $this->version, true);
 
         // Enqueue UI Modules (Split Refactoring)
-        $ui_deps = array('jquery', 'setae-app-core', 'setae-app-api', 'wp-i18n');
+        $ui_deps = array('jquery', 'setae-app-core', 'setae-app-api'); // wp-i18n 削除
 
         // 1. Logic Sub-Modules
         wp_enqueue_script('setae-ui-actions', SETAE_PLUGIN_URL . 'assets/js/modules/ui/actions.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-detail', SETAE_PLUGIN_URL . 'assets/js/modules/ui/detail.js', $ui_deps, $this->version, true);
-        wp_set_script_translations('setae-ui-detail', 'setae-core', SETAE_PLUGIN_DIR . 'languages');
-
         wp_enqueue_script('setae-ui-list', SETAE_PLUGIN_URL . 'assets/js/modules/ui/list.js', array_merge($ui_deps, array('setae-ui-detail')), $this->version, true);
         wp_enqueue_script('setae-ui-log-modal', SETAE_PLUGIN_URL . 'assets/js/modules/ui/log-modal.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-profile', SETAE_PLUGIN_URL . 'assets/js/modules/ui/profile.js', $ui_deps, $this->version, true); // New Profile Module
@@ -82,8 +112,7 @@ class Setae_Dashboard
 
         // 2. Controller (Renderer)
         // 2. Controller (Renderer)
-        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile', 'setae-ui-breeding-loan', 'wp-i18n'), $this->version, true);
-        wp_set_script_translations('setae-app-ui-renderer', 'setae-core', SETAE_PLUGIN_DIR . 'languages');
+        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile', 'setae-ui-breeding-loan'), $this->version, true);
 
         // 3. Main App Entry
         wp_enqueue_script('setae-app-main', SETAE_PLUGIN_URL . 'assets/js/setae-app.js', array('setae-app-ui-renderer', 'setae-ui-desktop'), $this->version, true);

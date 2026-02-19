@@ -15,6 +15,14 @@
     pointer-events: none;
 }
 
+@media (max-width: 767px) {
+    #setae-toast-container {
+        /* PWA: Respect Top Safe Area */
+        top: env(safe-area-inset-top);
+        padding-top: 16px;
+    }
+}
+
 .setae-toast {
     pointer-events: auto;
     min-width: 280px;
