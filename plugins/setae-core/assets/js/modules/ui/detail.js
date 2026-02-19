@@ -140,56 +140,9 @@ var SetaeUIDetail = (function ($) {
         `;
         $('#section-my-detail').append(fabBtnHtml);
 
-        // CSS injection handled by initial check in previous implementations or can be added here if missing
-        if ($('#setae-fab-style').length === 0) {
-            // ... (Same CSS as before, simplified for brevity as it's likely already injected or can be added to views.css)
-            // For now assuming existing CSS injection in head works or is present. 
-            // actually I should include the CSS injection block if I removed it from the main flow.
-            // To be safe, let's keep the CSS injection block.
-            $('head').append(`
-                <style id="setae-fab-style">
-                    .setae-fab-record {
-                        position: fixed; bottom: 30px; right: 30px; z-index: 9999;
-                        background: linear-gradient(135deg, #2ecc71, #27ae60);
-                        color: #fff; border: none; border-radius: 50px; padding: 12px 24px;
-                        font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
-                        cursor: pointer; display: flex; align-items: center; gap: 8px;
-                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                    }
-                    .setae-fab-record:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 25px rgba(46, 204, 113, 0.6); }
-                    .setae-fab-record:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 10px rgba(46, 204, 113, 0.3); }
-                    .setae-fab-record .fab-icon { font-size: 18px; line-height: 1; font-weight: 800; }
-                    @media (max-width: 480px) {
-                        .setae-fab-record { bottom: 90px; right: 20px; padding: 12px 20px; font-size: 14px; }
-                    }
-                </style>
-            `);
-        }
+
     }
 
-    // デザイン用CSSの注入関数
-    function injectTimelineStyles() {
-        if ($('#setae-timeline-css').length > 0) return;
-        const css = `
-            .setae-timeline-wrapper { position: relative; padding-left: 30px; margin-left: 10px; border-left: 2px solid #e0e0e0; padding-bottom: 20px; }
-            .timeline-date-label { position: relative; left: -39px; margin: 24px 0 12px 0; clear: both; }
-            .timeline-date-label span { background: #95a5a6; color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-            .timeline-date-label.is-today span { background: #2ecc71; }
-            .timeline-item { position: relative; margin-bottom: 12px; }
-            .timeline-node { position: absolute; left: -39px; top: 12px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.15); z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 10px; background: #95a5a6; color: white; }
-            .timeline-node img.emoji { width: 12px !important; height: 12px !important; margin: 0 !important; vertical-align: middle !important; }
-            .timeline-card { background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; transition: transform 0.2s; }
-            .timeline-card:active { transform: scale(0.98); }
-            .timeline-note-content { font-size: 13px; color: #444; margin-top: 8px; padding: 8px 10px; background-color: #fff9c4; border-left: 3px solid #f1c40f; border-radius: 0 4px 4px 0; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-            .node-feed { background: #2ecc71; }
-            .node-refused { background: #e74c3c; }
-            .node-molt { background: #9b59b6; }
-            .node-growth { background: #3498db; }
-            .node-note { background: #f1c40f; }
-            .node-default { background: #95a5a6; }
-        `;
-        $('head').append(`<style id="setae-timeline-css">${css}</style>`);
-    }
 
     function getRelativeDateLabel(dateStr) {
         const d = new Date(dateStr);
@@ -209,7 +162,6 @@ var SetaeUIDetail = (function ($) {
     }
 
     function loadSpiderLogs(id) {
-        injectTimelineStyles();
 
         $.ajax({
             url: SetaeCore.state.apiRoot + '/spider/' + id + '/events',

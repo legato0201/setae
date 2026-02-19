@@ -503,54 +503,218 @@
     cursor: pointer;
 }
 
-/* Timeline Design (Transforming the Log List) */
-.setae-timeline-section h4 {
-    margin-left: 10px;
-    margin-bottom: 15px;
-    color: #555;
+/* =========================================
+   Timeline / History Tab (Modern iOS Style)
+   ========================================= */
+.setae-timeline-section {
+    padding: 0 5px;
 }
 
+/* --- タイムライン全体のコンテナと縦線 --- */
 .timeline-container {
     position: relative;
-    padding-left: 20px;
-    /* Line space */
+    padding-left: 40px;
+    /* ノード（アイコン）用の左スペース */
+    margin-top: 10px;
 }
 
+/* ベースの縦ライン */
 .timeline-container::before {
     content: '';
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 9px;
+    left: 15px;
+    /* ノードの中心を通るように配置 */
     width: 2px;
-    background: #e0e0e0;
+    background: rgba(0, 0, 0, 0.06);
+    /* 繊細なグレーライン */
+    border-radius: 2px;
 }
 
-/* 既存のログカード(.setae-card)をタイムライン風に上書き */
-#setae-log-list .setae-card {
+/* --- 日付見出し (カプセル型ラベル) --- */
+.timeline-date-label {
     position: relative;
-    margin-bottom: 20px !important;
-    margin-left: 15px !important;
-    border: none !important;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border-radius: 12px;
-    padding: 15px !important;
+    /* 左のパディングを相殺してラインの上にラベルを配置 */
+    margin: 24px 0 16px -40px;
+    padding-left: 40px;
+    z-index: 2;
 }
 
-/* Timeline Dot */
-#setae-log-list .setae-card::before {
-    content: '';
+.timeline-date-label span {
+    display: inline-block;
+    background: rgba(240, 240, 245, 0.8);
+    /* 半透明のグレー */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #8e8e93;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* "Today" のラベルはアクセントカラーで強調 */
+.timeline-date-label.is-today span {
+    background: rgba(44, 62, 80, 0.08);
+    /* var(--setae-primary) の薄い版 */
+    color: var(--setae-primary);
+    border-color: rgba(44, 62, 80, 0.15);
+}
+
+/* --- タイムラインの各項目 --- */
+.timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+/* --- アイコンノード (丸いバッジ) --- */
+.timeline-node {
     position: absolute;
-    top: 20px;
-    left: -21px;
-    width: 10px;
-    height: 10px;
-    background: #fff;
-    border: 3px solid var(--setae-primary, #2ecc71);
-    /* 色はJSで制御されるボーダー色に合わせたいが一旦固定 */
+    left: -40px;
+    top: 0;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 2;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.timeline-node img.emoji {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* ホバー時のノードアニメーション */
+.timeline-item:hover .timeline-node {
+    transform: scale(1.15);
+}
+
+/* ノードの種類ごとの色分け (ボーダーで表現) */
+.timeline-node.node-feed {
+    border-color: #2ecc71;
+}
+
+.timeline-node.node-refused {
+    border-color: #ff3b30;
+    color: #ff3b30;
+    font-weight: bold;
+    font-size: 12px;
+    background: #fff5f5;
+}
+
+.timeline-node.node-molt {
+    border-color: #af52de;
+}
+
+/* iOS Purple */
+.timeline-node.node-growth {
+    border-color: #34c759;
+}
+
+/* --- 履歴カード本体 --- */
+.timeline-content {
+    position: relative;
+}
+
+.timeline-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* カードホバー時の浮き上がり効果 */
+.timeline-item:hover .timeline-card {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ノート・テキストのスタイル微調整 */
+.timeline-note-content {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #3a3a3c;
+    line-height: 1.5;
+    padding-top: 10px;
+    border-top: 1px dashed #eee;
+}
+
+/* 画像が含まれる場合の角丸処理 */
+.timeline-card img:not(.emoji) {
+    border-radius: 12px !important;
+}
+
+/* --- 削除ボタンのプロフェッショナル化 --- */
+.btn-delete-log {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 10;
+    background: #ffffff;
+    color: #ff3b30;
+    /* iOSの破壊的アクションレッド */
+    border: 1px solid rgba(255, 59, 48, 0.2);
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.15);
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+
+    /* 初期状態は非表示＆少し小さく */
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* ホバーでフワッと出現 */
+.timeline-content:hover .btn-delete-log {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.btn-delete-log:hover {
+    background: #ff3b30;
+    color: #ffffff;
+}
+
+.btn-delete-log svg {
+    pointer-events: none;
+    width: 14px;
+    height: 14px;
+}
+
+/* --- モバイル対応 --- */
+@media (max-width: 768px) {
+    .btn-delete-log {
+        /* スマホではホバーがないため、カードの内側に薄く常時表示 */
+        opacity: 0.7;
+        transform: scale(1);
+        top: 10px;
+        right: 10px;
+        box-shadow: none;
+        border: none;
+        background: rgba(255, 59, 48, 0.08);
+        color: #ff3b30;
+    }
 }
 
 /* --- Timeline Animation & Loading --- */
@@ -707,58 +871,7 @@
     }
 }
 
-/* タイムラインアイテムを相対配置に（ボタンの基準点） */
-.timeline-content {
-    position: relative;
-    /* 既存スタイルがあれば維持 */
-}
 
-/* 削除ボタンのスタイル */
-.btn-delete-log {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    z-index: 10;
-    background: #fff;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-
-
-    color: #999;
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    opacity: 0;
-    /* デフォルトで非表示（PC） */
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-}
-
-/* タイムラインアイテムにホバーした時に表示 */
-.timeline-content:hover .btn-delete-log {
-    opacity: 1;
-}
-
-.btn-delete-log:hover {
-    color: #fff;
-    background: #e74c3c;
-    border-color: #e74c3c;
-}
-
-.btn-delete-log svg {
-    pointer-events: none;
-}
-
-/* モバイル対応：タッチデバイスではホバーがないため常時表示（ただし薄く） */
-@media (max-width: 768px) {
-    .btn-delete-log {
-        opacity: 0.6;
-    }
-}
 
 /* --- Deck Pills (Filter Buttons) --- */
 .deck-pill {
