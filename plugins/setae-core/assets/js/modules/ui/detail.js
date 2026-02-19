@@ -145,19 +145,16 @@ var SetaeUIDetail = (function ($) {
 
 
     function getRelativeDateLabel(dateStr) {
+        if (!dateStr) return '-';
         const d = new Date(dateStr);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const target = new Date(d);
-        target.setHours(0, 0, 0, 0);
+        const now = new Date();
+        const diffTime = Math.abs(now - d);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        const diffTime = today - target;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) return setaeI18n.today;
-        if (diffDays === 1) return setaeI18n.yesterday;
-        if (diffDays <= 30) return setaeI18n.days_ago.replace('%d', diffDays);
-        if (diffDays <= 365) return setaeI18n.months_ago.replace('%d', Math.floor(diffDays / 30));
+        if (diffDays === 0) return setaeI18n.today || '今日';
+        if (diffDays === 1) return setaeI18n.yesterday || '昨日';
+        if (diffDays <= 30) return diffDays + (setaeI18n.days_ago || '日前');
+        if (diffDays <= 365) return Math.floor(diffDays / 30) + (setaeI18n.months_ago || 'ヶ月前');
         return d.getFullYear().toString();
     }
 

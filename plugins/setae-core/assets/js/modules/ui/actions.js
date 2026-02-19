@@ -97,10 +97,10 @@ var SetaeUIActions = (function ($) {
         $pipeline.find(`.pipeline-step[data-step="${nextStatus}"]`).addClass('active');
 
         if (action === 'feed') {
-            $row.find('.meta-label:contains("Feed")').next('.meta-value').text('Just now').removeClass('alert-text');
+            $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Feed|給餌)$/); }).next('.meta-value').text('たった今').removeClass('alert-text');
         }
         if (action === 'molt') {
-            $row.find('.meta-label:contains("Molt")').next('.meta-value').text('Just now');
+            $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Molt|脱皮)$/); }).next('.meta-value').text('たった今');
         }
 
         if (toastMsg) SetaeCore.showToast(toastMsg, toastType);
@@ -219,14 +219,14 @@ var SetaeUIActions = (function ($) {
             }
 
             if (actionType === 'feed' || actionType === 'ate') {
-                const $label = $row.find('.meta-label').filter(function () { return jQuery(this).text().trim() === 'Feed'; });
+                const $label = $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Feed|給餌)$/); });
                 if ($label.length) {
-                    $label.next('.meta-value').text('Today').css('color', '').css('background-color', '#e8f5e9').animate({ backgroundColor: 'transparent' }, 1000);
+                    $label.next('.meta-value').text('今日').css('color', '').removeClass('alert-text').css('background-color', '#e8f5e9').animate({ backgroundColor: 'transparent' }, 1000);
                 }
             } else if (actionType === 'molt') {
-                const $label = $row.find('.meta-label').filter(function () { return jQuery(this).text().trim() === 'Molt'; });
+                const $label = $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Molt|脱皮)$/); });
                 if ($label.length) {
-                    $label.next('.meta-value').text('Today').css('background-color', '#f3e5f5').animate({ backgroundColor: 'transparent' }, 1000);
+                    $label.next('.meta-value').text('今日').css('background-color', '#f3e5f5').animate({ backgroundColor: 'transparent' }, 1000);
                 }
             }
 
