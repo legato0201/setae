@@ -48,9 +48,8 @@ var SetaeUI = (function ($) {
 
         // カテゴリフィルタボタン
         $(document).on('click', '.com-filter-btn', function () {
-            $('.com-filter-btn').removeClass('active').css({ background: '#fff', color: '#666' });
-            $(this).addClass('active').css({ background: '#eee', color: '#333' }); // 簡易スタイル適用
-
+            $('.com-filter-btn').removeClass('active')
+            $(this).addClass('active')
             const type = $(this).data('type');
             loadTopics(type);
         });

@@ -269,12 +269,21 @@ $temperaments = get_terms(array(
             </div>
             <div class="setae-form-group">
                 <label>性別 (Gender)</label>
-                <div class="setae-radio-group">
-                    <label style="margin-right:10px;"><input type="radio" name="edit_spider_gender" value="unknown"
-                            checked> 不明</label>
-                    <label style="margin-right:10px;"><input type="radio" name="edit_spider_gender" value="female"> ♀
-                        メス</label>
-                    <label><input type="radio" name="edit_spider_gender" value="male"> ♂ オス</label>
+                <div class="setae-radio-group segment-control">
+                    <label class="segment-item">
+                        <input type="radio" name="edit_spider_gender" value="unknown" checked="">
+                        <span>不明</span>
+                    </label>
+                    <label class="segment-item">
+                        <input type="radio" name="edit_spider_gender" value="female">
+                        <span><img draggable="false" role="img" class="emoji" alt="♀"
+                                src="https://s.w.org/images/core/emoji/17.0.2/svg/2640.svg"> メス</span>
+                    </label>
+                    <label class="segment-item">
+                        <input type="radio" name="edit_spider_gender" value="male">
+                        <span><img draggable="false" role="img" class="emoji" alt="♂"
+                                src="https://s.w.org/images/core/emoji/17.0.2/svg/2642.svg"> オス</span>
+                    </label>
                 </div>
             </div>
             <div class="setae-form-group">

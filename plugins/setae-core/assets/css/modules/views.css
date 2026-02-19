@@ -1187,6 +1187,7 @@
     font-weight: 600;
     letter-spacing: 0.5px;
 }
+
 /* =========================================
    Floating Action Button (Record Log)
    ========================================= */
@@ -1196,30 +1197,31 @@
     bottom: calc(30px + env(safe-area-inset-bottom, 0px));
     right: 20px;
     z-index: 1000;
-    
+
     /* Flexboxでアイコンとテキストを美しく整列 */
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     padding: 14px 24px 14px 20px;
-    
+
     /* サイトに合わせたモダンなグラデーション（Primary〜Accent Blue系） */
     background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
     color: #ffffff;
     border: none;
-    border-radius: 30px; /* スタイリッシュなカプセル型 */
-    
+    border-radius: 30px;
+    /* スタイリッシュなカプセル型 */
+
     /* 立体感を出すための多重シャドウ（外側のぼかし＋内側のハイライト） */
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4), 
-                inset 0 1px 1px rgba(255, 255, 255, 0.2);
-    
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+
     font-family: var(--setae-font-main, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.5px;
     cursor: pointer;
-    
+
     /* スムーズなアニメーション遷移 */
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     -webkit-tap-highlight-color: transparent;
@@ -1227,9 +1229,10 @@
 
 /* --- ホバー時のアクション (PC) --- */
 .setae-fab-record:hover {
-    transform: translateY(-4px); /* 少し浮き上がる */
-    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.5), 
-                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    transform: translateY(-4px);
+    /* 少し浮き上がる */
+    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.5),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 /* ホバー時に「＋」アイコンが軽く回転する遊び心 */
@@ -1239,7 +1242,8 @@
 
 /* --- クリック（タップ）時のアクション --- */
 .setae-fab-record:active {
-    transform: translateY(0) scale(0.96); /* 押し込む感覚 */
+    transform: translateY(0) scale(0.96);
+    /* 押し込む感覚 */
     box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
 }
 
@@ -1267,7 +1271,7 @@
         padding: 12px 20px 12px 16px;
         font-size: 15px;
     }
-    
+
     .setae-fab-record .fab-icon {
         font-size: 18px;
     }
@@ -1309,7 +1313,8 @@
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    background: rgba(52, 152, 219, 0.1); /* Primaryカラーの淡いブルー */
+    background: rgba(52, 152, 219, 0.1);
+    /* Primaryカラーの淡いブルー */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1363,7 +1368,8 @@
     padding: 14px 16px;
     border-radius: 12px;
     border: 1px solid rgba(0, 0, 0, 0.1);
-    background: #f9f9fa; /* うっすらグレー */
+    background: #f9f9fa;
+    /* うっすらグレー */
     font-size: 15px;
     color: var(--setae-text, #1c1c1e);
     font-family: inherit;
@@ -1441,3 +1447,316 @@
     transform: translateY(0) scale(0.98);
     box-shadow: 0 2px 8px rgba(44, 62, 80, 0.2);
 }
+
+/* =========================================
+   Segmented Control (Gender / Radio Group)
+   iOS Pro Style
+   ========================================= */
+
+/* --- コンテナ（背景のグレー部分） --- */
+.setae-radio-group.segment-control {
+    display: flex;
+    background: rgba(118, 118, 128, 0.12);
+    /* iOS標準のセグメント背景に近い色 */
+    border-radius: 12px;
+    padding: 4px;
+    gap: 2px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* --- 個別のアイテム（ラベル） --- */
+.segment-item {
+    flex: 1;
+    /* 幅を均等に分割 */
+    position: relative;
+    cursor: pointer;
+    margin: 0 !important;
+    /* 念のためインラインの余白をリセット */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ネイティブのラジオボタンを完全に隠す */
+.segment-item input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* --- ボタン内のテキスト・アイコン領域 --- */
+.segment-item span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #8e8e93;
+    /* 非選択時は落ち着いたグレー */
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.segment-item img.emoji {
+    width: 16px !important;
+    height: 16px !important;
+    transition: transform 0.2s ease;
+}
+
+/* --- 選択時（Checked）のスタイル --- */
+.segment-item input[type="radio"]:checked+span {
+    background: #ffffff;
+    /* 選択された項目は白背景に */
+    color: var(--setae-text, #1c1c1e);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* 選択時のアイコンを少しだけ強調 */
+.segment-item input[type="radio"]:checked+span img.emoji {
+    transform: scale(1.1);
+}
+
+/* --- 性別ごとのアクセントカラー（オプション・任意） --- */
+.segment-item input[type="radio"][value="female"]:checked+span {
+    color: #ff2d55;
+    /* メス：iOS Pink */
+}
+
+.segment-item input[type="radio"][value="male"]:checked+span {
+    color: #007aff;
+    /* オス：iOS Blue */
+}
+
+/* =========================================
+   Chat Footer (Long Text Input / iOS Pro)
+   ========================================= */
+
+/* --- チャット下部のコンテナ（グラスモーフィズム） --- */
+.chat-footer {
+    display: flex;
+    align-items: flex-end;
+    /* ボタンをテキストエリアの下端に揃える */
+    gap: 12px;
+    padding: 16px 20px;
+
+    /* 背景を透かしてアプリ風の高級感を演出 */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+    position: relative;
+    z-index: 100;
+
+    /* PWA・スマホのホームバー（Safe Area）への対応 */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 768px) {
+    .chat-footer {
+        padding: 12px 16px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* --- 長文用テキストエリア --- */
+#chat-input {
+    flex-grow: 1;
+    min-height: 85px;
+    /* 長文前提：初期状態で3〜4行分確保 */
+    max-height: 250px;
+    /* 高くなりすぎないよう制限 */
+    resize: vertical;
+    /* PCユーザーが手動で高さを広げられるようにする */
+
+    padding: 14px 16px;
+    background: #f4f4f5;
+    /* 未フォーカス時は少し沈んだグレー */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 18px;
+    /* 角丸で柔らかな印象 */
+
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--setae-text, #1c1c1e);
+
+    /* わずかなインナーシャドウで入力欄らしさを出す */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+#chat-input::placeholder {
+    color: #8e8e93;
+}
+
+/* フォーカス（入力中）のハイライト */
+#chat-input:focus {
+    outline: none;
+    background: #ffffff;
+    /* 白く浮き上がる */
+    border-color: var(--setae-primary, #2c3e50);
+    box-shadow: 0 8px 25px rgba(44, 62, 80, 0.1);
+    /* 外側に柔らかい影 */
+    transform: translateY(-1px);
+}
+
+/* --- 送信ボタン --- */
+.btn-send {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+
+    /* サイトに合わせたブルー系グラデーション */
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    color: #ffffff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 0;
+
+    /* テキストエリアのpaddingと視覚的なベースラインを揃える微調整 */
+    margin-bottom: 4px;
+}
+
+.btn-send:hover {
+    transform: translateY(-3px) rotate(-10deg);
+    /* 遊び心のある紙飛行機の動き */
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.btn-send:active {
+    transform: translateY(0) scale(0.95);
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+/* SVGアイコン（紙飛行機）のサイズと線の調整 */
+.btn-send svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* アイコンの形状（紙飛行機）の重心ズレを補正して真ん中に見せる */
+    margin-left: -2px;
+    margin-top: 1px;
+}
+
+/* =========================================
+   Community Header & Filter Pills (iOS Pro Style)
+   ========================================= */
+
+/* --- ヘッダー領域 --- */
+.setae-header-bar {
+    margin-bottom: 20px;
+    padding: 0 10px;
+    /* カードなどのコンテンツと左端を揃える */
+}
+
+.setae-header-bar h3 {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--setae-text, #1c1c1e);
+    letter-spacing: -0.02em;
+}
+
+/* --- ピルナビゲーション（横スクロールコンテナ） --- */
+.setae-pill-nav {
+    display: flex;
+    gap: 10px;
+
+    padding-bottom: 12px;
+    /* 影が途切れないように下部の余白を確保 */
+
+    /* スムーズな横スクロール（iOS対応） */
+    -webkit-overflow-scrolling: touch;
+
+    /* スクロールバーを隠してアプリライクに */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.setae-pill-nav::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari */
+}
+
+/* --- フィルターボタン（ピル） --- */
+.com-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    color: #8e8e93;
+    /* 非アクティブ時は落ち着いたグレー */
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ホバー時の微細な変化 */
+.com-filter-btn:hover {
+    background: #f9f9fa;
+    border-color: rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+/* アクティブ（選択中）のスタイル */
+.com-filter-btn.active {
+    background: var(--setae-primary, #2c3e50);
+    color: #ffffff;
+    border-color: var(--setae-primary, #2c3e50);
+    /* ふんわりとしたブルーの影で浮き上がらせる */
+    box-shadow: 0 6px 15px rgba(44, 62, 80, 0.25);
+    transform: translateY(-2px);
+}
+
+/* アクティブ時クリックの押し込み */
+.com-filter-btn:active {
+    transform: translateY(0) scale(0.96);
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.2);
+}
+
+/* --- カラードット（カテゴリバッジ） --- */
+.badge-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* iOS標準アプリに近い、発色の良いカラーパレット */
+.badge-question {
+    background-color: #ff3b30;
+}
+
+/* Red */
+.badge-chat {
+    background-color: #34c759;
+}
+
+/* Green */
+.badge-breeding {
+    background-color: #af52de;
+}
+
+/* Purple */
