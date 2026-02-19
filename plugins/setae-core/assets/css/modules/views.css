@@ -1187,3 +1187,88 @@
     font-weight: 600;
     letter-spacing: 0.5px;
 }
+/* =========================================
+   Floating Action Button (Record Log)
+   ========================================= */
+.setae-fab-record {
+    position: fixed;
+    /* デフォルトの配置（スマホ用のボトムナビゲーションがある場合はメディアクエリで上書きされます） */
+    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+    right: 20px;
+    z-index: 1000;
+    
+    /* Flexboxでアイコンとテキストを美しく整列 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px 14px 20px;
+    
+    /* サイトに合わせたモダンなグラデーション（Primary〜Accent Blue系） */
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 30px; /* スタイリッシュなカプセル型 */
+    
+    /* 立体感を出すための多重シャドウ（外側のぼかし＋内側のハイライト） */
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4), 
+                inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    
+    font-family: var(--setae-font-main, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    
+    /* スムーズなアニメーション遷移 */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- ホバー時のアクション (PC) --- */
+.setae-fab-record:hover {
+    transform: translateY(-4px); /* 少し浮き上がる */
+    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.5), 
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* ホバー時に「＋」アイコンが軽く回転する遊び心 */
+.setae-fab-record:hover .fab-icon {
+    transform: rotate(90deg);
+}
+
+/* --- クリック（タップ）時のアクション --- */
+.setae-fab-record:active {
+    transform: translateY(0) scale(0.96); /* 押し込む感覚 */
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* --- 子要素の調整 --- */
+.setae-fab-record .fab-icon {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 800;
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.setae-fab-record .fab-text {
+    line-height: 1;
+}
+
+/* =========================================
+   モバイル向け調整 (PWA ボトムナビ考慮)
+   ========================================= */
+@media (max-width: 768px) {
+    .setae-fab-record {
+        /* スマホ版ではボトムナビゲーションの上に配置されるよう高さを確保 */
+        bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
+        /* 少しコンパクトに調整 */
+        padding: 12px 20px 12px 16px;
+        font-size: 15px;
+    }
+    
+    .setae-fab-record .fab-icon {
+        font-size: 18px;
+    }
+}
