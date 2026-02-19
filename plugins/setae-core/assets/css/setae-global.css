@@ -160,3 +160,31 @@ li {
     height: 24px;
     fill: currentColor;
 }
+
+/* =========================================
+   PWA/Mobile FAB Position Fix
+   ========================================= */
+@media (max-width: 767px) {
+
+    /* 1. トピック作成ボタン (+ボタン) */
+    #btn-create-topic {
+        /*
+           80px (元の位置) + env(safe-area-inset-bottom) (iPhoneのホームバー領域)
+           !important はインラインスタイルを上書きするために必須です
+        */
+        bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+
+        /* 右側の余白も少し調整（任意） */
+        right: 20px !important;
+    }
+
+    /* 2. ログ記録ボタン (FAB Record) */
+    #btn-add-log,
+    .setae-fab-record {
+        /* 同様に高さを確保 */
+        bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+
+        /* z-indexを確保してボトムバーより手前に表示 */
+        z-index: 1100 !important;
+    }
+}

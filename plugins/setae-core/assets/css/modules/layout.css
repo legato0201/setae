@@ -248,7 +248,7 @@
         /* 全幅ではなく、左右マージンに合わせる */
 
         /* PWA: Respect Bottom Safe Area */
-        bottom: calc(16px + env(safe-area-inset-bottom));
+        bottom: calc(8px + env(safe-area-inset-bottom));
 
         /* ホームバーの上に浮かせる */
         z-index: 2000;
@@ -461,7 +461,7 @@
 /* Mobile: Toolbar covers header at the very top */
 @media (max-width: 767px) {
     .setae-toolbar-container {
-        top: 0 !important;
+        top: env(safe-area-inset-top) !important;
         /* Force to very top */
         z-index: 2000 !important;
         /* Cover everything including Header (1000) */
@@ -538,7 +538,7 @@
     /* Mobile: Toolbar covers header at the very top */
     @media (max-width: 767px) {
         .setae-toolbar-container {
-            top: 0 !important;
+            top: env(safe-area-inset-top) !important;
             /* Force to very top */
             z-index: 2000 !important;
             /* Cover everything including Header (1000) */
