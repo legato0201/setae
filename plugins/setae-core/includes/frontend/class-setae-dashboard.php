@@ -60,11 +60,13 @@ class Setae_Dashboard
         wp_enqueue_script('setae-app-api', SETAE_PLUGIN_URL . 'assets/js/modules/app-api.js', array('jquery', 'setae-app-core'), $this->version, true);
 
         // Enqueue UI Modules (Split Refactoring)
-        $ui_deps = array('jquery', 'setae-app-core', 'setae-app-api');
+        $ui_deps = array('jquery', 'setae-app-core', 'setae-app-api', 'wp-i18n');
 
         // 1. Logic Sub-Modules
         wp_enqueue_script('setae-ui-actions', SETAE_PLUGIN_URL . 'assets/js/modules/ui/actions.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-detail', SETAE_PLUGIN_URL . 'assets/js/modules/ui/detail.js', $ui_deps, $this->version, true);
+        wp_set_script_translations('setae-ui-detail', 'setae-core', SETAE_PLUGIN_DIR . 'languages');
+
         wp_enqueue_script('setae-ui-list', SETAE_PLUGIN_URL . 'assets/js/modules/ui/list.js', array_merge($ui_deps, array('setae-ui-detail')), $this->version, true);
         wp_enqueue_script('setae-ui-log-modal', SETAE_PLUGIN_URL . 'assets/js/modules/ui/log-modal.js', $ui_deps, $this->version, true);
         wp_enqueue_script('setae-ui-profile', SETAE_PLUGIN_URL . 'assets/js/modules/ui/profile.js', $ui_deps, $this->version, true); // New Profile Module
@@ -80,7 +82,8 @@ class Setae_Dashboard
 
         // 2. Controller (Renderer)
         // 2. Controller (Renderer)
-        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile', 'setae-ui-breeding-loan'), $this->version, true);
+        wp_enqueue_script('setae-app-ui-renderer', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-renderer.js', array('setae-ui-actions', 'setae-ui-detail', 'setae-ui-list', 'setae-ui-log-modal', 'setae-ui-profile', 'setae-ui-breeding-loan', 'wp-i18n'), $this->version, true);
+        wp_set_script_translations('setae-app-ui-renderer', 'setae-core', SETAE_PLUGIN_DIR . 'languages');
 
         // 3. Main App Entry
         wp_enqueue_script('setae-app-main', SETAE_PLUGIN_URL . 'assets/js/setae-app.js', array('setae-app-ui-renderer', 'setae-ui-desktop'), $this->version, true);

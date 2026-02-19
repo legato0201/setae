@@ -1,5 +1,6 @@
 var SetaeUIDetail = (function ($) {
     'use strict';
+    const { __, sprintf } = wp.i18n;
 
     let currentSpiderId = null;
     let currentClassification = 'tarantula'; // ★追加: 現在の個体の分類を保持
@@ -47,9 +48,9 @@ var SetaeUIDetail = (function ($) {
         // Tab Navigation HTML
         const tabsHtml = `
             <div class="setae-detail-tabs">
-                <button class="tab-btn active" data-target="tab-overview">Overview</button>
-                <button class="tab-btn" data-target="tab-history">History</button>
-                ${(String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') ? '<button class="tab-btn" data-target="tab-settings">Settings / BL</button>' : ''}
+                <button class="tab-btn active" data-target="tab-overview">${__('Overview', 'setae-core')}</button>
+                <button class="tab-btn" data-target="tab-history">${__('History', 'setae-core')}</button>
+                ${(String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') ? `<button class="tab-btn" data-target="tab-settings">${__('Settings / BL', 'setae-core')}</button>` : ''}
             </div>
             
             <div id="tab-overview" class="detail-tab-content active"></div>
@@ -206,10 +207,10 @@ var SetaeUIDetail = (function ($) {
         const diffTime = today - target;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays <= 30) return `${diffDays} Days ago`;
-        if (diffDays <= 365) return `${Math.floor(diffDays / 30)} Months ago`;
+        if (diffDays === 0) return __('Today', 'setae-core');
+        if (diffDays === 1) return __('Yesterday', 'setae-core');
+        if (diffDays <= 30) return sprintf(__('%d Days ago', 'setae-core'), diffDays);
+        if (diffDays <= 365) return sprintf(__('%d Months ago', 'setae-core'), Math.floor(diffDays / 30));
         return d.getFullYear().toString();
     }
 
@@ -271,7 +272,7 @@ var SetaeUIDetail = (function ($) {
                     batch.forEach(e => {
                         const currentDateLabel = getRelativeDateLabel(e.date);
                         if (currentDateLabel !== lastDateLabel) {
-                            const isToday = currentDateLabel === 'Today';
+                            const isToday = currentDateLabel === __('Today', 'setae-core');
                             wrapper.append(`
                                 <div class="timeline-date-label ${isToday ? 'is-today' : ''}">
                                     <span>${currentDateLabel}</span>
@@ -606,13 +607,13 @@ var SetaeUIDetail = (function ($) {
     }
 
     function deleteSpider(id) {
-        if (!confirm('本当に削除しますか？')) return;
+        if (!confirm(__('本当に削除しますか？', 'setae-core'))) return;
         $.ajax({
             url: SetaeCore.state.apiRoot + '/spiders/' + id,
             method: 'DELETE',
             beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', SetaeCore.state.nonce); },
             success: function () {
-                SetaeCore.showToast('削除しました', 'success');
+                SetaeCore.showToast(__('削除しました', 'setae-core'), 'success');
                 $('#modal-edit-spider').fadeOut(); // ★追加: モーダルを閉じる
                 $('#section-my-detail').hide();
                 $('#section-my').fadeIn();
@@ -857,7 +858,7 @@ var SetaeUIDetail = (function ($) {
             const originalText = $btn.text();
 
             // ローディング表示
-            $btn.text('Saving...').prop('disabled', true);
+            $btn.text(__('Saving...', 'setae-core')).prop('disabled', true);
 
             const status = $('#bl-status-select').val();
             const terms = $('#bl-terms-input').val();
@@ -868,7 +869,7 @@ var SetaeUIDetail = (function ($) {
             formData.append('bl_terms', terms);
 
             SetaeAPI.updateSpider(id, formData, function (response) {
-                SetaeCore.showToast('Settings saved successfully', 'success');
+                SetaeCore.showToast(__('Settings saved successfully', 'setae-core'), 'success');
 
                 // ボタンを戻す
                 $btn.text(originalText).prop('disabled', false);

@@ -60,3 +60,150 @@ msgstr "募集中"
 
 msgid "契約管理"
 msgstr "契約管理"
+
+# section-my-detail.php
+msgid "Last Molt"
+msgstr "最終脱皮"
+
+msgid "Last Feed"
+msgstr "最終給餌"
+
+msgid "Cycle"
+msgstr "サイクル"
+
+msgid "Normal"
+msgstr "通常"
+
+msgid "Growth Log"
+msgstr "成長記録"
+
+msgid "Prey Preferences"
+msgstr "餌の好み"
+
+msgid "Log Calendar"
+msgstr "ログカレンダー"
+
+msgid "+ Record"
+msgstr "+ 記録"
+
+msgid "History Timeline"
+msgstr "履歴タイムライン"
+
+# 動的生成要素 (Tabs, Settings, Timeline etc.)
+msgid "Overview"
+msgstr "概要"
+
+msgid "History"
+msgstr "履歴"
+
+msgid "Settings / BL"
+msgstr "設定 / BL"
+
+msgid "Fasting"
+msgstr "絶食期"
+
+msgid "MOLT HISTORY"
+msgstr "脱皮履歴"
+
+msgid "DATE"
+msgstr "日付"
+
+msgid "INTERVAL"
+msgstr "間隔"
+
+msgid "NO."
+msgstr "回数"
+
+msgid "FEED"
+msgstr "給餌"
+
+msgid "Cricket"
+msgstr "コオロギ"
+
+msgid "(REFUSED)"
+msgstr "(拒食)"
+
+msgid "MOLT"
+msgstr "脱皮"
+
+msgid "GROWTH"
+msgstr "成長"
+
+msgid "End of logs"
+msgstr "すべてのログを表示しました"
+
+msgid "Breeding Loan Settings"
+msgstr "ブリーディングローン設定"
+
+msgid "Manage availability and terms for community breeding projects."
+msgstr "コミュニティでの繁殖プロジェクトの参加状況や条件を管理します。"
+
+msgid "Current Status"
+msgstr "現在のステータス"
+
+msgid "Private (Not Listed)"
+msgstr "非公開（リスト非表示）"
+
+msgid "Recruiting (Public)"
+msgstr "募集中（公開）"
+
+msgid "Loaned Out"
+msgstr "貸出中"
+
+msgid "Select \"Recruiting\" to display this spider on the community board."
+msgstr "コミュニティ掲示板に表示するには「募集中」を選択してください。"
+
+msgid "Terms & Conditions"
+msgstr "取引条件"
+
+msgid "Provide clear details about the loan agreement to avoid disputes."
+msgstr "トラブルを避けるため、貸出に関する条件を明確に記載してください。"
+
+msgid "Save Settings"
+msgstr "設定を保存"
+
+# JS Messages
+msgid "送信中..."
+msgstr "送信中..."
+
+msgid "投稿する"
+msgstr "投稿する"
+
+msgid "トピックを作成しました"
+msgstr "トピックを作成しました"
+
+msgid "読み込み中..."
+msgstr "読み込み中..."
+
+msgid "トピックがありません。<br>最初の投稿を作成してみましょう！"
+msgstr "トピックがありません。<br>最初の投稿を作成してみましょう！"
+
+msgid "コメントは1000文字以内で入力してください"
+msgstr "コメントは1000文字以内で入力してください"
+
+msgid "コメントを投稿しました"
+msgstr "コメントを投稿しました"
+
+msgid "Today"
+msgstr "今日"
+
+msgid "Yesterday"
+msgstr "昨日"
+
+msgid "%d Days ago"
+msgstr "%d 日前"
+
+msgid "%d Months ago"
+msgstr "%d ヶ月前"
+
+msgid "本当に削除しますか？"
+msgstr "本当に削除しますか？"
+
+msgid "削除しました"
+msgstr "削除しました"
+
+msgid "Saving..."
+msgstr "保存中..."
+
+msgid "Settings saved successfully"
+msgstr "設定を保存しました"
