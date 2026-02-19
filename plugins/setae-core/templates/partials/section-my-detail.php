@@ -22,58 +22,17 @@
         </div>
     </div>
 
+    <div class="setae-detail-tabs">
+        <button class="tab-btn active"
+            data-target="tab-overview"><?php esc_html_e('Overview', 'setae-core'); ?></button>
+        <button class="tab-btn" data-target="tab-history"><?php esc_html_e('History', 'setae-core'); ?></button>
+        <button class="tab-btn" id="btn-tab-settings" data-target="tab-settings"
+            style="display:none;"><?php esc_html_e('Settings / BL', 'setae-core'); ?></button>
+    </div>
+
     <div class="setae-detail-container">
-
-        <div class="status-grid">
-            <div class="status-item">
-                <span class="status-label"><?php esc_html_e('Last Molt', 'setae-core'); ?></span>
-                <strong id="detail-spider-molt">2026-01-31</strong>
-            </div>
-            <div class="status-item">
-                <span class="status-label"><?php esc_html_e('Last Feed', 'setae-core'); ?></span>
-                <strong id="detail-spider-feed">2026-01-31</strong>
-            </div>
-            <div class="status-item">
-                <span class="status-label"><?php esc_html_e('Cycle', 'setae-core'); ?></span>
-                <strong><?php esc_html_e('Normal', 'setae-core'); ?></strong>
-            </div>
-        </div>
-
-        <div class="setae-grid-dashboard">
-            <div class="setae-card dashboard-card">
-                <h4><?php esc_html_e('Growth Log', 'setae-core'); ?></h4>
-                <div class="chart-container">
-                    <canvas id="growthChart"></canvas>
-                </div>
-            </div>
-            <div class="setae-card dashboard-card">
-                <h4><?php esc_html_e('Prey Preferences', 'setae-core'); ?></h4>
-                <div class="chart-container">
-                    <canvas id="preyChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="setae-card section-calendar">
-            <div class="card-header-flex">
-                <h4><?php esc_html_e('Log Calendar', 'setae-core'); ?></h4>
-                <div class="cal-nav">
-                    <button id="cal-prev">&lt;</button>
-                    <span id="cal-month-label">2026.1</span>
-                    <button id="cal-next">&gt;</button>
-                </div>
-            </div>
-            <div id="setae-calendar" class="setae-calendar-grid">
-            </div>
-            <button id="btn-add-log"
-                class="setae-btn-floating"><?php esc_html_e('+ Record', 'setae-core'); ?></button>
-        </div>
-
-        <div class="setae-timeline-section">
-            <h4><?php esc_html_e('History Timeline', 'setae-core'); ?></h4>
-            <div id="setae-log-list" class="timeline-container">
-            </div>
-            <div id="log-sentinel"></div>
-        </div>
+        <div id="tab-overview" class="detail-tab-content active"></div>
+        <div id="tab-history" class="detail-tab-content" style="display:none;"></div>
+        <div id="tab-settings" class="detail-tab-content" style="display:none;"></div>
     </div>
 </div>

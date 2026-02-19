@@ -7,6 +7,14 @@ var SetaeUIDetail = (function ($) {
     // ==========================================
     // DEEP DETAIL VIEW
     // ==========================================
+
+    // Tab Event Listener (Delegated)
+    $(document).on('click', '.setae-detail-tabs .tab-btn', function () {
+        $('.setae-detail-tabs .tab-btn').removeClass('active');
+        $(this).addClass('active');
+        $('.detail-tab-content').hide();
+        $('#' + $(this).data('target')).fadeIn(200);
+    });
     function loadSpiderDetail(id) {
         currentSpiderId = id;
         $.ajax({
@@ -40,23 +48,17 @@ var SetaeUIDetail = (function ($) {
         $('#detail-spider-species').text(spider.species_name || spider.scientific_name || 'Unknown Species');
         $('#detail-spider-id-badge').text(`#${spider.id}`);
 
-        // --- Tabs Implementation (Fix Step 2) ---
-        const $container = $('.setae-detail-container');
-        $container.empty(); // Clear existing content
+        // --- Tabs Implementation (Refactored for Static HTML) ---
+        // Do not empty container as it holds the static panel structure now.
+        // Just manage visibility of the Settings tab.
 
-        // Tab Navigation HTML
-        const tabsHtml = `
-            <div class="setae-detail-tabs">
-                <button class="tab-btn active" data-target="tab-overview">${setaeI18n.overview}</button>
-                <button class="tab-btn" data-target="tab-history">${setaeI18n.history}</button>
-                ${(String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') ? `<button class="tab-btn" data-target="tab-settings">${setaeI18n.settings_bl}</button>` : ''}
-            </div>
-            
-            <div id="tab-overview" class="detail-tab-content active"></div>
-            <div id="tab-history" class="detail-tab-content" style="display:none;"></div>
-            <div id="tab-settings" class="detail-tab-content" style="display:none;"></div>
-        `;
-        $container.append(tabsHtml);
+        const $settingsBtn = $('#btn-tab-settings');
+        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') {
+            $settingsBtn.show();
+            renderBLSettingsCard(spider, '#tab-settings');
+        } else {
+            $settingsBtn.hide();
+        }
 
         // --- Tab 1: Overview (Status + Charts) ---
         // Helper for cycle color
@@ -102,18 +104,11 @@ var SetaeUIDetail = (function ($) {
         `;
         $('#tab-history').html(historyHtml);
 
-        // --- Tab 3: Settings (BL Settings) ---
-        if (String(spider.owner_id) === String(SetaeCore.state.currentUserId) && currentClassification === 'tarantula') {
-            renderBLSettingsCard(spider, '#tab-settings'); // Pass target selector
-        }
+        // renderBLSettingsCard called above
+
 
         // --- Tab Switch Event ---
-        $('.tab-btn').on('click', function () {
-            $('.tab-btn').removeClass('active');
-            $(this).addClass('active');
-            $('.detail-tab-content').hide();
-            $('#' + $(this).data('target')).fadeIn(200);
-        });
+        // Moved to top-level delegation to prevent multiple bindings
 
         // Load Logs (Render to #setae-log-list)
         loadSpiderLogs(spider.id);

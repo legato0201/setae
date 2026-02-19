@@ -228,12 +228,78 @@
 .setae-spider-hero {
     position: relative;
     height: 280px;
-    margin: 5px 5px 20px 5px;
-    /* 親のpaddingを打ち消す */
-    border-radius: 24px 24px 24px 24px;
+    /* 下マージンを0にし、タブと連結 */
+    margin: 5px 5px 0 5px;
+    /* 上部のみ角丸にする */
+    border-radius: 24px 24px 0 0;
     overflow: hidden;
     color: #fff;
+    /* 影は削除し、下のタブ要素に任せて一体感を持たせる */
+    box-shadow: none;
+}
+
+
+/* =========================================
+   Detail Tabs (ヒーローと一体化したグラスモーフィズム)
+   ========================================= */
+.setae-detail-tabs {
+    display: flex;
+    /* グラスモーフィズムによる洗練された背景 */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    /* ヒーローコンテナの幅と合わせ、下にマージンを取る */
+    margin: 0 5px 20px 5px;
+    /* 下部のみ角丸にする（ヒーローと合わせて一つのカードに見せる） */
+    border-radius: 0 0 24px 24px;
+
+    /* 全体を包み込むような柔らかい影 */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+    /* 上部に極細のハイライトラインを入れて質感を向上 */
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+    border-bottom: none;
+    z-index: 10;
+    padding: 0 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 16px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #8e8e93;
+    /* 非アクティブ時はiOSライクなグレー */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* アクティブタブのスタイル（グローバルのPrimaryカラーを使用） */
+.tab-btn.active {
+    color: var(--setae-primary);
+}
+
+/* アクティブ時のインジケーター（下線）をモダンな角丸バーに変更 */
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: var(--setae-primary);
+    border-radius: 3px 3px 0 0;
+    transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.tab-btn.active::after {
+    width: 50%;
+    /* ボタン幅の50%の長さでスタイリッシュに */
 }
 
 /* 3. 背景画像の補正：オーバーレイ（Scrim）を強化 */
@@ -831,10 +897,7 @@
     transition: all 0.2s;
 }
 
-.tab-btn.active {
-    color: #2ecc71;
-    border-bottom-color: #2ecc71;
-}
+
 
 .detail-tab-content {
     animation: fadeIn 0.3s ease;
