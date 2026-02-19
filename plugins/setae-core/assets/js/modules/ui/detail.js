@@ -813,36 +813,36 @@ var SetaeUIDetail = (function ($) {
             <div class="bl-panel-header">
                 <div class="bl-icon-box">🤝</div>
                 <div class="bl-header-text">
-                    <h4>Breeding Loan Settings</h4>
-                    <p>Manage availability and terms for community breeding projects.</p>
+                    <h4>${setaeI18n.bl_settings_title}</h4>
+                    <p>${setaeI18n.bl_settings_desc}</p>
                 </div>
             </div>
 
             <div class="bl-panel-body">
                 <div class="bl-form-group">
-                    <label for="bl-status-select">Current Status</label>
+                    <label for="bl-status-select">${setaeI18n.current_status}</label>
                     <div class="setae-input-wrapper">
                         <select id="bl-status-select">
-                            <option value="none" ${blStatus === 'none' ? 'selected' : ''}>⛔ Private (Not Listed)</option>
-                            <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>✅ Recruiting (Public)</option>
-                            <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>⏳ Loaned Out</option>
+                            <option value="none" ${blStatus === 'none' ? 'selected' : ''}>⛔ ${setaeI18n.status_private}</option>
+                            <option value="recruiting" ${blStatus === 'recruiting' ? 'selected' : ''}>✅ ${setaeI18n.status_recruiting}</option>
+                            <option value="loaned" ${blStatus === 'loaned' ? 'selected' : ''}>⏳ ${setaeI18n.status_loaned}</option>
                         </select>
                     </div>
-                    <span class="input-helper">Select "Recruiting" to display this spider on the community board.</span>
+                    <span class="input-helper">${setaeI18n.bl_status_helper}</span>
                 </div>
 
                 <div class="bl-form-group">
-                    <label for="bl-terms-input">Terms & Conditions</label>
+                    <label for="bl-terms-input">${setaeI18n.terms_conditions}</label>
                     <div class="setae-input-wrapper">
                         <textarea id="bl-terms-input" placeholder="例: 子返し50%、発送は翌日着地域のみ、死着保証なし等">${blTerms}</textarea>
                     </div>
-                    <span class="input-helper">Provide clear details about the loan agreement to avoid disputes.</span>
+                    <span class="input-helper">${setaeI18n.bl_terms_helper}</span>
                 </div>
             </div>
 
             <div class="bl-panel-footer">
                 <button id="btn-save-bl-settings" class="setae-btn-sm btn-primary btn-wide" data-id="${spider.id}">
-                    Save Settings
+                    ${setaeI18n.save_settings}
                 </button>
             </div>
         </div>

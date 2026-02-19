@@ -85,6 +85,18 @@ class Setae_Dashboard
             'settings_bl' => esc_html__('Settings / BL', 'setae-core'),
             'settings_saved' => esc_html__('Settings saved successfully', 'setae-core'),
             'spider_deleted' => esc_html__('削除しました', 'setae-core'), // 重複だが明示
+
+            // ▼ ここから下を新規追加 (BL Settings)
+            'bl_settings_title' => esc_html__('Breeding Loan Settings', 'setae-core'),
+            'bl_settings_desc' => esc_html__('Manage availability and terms for community breeding projects.', 'setae-core'),
+            'current_status' => esc_html__('Current Status', 'setae-core'),
+            'status_private' => esc_html__('Private (Not Listed)', 'setae-core'),
+            'status_recruiting' => esc_html__('Recruiting (Public)', 'setae-core'),
+            'status_loaned' => esc_html__('Loaned Out', 'setae-core'),
+            'bl_status_helper' => esc_html__('Select "Recruiting" to display this spider on the community board.', 'setae-core'),
+            'terms_conditions' => esc_html__('Terms & Conditions', 'setae-core'),
+            'bl_terms_helper' => esc_html__('Provide clear details about the loan agreement to avoid disputes.', 'setae-core'),
+            'save_settings' => esc_html__('Save Settings', 'setae-core'),
         );
         wp_localize_script('setae-app-core', 'setaeI18n', $setae_i18n);
 
