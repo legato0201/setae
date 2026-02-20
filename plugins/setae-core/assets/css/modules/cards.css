@@ -508,7 +508,6 @@
 }
 
 /* =========================================
-/* =========================================
    List Row Hover Effect (PC Only / iOS Pro Style)
    ========================================= */
 
@@ -519,46 +518,12 @@
     border-radius: 16px;
 }
 
-/* カード本体（実体）に影と移動のトランジションをまとめる */
-.setae-list-content {
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-        box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-        border-color 0.3s ease,
-        background-color 0.3s ease !important;
-}
 
-/* スワイプ背景のチラつき防止用トランジション */
-.setae-swipe-bg {
-    transition: opacity 0.2s ease;
-}
 
 /* --- PCサイズ（幅769px以上）かつ、ホバー可能なデバイスのみ適用 --- */
-@media (min-width: 769px) and (hover: hover) {
-
-    /* ホバー時：透明な親ではなく「中の白いカード」だけを浮かす */
-    .setae-spider-list-row:hover .setae-list-content {
-        transform: translateY(-4px) !important;
-
-        /* Apple風の広がりを持った多重シャドウ */
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08),
-            0 4px 10px rgba(0, 0, 0, 0.03) !important;
-
-        border-color: rgba(0, 0, 0, 0.08);
-        z-index: 10;
-    }
-
-    /* 安全対策：ホバー中は裏側のスワイプ背景を完全に透明にして隠す */
-    .setae-spider-list-row:hover .setae-swipe-bg {
-        opacity: 0 !important;
-        visibility: hidden !important;
-    }
-}
-
-/* --- クリック（押し込み）時のマイクロインタラクション --- */
 @media (min-width: 769px) {
-    .setae-spider-list-row:active .setae-list-content {
-        /* クリックすると少し沈み込む */
-        transform: translateY(-1px) scale(0.99) !important;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+
+    .setae-list-content {
+        transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 }
