@@ -458,24 +458,44 @@ var SetaeUI = (function ($) {
                     case 'breeding': typeLabel = 'ブリード'; typeColor = '#9b59b6'; break;
                 }
 
+                // アバターまたはイニシャルの表示ロジック
+                // APIレスポンスに avatar_url / initial 等が含まれていない場合はフォールバック
+                let topicListAvatarHtml = '';
+                if (topic.author_avatar) {
+                    topicListAvatarHtml = `<img src="${topic.author_avatar}" alt="${topic.author_name}" class="avatar-img">`;
+                } else if (topic.author_initial) {
+                    topicListAvatarHtml = `<span class="avatar-initial">${topic.author_initial}</span>`;
+                } else {
+                    // 古いデータ形式等へのフォールバック（最初の1文字を取る）
+                    let initial = topic.author_name ? topic.author_name.substring(0, 1) : '?';
+                    topicListAvatarHtml = `<span class="avatar-initial">${initial}</span>`;
+                }
+
                 const html = `
-                    <div class="setae-topic-row setae-card" data-id="${topic.id}" style="cursor:pointer; margin-bottom:10px; padding:15px; position:relative;">
-                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
-                            <span style="background:${typeColor}; color:#fff; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:bold;">${typeLabel}</span>
-                            <span style="font-size:11px; color:#999;">${SetaeCore.formatRelativeDate(topic.date)}</span>
+                    <div class="setae-topic-row setae-card" data-id="${topic.id}">
+                        <div class="setae-topic-row-header">
+                            <span class="setae-topic-badge badge-${topic.type}">${typeLabel}</span>
+                            <span class="setae-topic-time">${SetaeCore.formatRelativeDate(topic.date)}</span>
                         </div>
                         
-                        <div style="font-weight:bold; font-size:16px; margin-bottom:8px; line-height:1.4;">${topic.title}</div>
+                        <h3 class="setae-topic-title">${topic.title}</h3>
                         
-                        <div style="font-size:13px; color:#666; margin-bottom:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        <div class="setae-topic-excerpt">
                             ${topic.excerpt}
                         </div>
 
-                        <div style="font-size:12px; color:#888; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5; padding-top:8px;">
-                            <span>👤 ${topic.author_name || 'Anonymous'}</span>
-                            <span style="display:flex; align-items:center;">
-                                💬 <span style="margin-left:4px; font-weight:bold; color:${topic.comment_count > 0 ? '#333' : '#ccc'}">${topic.comment_count}</span>
-                            </span>
+                        <div class="setae-topic-row-footer">
+                            <div class="setae-topic-author">
+                                <div class="setae-user-avatar avatar-sm">
+                                    ${topicListAvatarHtml}
+                                </div>
+                                <span class="setae-author-name">${topic.author_name || 'Anonymous'}</span>
+                            </div>
+
+                            <div class="setae-topic-comments-count">
+                                <img draggable="false" role="img" class="emoji" alt="💬" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4ac.svg">
+                                <span class="count">${topic.comment_count}</span>
+                            </div>
                         </div>
                     </div>
                 `;

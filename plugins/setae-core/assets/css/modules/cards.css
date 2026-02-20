@@ -662,3 +662,111 @@
     color: #1c1c1e;
     font-weight: 600;
 }
+
+/* =========================================
+   Topic List Row (Community)
+   ========================================= */
+.setae-topic-row {
+    cursor: pointer;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s;
+}
+
+.setae-topic-row:active {
+    transform: scale(0.98);
+    background-color: #f9f9f9;
+}
+
+.setae-topic-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.setae-topic-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.setae-topic-badge.badge-question {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+.setae-topic-badge.badge-chat {
+    background-color: #2ecc71;
+    color: #fff;
+}
+
+.setae-topic-badge.badge-breeding {
+    background-color: #9b59b6;
+    color: #fff;
+}
+
+.setae-topic-badge.badge-general {
+    background-color: #95a5a6;
+    color: #fff;
+}
+
+.setae-topic-time {
+    font-size: 11px;
+    color: #8e8e93;
+}
+
+.setae-topic-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1c1c1e;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+
+.setae-topic-excerpt {
+    font-size: 13px;
+    color: #636366;
+    margin-bottom: 12px;
+
+    /* multiline ellipsis for compatibility across browsers if needed, or simple white-space nowrap based on user request */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.setae-topic-row-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding-top: 10px;
+    font-size: 12px;
+}
+
+.setae-topic-author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 一覧用の小さめアバター（詳細画面の .setae-user-avatar を上書き） */
+.setae-user-avatar.avatar-sm {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+}
+
+.setae-topic-comments-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.setae-topic-comments-count .count {
+    font-weight: 700;
+    color: #3a3a3c;
+}
