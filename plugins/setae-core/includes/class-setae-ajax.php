@@ -16,6 +16,9 @@ class Setae_Ajax
         // Encyclopedia AJAX
         add_action('wp_ajax_setae_search_species', array($this, 'search_species'));
         add_action('wp_ajax_nopriv_setae_search_species', array($this, 'search_species'));
+
+        // ▼▼▼ 追加: Best Shot の承認・拒否 AJAXハンドラ ▼▼▼
+        add_action('wp_ajax_setae_handle_best_shot', array($this, 'handle_best_shot'));
     }
 
     /**
@@ -383,5 +386,53 @@ class Setae_Ajax
         }
 
         wp_send_json_success('提案を受け付けました');
+    }
+
+    // ▼▼▼ 追加: Best Shot の承認・拒否処理 ▼▼▼
+    public function handle_best_shot()
+    {
+        check_ajax_referer('setae_best_shot_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('You do not have permission.', 'setae'));
+        }
+
+        $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
+        $log_id = isset($_POST['log_id']) ? intval($_POST['log_id']) : 0;
+        $species_id = isset($_POST['species_id']) ? intval($_POST['species_id']) : 0;
+        $image_id = isset($_POST['image_id']) ? intval($_POST['image_id']) : 0;
+
+        if (!$log_id) {
+            wp_send_json_error(__('Invalid request.', 'setae'));
+        }
+
+        if ($type === 'approve') {
+            if (!$species_id || !$image_id) {
+                wp_send_json_error(__('Required data is missing.', 'setae'));
+            }
+
+            // Species(図鑑)側のギャラリー配列に画像IDを追加
+            $gallery = get_post_meta($species_id, '_setae_species_gallery', true);
+            if (!is_array($gallery)) {
+                $gallery = array();
+            }
+
+            // 重複チェックをして追加
+            if (!in_array($image_id, $gallery)) {
+                $gallery[] = $image_id;
+                update_post_meta($species_id, '_setae_species_gallery', $gallery);
+            }
+
+            // ログのステータスを承認済みに変更
+            update_post_meta($log_id, '_best_shot_status', 'approved');
+            wp_send_json_success(__('Approved.', 'setae'));
+
+        } elseif ($type === 'reject') {
+            // ログのステータスを却下済みに変更
+            update_post_meta($log_id, '_best_shot_status', 'rejected');
+            wp_send_json_success(__('Rejected.', 'setae'));
+        }
+
+        wp_send_json_error(__('Invalid operation.', 'setae'));
     }
 }

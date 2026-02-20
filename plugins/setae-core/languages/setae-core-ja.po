@@ -217,3 +217,66 @@ msgstr "中級"
 
 msgid "advanced"
 msgstr "上級"
+
+msgid "Best Shots Approval"
+msgstr "Best Shots 承認"
+
+msgid "Pending Best Shots Approval"
+msgstr "Best Shots 承認待ち一覧"
+
+msgid "Image"
+msgstr "画像"
+
+msgid "User"
+msgstr "ユーザー"
+
+msgid "Spider"
+msgstr "個体(Spider)"
+
+msgid "Species"
+msgstr "図鑑(Species)"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "There are currently no pending Best Shots."
+msgstr "現在、承認待ちのBest Shotはありません。"
+
+msgid "Approve"
+msgstr "承認"
+
+msgid "Reject"
+msgstr "削除(却下)"
+
+msgid "Are you sure you want to add this image to the species gallery?"
+msgstr "この画像を図鑑のギャラリーに追加しますか？"
+
+msgid "Are you sure you want to reject this request?"
+msgstr "この申請を却下(削除)しますか？"
+
+msgid "Processing..."
+msgstr "処理中..."
+
+msgid "Error: "
+msgstr "エラー: "
+
+msgid "A communication error occurred."
+msgstr "通信エラーが発生しました。"
+
+msgid "You do not have permission."
+msgstr "権限がありません。"
+
+msgid "Invalid request."
+msgstr "不正なリクエストです。"
+
+msgid "Required data is missing."
+msgstr "必要なデータが不足しています。"
+
+msgid "Approved."
+msgstr "承認しました。"
+
+msgid "Rejected."
+msgstr "却下しました。"
+
+msgid "Invalid operation."
+msgstr "無効な操作です。"

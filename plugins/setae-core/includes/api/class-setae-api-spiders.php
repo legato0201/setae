@@ -737,6 +737,8 @@ class Setae_API_Spiders
         $parsed_data = is_string($data_json) ? json_decode($data_json, true) : $data_json;
         if (!empty($parsed_data['is_best_shot'])) {
             update_post_meta($log_id, '_setae_is_best_shot', 1);
+            // 追加時は「承認待ち(pending)」ステータスにする
+            update_post_meta($log_id, '_best_shot_status', 'pending');
 
             /* // Auto-approve for Admin (Demo/Prototype mode)
             if (current_user_can('manage_options') && !empty($image_url) && $species_id) {

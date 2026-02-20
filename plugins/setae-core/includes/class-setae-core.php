@@ -57,6 +57,9 @@ class Setae_Core
          */
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-dashboard.php';
 
+        // ▼▼▼ 追加: Best Shot承認用管理ページのクラスを読み込み ▼▼▼
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-best-shots.php';
+
         $this->loader = new Setae_Loader();
 
     }
@@ -86,6 +89,9 @@ class Setae_Core
     private function define_admin_hooks()
     {
         $plugin_admin = new Setae_Admin_Settings();
+
+        // ▼▼▼ 追加: Best Shot管理ページをインスタンス化 ▼▼▼
+        $admin_best_shots = new Setae_Admin_Best_Shots();
 
         // ▼ 追加: 管理画面アクセス制限のフックを登録
         $this->loader->add_action('admin_init', $this, 'restrict_admin_access');
