@@ -411,26 +411,38 @@ class Setae_Ajax
                 wp_send_json_error(__('Required data is missing.', 'setae'));
             }
 
-            // Species(図鑑)側のギャラリー配列に画像IDを追加
+            // Species(図鑑)側のギャラリー配列を取得
             $gallery = get_post_meta($species_id, '_setae_species_gallery', true);
             if (!is_array($gallery)) {
                 $gallery = array();
             }
 
-            // 重複チェックをして追加
-            if (!in_array($image_id, $gallery)) {
+            // ▼▼▼ 修正: すでにある場合は外し、ない場合は追加する処理 ▼▼▼
+            $index = array_search($image_id, $gallery);
+            $msg = '';
+
+            if ($index !== false) {
+                // 既にギャラリーに存在する場合は外す(削除)
+                unset($gallery[$index]);
+                $gallery = array_values($gallery); // 配列のインデックスを詰める
+                $msg = __('Removed from the gallery because it was already present.', 'setae');
+            } else {
+                // ギャラリーに存在しない場合は追加
                 $gallery[] = $image_id;
-                update_post_meta($species_id, '_setae_species_gallery', $gallery);
+                $msg = __('Approved and added to the gallery.', 'setae');
             }
+
+            update_post_meta($species_id, '_setae_species_gallery', $gallery);
 
             // ログのステータスを承認済みに変更
             update_post_meta($log_id, '_best_shot_status', 'approved');
-            wp_send_json_success(__('Approved.', 'setae'));
+
+            wp_send_json_success($msg);
 
         } elseif ($type === 'reject') {
             // ログのステータスを却下済みに変更
             update_post_meta($log_id, '_best_shot_status', 'rejected');
-            wp_send_json_success(__('Rejected.', 'setae'));
+            wp_send_json_success(__('Request rejected (deleted).', 'setae'));
         }
 
         wp_send_json_error(__('Invalid operation.', 'setae'));

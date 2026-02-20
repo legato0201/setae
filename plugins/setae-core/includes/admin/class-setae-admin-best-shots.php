@@ -54,7 +54,7 @@ class Setae_Admin_Best_Shots
             while ($logs->have_posts()) {
                 $logs->the_post();
                 $log_id = get_the_ID();
-                $spider_id = get_post_meta($log_id, '_setae_spider_id', true);
+                $spider_id = get_post_meta($log_id, '_setae_log_spider_id', true);
                 $species_id = get_post_meta($spider_id, '_setae_species_id', true);
 
                 // ▼ 修正: API側の保存形式に合わせて画像URLを取得し、そこから画像IDを逆算する

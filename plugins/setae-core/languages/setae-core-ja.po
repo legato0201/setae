@@ -280,3 +280,12 @@ msgstr "却下しました。"
 
 msgid "Invalid operation."
 msgstr "無効な操作です。"
+
+msgid "Removed from the gallery because it was already present."
+msgstr "既にギャラリーに存在していたため、ギャラリーから削除しました。"
+
+msgid "Approved and added to the gallery."
+msgstr "承認し、図鑑のギャラリーに追加しました。"
+
+msgid "Request rejected (deleted)."
+msgstr "申請を却下(削除)しました。"
