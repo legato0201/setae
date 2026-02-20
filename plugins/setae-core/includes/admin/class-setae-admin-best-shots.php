@@ -98,8 +98,9 @@ class Setae_Admin_Best_Shots
     public function add_admin_scripts()
     {
         $screen = get_current_screen();
-        if (!$screen || $screen->id !== 'setae_settings_page_setae_best_shots')
+        if (!$screen || strpos($screen->id, 'setae_best_shots') === false) {
             return;
+        }
         ?>
         <script>
             jQuery(document).ready(function ($) {
@@ -112,7 +113,7 @@ class Setae_Admin_Best_Shots
 
                     var confirmMsgApprove = '<?php echo esc_js(__("Are you sure you want to add this image to the species gallery?", "setae")); ?>';
                     var confirmMsgReject = '<?php echo esc_js(__("Are you sure you want to reject this request?", "setae")); ?>';
-                    
+
                     if (!confirm(actionType === 'approve' ? confirmMsgApprove : confirmMsgReject)) return;
 
                     btn.prop('disabled', true).text('<?php echo esc_js(__("Processing...", "setae")); ?>');
