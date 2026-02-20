@@ -526,11 +526,13 @@ var SetaeUI = (function ($) {
 
                 // 本文描画
                 $('#topic-detail-content').html(`
-                    <div class="setae-card" style="margin-bottom:20px; padding:15px; background:#fff;">
-                        <div style="font-size:12px; color:#666; margin-bottom:10px;">
-                            👤 ${data.author_name} / 📅 ${data.date}
+                    <div class="setae-card setae-topic-detail-card">
+                        <div class="setae-topic-meta">
+                            <img draggable="false" role="img" class="emoji" alt="👤" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f464.svg"> ${data.author_name} <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4c5.svg"> ${data.date}
                         </div>
-                        <div style="line-height:1.6; white-space:pre-wrap;">${data.content}</div>
+                        <div class="setae-topic-body">
+                            <p>${data.content}</p>
+                        </div>
                     </div>
                 `);
 

@@ -570,3 +570,60 @@
 .setae-comment-body p {
     margin: 0;
 }
+
+/* =========================================
+   Topic Detail (iOS Card Style)
+   ========================================= */
+/* 既存の .setae-card をベースにしつつ、詳細画面用の微調整 */
+.setae-topic-detail-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    padding: 20px;
+    /* 詳細画面の本文は少し余白を広めに */
+}
+
+/* 投稿者・日時などのメタ情報 */
+.setae-topic-meta {
+    font-size: 12px;
+    color: #8e8e93;
+    /* System Gray */
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* 区切り文字の微調整 */
+.setae-topic-meta .meta-divider {
+    color: #d1d1d6;
+    margin: 0 2px;
+}
+
+/* WordPressの絵文字アイコンのサイズ調整 */
+.setae-topic-meta .emoji {
+    width: 14px !important;
+    height: 14px !important;
+    vertical-align: -0.1em !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 本文エリア */
+.setae-topic-body {
+    font-size: 15px;
+    /* コメントよりわずかに大きくして読みやすさを確保 */
+    color: #1c1c1e;
+    /* System Black */
+    line-height: 1.6;
+    white-space: pre-wrap;
+    /* 改行を反映 */
+}
+
+.setae-topic-body p {
+    margin: 0 0 12px 0;
+}
+
+.setae-topic-body p:last-child {
+    margin-bottom: 0;
+}
