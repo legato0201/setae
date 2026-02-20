@@ -199,3 +199,12 @@ msgstr "%d 分前"
 
 msgid "%d hours ago"
 msgstr "%d 時間前"
+
+msgid "Size"
+msgstr "サイズ"
+
+msgid "Level"
+msgstr "レベル"
+
+msgid "No Image"
+msgstr "画像なし"

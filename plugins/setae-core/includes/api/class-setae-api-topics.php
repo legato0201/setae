@@ -92,12 +92,24 @@ class Setae_API_Topics
 
                 $topic_type = get_post_meta($id, 'setae_topic_type', true) ?: 'general';
 
+                // ▼ 追加：投稿者情報の取得とアバターの処理
+                $author_id = get_the_author_meta('ID');
+                $author_name = get_the_author();
+
+                $author_avatar = get_avatar_url($author_id);
+                if ($author_avatar && strpos($author_avatar, 'mystery') !== false) {
+                    $author_avatar = '';
+                }
+                // ▲ 追加ここまで
+
                 $data[] = array(
                     'id' => $id,
                     'title' => get_the_title(),
                     'date' => get_the_modified_date('Y-m-d H:i:s'), // 更新日時を返す
                     'excerpt' => $excerpt,
-                    'author_name' => get_the_author(),
+                    'author_name' => $author_name,
+                    'author_avatar' => $author_avatar, // ▼ 追加
+                    'author_initial' => mb_substr($author_name, 0, 1, 'UTF-8'), // ▼ 追加
                     'comment_count' => get_comments_number(),
                     'type' => $topic_type, // カテゴリ
                     'link' => get_permalink(),

@@ -17,7 +17,7 @@ if (!$title_ja) {
 
 // 画像
 $thumb_id = get_post_thumbnail_id($id);
-$img_html = '<div class="no-image">No Image</div>';
+$img_html = '<div class="no-image">' . esc_html__('No Image', 'setae-core') . '</div>';
 if ($thumb_id) {
     $img_html = wp_get_attachment_image($thumb_id, 'medium', false, array('loading' => 'lazy'));
 }
@@ -31,7 +31,7 @@ $level = get_post_meta($id, '_setae_difficulty', true);
 $keeping_count = get_post_meta($id, 'keeping_count', true);
 $badges = '';
 if ($keeping_count) {
-    $badges .= '<span class="badge" style="background:#ffcc00; color:#000;">🔥 ' . esc_html($keeping_count) . ' Keeping</span>';
+    $badges .= '<span class="badge" style="background:#ffcc00; color:#000;">🔥 ' . esc_html($keeping_count) . ' ' . esc_html__('Keeping', 'setae-core') . '</span>';
 }
 // タクソノミーバッジ（例：樹上性）
 $styles = get_the_terms($id, 'setae_lifestyle');
@@ -57,12 +57,12 @@ if (!empty($styles) && !is_wp_error($styles)) {
                 <p class="sci-name"><?php echo esc_html($title_en); ?></p>
             </div>
             <div class="species-specs">
-                <div class="spec-item"><span class="spec-label">Size</span><span
+                <div class="spec-item"><span class="spec-label"><?php esc_html_e('Size', 'setae-core'); ?></span><span
                         class="spec-value"><?php echo esc_html($size ? $size . 'cm' : '-'); ?></span></div>
-                <div class="spec-item"><span class="spec-label">Temp</span><span
+                <div class="spec-item"><span class="spec-label"><?php esc_html_e('Temp', 'setae-core'); ?></span><span
                         class="spec-value"><?php echo esc_html($temp ? $temp : '-'); ?></span></div>
                 <div class="spec-item difficulty-<?php echo esc_attr($level); ?>">
-                    <span class="spec-label">Level</span>
+                    <span class="spec-label"><?php esc_html_e('Level', 'setae-core'); ?></span>
                     <span class="spec-value"><?php echo esc_html($level ? $level : '-'); ?></span>
                 </div>
             </div>
