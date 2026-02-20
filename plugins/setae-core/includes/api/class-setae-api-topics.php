@@ -184,9 +184,17 @@ class Setae_API_Topics
             // ★追加: 画像URLを取得
             $image_url = get_comment_meta($c->comment_ID, 'setae_comment_image_url', true);
 
+            $c_author_id = $c->user_id;
+            $c_avatar = $c_author_id ? get_avatar_url($c_author_id) : get_avatar_url($c->comment_author_email);
+            if ($c_avatar && strpos($c_avatar, 'mystery') !== false) {
+                $c_avatar = '';
+            }
+
             $comments_data[] = array(
                 'id' => $c->comment_ID,
                 'author_name' => $c->comment_author,
+                'author_avatar' => $c_avatar,
+                'author_initial' => mb_substr($c->comment_author, 0, 1, 'UTF-8'),
                 'date' => $c->comment_date,
                 'content' => wpautop($c->comment_content),
                 'image' => $image_url, // ★追加: レスポンスに含める
@@ -195,12 +203,21 @@ class Setae_API_Topics
 
         $type = get_post_meta($post->ID, 'setae_topic_type', true) ?: 'general';
 
+        $author_id = $post->post_author;
+        $author_name = get_the_author_meta('display_name', $author_id);
+        $author_avatar = get_avatar_url($author_id);
+        if ($author_avatar && strpos($author_avatar, 'mystery') !== false) {
+            $author_avatar = '';
+        }
+
         $data = array(
             'id' => $post->ID,
             'title' => $post->post_title,
             'content' => wpautop($post->post_content),
             'date' => $post->post_date,
-            'author_name' => get_the_author_meta('display_name', $post->post_author),
+            'author_name' => $author_name,
+            'author_avatar' => $author_avatar,
+            'author_initial' => mb_substr($author_name, 0, 1, 'UTF-8'),
             'type' => $type,
             'comments' => $comments_data,
             'has_next' => $has_next, // ▼ 追加: 次ページフラグ

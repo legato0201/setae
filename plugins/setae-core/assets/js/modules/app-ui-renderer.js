@@ -524,11 +524,20 @@ var SetaeUI = (function ($) {
                 $('#detail-header-title').text(data.title);
                 $('#comment-post-id').val(data.id);
 
+                // アバターまたはイニシャルの表示ロジック
+                let topicAvatarHtml = data.author_avatar ?
+                    `<img src="${data.author_avatar}" alt="${data.author_name}" class="avatar-img">` :
+                    `<span class="avatar-initial">${data.author_initial}</span>`;
+
                 // 本文描画
                 $('#topic-detail-content').html(`
                     <div class="setae-card setae-topic-detail-card">
                         <div class="setae-topic-meta">
-                            <img draggable="false" role="img" class="emoji" alt="👤" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f464.svg"> ${data.author_name} <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4c5.svg"> ${data.date}
+                            <div class="setae-user-avatar">
+                                ${topicAvatarHtml}
+                            </div>
+                            <span class="setae-author-name">${data.author_name}</span>
+                            <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4c5.svg"> ${data.date}
                         </div>
                         <div class="setae-topic-body">
                             <p>${data.content}</p>
@@ -562,10 +571,18 @@ var SetaeUI = (function ($) {
                         imageHtml = `<div style="margin-top:5px;"><img src="${comment.image}" style="max-width:100px; max-height:100px; border-radius:4px; cursor:pointer;" onclick="window.open(this.src, '_blank')"></div>`;
                     }
 
+                    let cAvatarHtml = comment.author_avatar ?
+                        `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="avatar-img">` :
+                        `<span class="avatar-initial">${comment.author_initial}</span>`;
+
                     commentsContainer.append(`
                         <div class="setae-comment-row">
                             <div class="setae-comment-meta">
-                                <strong>${comment.author_name}</strong> - ${SetaeCore.formatRelativeDate(comment.date)}
+                                <div class="setae-user-avatar">
+                                    ${cAvatarHtml}
+                                </div>
+                                <span class="setae-author-name">${comment.author_name}</span>
+                                <span class="meta-divider">-</span> ${SetaeCore.formatRelativeDate(comment.date)}
                             </div>
                             <div class="setae-comment-body">
                                 ${comment.content}
