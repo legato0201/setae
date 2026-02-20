@@ -31,7 +31,8 @@ class Setae_Admin_Best_Shots
             'posts_per_page' => -1,
             'meta_query' => array(
                 array(
-                    'key' => '_is_best_shot',
+                    // ▼ 修正: API側で保存しているキー名（_setae_is_best_shot）に合わせる
+                    'key' => '_setae_is_best_shot',
                     'value' => 1,
                 ),
                 array(
@@ -56,12 +57,13 @@ class Setae_Admin_Best_Shots
                 $spider_id = get_post_meta($log_id, '_setae_spider_id', true);
                 $species_id = get_post_meta($spider_id, '_setae_species_id', true);
 
-                // サムネイル画像を取得（実装に合わせてメタキーを変更してください）
-                $image_id = get_post_thumbnail_id($log_id);
-                if (!$image_id) {
-                    $image_id = get_post_meta($log_id, '_setae_image_id', true);
+                // ▼ 修正: API側の保存形式に合わせて画像URLを取得し、そこから画像IDを逆算する
+                $image_url = get_post_meta($log_id, '_setae_log_image', true);
+                $image_id = 0;
+                if ($image_url) {
+                    // WordPressの機能を使って、画像URLからアタッチメントIDを取得
+                    $image_id = attachment_url_to_postid($image_url);
                 }
-                $image_url = wp_get_attachment_image_url($image_id, 'thumbnail');
 
                 $user_info = get_userdata(get_post_field('post_author', $log_id));
                 $username = $user_info ? $user_info->display_name : 'Unknown';
@@ -69,7 +71,7 @@ class Setae_Admin_Best_Shots
                 echo '<tr id="best-shot-row-' . esc_attr($log_id) . '">';
                 echo '<td>';
                 if ($image_url) {
-                    echo '<a href="' . esc_url(wp_get_attachment_url($image_id)) . '" target="_blank"><img src="' . esc_url($image_url) . '" width="80" style="object-fit:cover; border-radius:4px;"></a>';
+                    echo '<a href="' . esc_url($image_url) . '" target="_blank"><img src="' . esc_url($image_url) . '" width="80" style="object-fit:cover; border-radius:4px;"></a>';
                 } else {
                     echo 'No Image';
                 }
