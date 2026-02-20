@@ -13,7 +13,7 @@
         </button>
         <h4 style="margin:0; flex-grow:1; text-align:center; font-size:16px; font-weight:bold; color:#333;"
             id="enc-detail-title">
-            Loading...
+            <?php esc_html_e('Loading...', 'setae-core'); ?>
         </h4>
 
         <button id="btn-open-edit-modal" class="setae-icon-btn" type="button" aria-label="Edit Suggestion"
@@ -29,9 +29,9 @@
         <img id="enc-detail-image" src="" style="width:100%; height:200px; object-fit:cover; display:block;">
         <div style="padding:15px;">
             <span id="enc-detail-genus"
-                style="display:block; font-style:italic; color:#888; font-size:12px; margin-bottom:4px;">Genus</span>
+                style="display:block; font-style:italic; color:#888; font-size:12px; margin-bottom:4px;"><?php esc_html_e('Genus', 'setae-core'); ?></span>
             <div id="enc-detail-common-name" style="font-size:12px; color:#555; font-weight:bold;"></div>
-            <h3 id="enc-detail-name" style="margin:0;">Species Title</h3>
+            <h3 id="enc-detail-name" style="margin:0;"><?php esc_html_e('Species Title', 'setae-core'); ?></h3>
 
             <!-- Temperament List (Chips) -->
             <div id="enc-detail-temperament-list" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px;">
@@ -48,28 +48,33 @@
 
     <!-- Stats/Info -->
     <div class="setae-card" style="margin-bottom:15px;">
-        <h4 style="margin-top:0;">Species Info</h4>
+        <h4 style="margin-top:0;"><?php esc_html_e('Species Info', 'setae-core'); ?></h4>
         <p id="enc-detail-description" style="font-size:13px; line-height:1.6; color:#555;">...</p>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
             <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span style="display:block; font-size:10px; color:#888;">Lifestyle</span>
+                <span
+                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Lifestyle', 'setae-core'); ?></span>
                 <strong id="enc-detail-lifestyle">-</strong>
             </div>
             <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span style="display:block; font-size:10px; color:#888;">Temp</span>
+                <span
+                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Temp', 'setae-core'); ?></span>
                 <strong id="enc-detail-temp">-</strong>
             </div>
             <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span style="display:block; font-size:10px; color:#888;">Humidity</span>
+                <span
+                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Humidity', 'setae-core'); ?></span>
                 <strong id="enc-detail-humidity">-</strong>
             </div>
             <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span style="display:block; font-size:10px; color:#888;">Lifespan</span>
+                <span
+                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Lifespan', 'setae-core'); ?></span>
                 <strong id="enc-detail-lifespan">-</strong>
             </div>
             <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span style="display:block; font-size:10px; color:#888;">Max Legspan</span>
+                <span
+                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Max Legspan', 'setae-core'); ?></span>
                 <strong id="enc-detail-size">-</strong>
             </div>
         </div>
@@ -77,11 +82,11 @@
 
     <!-- Community Gallery -->
     <div class="setae-card">
-        <h4 style="margin-top:0;">Best Shots Gallery</h4>
+        <h4 style="margin-top:0;"><?php esc_html_e('Best Shots Gallery', 'setae-core'); ?></h4>
         <div id="enc-gallery-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;">
             <!-- JS Populated -->
         </div>
-        <p id="enc-gallery-empty" style="text-align:center; color:#ccc; font-size:12px; display:none;">No
-            community photos yet.</p>
+        <p id="enc-gallery-empty" style="text-align:center; color:#ccc; font-size:12px; display:none;">
+            <?php esc_html_e('No community photos yet.', 'setae-core'); ?></p>
     </div>
 </div>
