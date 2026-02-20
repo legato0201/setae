@@ -63,7 +63,7 @@ if (!empty($styles) && !is_wp_error($styles)) {
                         class="spec-value"><?php echo esc_html($temp ? $temp : '-'); ?></span></div>
                 <div class="spec-item difficulty-<?php echo esc_attr($level); ?>">
                     <span class="spec-label"><?php esc_html_e('Level', 'setae-core'); ?></span>
-                    <span class="spec-value"><?php echo esc_html($level ? $level : '-'); ?></span>
+                    <span class="spec-value"><?php echo $level ? esc_html__($level, 'setae-core') : '-'; ?></span>
                 </div>
             </div>
         </div>

@@ -208,3 +208,12 @@ msgstr "レベル"
 
 msgid "No Image"
 msgstr "画像なし"
+
+msgid "beginner"
+msgstr "初級"
+
+msgid "intermediate"
+msgstr "中級"
+
+msgid "advanced"
+msgstr "上級"
