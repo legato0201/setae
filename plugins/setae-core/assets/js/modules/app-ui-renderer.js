@@ -561,11 +561,11 @@ var SetaeUI = (function ($) {
                     }
 
                     commentsContainer.append(`
-                        <div class="setae-comment-row" style="border-bottom:1px solid #eee; padding:10px 0;">
-                            <div style="font-size:12px; color:#888; margin-bottom:4px;">
+                        <div class="setae-comment-row">
+                            <div class="setae-comment-meta">
                                 <strong>${comment.author_name}</strong> - ${SetaeCore.formatRelativeDate(comment.date)}
                             </div>
-                            <div style="font-size:14px;">
+                            <div class="setae-comment-body">
                                 ${comment.content}
                                 ${imageHtml}
                             </div>
