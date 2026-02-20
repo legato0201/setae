@@ -239,8 +239,6 @@ msgstr "図鑑(Species)"
 msgid "Actions"
 msgstr "操作"
 
-msgid "There are currently no pending Best Shots."
-msgstr "現在、承認待ちのBest Shotはありません。"
 
 msgid "Approve"
 msgstr "承認"
@@ -289,3 +287,24 @@ msgstr "承認し、図鑑のギャラリーに追加しました。"
 
 msgid "Request rejected (deleted)."
 msgstr "申請を却下(削除)しました。"
+
+msgid "Revoked and removed from the gallery."
+msgstr "取り消し、図鑑のギャラリーから外しました。"
+
+msgid "Best Shots Management"
+msgstr "Best Shots 管理"
+
+msgid "Approved Best Shots (In Gallery)"
+msgstr "承認済み Best Shots（ギャラリー掲載中）"
+
+msgid "Revoke (Remove from Gallery)"
+msgstr "取り消し（ギャラリーから外す）"
+
+msgid "Are you sure you want to remove this image from the gallery?"
+msgstr "本当にこの画像をギャラリーから外しますか？"
+
+msgid "There are currently no pending Best Shots."
+msgstr "現在、承認待ちのBest Shotsはありません。"
+
+msgid "No records found."
+msgstr "レコードが見つかりませんでした。"
