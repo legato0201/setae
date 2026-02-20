@@ -13,7 +13,7 @@ class Setae_Admin_Best_Shots
     {
         // 設定メニューのサブメニューとして追加
         add_submenu_page(
-            'setae_settings',
+            'options-general.php',
             __('Best Shots Approval', 'setae'),
             __('Best Shots Approval', 'setae'),
             'manage_options',
