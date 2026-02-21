@@ -4,6 +4,24 @@ var SetaeUIAddSpider = (function ($) {
     function init() {
         // モーダルを開く
         $(document).on('click', '#btn-add-spider', function () {
+
+            // ▼▼▼ 新規追加: 登録上限チェックと表示の切り替え ▼▼▼
+            if (typeof SetaeSettings !== 'undefined' && SetaeSettings.current_user) {
+                const limit = SetaeSettings.current_user.spider_limit;
+                const count = SetaeSettings.current_user.spider_count;
+
+                // limit が -1 の場合は無制限 (プレミアム)
+                if (limit !== -1 && count >= limit) {
+                    $('#form-add-spider').hide();
+                    $('#add-spider-limit-message').show();
+                    $('#limit-msg-count').text(limit);
+                } else {
+                    $('#form-add-spider').show();
+                    $('#add-spider-limit-message').hide();
+                }
+            }
+            // ▲▲▲ 新規追加ここまで ▲▲▲
+
             $('#modal-add-spider').fadeIn(200);
             // 本日の日付をデフォルトセット
             const today = new Date().toISOString().split('T')[0];
@@ -210,6 +228,12 @@ var SetaeUIAddSpider = (function ($) {
                 function (response) {
                     SetaeCore.showToast('新しい個体を登録しました', 'success');
 
+                    // ▼▼▼ 追加: 成功したらローカルの登録数を+1しておく ▼▼▼
+                    if (typeof SetaeSettings !== 'undefined' && SetaeSettings.current_user) {
+                        SetaeSettings.current_user.spider_count++;
+                    }
+                    // ▲▲▲ 追加ここまで ▲▲▲
+
                     // フォームとプレビューのリセット
                     $form[0].reset();
                     $('#spider-species-search').val('');
@@ -244,6 +268,33 @@ var SetaeUIAddSpider = (function ($) {
                 }
             );
         });
+
+        // ▼▼▼ 新規追加: プレミアムアップグレード処理 (上限メッセージ内) ▼▼▼
+        $(document).on('click', '#limit-upgrade-premium-btn', async function () {
+            const originalText = $(this).text();
+            $(this).text('読み込み中...').prop('disabled', true);
+
+            try {
+                const response = await fetch(SetaeSettings.api_root + 'setae/v1/stripe/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'X-WP-Nonce': SetaeSettings.nonce }
+                });
+                const data = await response.json();
+
+                if (data.url) {
+                    // Stripeの安全な決済画面（Checkout）へリダイレクト
+                    window.location.href = data.url;
+                } else {
+                    alert('決済セッションの作成に失敗しました。');
+                    $(this).text(originalText).prop('disabled', false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました。');
+                $(this).text(originalText).prop('disabled', false);
+            }
+        });
+        // ▲▲▲ 新規追加ここまで ▲▲▲
     }
 
     return { init: init };

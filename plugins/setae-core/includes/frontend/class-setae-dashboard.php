@@ -40,6 +40,14 @@ class Setae_Dashboard
         // Enqueue Core Module
         wp_enqueue_script('setae-app-core', SETAE_PLUGIN_URL . 'assets/js/modules/app-core.js', array('jquery', 'chart-js'), $this->version, true);
 
+        // ▼▼▼ 追加・修正: ユーザーの登録数と上限を取得するロジック ▼▼▼
+        $user_id = get_current_user_id();
+        $is_premium = get_user_meta($user_id, '_setae_is_premium', true);
+        $spider_count = count_user_posts($user_id, 'setae_spider', true);
+        $base_limit = (int) get_option('setae_free_spider_limit', 5);
+        $bonus_limit = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
+        $spider_limit = $is_premium ? -1 : ($base_limit + $bonus_limit); // -1は無制限のフラグ
+
         // Localize Script for Core (Pass API Root, Nonce, etc.)
         wp_localize_script('setae-app-core', 'SetaeSettings', array(
             'api_root' => esc_url_raw(rest_url()),
@@ -47,15 +55,18 @@ class Setae_Dashboard
             'setae_nonce' => wp_create_nonce('setae_nonce'), // For Encyclopedia AJAX
             'ajax_url' => admin_url('admin-ajax.php'),
             'logout_url' => wp_logout_url(home_url()),
-            'current_user_id' => get_current_user_id(),
+            'current_user_id' => $user_id,
             'plugin_url' => SETAE_PLUGIN_URL, // Added for default images
             'current_user' => array(
                 'display_name' => wp_get_current_user()->display_name,
                 'email' => wp_get_current_user()->user_email,
-                'avatar' => get_avatar_url(get_current_user_id()),
-                'is_premium' => get_user_meta(get_current_user_id(), '_setae_is_premium', true),
+                'avatar' => get_avatar_url($user_id),
+                'is_premium' => $is_premium,
+                'spider_count' => $spider_count, // 追加
+                'spider_limit' => $spider_limit, // 追加
             )
         ));
+        // ▲▲▲ 追加・修正ここまで ▲▲▲
 
         // ★追加: JS翻訳用のデータを渡す (wp_localize_script)
         // wp.i18n (JSON) が使えない環境でも確実に翻訳を適用するため

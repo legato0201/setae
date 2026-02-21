@@ -330,6 +330,30 @@ $temperaments = get_terms(array(
     <div class="setae-modal-content">
         <span class="setae-close">×</span>
         <h3>新規個体登録</h3>
+
+        <div id="add-spider-limit-message"
+            style="display:none; padding:20px; background:#fffbea; border:1px solid #fce8a6; border-radius:12px; text-align:center; margin-bottom:15px;">
+            <div style="font-weight:bold; color:#b28900; margin-bottom:10px; font-size:16px;">
+                <img draggable="false" role="img" class="emoji" alt="⚠️"
+                    src="https://s.w.org/images/core/emoji/17.0.2/svg/26a0.svg"> 生体の登録上限に達しています
+            </div>
+            <p style="font-size:13px; color:#555; margin-bottom:20px; line-height:1.5;">
+                無料プランの登録上限（<span id="limit-msg-count"></span>匹）に達しました。<br>
+                引き続き登録するには、以下のいずれかの方法をご利用ください。
+            </p>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <button type="button" class="setae-btn setae-btn-primary" id="limit-upgrade-premium-btn"
+                    style="background:linear-gradient(135deg, #FFD700, #FDB931); border:none; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">
+                    ✨ プレミアムプランにアップグレード (無制限)
+                </button>
+                <button type="button" class="setae-btn"
+                    style="background:#fff; border:1px solid #ddd; color:#333; font-size:13px;"
+                    onclick="$('#modal-add-spider').fadeOut(); $('.setae-nav-item[data-target=\'section-enc\']').click();">
+                    📖 図鑑へ写真提供してボーナス枠を獲得 (+1枠)
+                </button>
+            </div>
+        </div>
+
         <form id="form-add-spider">
 
             <div class="setae-form-group">
