@@ -1,11 +1,14 @@
 <?php
 class Setae_API_Stripe
 {
-    private $stripe_secret_key = 'sk_test_...'; // 環境変数や管理画面の設定から取得するよう変更推奨
-    private $webhook_secret = 'whsec_...';
+    private $stripe_secret_key;
+    private $webhook_secret;
 
     public function __construct()
     {
+        // 管理画面の設定からStripe APIキーとWebhookシークレットを取得
+        $this->stripe_secret_key = get_option('setae_stripe_secret_key');
+        $this->webhook_secret = get_option('setae_stripe_webhook_secret');
         // \Stripe\Stripe::setApiKey($this->stripe_secret_key); // Requires Stripe PHP SDK
     }
 
@@ -16,7 +19,8 @@ class Setae_API_Stripe
             'methods' => 'POST',
             'callback' => array($this, 'create_checkout_session'),
             'permission_callback' => function () {
-                return is_user_logged_in(); },
+                return is_user_logged_in();
+            },
         ));
 
         // Webhook受信用のエンドポイント（Stripeからの通信なので認証なし）

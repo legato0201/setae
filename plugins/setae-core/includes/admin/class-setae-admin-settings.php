@@ -22,6 +22,13 @@ class Setae_Admin_Settings {
         add_action( 'edit_user_profile', array( $this, 'add_ban_field' ) );
         add_action( 'personal_options_update', array( $this, 'save_ban_field' ) );
         add_action( 'edit_user_profile_update', array( $this, 'save_ban_field' ) );
+
+        // ▼▼▼ 新規追加: ユーザー編集画面での権限・ボーナス枠操作 ▼▼▼
+        add_action('show_user_profile', array($this, 'add_custom_user_profile_fields'));
+        add_action('edit_user_profile', array($this, 'add_custom_user_profile_fields'));
+        add_action('personal_options_update', array($this, 'save_custom_user_profile_fields'));
+        add_action('edit_user_profile_update', array($this, 'save_custom_user_profile_fields'));
+        // ▲▲▲ 新規追加ここまで ▲▲▲
     }
 
     // --- SMTP Settings ---
@@ -41,6 +48,16 @@ class Setae_Admin_Settings {
         register_setting('setae_options_group', 'setae_enable_registration');
         // ▼ 追加: 利用規約URLの設定
         register_setting('setae_options_group', 'setae_tos_url');
+
+        // Stripe設定
+        register_setting('setae_options_group', 'setae_stripe_secret_key');
+        register_setting('setae_options_group', 'setae_stripe_webhook_secret');
+        // 基本の生体登録上限数
+        register_setting('setae_options_group', 'setae_free_spider_limit', array(
+            'type' => 'integer',
+            'default' => 5,
+            'sanitize_callback' => 'absint'
+        ));
 
         add_settings_section(
             'setae_general_section',
@@ -101,6 +118,30 @@ class Setae_Admin_Settings {
             <form method="post" action="options.php">
                 <?php settings_fields( 'setae_options_group' ); ?>
                 <?php do_settings_sections( 'setae_options_group' ); ?>
+
+                <h2>Stripe 決済連携</h2>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">シークレットキー</th>
+                        <td><input type="password" name="setae_stripe_secret_key" value="<?php echo esc_attr(get_option('setae_stripe_secret_key')); ?>" class="regular-text" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Webhook シークレット</th>
+                        <td><input type="password" name="setae_stripe_webhook_secret" value="<?php echo esc_attr(get_option('setae_stripe_webhook_secret')); ?>" class="regular-text" /></td>
+                    </tr>
+                </table>
+
+                <h2>ユーザー制限</h2>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">通常ユーザーの生体登録上限</th>
+                        <td>
+                            <input type="number" name="setae_free_spider_limit" value="<?php echo esc_attr(get_option('setae_free_spider_limit', 5)); ?>" class="small-text" /> 匹
+                            <p class="description">無料プランのユーザーが登録できるデフォルトの上限数です。</p>
+                        </td>
+                    </tr>
+                </table>
+
                 <h2>SMTP Configuration</h2>
                 <table class="form-table">
                     <tr valign="top">
@@ -151,6 +192,7 @@ class Setae_Admin_Settings {
         $columns['setae_ip'] = 'IP Address';
         $columns['setae_spiders'] = 'My Spiders';
         $columns['setae_status'] = 'Status';
+        $columns['setae_plan'] = 'プラン・登録枠'; // ▼追加
         return $columns;
     }
 
@@ -165,6 +207,18 @@ class Setae_Admin_Settings {
         if ( 'setae_status' == $column_name ) {
              $banned = get_user_meta( $user_id, 'setae_is_banned', true );
              return $banned ? '<span style="color:red;font-weight:bold;">BANNED</span>' : '<span style="color:green;">Active</span>';
+        }
+        if ($column_name === 'setae_plan') {
+            $is_premium = get_user_meta($user_id, '_setae_is_premium', true);
+            $bonus_limit = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
+            
+            $plan_badge = $is_premium 
+                ? '<span style="background:#FDB931; color:#fff; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">PREMIUM</span>' 
+                : '<span style="background:#eee; color:#666; padding:2px 6px; border-radius:4px; font-size:11px;">通常</span>';
+            
+            $bonus_text = $bonus_limit > 0 ? "<br><small>ボーナス枠: +{$bonus_limit}</small>" : "";
+
+            return $plan_badge . $bonus_text;
         }
         return $value;
     }
@@ -197,9 +251,57 @@ class Setae_Admin_Settings {
         <?php
     }
 
+    // ユーザー編集画面へのフィールド追加
+    public function add_custom_user_profile_fields($user)
+    {
+        // 管理者のみ操作可能にする
+        if (!current_user_can('manage_options')) return;
+        
+        $is_premium = get_user_meta($user->ID, '_setae_is_premium', true);
+        $bonus_limit = get_user_meta($user->ID, '_setae_bonus_spider_limit', true);
+        ?>
+        <h3>Setae ユーザー設定</h3>
+        <table class="form-table">
+            <tr>
+                <th><label for="_setae_is_premium">プレミアムプラン</label></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="_setae_is_premium" id="_setae_is_premium" value="1" <?php checked($is_premium, 1); ?> />
+                        このユーザーをプレミアム会員にする
+                    </label>
+                    <p class="description">※通常はStripeのWebhookで自動で切り替わります。手動で付与・剥奪する場合に使用します。</p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="_setae_bonus_spider_limit">ボーナス登録枠 (匹)</label></th>
+                <td>
+                    <input type="number" name="_setae_bonus_spider_limit" id="_setae_bonus_spider_limit" value="<?php echo esc_attr($bonus_limit ?: 0); ?>" class="regular-text" />
+                    <p class="description">図鑑提供やベストショット採用で付与された追加枠です。手動で調整可能です。</p>
+                </td>
+            </tr>
+        </table>
+        <?php
+    }
+
     public function save_ban_field( $user_id ) {
         if ( ! current_user_can( 'edit_user', $user_id ) ) { return false; }
         update_user_meta( $user_id, 'setae_is_banned', isset( $_POST['setae_is_banned'] ) );
+    }
+
+    // ユーザー保存時の処理
+    public function save_custom_user_profile_fields($user_id)
+    {
+        if (!current_user_can('manage_options')) return false;
+
+        if (isset($_POST['_setae_is_premium'])) {
+            update_user_meta($user_id, '_setae_is_premium', 1);
+        } else {
+            delete_user_meta($user_id, '_setae_is_premium');
+        }
+
+        if (isset($_POST['_setae_bonus_spider_limit'])) {
+            update_user_meta($user_id, '_setae_bonus_spider_limit', absint($_POST['_setae_bonus_spider_limit']));
+        }
     }
 
     public function check_ban_status( $user, $username, $password ) {
