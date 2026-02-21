@@ -284,7 +284,7 @@ $temperaments = get_terms(array(
                 </button>
                 <button type="button" class="setae-btn"
                     style="background:#fff; border:1px solid #ddd; color:#333; font-size:13px;"
-                    onclick="$('#modal-add-spider').fadeOut(); $('.setae-nav-item[data-target=\'section-enc\']').click();">
+                    onclick="jQuery('#modal-add-spider').fadeOut(); jQuery('.setae-nav-item[data-target=\'section-enc\']').click();">
                     📖 図鑑へ写真提供してボーナス枠を獲得 (+1枠)
                 </button>
             </div>
