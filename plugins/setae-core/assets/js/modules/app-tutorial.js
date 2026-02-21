@@ -10,7 +10,9 @@ var SetaeTutorial = (function ($) {
     const KEYS = {
         MAIN: 'setae_tutorial_main_v1',
         ADD: 'setae_tutorial_add_v1',
-        SWIPE: 'setae_tutorial_swipe_v1'
+        SWIPE: 'setae_tutorial_swipe_v1',
+        ENC: 'setae_tutorial_enc_v1',         // ← 追加: 図鑑用
+        EDIT_SUGGEST: 'setae_tutorial_edit_v1' // ← 追加: 編集提案用
     };
 
     // --- シナリオ定義 ---
@@ -121,6 +123,68 @@ var SetaeTutorial = (function ($) {
                 text: 'カード自体をタップすると詳細画面へ移動します。<br>成長ログやグラフを確認してみましょう。',
                 position: 'bottom'
             }
+        ],
+
+        // 4. 図鑑画面
+        encyclopedia: [
+            {
+                target: null,
+                title: '図鑑へようこそ！',
+                text: 'ここはみんなで作る生き物のデータベースです。<br>飼育に必要な情報や写真を共有しましょう。',
+                position: 'center'
+            },
+            {
+                target: '#enc-search',
+                title: '種類の検索',
+                text: '学名や和名を入力して、<br>気になる生き物をすぐに探すことができます。',
+                position: 'bottom'
+            },
+            {
+                target: '#btn-request-species',
+                title: '追加リクエスト',
+                text: 'もし探している種類が図鑑にない場合は、<br>ここから追加のリクエストを送ることができます。',
+                position: 'bottom'
+            },
+            {
+                target: '.setae-enc-card:first',
+                title: '詳細を見る',
+                text: 'カードをタップすると、適温や湿度などの詳細データと、<br>みんなが投稿した写真ギャラリーを見ることができます。',
+                position: 'bottom'
+            }
+        ],
+
+        // 5. 編集提案・情報提供モーダル
+        edit_suggestion: [
+            {
+                target: null,
+                title: '情報提供ありがとうございます！',
+                text: 'あなたの知識や写真が、Setaeの図鑑をより豊かにします。<br>わかる範囲で構いませんので、情報をご提供ください。',
+                position: 'center'
+            },
+            {
+                target: '#edit-image-placeholder',
+                title: 'ベストショットの提供',
+                text: 'ご自身で撮影された、その種類の特徴がよくわかる<br>ベストショットをアップロードしてください。',
+                position: 'bottom'
+            },
+            {
+                target: '#setae-species-edit-form .setae-form-group:eq(1)', // 和名のあたり
+                title: '基本データの入力',
+                text: '和名、適温、性格などの基本データを入力します。<br>不明な項目は空欄のままで大丈夫です。',
+                position: 'bottom'
+            },
+            {
+                target: 'textarea[name="suggested_description"]',
+                title: '特徴や飼育のコツ',
+                text: 'その他、飼育時の注意点や固有の特徴があれば、<br>こちらの補足情報にぜひ記載してください。',
+                position: 'top'
+            },
+            {
+                target: '#setae-species-edit-form button[type="submit"]',
+                title: '提案を送信',
+                text: '入力が終わったらここをタップして送信してください。<br>内容を確認後、図鑑に反映されます！',
+                position: 'top'
+            }
         ]
     };
 
@@ -169,6 +233,33 @@ var SetaeTutorial = (function ($) {
                 startScenario('swipe_guide');
             }
         }, 800);
+    }
+
+    /**
+     * Encyclopedia Scenario Init
+     */
+    function initEncyclopedia() {
+        if (localStorage.getItem(KEYS.ENC)) return;
+        setTimeout(() => {
+            // 図鑑セクションが表示されており、カードが1枚以上ある場合
+            if ($('#section-enc').is(':visible') && !$('.setae-modal').is(':visible') && $('.setae-enc-card').length > 0) {
+                $('html, body').scrollTop(0);
+                startScenario('encyclopedia');
+            }
+        }, 800);
+    }
+
+    /**
+     * Edit Suggestion Scenario Init
+     */
+    function initEditSuggestion() {
+        if (localStorage.getItem(KEYS.EDIT_SUGGEST)) return;
+        setTimeout(() => {
+            if ($('#setae-species-edit-modal').is(':visible')) {
+                $('#setae-species-edit-modal .setae-modal-content').scrollTop(0);
+                startScenario('edit_suggestion');
+            }
+        }, 500);
     }
 
     function startScenario(scenarioName) {
@@ -340,6 +431,8 @@ var SetaeTutorial = (function ($) {
         if (activeScenario === 'main') localStorage.setItem(KEYS.MAIN, 'true');
         else if (activeScenario === 'add_spider') localStorage.setItem(KEYS.ADD, 'true');
         else if (activeScenario === 'swipe_guide') localStorage.setItem(KEYS.SWIPE, 'true');
+        else if (activeScenario === 'encyclopedia') localStorage.setItem(KEYS.ENC, 'true');             // ← 追加
+        else if (activeScenario === 'edit_suggestion') localStorage.setItem(KEYS.EDIT_SUGGEST, 'true'); // ← 追加
 
         activeScenario = null;
     }
@@ -354,6 +447,8 @@ var SetaeTutorial = (function ($) {
         init: initMain,
         initAddSpider: initAddSpider,
         initSwipe: initSwipe,
+        initEncyclopedia: initEncyclopedia,     // ← 追加
+        initEditSuggestion: initEditSuggestion, // ← 追加
         reset: resetAndStart
     };
 
