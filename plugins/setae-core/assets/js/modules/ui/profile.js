@@ -68,7 +68,7 @@ var SetaeUIProfile = (function ($) {
                                 <div style="font-weight:bold;color:#b28900;margin-bottom:10px;">
                                     <img draggable="false" role="img" class="emoji" alt="🌟" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f31f.svg"> You are a Premium Member
                                 </div>
-                                <button type="button" id="btn-manage-subscription" class="setae-btn" style="background:#fff; color:#333; border:1px solid #dcdcdc; font-size:12px; padding:6px 16px; border-radius:4px; cursor:pointer;">
+                                <button type="button" id="btn-manage-subscription" class="setae-btn">
                                     プランの管理・解約手続き
                                 </button>
                                </div>`
