@@ -298,8 +298,22 @@ class Setae_Ajax
             wp_send_json_error(array('message' => $user_id->get_error_message()), 500);
         }
 
-        // 5. Handle Image Upload
-        if (!empty($_FILES['profile_image'])) {
+        // 5. Handle Image Upload (with strict validation)
+        if (!empty($_FILES['profile_image']) && !empty($_FILES['profile_image']['name'])) {
+            $file = $_FILES['profile_image'];
+
+            // サイズチェック (例: 2MB)
+            if ($file['size'] > 2 * 1024 * 1024) {
+                wp_send_json_error(array('message' => 'プロフィール画像は2MB以下にしてください。'), 400);
+            }
+
+            // MIMEタイプチェック
+            $check = @getimagesize($file['tmp_name']);
+            $allowed = array('image/jpeg', 'image/png', 'image/webp'); // GIF exclude on profile if you want, or include
+            if ($check === false || !in_array($check['mime'], $allowed)) {
+                wp_send_json_error(array('message' => '無効な画像形式です。JPG, PNG, WEBPのみ対応しています。'), 400);
+            }
+
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             require_once(ABSPATH . 'wp-admin/includes/file.php');
             require_once(ABSPATH . 'wp-admin/includes/media.php');
@@ -333,22 +347,29 @@ class Setae_Ajax
         // タイトルの生成
         $target_species = get_post($species_id);
         $req_name = isset($_POST['species_name']) ? sanitize_text_field($_POST['species_name']) : $target_species->post_title;
-
         $title = '修正提案: ' . $req_name;
         if (is_user_logged_in()) {
             $title .= ' (by ' . wp_get_current_user()->display_name . ')';
         }
 
+        $suggested_description = isset($_POST['suggested_description']) ? sanitize_textarea_field($_POST['suggested_description']) : '';
+
+        // ▼ 文字数制限の追加 (例: 2000文字以内)
+        if (mb_strlen($suggested_description) > 2000) {
+            wp_send_json_error('提案の説明は2000文字以内で入力してください。');
+        }
+
         $post_data = array(
             'post_type' => 'setae_suggestion',
             'post_title' => $title,
-            'post_content' => sanitize_textarea_field($_POST['suggested_description']),
+            'post_content' => $suggested_description,
             'post_status' => 'pending',
         );
 
         $suggestion_id = wp_insert_post($post_data);
-        if (is_wp_error($suggestion_id))
+        if (is_wp_error($suggestion_id)) {
             wp_send_json_error('保存に失敗しました。');
+        }
 
         // メタデータの保存
         update_post_meta($suggestion_id, '_target_species_id', $species_id);
@@ -374,8 +395,22 @@ class Setae_Ajax
             update_post_meta($suggestion_id, '_suggested_temperament_ids', sanitize_text_field($_POST['suggested_temperament_ids']));
         }
 
-        // 画像処理 (変更なし)
+        // 画像処理 (with strict validation)
         if (!empty($_FILES['suggested_image']['name'])) {
+            $file = $_FILES['suggested_image'];
+
+            // サイズチェック (例: 5MB)
+            if ($file['size'] > 5 * 1024 * 1024) {
+                wp_send_json_error('画像サイズは5MB以下にしてください。');
+            }
+
+            // MIMEタイプチェック
+            $check = @getimagesize($file['tmp_name']);
+            $allowed = array('image/jpeg', 'image/png', 'image/webp', 'image/gif');
+            if ($check === false || !in_array($check['mime'], $allowed)) {
+                wp_send_json_error('無効な画像形式です。');
+            }
+
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             require_once(ABSPATH . 'wp-admin/includes/file.php');
             require_once(ABSPATH . 'wp-admin/includes/media.php');

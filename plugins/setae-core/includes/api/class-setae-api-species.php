@@ -72,13 +72,13 @@ class Setae_API_Species extends WP_REST_Controller
             // WP_Queryの不具合を回避し、DBに直接「この文字を含むIDをくれ」と命令します
             $like_term = '%' . $wpdb->esc_like($search) . '%';
 
-            // SQL: post_id を postmeta テーブルから探す
-            // 条件: キーが _setae_common_name_ja かつ 値に検索語句が含まれる
+            // ▼ 修正: 無制限取得を防ぐためLIMIT句を追加 (例: 最大100件)
             $sql_meta = $wpdb->prepare("
                 SELECT post_id 
                 FROM {$wpdb->postmeta}
                 WHERE meta_key = '_setae_common_name_ja'
                 AND meta_value LIKE %s
+                LIMIT 100
             ", $like_term);
 
             $ids_meta = $wpdb->get_col($sql_meta);

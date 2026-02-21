@@ -108,11 +108,21 @@ class Setae_API_Spiders
     public function get_my_spiders($request)
     {
         $user_id = get_current_user_id();
-        $sort = $request->get_param('sort') ?: 'priority'; // Default to priority
+        $sort = $request->get_param('sort') ?: 'priority';
+
+        // ▼ 追加: ページネーションパラメータの取得
+        $paged = $request->get_param('paged') ? absint($request->get_param('paged')) : 1;
+        $per_page = $request->get_param('per_page') ? absint($request->get_param('per_page')) : 50;
+
+        // 最大取得件数を制限 (例: 最大100件まで)
+        if ($per_page > 100) {
+            $per_page = 100;
+        }
 
         $args = array(
             'post_type' => 'setae_spider',
-            'posts_per_page' => -1,
+            'posts_per_page' => $per_page, // -1から変更
+            'paged' => $paged,             // ページ番号を指定
             'author' => $user_id,
             'post_status' => 'publish',
         );
@@ -558,7 +568,14 @@ class Setae_API_Spiders
 
         $bl_terms = $request->get_param('bl_terms');
         if (isset($bl_terms)) {
-            update_post_meta($spider_id, '_setae_bl_terms', sanitize_textarea_field($bl_terms));
+            $sanitized_bl_terms = sanitize_textarea_field($bl_terms);
+
+            // 文字数制限の追加 (例: 2000文字以内)
+            if (mb_strlen($sanitized_bl_terms) > 2000) {
+                return new WP_Error('text_too_long', '規約のテキストは2000文字以内で入力してください。', array('status' => 400));
+            }
+
+            update_post_meta($spider_id, '_setae_bl_terms', $sanitized_bl_terms);
         }
         // ▲▲▲ End Added ▲▲▲
 
@@ -720,12 +737,20 @@ class Setae_API_Spiders
             }
         }
 
+        // ▼ 文字数制限の追加 (JSON文字列全体で5000文字以内)
+        $data_json_string = is_string($data_json) ? $data_json : wp_json_encode($data_json);
+        if (mb_strlen($data_json_string) > 5000) {
+            // エラーの場合は作成したログの空枠を削除してから返す
+            wp_delete_post($log_id, true);
+            return new WP_Error('data_too_large', 'ログのデータ量が上限を超えています。', array('status' => 400));
+        }
+
         // Save Meta
         update_post_meta($log_id, '_setae_log_spider_id', $spider_id);
         update_post_meta($log_id, '_setae_log_type', $type);
         update_post_meta($log_id, '_setae_log_date', $date);
         $parsed_input = is_string($data_json) ? json_decode($data_json, true) : $data_json;
-        update_post_meta($log_id, '_setae_log_data', json_encode($parsed_input, JSON_UNESCAPED_UNICODE));
+        update_post_meta($log_id, '_setae_log_data', wp_json_encode($parsed_input, JSON_UNESCAPED_UNICODE));
 
         // [Optim] Save Link to Species for efficient querying
         $species_id = get_post_meta($spider_id, '_setae_species_id', true);
@@ -789,14 +814,18 @@ class Setae_API_Spiders
     public function get_events($request)
     {
         $spider_id = $request['id'];
-        // Check permission if private? For now, public or check owner.
-        // Assuming My Spiders context mostly, but let's check ownership if strict.
-        // public read for now is fine for "community" sharing? Or restrict? 
-        // Code implies owner context largely, but let's allow read if spider is visible.
+
+        // ▼ 追加: オフセットまたはページネーションを受け取る
+        $offset = $request->get_param('offset') ? absint($request->get_param('offset')) : 0;
+        $per_page = $request->get_param('per_page') ? absint($request->get_param('per_page')) : 50;
+
+        if ($per_page > 100)
+            $per_page = 100; // 安全のための上限
 
         $args = array(
             'post_type' => 'setae_log',
-            'posts_per_page' => 50,
+            'posts_per_page' => $per_page,
+            'offset' => $offset, // 追加
             'meta_query' => array(
                 array(
                     'key' => '_setae_log_spider_id',
