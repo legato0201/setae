@@ -50,7 +50,7 @@ var SetaeTutorial = (function ($) {
             { target: null, title: '図鑑へようこそ！', text: 'ここはみんなで作る生き物のデータベースです。<br>飼育に必要な情報や写真を共有しましょう。', position: 'center' },
             { target: '#enc-search', title: '種類の検索', text: '学名や和名を入力して、<br>気になる生き物をすぐに探すことができます。', position: 'bottom' },
             { target: '#btn-request-species', title: '追加リクエスト', text: 'もし探している種類が図鑑にない場合は、<br>ここから追加のリクエストを送ることができます。', position: 'bottom' },
-            { target: '.setae-enc-card:first', title: '詳細を見る', text: 'カードをタップすると、適温や湿度などの詳細データと、<br>みんなが投稿した写真ギャラリーを見ることができます。', position: 'bottom' }
+            { target: '.species-card:first', title: '詳細を見る', text: 'カードをタップすると、適温や湿度などの詳細データと、<br>みんなが投稿した写真ギャラリーを見ることができます。', position: 'bottom' }
         ],
 
         // 5. 編集提案・情報提供モーダル
@@ -108,7 +108,7 @@ var SetaeTutorial = (function ($) {
         let attempts = 0;
         const checkInterval = setInterval(() => {
             attempts++;
-            if ($('#section-enc').is(':visible') && !$('.setae-modal').is(':visible') && $('.setae-enc-card').length > 0) {
+            if ($('#section-enc').is(':visible') && !$('.setae-modal').is(':visible') && $('.species-card').length > 0) {
                 clearInterval(checkInterval);
                 startScenario('encyclopedia');
             } else if (attempts > 40) {
