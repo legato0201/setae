@@ -1,6 +1,6 @@
 /**
  * Setae App Tutorial Module
- * - Scenarios: Main, AddSpider, SwipeGuide, Encyclopedia, EditSuggestion
+ * - Scenarios: Main, AddSpider, SwipeGuide, Encyclopedia, EditSuggestion, EncyclopediaDetail
  * - Features: Mobile optimized, Scroll lock, Dynamic positioning, Auto-scroll
  */
 var SetaeTutorial = (function ($) {
@@ -12,7 +12,10 @@ var SetaeTutorial = (function ($) {
         ADD: 'setae_tutorial_add_v1',
         SWIPE: 'setae_tutorial_swipe_v1',
         ENC: 'setae_tutorial_enc_v1',
-        EDIT_SUGGEST: 'setae_tutorial_edit_v1'
+        EDIT_SUGGEST: 'setae_tutorial_edit_v1',
+        ENC_DETAIL: 'setae_tutorial_enc_detail_v1', // ← 追加: 図鑑詳細用
+        ADD_LOG: 'setae_tutorial_add_log_v1', // ← 追加: 記録を追加用
+        MY_DETAIL: 'setae_tutorial_my_detail_v1' // ← 追加: 個体詳細画面用
     };
 
     // --- シナリオ定義 ---
@@ -60,6 +63,32 @@ var SetaeTutorial = (function ($) {
             { target: '#setae-species-edit-form .setae-form-group:eq(1)', title: '基本データの入力', text: '和名、適温、性格などの基本データを入力します。<br>不明な項目は空欄のままで大丈夫です。', position: 'bottom' },
             { target: 'textarea[name="suggested_description"]', title: '特徴や飼育のコツ', text: 'その他、飼育時の注意点や固有の特徴があれば、<br>こちらの補足情報にぜひ記載してください。', position: 'top' },
             { target: '#setae-species-edit-form button[type="submit"]', title: '提案を送信', text: '入力が終わったらここをタップして送信してください。<br>内容を確認後、図鑑に反映されます！', position: 'top' }
+        ],
+
+        // 6. 図鑑詳細ページ
+        encyclopedia_detail: [
+            { target: null, title: '種別詳細ページ', text: 'ここでは、この生き物に関する詳しいデータや、<br>みんなが投稿した写真ギャラリーを見ることができます。', position: 'center' },
+            { target: '#btn-open-edit-modal', title: '情報・写真の提供', text: '<b>Setaeの図鑑はみんなで作る参加型です！</b><br>右上のこのアイコンをタップして、あなたが知っている情報や、ご自身で撮影したベストショットをぜひ提供してください。', position: 'bottom' },
+            { target: '#enc-detail-keeping', title: '飼育者数', text: 'Setae内でこの種類を飼育している人の数です。<br>人気度が一目でわかります。', position: 'top' },
+            { target: '#section-enc-detail .setae-card:last', title: 'ギャラリー', text: 'みんなが投稿したベストショットがここに並びます。<br>あなたの写真で図鑑を彩りましょう！', position: 'top' }
+        ],
+
+        // 7. 記録を追加モーダル
+        add_log: [
+            { target: null, title: '飼育記録をつけましょう', text: '日々の給餌や脱皮、成長の様子を記録して、<br>個体の状態をしっかり管理できます。', position: 'center' },
+            { target: '.type-group', title: 'イベントの種類', text: '給餌、脱皮、サイズ測定などの<br>イベントタイプを選択します。', position: 'bottom' },
+            { target: '.toggle-refused', title: '拒食の記録', text: '餌を与えて食べなかった場合は「拒食」をオンに。<br>次の給餌タイミングの参考になります。', position: 'top' },
+            { target: '.upload-group', title: '写真とBest Shot', text: 'カメラアイコンから写真を添付できます。<br><br><b style="color:#d35400;">📸 写真を追加した際に表示される「Best Shot」をオンにして保存すると、あなたの写真がみんなの図鑑にも投稿されます！</b><br><span style="font-size:11px; color:#888;">(※図鑑への反映は承認制です)</span>', position: 'top' },
+            { target: '.setae-btn-submit', title: '記録を保存', text: '日付やメモを入力したら、<br>ここをタップして記録を保存しましょう！', position: 'top' }
+        ],
+
+        // 8. 個体詳細画面
+        my_detail: [
+            { target: null, title: '個体詳細', text: 'ここは個体の詳細画面です。<br>日々の成長や給餌の記録を確認・管理できます。', position: 'center' },
+            { target: '.setae-detail-tabs', title: '情報の切り替え', text: '「概要」でグラフや最新ステータスを確認し、<br>「履歴」で過去の記録をタイムラインで振り返ることができます。', position: 'bottom' },
+            { target: '#btn-add-log', title: '記録の追加', text: '右下のこのボタンから、いつでも給餌や脱皮などの<br>新しい記録を追加できます。', position: 'top' },
+            { target: '#btn-edit-spider-trigger', title: '個体情報の編集', text: '名前の変更やプロフ画像の更新、<br>死亡時のステータス変更はこちらから行えます。', position: 'bottom' },
+            { target: '#btn-tab-settings', title: 'ブリーディングローン(BL)', text: '「設定 / BL」タブから、この個体を<br>繁殖パートナーとしてコミュニティに公開・募集できます。', position: 'bottom' }
         ]
     };
 
@@ -78,7 +107,6 @@ var SetaeTutorial = (function ($) {
         }, 1000);
     }
 
-    // ★ADDチュートリアル（ポーリング方式に変更し、確実にモーダル表示を待つ）
     function initAddSpider() {
         if (localStorage.getItem(KEYS.ADD)) return;
         let attempts = 0;
@@ -102,7 +130,6 @@ var SetaeTutorial = (function ($) {
         }, 800);
     }
 
-    // ★ENCチュートリアル（待機時間を最大20秒に延長し、通信ラグに対応）
     function initEncyclopedia() {
         if (localStorage.getItem(KEYS.ENC)) return;
         let attempts = 0;
@@ -131,7 +158,52 @@ var SetaeTutorial = (function ($) {
         }, 500);
     }
 
-    // ★イベントの自己監視の強化
+    // ★図鑑詳細用の監視
+    function initEncyclopediaDetail() {
+        if (localStorage.getItem(KEYS.ENC_DETAIL)) return;
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if ($('#section-enc-detail').is(':visible') && $('#enc-detail-title').text() !== '') {
+                clearInterval(checkInterval);
+                startScenario('encyclopedia_detail');
+            } else if (attempts > 20) {
+                clearInterval(checkInterval);
+            }
+        }, 500);
+    }
+
+    // ★記録を追加モーダル用の監視
+    function initAddLog() {
+        if (localStorage.getItem(KEYS.ADD_LOG)) return;
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if ($('#setae-log-form').is(':visible')) {
+                clearInterval(checkInterval);
+                startScenario('add_log');
+            } else if (attempts > 20) {
+                clearInterval(checkInterval);
+            }
+        }, 500);
+    }
+
+    // ★個体詳細画面用の監視
+    function initMyDetail() {
+        if (localStorage.getItem(KEYS.MY_DETAIL)) return;
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if ($('#section-my-detail').is(':visible') && !$('.setae-modal').is(':visible')) {
+                clearInterval(checkInterval);
+                startScenario('my_detail');
+            } else if (attempts > 20) {
+                clearInterval(checkInterval);
+            }
+        }, 500);
+    }
+
+    // イベントの自己監視
     $(document).ready(function () {
         // ① 図鑑タブがクリックされたとき
         $(document).on('click', '.setae-nav-item[data-target="section-enc"]', function () {
@@ -143,15 +215,34 @@ var SetaeTutorial = (function ($) {
             initEditSuggestion();
         });
 
-        // ③ 個体登録ボタンがクリックされたとき【追加: ADDのトリガー】
+        // ③ 個体登録ボタンがクリックされたとき
         $(document).on('click', '#btn-add-spider', function () {
             initAddSpider();
         });
 
-        // ④ ページ読み込み時に最初から図鑑タブが表示されている場合の対応【追加】
+        // ④ 図鑑詳細ページが開かれたとき【追加】
+        $(document).on('click', '.js-open-species-detail', function () {
+            initEncyclopediaDetail();
+        });
+
+        // ⑤ ページ読み込み時に最初から図鑑タブが表示されている場合の対応
         if ($('#section-enc').is(':visible')) {
             initEncyclopedia();
         }
+
+        // ⑥ 動的に開く画面・モーダル用の汎用クリック監視
+        $(document).on('click', function () {
+            setTimeout(() => {
+                // 記録を追加モーダル
+                if (!localStorage.getItem(KEYS.ADD_LOG) && $('#setae-log-form').is(':visible')) {
+                    initAddLog();
+                }
+                // 個体詳細画面の検知
+                if (!localStorage.getItem(KEYS.MY_DETAIL) && $('#section-my-detail').is(':visible') && !$('.setae-modal').is(':visible')) {
+                    initMyDetail();
+                }
+            }, 300);
+        });
     });
 
     // --- シナリオ実行 ---
@@ -225,7 +316,7 @@ var SetaeTutorial = (function ($) {
 
         if ($target && $target.length) {
 
-            // ★自動スクロール処理（要素が見える位置までスムーズに移動）
+            // 自動スクロール処理（要素が見える位置までスムーズに移動）
             $target[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             // スクロール完了を少し待ってからスポットライトを配置
@@ -328,6 +419,9 @@ var SetaeTutorial = (function ($) {
         else if (activeScenario === 'swipe_guide') localStorage.setItem(KEYS.SWIPE, 'true');
         else if (activeScenario === 'encyclopedia') localStorage.setItem(KEYS.ENC, 'true');
         else if (activeScenario === 'edit_suggestion') localStorage.setItem(KEYS.EDIT_SUGGEST, 'true');
+        else if (activeScenario === 'encyclopedia_detail') localStorage.setItem(KEYS.ENC_DETAIL, 'true'); // ← 追加
+        else if (activeScenario === 'add_log') localStorage.setItem(KEYS.ADD_LOG, 'true'); // ← 追加
+        else if (activeScenario === 'my_detail') localStorage.setItem(KEYS.MY_DETAIL, 'true'); // ← 追加
 
         activeScenario = null;
     }
@@ -344,6 +438,9 @@ var SetaeTutorial = (function ($) {
         initSwipe: initSwipe,
         initEncyclopedia: initEncyclopedia,
         initEditSuggestion: initEditSuggestion,
+        initEncyclopediaDetail: initEncyclopediaDetail, // ← 公開メソッドに追加
+        initAddLog: initAddLog, // ← 追加
+        initMyDetail: initMyDetail, // ← 追加
         reset: resetAndStart
     };
 
