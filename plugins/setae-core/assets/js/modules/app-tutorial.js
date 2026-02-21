@@ -78,11 +78,17 @@ var SetaeTutorial = (function ($) {
         }, 1000);
     }
 
+    // ★ADDチュートリアル（ポーリング方式に変更し、確実にモーダル表示を待つ）
     function initAddSpider() {
         if (localStorage.getItem(KEYS.ADD)) return;
-        setTimeout(() => {
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+            attempts++;
             if ($('#modal-add-spider').is(':visible')) {
+                clearInterval(checkInterval);
                 startScenario('add_spider');
+            } else if (attempts > 20) {
+                clearInterval(checkInterval);
             }
         }, 500);
     }
@@ -96,7 +102,7 @@ var SetaeTutorial = (function ($) {
         }, 800);
     }
 
-    // ★図鑑はデータ読み込みを待つために定期チェック（最大10秒）
+    // ★ENCチュートリアル（待機時間を最大20秒に延長し、通信ラグに対応）
     function initEncyclopedia() {
         if (localStorage.getItem(KEYS.ENC)) return;
         let attempts = 0;
@@ -105,13 +111,12 @@ var SetaeTutorial = (function ($) {
             if ($('#section-enc').is(':visible') && !$('.setae-modal').is(':visible') && $('.setae-enc-card').length > 0) {
                 clearInterval(checkInterval);
                 startScenario('encyclopedia');
-            } else if (attempts > 20) {
+            } else if (attempts > 40) {
                 clearInterval(checkInterval);
             }
         }, 500);
     }
 
-    // ★編集モーダルも開くまで待機
     function initEditSuggestion() {
         if (localStorage.getItem(KEYS.EDIT_SUGGEST)) return;
         let attempts = 0;
@@ -126,14 +131,27 @@ var SetaeTutorial = (function ($) {
         }, 500);
     }
 
-    // イベントの自己監視（他のJSからの呼び出し不要化）
+    // ★イベントの自己監視の強化
     $(document).ready(function () {
+        // ① 図鑑タブがクリックされたとき
         $(document).on('click', '.setae-nav-item[data-target="section-enc"]', function () {
             initEncyclopedia();
         });
-        $(document).on('click', '#btn-open-edit-modal', function () {
+
+        // ② 編集モーダルが開かれたとき
+        $(document).on('click', '#btn-open-edit-modal, .btn-open-edit-modal', function () {
             initEditSuggestion();
         });
+
+        // ③ 個体登録ボタンがクリックされたとき【追加: ADDのトリガー】
+        $(document).on('click', '#btn-add-spider', function () {
+            initAddSpider();
+        });
+
+        // ④ ページ読み込み時に最初から図鑑タブが表示されている場合の対応【追加】
+        if ($('#section-enc').is(':visible')) {
+            initEncyclopedia();
+        }
     });
 
     // --- シナリオ実行 ---
