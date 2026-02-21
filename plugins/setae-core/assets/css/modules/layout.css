@@ -862,3 +862,29 @@
     text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
     border: 1px solid #f1c40f;
 }
+
+/* =========================================================
+   Premium "PRO" Badge for Logo
+   ========================================================= */
+.setae-pro-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #2c2c2c, #111111);
+    /* 重厚感のあるダークグレー〜黒 */
+    color: #FDB931;
+    /* プレミアムなゴールド */
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    border: 1px solid rgba(253, 185, 49, 0.4);
+    /* うっすらとしたゴールドのエッジ */
+    line-height: 1;
+    vertical-align: middle;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    /* ロゴの中央に視覚的に揃える調整 */
+    font-family: system-ui, -apple-system, sans-serif;
+}
