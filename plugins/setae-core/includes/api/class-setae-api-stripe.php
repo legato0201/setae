@@ -23,6 +23,15 @@ class Setae_API_Stripe
             },
         ));
 
+        // ▼▼▼ 新規追加: カスタマーポータルセッション作成用エンドポイント ▼▼▼
+        register_rest_route('setae/v1', '/stripe/create-portal-session', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'create_portal_session'),
+            'permission_callback' => function () {
+                return is_user_logged_in();
+            },
+        ));
+
         // Webhook受信用のエンドポイント（Stripeからの通信なので認証なし）
         register_rest_route('setae/v1', '/stripe/webhook', array(
             'methods' => 'POST',
@@ -64,6 +73,37 @@ class Setae_API_Stripe
                 'client_reference_id' => $user_id, // Webhookでユーザーを特定するためのID
                 'success_url' => home_url('/dashboard?upgrade=success'),
                 'cancel_url' => home_url('/dashboard?upgrade=canceled'),
+            ]);
+
+            return new WP_REST_Response(['url' => $session->url], 200);
+        } catch (Exception $e) {
+            return new WP_Error('stripe_error', $e->getMessage(), ['status' => 500]);
+        }
+    }
+
+    // ▼▼▼ 新規追加: ポータルURLの生成メソッド ▼▼▼
+    public function create_portal_session($request)
+    {
+        $user_id = get_current_user_id();
+
+        // Checkout時に保存しておいたStripeの顧客IDを取得
+        $customer_id = get_user_meta($user_id, '_setae_stripe_customer_id', true);
+
+        if (!$customer_id) {
+            return new WP_Error('no_customer', 'Stripeの顧客情報が見つかりません。', ['status' => 400]);
+        }
+
+        if (!class_exists('\Stripe\Stripe')) {
+            return new WP_Error('stripe_missing', 'Stripe SDK is not loaded.', ['status' => 500]);
+        }
+
+        \Stripe\Stripe::setApiKey($this->stripe_secret_key);
+
+        try {
+            // カスタマーポータルのセッションを作成
+            $session = \Stripe\BillingPortal\Session::create([
+                'customer' => $customer_id,
+                'return_url' => home_url('/dashboard'), // ユーザーがポータルから戻ってくる先のURL
             ]);
 
             return new WP_REST_Response(['url' => $session->url], 200);

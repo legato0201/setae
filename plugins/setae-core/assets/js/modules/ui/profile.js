@@ -64,7 +64,14 @@ var SetaeUIProfile = (function ($) {
                     <div class="setae-form-group">
                         <label>Premium Plan</label>
                         ${currentUser.is_premium
-                ? '<div class="premium-status" style="padding:10px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;font-weight:bold;color:#b28900;">🌟 You are a Premium Member</div>'
+                ? `<div class="premium-status" style="padding:15px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;">
+                                <div style="font-weight:bold;color:#b28900;margin-bottom:10px;">
+                                    <img draggable="false" role="img" class="emoji" alt="🌟" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f31f.svg"> You are a Premium Member
+                                </div>
+                                <button type="button" id="btn-manage-subscription" class="setae-btn" style="background:#fff; color:#333; border:1px solid #dcdcdc; font-size:12px; padding:6px 16px; border-radius:4px; cursor:pointer;">
+                                    プランの管理・解約手続き
+                                </button>
+                               </div>`
                 : '<button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn" style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">✨ Upgrade to Premium</button>'
             }
                     </div>
@@ -145,8 +152,44 @@ var SetaeUIProfile = (function ($) {
                 alert('エラーが発生しました。');
             }
         });
-    }
 
+        // サブスクリプション管理ボタンの処理 (カスタマーポータル)
+        $('#setae-profile-modal').on('click', '#btn-manage-subscription', async function () {
+            const btnManageSub = document.getElementById('btn-manage-subscription');
+            if (btnManageSub) {
+                // ボタンをローディング状態にする（連打防止）
+                const originalText = btnManageSub.textContent;
+                btnManageSub.disabled = true;
+                btnManageSub.textContent = '読み込み中...';
+
+                try {
+                    const response = await fetch(SetaeSettings.api_root + 'setae/v1/stripe/create-portal-session', {
+                        method: 'POST',
+                        headers: {
+                            'X-WP-Nonce': SetaeSettings.nonce,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.url) {
+                        // Stripeの安全なカスタマーポータル画面へ遷移
+                        window.location.href = data.url;
+                    } else {
+                        alert('ポータルの表示に失敗しました: ' + (data.message || '不明なエラー'));
+                        btnManageSub.disabled = false;
+                        btnManageSub.textContent = originalText;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('通信エラーが発生しました。');
+                    btnManageSub.disabled = false;
+                    btnManageSub.textContent = originalText;
+                }
+            }
+        });
+    }
     function updateProfile() {
         // UIに即時反映（表示名）
         const newName = $('#prof-display-name').val();
