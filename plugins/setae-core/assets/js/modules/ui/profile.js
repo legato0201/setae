@@ -61,6 +61,14 @@ var SetaeUIProfile = (function ($) {
                         <input type="password" id="prof-password" class="setae-input" placeholder="********" autocomplete="new-password">
                     </div>
 
+                    <div class="setae-form-group">
+                        <label>Premium Plan</label>
+                        ${currentUser.is_premium
+                ? '<div class="premium-status" style="padding:10px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;font-weight:bold;color:#b28900;">🌟 You are a Premium Member</div>'
+                : '<button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn" style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">✨ Upgrade to Premium</button>'
+            }
+                    </div>
+
                     <div class="setae-form-actions">
                         <button type="button" class="setae-btn setae-btn-danger-ghost" id="setae-logout-btn">
                             <span>↪</span> Logout
@@ -114,6 +122,27 @@ var SetaeUIProfile = (function ($) {
         $('#setae-logout-btn').on('click', function () {
             if (confirm('ログアウトしますか？')) {
                 window.location.href = SetaeSettings.logout_url;
+            }
+        });
+
+        // プレミアムアップグレード処理
+        $('#setae-profile-modal').on('click', '#upgrade-premium-btn', async function () {
+            try {
+                const response = await fetch(SetaeSettings.api_root + 'setae/v1/stripe/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'X-WP-Nonce': SetaeSettings.nonce }
+                });
+                const data = await response.json();
+
+                if (data.url) {
+                    // Stripeの安全な決済画面（Checkout）へリダイレクト
+                    window.location.href = data.url;
+                } else {
+                    alert('決済セッションの作成に失敗しました。');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました。');
             }
         });
     }
