@@ -11,6 +11,14 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+// ▼▼▼ 新規追加: Composerのオートローダーを読み込む ▼▼▼
+$composer_autoload = plugin_dir_path(__FILE__) . 'vendor/autoload.php';
+if (file_exists($composer_autoload)) {
+	require_once $composer_autoload;
+}
+// ▲▲▲ 新規追加ここまで ▲▲▲
+
+
 // Define Plugin Constants
 // Define Plugin Constants
 define('SETAE_VERSION', '1.0.36');

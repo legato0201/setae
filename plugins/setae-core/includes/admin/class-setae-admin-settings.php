@@ -52,6 +52,10 @@ class Setae_Admin_Settings {
         // Stripe設定
         register_setting('setae_options_group', 'setae_stripe_secret_key');
         register_setting('setae_options_group', 'setae_stripe_webhook_secret');
+        
+        // ▼▼▼ 追加: 料金IDの登録 ▼▼▼
+        register_setting('setae_options_group', 'setae_stripe_price_id');
+
         // 基本の生体登録上限数
         register_setting('setae_options_group', 'setae_free_spider_limit', array(
             'type' => 'integer',
@@ -128,6 +132,13 @@ class Setae_Admin_Settings {
                     <tr valign="top">
                         <th scope="row">Webhook シークレット</th>
                         <td><input type="password" name="setae_stripe_webhook_secret" value="<?php echo esc_attr(get_option('setae_stripe_webhook_secret')); ?>" class="regular-text" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">サブスクリプション料金ID (Price ID)</th>
+                        <td>
+                            <input type="text" name="setae_stripe_price_id" value="<?php echo esc_attr(get_option('setae_stripe_price_id')); ?>" class="regular-text" placeholder="price_xxxxxxxx" />
+                            <p class="description">Stripeダッシュボードの商品カタログから取得した「price_」で始まるIDを入力してください。</p>
+                        </td>
                     </tr>
                 </table>
 

@@ -42,12 +42,20 @@ class Setae_API_Stripe
         }
         \Stripe\Stripe::setApiKey($this->stripe_secret_key);
 
+        // ▼▼▼ 新規追加: オプションから実際の料金IDを取得 ▼▼▼
+        $price_id = get_option('setae_stripe_price_id');
+        if (empty($price_id)) {
+            return new WP_Error('stripe_error', '料金ID（Price ID）が設定されていません。管理画面から設定してください。', ['status' => 500]);
+        }
+        // ▲▲▲ 新規追加ここまで ▲▲▲
+
         try {
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [
                     [
-                        'price' => 'price_xxxxxxxxxxxxxx', // ステップ1で取得した料金ID
+                        // ▼▼▼ 修正: ダミー値を消し、変数に置き換え ▼▼▼
+                        'price' => $price_id,
                         'quantity' => 1,
                     ]
                 ],
