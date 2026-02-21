@@ -552,3 +552,32 @@ $temperaments = get_terms(array(
         </button>
     </div>
 </div>
+
+<!-- Gallery View Modal -->
+<div id="modal-gallery-view" class="setae-modal" style="z-index: 100000; display: none;">
+    <div class="modal-content"
+        style="max-width: 800px; padding: 0; background: #111; border: none; overflow: hidden; display: flex; flex-direction: column; position: relative; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+
+        <div
+            style="background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; width: 100%; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div id="gallery-modal-avatar"
+                    style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;">Photo
+                        by</span>
+                    <span id="gallery-modal-username"
+                        style="font-weight: bold; font-size: 14px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8);"></span>
+                </div>
+            </div>
+            <span id="close-gallery-modal"
+                style="color: #fff; opacity: 0.8; cursor: pointer; font-size: 28px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); transition: 0.2s;">&times;</span>
+        </div>
+
+        <div
+            style="height: 75vh; width: 100%; display: flex; align-items: center; justify-content: center; background: #000;">
+            <img id="gallery-modal-img" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        </div>
+    </div>
+</div>

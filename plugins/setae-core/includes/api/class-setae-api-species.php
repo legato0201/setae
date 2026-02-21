@@ -147,6 +147,44 @@ class Setae_API_Species extends WP_REST_Controller
         $lifespan = get_post_meta($id, '_setae_lifespan', true);
         $size = get_post_meta($id, '_setae_size', true);
 
+        // ▼▼▼ 追加: ギャラリー画像の投稿者情報を取得する処理 ▼▼▼
+        $featured_gallery = [];
+        if (!empty($featured)) {
+            global $wpdb;
+            foreach ($featured as $url) {
+                // その画像を持つログを検索
+                $log_id = $wpdb->get_var($wpdb->prepare("
+                    SELECT post_id FROM {$wpdb->postmeta}
+                    WHERE meta_key = '_setae_log_image' AND meta_value = %s
+                    LIMIT 1
+                ", $url));
+
+                $username = 'Unknown User';
+                $avatar = '';
+
+                if ($log_id) {
+                    $log_post = get_post($log_id);
+                    if ($log_post) {
+                        $user_info = get_userdata($log_post->post_author);
+                        if ($user_info) {
+                            $username = $user_info->display_name;
+                            $avatar_id = get_user_meta($user_info->ID, 'setae_user_avatar', true);
+                            if ($avatar_id) {
+                                $avatar = wp_get_attachment_url($avatar_id);
+                            }
+                        }
+                    }
+                }
+
+                $featured_gallery[] = array(
+                    'url' => $url,
+                    'username' => $username,
+                    'avatar' => $avatar
+                );
+            }
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         // Keeping Count
         $keeping_count = $this->count_active_keepers($id);
 
@@ -163,6 +201,7 @@ class Setae_API_Species extends WP_REST_Controller
             'temperature' => get_post_meta($id, '_setae_temperature', true),
             'humidity' => get_post_meta($id, '_setae_humidity', true),
             'featured_images' => $featured,
+            'featured_gallery' => $featured_gallery, // ★追加: ユーザー情報付きの配列をレスポンスに含める
             'keeping_count' => $keeping_count,
         );
 

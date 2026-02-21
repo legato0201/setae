@@ -352,19 +352,24 @@ var SetaeUI = (function ($) {
 
             // Gallery
             const gallery = $('#enc-gallery-grid');
-            gallery.empty();
             const emptyMsg = $('#enc-gallery-empty');
 
-            if (data.featured_images && data.featured_images.length > 0) {
+            if (data.featured_gallery && data.featured_gallery.length > 0) {
+                gallery.empty().show();
                 emptyMsg.hide();
-                data.featured_images.forEach(imgUrl => {
-                    gallery.append(`
-                        <div style="height:100px; overflow:hidden; border-radius:4px;">
-                            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
+                data.featured_gallery.forEach(item => {
+                    const html = `
+                        <div class="gallery-item-trigger" style="height:100px; overflow:hidden; border-radius:4px; cursor:pointer; position:relative;"
+                             data-url="${item.url}"
+                             data-username="${item.username}"
+                             data-avatar="${item.avatar || ''}">
+                            <img src="${item.url}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         </div>
-                    `);
+                    `;
+                    gallery.append(html);
                 });
             } else {
+                gallery.hide();
                 emptyMsg.show();
             }
         });
@@ -658,6 +663,34 @@ var SetaeUI = (function ($) {
         // savePreyList/resetPreyListToDefault are attached to window in log-modal.js
         window.handlePreySelect = SetaeUILogModal.handlePreySelect;
     }
+
+    // ギャラリー画像クリックイベント
+    $(document).off('click', '.gallery-item-trigger').on('click', '.gallery-item-trigger', function () {
+        const url = $(this).data('url');
+        const username = $(this).data('username') || 'Unknown User';
+        const avatar = $(this).data('avatar');
+
+        $('#gallery-modal-img').attr('src', url);
+        $('#gallery-modal-username').text(username);
+
+        const $avatarContainer = $('#gallery-modal-avatar');
+        if (avatar) {
+            $avatarContainer.html(`<img src="${avatar}" style="width:100%; height:100%; object-fit:cover;">`);
+        } else {
+            // アイコンがない場合は頭文字を生成 (Setaeのテーマカラーグラデーション)
+            const initial = username.charAt(0).toUpperCase();
+            $avatarContainer.html(`<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--primary-color, #2ecc71), #27ae60); color:#fff; font-size:16px; font-weight:bold;">${initial}</div>`);
+        }
+
+        $('#modal-gallery-view').fadeIn(200).css('display', 'flex');
+    });
+
+    // ギャラリーモーダルを閉じる
+    $(document).off('click', '#close-gallery-modal, #modal-gallery-view').on('click', '#close-gallery-modal, #modal-gallery-view', function (e) {
+        if (e.target === this || e.target.id === 'close-gallery-modal') {
+            $('#modal-gallery-view').fadeOut(200);
+        }
+    });
 
     // Public API
     return {
