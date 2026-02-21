@@ -70,7 +70,7 @@
                                 <div class="spec-item">
                                     <span class="spec-label">Size</span>
                                     <span class="spec-value">
-                                        <?php echo $size ? esc_html($size) . 'cm' : '-'; ?>
+                                        <?php echo $size ? esc_html(trim(str_ireplace('cm', '', $size))) . 'cm' : '-'; ?>
                                     </span>
                                 </div>
                                 <div class="spec-item">

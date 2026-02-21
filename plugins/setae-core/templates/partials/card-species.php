@@ -58,7 +58,8 @@ if (!empty($styles) && !is_wp_error($styles)) {
             </div>
             <div class="species-specs">
                 <div class="spec-item"><span class="spec-label"><?php esc_html_e('Size', 'setae-core'); ?></span><span
-                        class="spec-value"><?php echo esc_html($size ? $size . 'cm' : '-'); ?></span></div>
+                        class="spec-value"><?php echo esc_html($size ? trim(str_ireplace('cm', '', $size)) . 'cm' : '-'); ?></span>
+                </div>
                 <div class="spec-item"><span class="spec-label"><?php esc_html_e('Temp', 'setae-core'); ?></span><span
                         class="spec-value"><?php echo esc_html($temp ? $temp : '-'); ?></span></div>
                 <div class="spec-item difficulty-<?php echo esc_attr($level); ?>">

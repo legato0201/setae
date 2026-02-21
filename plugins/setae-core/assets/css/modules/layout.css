@@ -34,7 +34,7 @@
     /* Layout: 追従設定 */
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 60px;
+    top: 90px;
     /* PCでのヘッダーオフセット */
     z-index: 900;
 

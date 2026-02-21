@@ -58,127 +58,99 @@ $temperaments = get_terms(array(
 ?>
 
 <div id="setae-species-edit-modal" class="setae-modal" style="display: none;">
-    <div class="setae-modal-content"
-        style="max-width: 650px; width:90%; padding: 0; border-radius: 12px; overflow:hidden; display:flex; flex-direction:column; max-height:90vh;">
+    <div class="setae-modal-content" style="max-width: 600px;">
+        <span id="close-species-edit-modal" class="setae-close">&times;</span>
+        <h3 style="margin-bottom: 5px;">修正・情報提供</h3>
+        <p id="edit-req-species-name-display" style="font-size: 13px; color: #888; margin-top: 0; margin-bottom: 20px;">
+            Species Name</p>
 
-        <div
-            style="background: #fff; padding: 15px 20px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <div>
-                <h3 style="margin:0; font-size:18px; font-weight:700; color:#333;">修正・情報提供</h3>
-                <p id="edit-req-species-name-display"
-                    style="margin:2px 0 0 0; font-size:12px; font-style:italic; color:#888;">Species Name</p>
-            </div>
-            <span id="close-species-edit-modal" class="setae-close"
-                style="font-size:24px; line-height:1; cursor:pointer; color:#999;">&times;</span>
-        </div>
+        <form id="setae-species-edit-form" enctype="multipart/form-data">
+            <input type="hidden" id="edit-req-species-id" name="species_id" value="">
+            <input type="hidden" id="edit-req-species-name" name="species_name" value="">
+            <input type="hidden" name="action" value="setae_submit_species_edit">
 
-        <div style="padding: 20px; overflow-y: auto; background:#f9f9f9; flex-grow:1;">
-
-            <form id="setae-species-edit-form" enctype="multipart/form-data">
-                <input type="hidden" id="edit-req-species-id" name="species_id" value="">
-                <input type="hidden" id="edit-req-species-name" name="species_name" value="">
-                <input type="hidden" name="action" value="setae_submit_species_edit">
-
-                <div class="setae-form-section"
-                    style="background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px; text-align:center;">
-                    <label
-                        style="display:block; font-size:13px; font-weight:bold; margin-bottom:10px; text-align:left;">画像提供
-                        (Best Shot)</label>
-
-                    <div id="image-preview-container"
-                        style="width:100%; height:200px; background:#f0f2f5; border:2px dashed #dce0e6; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin-bottom:10px;">
-                        <img id="edit-image-preview" src=""
-                            style="width:100%; height:100%; object-fit:cover; display:none;">
-                        <div id="edit-image-placeholder" style="color:#adb5bd; text-align:center;">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                            <p style="font-size:12px; margin:5px 0 0;">No Image Selected</p>
-                        </div>
-                    </div>
-
+            <div class="setae-form-group">
+                <label>画像提供 (Best Shot)</label>
+                <div class="setae-file-upload-wrapper">
                     <input type="file" name="suggested_image" id="suggested-image-input" accept="image/*"
                         style="display:none;">
-                    <label for="suggested-image-input" class="setae-btn-outline"
-                        style="display:inline-block; padding:8px 20px; border:1px solid #333; border-radius:20px; font-size:12px; font-weight:bold; color:#333; cursor:pointer; background:#fff; transition:all 0.2s;">
-                        📷 写真を選択 (Choose File)
+
+                    <label for="suggested-image-input" id="edit-image-placeholder"
+                        style="display:block; width:100%; text-align:center; padding: 25px; border: 2px dashed #ccc; background: #fafafa; border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                        <span style="display:block; font-size: 28px; margin-bottom: 8px;">📸</span>
+                        <span style="display:block; font-weight: bold; color: #555; font-size: 14px;">写真を選択 (Choose
+                            File)</span>
+                        <span
+                            style="display:block; font-size: 11px; color: #999; margin-top: 5px;">※ご自身で撮影された写真に限ります</span>
                     </label>
-                    <p style="font-size:10px; color:#999; margin-top:8px;">※ご自身で撮影された写真に限ります</p>
-                </div>
 
-                <div class="setae-form-section"
-                    style="background:#fff; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px;">
-                    <label
-                        style="display:block; font-size:13px; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">基本データ</label>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <label class="setae-label-mini">和名</label>
-                            <input type="text" name="suggested_common_name_ja" class="setae-input-std"
-                                placeholder="例: メキシカンレッドニー">
-                        </div>
-                        <div>
-                            <label class="setae-label-mini">スタイル (Lifestyle)</label>
-                            <select name="suggested_lifestyle" class="setae-input-std">
-                                <option value="">選択...</option>
-                                <option value="地表性">地表性 (Terrestrial)</option>
-                                <option value="樹上性">樹上性 (Arboreal)</option>
-                                <option value="地中性">地中性 (Fossorial)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <label class="setae-label-mini">適温 (Temp)</label>
-                            <input type="text" name="suggested_temperature" class="setae-input-std"
-                                placeholder="例: 24-28℃">
-                        </div>
-                        <div>
-                            <label class="setae-label-mini">湿度 (Humidity)</label> <input type="text"
-                                name="suggested_humidity" class="setae-input-std" placeholder="例: 60-70%">
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <label class="setae-label-mini">性格 (Temperament)</label>
-                        <div id="temperament-selector-trigger"
-                            style="border:1px solid #ddd; padding:8px; border-radius:4px; background:#fff; cursor:pointer; font-size:13px; min-height:38px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                            <span style="color:#999;">タップして選択してください...</span>
-                        </div>
-                        <input type="hidden" name="suggested_temperament_ids" id="suggested-temperament-input">
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label class="setae-label-mini">寿命 (Lifespan)</label>
-                            <input type="text" name="suggested_lifespan" class="setae-input-std"
-                                placeholder="例: 15-20 years">
-                        </div>
-                        <div>
-                            <label class="setae-label-mini">最大サイズ (Legspan)</label>
-                            <input type="text" name="suggested_size" class="setae-input-std" placeholder="例: 15cm">
-                        </div>
+                    <div id="image-preview-container" style="display:none; margin-top:10px; position:relative;">
+                        <img id="edit-image-preview" src=""
+                            style="width:100%; border-radius:8px; height:200px; object-fit:cover; border: 1px solid #eee;">
+                        <button type="button" id="btn-remove-suggested-image" class="remove-image-btn"
+                            style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size: 16px; line-height: 1;">×</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="setae-form-section"
-                    style="background:#fff; padding:15px; border-radius:8px; border:1px solid #eee;">
-                    <label class="setae-label-mini">特徴・補足情報</label>
-                    <textarea name="suggested_description" rows="4" class="setae-input-std" style="resize:vertical;"
-                        placeholder="詳細な特徴や飼育のポイントがあれば追記してください..."></textarea>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="setae-form-group">
+                    <label>和名</label>
+                    <input type="text" name="suggested_common_name_ja" class="setae-input" placeholder="例: メキシカンレッドニー">
                 </div>
+                <div class="setae-form-group">
+                    <label>スタイル (Lifestyle)</label>
+                    <select name="suggested_lifestyle" class="setae-input">
+                        <option value="">選択...</option>
+                        <option value="地表性">地表性 (Terrestrial)</option>
+                        <option value="樹上性">樹上性 (Arboreal)</option>
+                        <option value="地中性">地中性 (Fossorial)</option>
+                    </select>
+                </div>
+            </div>
 
-                <div style="height:20px;"></div>
-                <div class="setae-form-actions" style="text-align:center;">
-                    <button type="submit" class="setae-btn-primary"
-                        style="width:100%; padding:12px; font-size:16px; font-weight:bold; border-radius:8px;">提案を送信する</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="setae-form-group">
+                    <label>適温 (Temp)</label>
+                    <input type="text" name="suggested_temperature" class="setae-input" placeholder="例: 24-28℃">
                 </div>
-            </form>
-        </div>
+                <div class="setae-form-group">
+                    <label>湿度 (Humidity)</label>
+                    <input type="text" name="suggested_humidity" class="setae-input" placeholder="例: 60-70%">
+                </div>
+            </div>
+
+            <div class="setae-form-group">
+                <label>性格 (Temperament)</label>
+                <div id="temperament-selector-trigger" class="setae-input"
+                    style="cursor:pointer; display:flex; align-items:center; flex-wrap:wrap; gap:4px; min-height: 42px;">
+                    <span style="color:#999;">タップして選択してください...</span>
+                </div>
+                <input type="hidden" name="suggested_temperament_ids" id="suggested-temperament-input">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="setae-form-group">
+                    <label>寿命 (Lifespan)</label>
+                    <input type="text" name="suggested_lifespan" class="setae-input" placeholder="例: 15-20 years">
+                </div>
+                <div class="setae-form-group">
+                    <label>最大サイズ (Legspan)</label>
+                    <input type="text" name="suggested_size" class="setae-input" placeholder="例: 15cm">
+                </div>
+            </div>
+
+            <div class="setae-form-group">
+                <label>特徴・補足情報</label>
+                <textarea name="suggested_description" rows="4" class="setae-input" style="resize:vertical;"
+                    placeholder="詳細な特徴や飼育のポイントがあれば追記してください..."></textarea>
+            </div>
+
+            <div class="setae-form-actions" style="margin-top: 20px;">
+                <button type="submit" class="setae-btn setae-btn-primary"
+                    style="width: 100%; padding: 12px; font-size: 16px;">提案を送信する</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -207,42 +179,6 @@ $temperaments = get_terms(array(
         </div>
     </div>
 </div>
-
-<style>
-    .setae-label-mini {
-        display: block;
-        font-size: 11px;
-        font-weight: bold;
-        color: #666;
-        margin-bottom: 4px;
-    }
-
-    .setae-input-std {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: #fff;
-        box-sizing: border-box;
-    }
-
-    .setae-input-std:focus {
-        border-color: #333;
-        outline: none;
-    }
-
-    /* チップスタイル (選択された性格表示用) */
-    .temp-chip {
-        display: inline-block;
-        font-size: 11px;
-        background: #eee;
-        padding: 2px 8px;
-        border-radius: 12px;
-        margin-right: 4px;
-        margin-bottom: 2px;
-    }
-</style>
 
 
 <!-- Edit Spider Modal -->

@@ -320,7 +320,7 @@ var SetaeUI = (function ($) {
             // Stats
             $('#enc-detail-description').html(data.description ? data.description.replace(/\n/g, '<br>') : 'No description available.');
             $('#enc-detail-lifespan').text(data.lifespan || '-');
-            $('#enc-detail-size').text(data.size ? data.size + ' cm' : '-');
+            $('#enc-detail-size').text(data.size ? String(data.size).replace(/cm/gi, '').trim() + ' cm' : '-');
             $('#enc-detail-temp').text(data.temperature || '-');
             $('#enc-detail-humidity').text(data.humidity || '-');
 
