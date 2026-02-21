@@ -95,7 +95,27 @@ class Setae_Core
 
         // ▼ 追加: 管理画面アクセス制限のフックを登録
         $this->loader->add_action('admin_init', $this, 'restrict_admin_access');
+
+        // ▼▼▼ 新規追加: 採用時のボーナス枠付与アクション ▼▼▼
+        $this->loader->add_action('setae_on_best_shot_approved', $this, 'grant_bonus_spider_limit', 10, 1);
+        $this->loader->add_action('setae_on_encyclopedia_approved', $this, 'grant_bonus_spider_limit', 10, 1);
+        // ▲▲▲ 新規追加ここまで ▲▲▲
     }
+
+    // ▼▼▼ 新規追加: ボーナス枠付与メソッド ▼▼▼
+    /**
+     * ベストショットや図鑑情報が採用された際に、生体登録上限を+1する
+     * @param int $user_id 対象のユーザーID
+     */
+    public function grant_bonus_spider_limit($user_id)
+    {
+        if (!$user_id)
+            return;
+
+        $current_bonus = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
+        update_user_meta($user_id, '_setae_bonus_spider_limit', $current_bonus + 1);
+    }
+    // ▲▲▲ 新規追加ここまで ▲▲▲
 
     /**
      * 管理者以外が管理画面にアクセスしたらリダイレクトする

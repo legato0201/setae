@@ -53,6 +53,7 @@ class Setae_Dashboard
                 'display_name' => wp_get_current_user()->display_name,
                 'email' => wp_get_current_user()->user_email,
                 'avatar' => get_avatar_url(get_current_user_id()),
+                'is_premium' => get_user_meta(get_current_user_id(), '_setae_is_premium', true),
             )
         ));
 

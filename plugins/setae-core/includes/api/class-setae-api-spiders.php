@@ -366,6 +366,31 @@ class Setae_API_Spiders
     {
         $user_id = get_current_user_id();
 
+        // ▼▼▼ 新規追加: 生体登録数の上限チェック ▼▼▼
+        $is_premium = get_user_meta($user_id, '_setae_is_premium', true);
+
+        if (!$is_premium) {
+            // 現在の登録数を取得
+            $current_spiders_count = count_user_posts($user_id, 'setae_spider', true);
+
+            // 基本上限を取得（管理画面で変更可能にするためget_optionを使用。デフォルト5）
+            $base_limit = (int) get_option('setae_free_spider_limit', 5);
+
+            // ボーナス枠を取得（ベストショットや図鑑情報採用で付与される枠）
+            $bonus_limit = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
+
+            $total_limit = $base_limit + $bonus_limit;
+
+            if ($current_spiders_count >= $total_limit) {
+                return new WP_Error(
+                    'limit_reached',
+                    '生体の登録上限（' . $total_limit . '匹）に達しています。プレミアムプランにアップグレードするか、既存の生体を削除してください。',
+                    array('status' => 403)
+                );
+            }
+        }
+        // ▲▲▲ 新規追加ここまで ▲▲▲
+
         // パラメータ取得
         $classification = $request->get_param('classification') ?: 'tarantula';
         $species_id = $request->get_param('species_id');
