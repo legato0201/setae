@@ -1,6 +1,11 @@
 var SetaeUIBL = (function ($) {
     'use strict';
 
+    // ▼ 変更箇所: wp.i18n.__ の代わりに、PHPから渡される SetaeBL_i18n を参照する関数を定義
+    const __ = function (text) {
+        return (typeof SetaeBL_i18n !== 'undefined' && SetaeBL_i18n[text]) ? SetaeBL_i18n[text] : text;
+    };
+
     // 状態管理用
     let currentCandidates = [];
 
@@ -71,10 +76,10 @@ var SetaeUIBL = (function ($) {
         const tabsHtml = `
             <div class="setae-segment-nav">
                 <button class="segment-btn active" data-target="tab-community-list">
-                    Community Listings <span class="count-badge-inline">${otherSpiders.length}</span>
+                    ${__('Community Listings', 'setae-core')} <span class="count-badge-inline">${otherSpiders.length}</span>
                 </button>
                 <button class="segment-btn" data-target="tab-mylistings-list">
-                    My Listings <span class="count-badge-inline">${mySpiders.length}</span>
+                    ${__('My Listings', 'setae-core')} <span class="count-badge-inline">${mySpiders.length}</span>
                 </button>
             </div>
         `;
@@ -83,9 +88,9 @@ var SetaeUIBL = (function ($) {
         const contentHtml = `
             <div id="tab-community-list" class="bl-tab-pane active">
                 <div class="setae-list-header">
-                    <span class="col-status">Status</span>
-                    <span class="col-main">Details</span>
-                    <span class="col-actions">Actions</span>
+                    <span class="col-status">${__('Status', 'setae-core')}</span>
+                    <span class="col-main">${__('Details', 'setae-core')}</span>
+                    <span class="col-actions">${__('Actions', 'setae-core')}</span>
                 </div>
                 <div class="setae-list-group">
                     ${otherSpiders.length > 0
@@ -96,9 +101,9 @@ var SetaeUIBL = (function ($) {
             
             <div id="tab-mylistings-list" class="bl-tab-pane" style="display:none;">
                 <div class="setae-list-header">
-                    <span class="col-status">Status</span>
-                    <span class="col-main">Details</span>
-                    <span class="col-actions">Actions</span>
+                    <span class="col-status">${__('Status', 'setae-core')}</span>
+                    <span class="col-main">${__('Details', 'setae-core')}</span>
+                    <span class="col-actions">${__('Actions', 'setae-core')}</span>
                 </div>
                 <div class="setae-list-group">
                     ${mySpiders.length > 0
@@ -149,7 +154,7 @@ var SetaeUIBL = (function ($) {
                 </button>
             `;
         } else {
-            actionBtn = `<span class="badge-mine">Your Listing</span>`;
+            actionBtn = `<span class="badge-mine">${__('Your Listing', 'setae-core')}</span>`;
         }
 
         const dateStr = 'ID: ' + spider.id;
@@ -285,8 +290,8 @@ var SetaeUIBL = (function ($) {
                     </div>
                 </div>
                 <div class="modal-footer-actions">
-                    <button class="btn-cancel btn-close-modal">Cancel</button>
-                    <button id="btn-submit-request" class="btn-submit-req">Send Request</button>
+                    <button class="btn-cancel btn-close-modal">${__('Cancel', 'setae-core')}</button>
+                    <button id="btn-submit-request" class="btn-submit-req">${__('Send Request', 'setae-core')}</button>
                 </div>
             </div>
         </div>
@@ -370,10 +375,10 @@ var SetaeUIBL = (function ($) {
         const tabsHtml = `
             <div class="setae-segment-nav">
                 <button class="segment-btn active" data-target="tab-incoming">
-                    Requests Received <span class="count-badge-inline">${incoming.length}</span>
+                    ${__('Requests Received', 'setae-core')} <span class="count-badge-inline">${incoming.length}</span>
                 </button>
                 <button class="segment-btn" data-target="tab-outgoing">
-                    Requests Sent <span class="count-badge-inline">${outgoing.length}</span>
+                    ${__('Requests Sent', 'setae-core')} <span class="count-badge-inline">${outgoing.length}</span>
                 </button>
             </div>
         `;

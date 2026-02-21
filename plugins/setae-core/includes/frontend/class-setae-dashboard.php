@@ -156,6 +156,22 @@ class Setae_Dashboard
         wp_enqueue_script('setae-ui-profile', SETAE_PLUGIN_URL . 'assets/js/modules/ui/profile.js', $ui_deps, $this->version, true); // New Profile Module
         wp_enqueue_script('setae-ui-add-spider', SETAE_PLUGIN_URL . 'assets/js/modules/ui/add-spider.js', $ui_deps, $this->version, true); // Add Spider Module
         wp_enqueue_script('setae-ui-breeding-loan', SETAE_PLUGIN_URL . 'assets/js/modules/ui/breeding_loan.js', $ui_deps, $this->version, true); // Breeding Loan Module
+
+        // ▼ 追加: BLモジュール用翻訳データのLocalization
+        $bl_i18n_strings = array(
+            'Community Listings' => __('Community Listings', 'setae-core'),
+            'My Listings' => __('My Listings', 'setae-core'),
+            'Status' => __('Status', 'setae-core'),
+            'Details' => __('Details', 'setae-core'),
+            'Actions' => __('Actions', 'setae-core'),
+            'Your Listing' => __('Your Listing', 'setae-core'),
+            'Cancel' => __('Cancel', 'setae-core'),
+            'Send Request' => __('Send Request', 'setae-core'),
+            'Requests Received' => __('Requests Received', 'setae-core'),
+            'Requests Sent' => __('Requests Sent', 'setae-core'),
+        );
+        wp_localize_script('setae-ui-breeding-loan', 'SetaeBL_i18n', $bl_i18n_strings);
+
         wp_enqueue_script('setae-ui-encyclopedia', SETAE_PLUGIN_URL . 'assets/js/modules/ui/encyclopedia.js', $ui_deps, $this->version, true); // Encyclopedia Module
 
         // 1.5 Desktop Specific Logic

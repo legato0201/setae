@@ -308,3 +308,30 @@ msgstr "現在、承認待ちのBest Shotsはありません。"
 
 msgid "No records found."
 msgstr "レコードが見つかりませんでした。"
+
+msgid "Community Listings"
+msgstr "コミュニティの募集"
+
+msgid "My Listings"
+msgstr "自分の募集"
+
+msgid "Status"
+msgstr "ステータス"
+
+msgid "Details"
+msgstr "詳細"
+
+msgid "Requests Received"
+msgstr "受信したリクエスト"
+
+msgid "Requests Sent"
+msgstr "送信したリクエスト"
+
+msgid "Your Listing"
+msgstr "自分の募集"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "Send Request"
+msgstr "リクエスト送信"

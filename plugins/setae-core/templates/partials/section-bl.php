@@ -5,10 +5,10 @@
 ?>
 <div id="section-bl" class="setae-section" style="display:none;">
     <div class="setae-card">
-        <h3>Breeding Loan Match</h3>
+        <h3><?php esc_html_e('Breeding Loan Match', 'setae-core'); ?></h3>
         <div class="setae-toolbar" style="margin-top:10px;">
-            <button class="setae-btn-sm active" id="btn-bl-board">募集中</button>
-            <button class="setae-btn-sm" id="btn-bl-contracts">契約管理</button>
+            <button class="setae-btn-sm active" id="btn-bl-board"><?php esc_html_e('募集中', 'setae-core'); ?></button>
+            <button class="setae-btn-sm" id="btn-bl-contracts"><?php esc_html_e('契約管理', 'setae-core'); ?></button>
         </div>
     </div>
 
