@@ -97,6 +97,40 @@ class Setae_CPT_Suggestion
             }
             echo '<div><strong>性格:</strong> ' . esc_html(implode(', ', $names)) . '</div>';
         }
+
+        // ▼▼▼ 新規追加: 本文（特徴・補足情報）の差分表示 ▼▼▼
+        $suggestion_content = get_post_field('post_content', $post->ID);
+        $original_content = get_post_field('post_content', $target_id);
+
+        if (!empty($suggestion_content) && $suggestion_content !== $original_content) {
+            echo '<hr style="margin: 15px 0;">';
+            echo '<h4 style="margin-bottom: 10px;">特徴・補足情報の変更 (差分)</h4>';
+
+            // WordPress標準のテキスト差分表示関数を使用
+            $args = array(
+                'title' => '',
+                'title_left' => '現在の内容',
+                'title_right' => '提案された内容',
+            );
+            $diff_html = wp_text_diff($original_content, $suggestion_content, $args);
+
+            if ($diff_html) {
+                // 差分テーブルを見やすくするためのCSSを直接出力
+                echo '<style>
+                    table.diff { width: 100%; border-collapse: collapse; font-size: 13px; font-family: monospace; background: #fff; border: 1px solid #ccd0d4; }
+                    table.diff th { background: #f0f0f1; padding: 6px; font-weight: bold; border-bottom: 1px solid #ccd0d4; }
+                    table.diff td { padding: 6px; vertical-align: top; white-space: pre-wrap; word-break: break-all; }
+                    table.diff .diff-deletedline { background-color: #fcf0f1; border-left: 4px solid #d63638; }
+                    table.diff .diff-deletedline del { text-decoration: none; color: #d63638; background: #f8cacc; }
+                    table.diff .diff-addedline { background-color: #f0f7f4; border-left: 4px solid #00a32a; }
+                    table.diff .diff-addedline ins { text-decoration: none; color: #00a32a; background: #c6e9d0; }
+                </style>';
+                echo $diff_html;
+            } else {
+                echo '<p>文章の変更はありません。</p>';
+            }
+        }
+        // ▲▲▲ 新規追加ここまで ▲▲▲
     }
 
     // 4. 自動反映ロジック (保存時にフック)
@@ -176,15 +210,12 @@ class Setae_CPT_Suggestion
             // ▲▲▲ 新規追加ここまで ▲▲▲
         }
 
-        // 5. 説明文 (本文) -> 追記
+        // 5. 説明文 (本文) -> 上書き (追記から変更)
         $suggestion_content = get_post_field('post_content', $post_id);
         if (!empty($suggestion_content)) {
-            $original_content = get_post_field('post_content', $target_id);
-            // 重複追記を避けるロジックなどは必要に応じて追加
-            $new_content = $original_content . "\n\n\n" . $suggestion_content;
             wp_update_post(array(
                 'ID' => $target_id,
-                'post_content' => $new_content
+                'post_content' => $suggestion_content // $new_content を使わず直接上書き
             ));
         }
     }
