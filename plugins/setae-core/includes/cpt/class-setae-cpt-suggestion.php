@@ -158,6 +158,22 @@ class Setae_CPT_Suggestion
         if (has_post_thumbnail($post_id)) {
             $thumb_id = get_post_thumbnail_id($post_id);
             set_post_thumbnail($target_id, $thumb_id);
+
+            // ▼▼▼ 新規追加: 画像が提供・採用された場合、提案者にボーナス枠を付与 ▼▼▼
+            $suggestion_post = get_post($post_id);
+            $author_id = $suggestion_post->post_author;
+
+            // 重複付与を防ぐためのフラグを確認
+            $bonus_granted = get_post_meta($post_id, '_setae_bonus_granted', true);
+
+            if (!$bonus_granted && $author_id) {
+                // Setae_Coreで定義したボーナス付与アクションを発火
+                do_action('setae_on_encyclopedia_approved', $author_id);
+
+                // 付与完了フラグを保存（2回目以降の保存では付与しない）
+                update_post_meta($post_id, '_setae_bonus_granted', true);
+            }
+            // ▲▲▲ 新規追加ここまで ▲▲▲
         }
 
         // 5. 説明文 (本文) -> 追記

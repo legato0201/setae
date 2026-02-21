@@ -17,7 +17,13 @@ var SetaeCore = (function ($) {
         encFilter: localStorage.getItem('setae_enc_filter') || 'all',
         encSort: localStorage.getItem('setae_enc_sort') || 'name',
 
-        feedTypes: (typeof SetaeSettings !== 'undefined' && SetaeSettings.feed_types) ? SetaeSettings.feed_types : ['Cricket', 'Dubia']
+        feedTypes: (typeof SetaeSettings !== 'undefined' && SetaeSettings.feed_types) ? SetaeSettings.feed_types : [
+            'Fruit Fly (ショウジョウバエ)',
+            'Cricket (コオロギ)',
+            'Red Roach (レッドローチ)',
+            'Dubia (デュビア)',
+            'Pinky (ピンキー)'
+        ]
     };
 
     // Global Utilities
