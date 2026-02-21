@@ -163,7 +163,15 @@ jQuery(document).ready(function ($) {
 
         // ▲▲▲ 追加終了 ▲▲▲
 
+        // ▲▲▲ 追加終了 ▲▲▲
+
         $('#setae-species-edit-modal').fadeIn(200).css('display', 'flex');
+
+        // ▼▼▼ ここに追加: モーダルが開いた後にチュートリアルを起動 ▼▼▼
+        if (typeof SetaeTutorial !== 'undefined' && typeof SetaeTutorial.initEditSuggestion === 'function') {
+            SetaeTutorial.initEditSuggestion();
+        }
+        // ▲▲▲ 追加終了 ▲▲▲
     });
 
     // 2. 閉じる

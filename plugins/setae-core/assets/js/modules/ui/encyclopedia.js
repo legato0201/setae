@@ -175,6 +175,13 @@ var SetaeUIEncyclopedia = (function ($) {
                             checkLoaderVisibility();
                             setupObserver();
                         }
+
+                        // ▼▼▼ ここに追加: 初回データ読み込み完了時にチュートリアルを起動 ▼▼▼
+                        if (typeof SetaeTutorial !== 'undefined' && typeof SetaeTutorial.initEncyclopedia === 'function') {
+                            SetaeTutorial.initEncyclopedia();
+                        }
+                        // ▲▲▲ 追加終了 ▲▲▲
+
                     } else {
                         $container.append(res.data.html);
                     }
