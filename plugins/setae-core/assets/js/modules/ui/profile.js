@@ -71,7 +71,7 @@ var SetaeUIProfile = (function ($) {
                         ${currentUser.is_premium
                 ? `<div class="premium-status" style="padding:15px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;">
                                 <div style="font-weight:bold;color:#b28900;margin-bottom:10px;">
-                                    <img draggable="false" role="img" class="emoji" alt="🌟" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f31f.svg"> ${__('You are a Premium Member')}
+                                    <img draggable="false" role="img" class="emoji" alt="🌟" src="/wp-content/plugins/setae-core/assets/images/emoji/1f31f.svg"> ${__('You are a Premium Member')}
                                 </div>
                                 <button type="button" id="btn-manage-subscription" class="setae-btn">
                                     ${__('プランの管理・解約手続き')}

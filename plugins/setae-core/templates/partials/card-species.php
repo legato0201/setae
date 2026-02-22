@@ -18,8 +18,8 @@ if (!$title_ja) {
 // 画像
 $thumb_id = get_post_thumbnail_id($id);
 $img_html = '
-<div class="no-image setae-avatar-img" style="background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-    <img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f577.svg" style="object-fit: fill;width: 50%; height: 50%; filter: grayscale(100%) opacity(0.35);" alt="No Image">
+<div class="no-image setae-avatar-img" style="background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;border:0px;">
+    <img src="' . esc_url(plugins_url('assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php')) . '" style="object-fit: fill;width: 50%; height: 50%; filter: grayscale(100%) opacity(0.35);" alt="No Image">
 </div>';
 if ($thumb_id) {
     $img_html = wp_get_attachment_image($thumb_id, 'medium', false, array('loading' => 'lazy'));

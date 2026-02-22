@@ -31,7 +31,7 @@
 
         <button type="button" id="btn-trigger-comment-image" title="画像を添付">
             <img draggable="false" role="img" class="emoji" alt="📸"
-                src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4f8.svg">
+                src="<?php echo plugins_url( 'assets/images/emoji/1f4f8.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
         </button>
 
         <div id="comment-image-preview" style="display:none;">

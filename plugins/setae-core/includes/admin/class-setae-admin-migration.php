@@ -352,23 +352,23 @@ class Setae_Admin_Migration
                                 <div class="setae-radio-group mig-val-class-group" style="display:flex; gap:5px; flex-wrap:wrap;">
                                     <label class="radio-chip ${defaultClass === 'tarantula' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="tarantula" ${defaultClass === 'tarantula' ? 'checked' : ''} hidden>
-                                        <img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f577.svg" alt="🕷️">クモ
+                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🕷️">クモ
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'scorpion' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="scorpion" ${defaultClass === 'scorpion' ? 'checked' : ''} hidden>
-                                        <img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f982.svg" alt="🦂">サソリ
+                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f982.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🦂">サソリ
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'reptile' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="reptile" ${defaultClass === 'reptile' ? 'checked' : ''} hidden>
-                                        <img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f98e.svg" alt="🦎">爬虫類
+                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f98e.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🦎">爬虫類
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'plant' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="plant" ${defaultClass === 'plant' ? 'checked' : ''} hidden>
-                                        <img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f33f.svg" alt="🌿">植物
+                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f33f.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🌿">植物
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'other' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="other" ${defaultClass === 'other' ? 'checked' : ''} hidden>
-                                        <img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4e6.svg" alt="📦">その他
+                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f4e6.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="📦">その他
                                     </label>
                                 </div>
                             `;

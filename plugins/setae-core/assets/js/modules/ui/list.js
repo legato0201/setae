@@ -206,7 +206,7 @@ var SetaeUIList = (function ($) {
                 case 'tarantula':
                 default: emojiSvgName = '1f577.svg'; break; // 🕷️
             }
-            const emojiUrl = `https://s.w.org/images/core/emoji/17.0.2/svg/${emojiSvgName}`;
+            const emojiUrl = `/wp-content/plugins/setae-core/assets/images/emoji/${emojiSvgName}`;
 
             // Flexboxを使ってグレー背景の中央にTwemojiを配置
             thumbHtml = `

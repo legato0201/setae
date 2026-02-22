@@ -498,7 +498,7 @@ var SetaeUI = (function ($) {
                             </div>
 
                             <div class="setae-topic-comments-count">
-                                <img draggable="false" role="img" class="emoji" alt="💬" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4ac.svg">
+                                <img draggable="false" role="img" class="emoji" alt="💬" src="/wp-content/plugins/setae-core/assets/images/emoji/1f4ac.svg">
                                 <span class="count">${topic.comment_count}</span>
                             </div>
                         </div>
@@ -562,7 +562,7 @@ var SetaeUI = (function ($) {
                                 ${topicAvatarHtml}
                             </div>
                             <span class="setae-author-name">${data.author_name}</span>
-                            <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4c5.svg"> ${data.date}
+                            <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="/wp-content/plugins/setae-core/assets/images/emoji/1f4c5.svg"> ${data.date}
                         </div>
                         <div class="setae-topic-body">
                             <p>${data.content}</p>

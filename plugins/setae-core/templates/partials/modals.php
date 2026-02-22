@@ -233,12 +233,12 @@ $temperaments = get_terms(array(
                     <label class="segment-item">
                         <input type="radio" name="edit_spider_gender" value="female">
                         <span><img draggable="false" role="img" class="emoji" alt="♀"
-                                src="https://s.w.org/images/core/emoji/17.0.2/svg/2640.svg"> メス</span>
+                                src="<?php echo plugins_url( 'assets/images/emoji/2640.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>"> メス</span>
                     </label>
                     <label class="segment-item">
                         <input type="radio" name="edit_spider_gender" value="male">
                         <span><img draggable="false" role="img" class="emoji" alt="♂"
-                                src="https://s.w.org/images/core/emoji/17.0.2/svg/2642.svg"> オス</span>
+                                src="<?php echo plugins_url( 'assets/images/emoji/2642.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>"> オス</span>
                     </label>
                 </div>
             </div>
@@ -293,7 +293,7 @@ $temperaments = get_terms(array(
             style="display:none; padding:20px; background:#fffbea; border:1px solid #fce8a6; border-radius:12px; text-align:center; margin-bottom:15px;">
             <div style="font-weight:bold; color:#b28900; margin-bottom:10px; font-size:16px;">
                 <img draggable="false" role="img" class="emoji" alt="⚠️"
-                    src="https://s.w.org/images/core/emoji/17.0.2/svg/26a0.svg">
+                    src="<?php echo plugins_url( 'assets/images/emoji/26a0.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                 <?php esc_html_e('生体の登録上限に達しています', 'setae-core'); ?>
             </div>
             <p style="font-size:13px; color:#555; margin-bottom:20px; line-height:1.5;">
@@ -303,14 +303,14 @@ $temperaments = get_terms(array(
                 <button type="button" class="setae-btn setae-btn-primary" id="limit-upgrade-premium-btn"
                     style="background:linear-gradient(135deg, #FFD700, #FDB931); border:none; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">
                     <img draggable="false" role="img" class="emoji" alt="✨"
-                        src="https://s.w.org/images/core/emoji/17.0.2/svg/2728.svg">
+                        src="<?php echo plugins_url( 'assets/images/emoji/2728.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                     <?php esc_html_e('プレミアムプランにアップグレード (無制限)', 'setae-core'); ?>
                 </button>
                 <button type="button" class="setae-btn"
                     style="background:#fff; border:1px solid #ddd; color:#333; font-size:13px;"
                     onclick="jQuery('#modal-add-spider').fadeOut(); jQuery('.setae-nav-item[data-target=\'section-enc\']').click();">
                     <img draggable="false" role="img" class="emoji" alt="📖"
-                        src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4d6.svg">
+                        src="<?php echo plugins_url( 'assets/images/emoji/1f4d6.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                     <?php esc_html_e('図鑑へ写真提供してボーナス枠を獲得 (+1枠)', 'setae-core'); ?>
                 </button>
             </div>
@@ -325,31 +325,31 @@ $temperaments = get_terms(array(
                     <label class="radio-chip active">
                         <input type="radio" name="classification" value="tarantula" checked="" hidden="">
                         <img draggable="false" role="img" class="emoji" alt="🕷️"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f577.svg">
+                            src="<?php echo plugins_url( 'assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                         <?php esc_html_e('Tarantula', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
                         <input type="radio" name="classification" value="scorpion" hidden="">
                         <img draggable="false" role="img" class="emoji" alt="🦂"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f982.svg">
+                            src="<?php echo plugins_url( 'assets/images/emoji/1f982.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                         <?php esc_html_e('Scorpion', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
                         <input type="radio" name="classification" value="reptile" hidden="">
                         <img draggable="false" role="img" class="emoji" alt="🦎"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f98e.svg">
+                            src="<?php echo plugins_url( 'assets/images/emoji/1f98e.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                         <?php esc_html_e('Reptile', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
                         <input type="radio" name="classification" value="plant" hidden="">
                         <img draggable="false" role="img" class="emoji" alt="🌿"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f33f.svg">
+                            src="<?php echo plugins_url( 'assets/images/emoji/1f33f.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                         <?php esc_html_e('Plant', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
                         <input type="radio" name="classification" value="other" hidden="">
                         <img draggable="false" role="img" class="emoji" alt="📦"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4e6.svg">
+                            src="<?php echo plugins_url( 'assets/images/emoji/1f4e6.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                         <?php esc_html_e('Other', 'setae-core'); ?>
                     </label>
                 </div>
@@ -363,7 +363,7 @@ $temperaments = get_terms(array(
                     <button type="button" id="btn-trigger-upload-add" class="setae-btn"
                         style="width:100%; border:2px dashed #ccc; background:#fafafa; color:#888; padding:15px; margin-top:5px;">
                         <img draggable="false" role="img" class="emoji" alt="📸"
-                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4f8.svg">
+                            src="<?php echo plugins_url( 'assets/images/emoji/1f4f8.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
                         <?php esc_html_e('写真を選択', 'setae-core'); ?>
                     </button>
                     <div id="spider-image-preview" style="display:none; margin-top:10px; position:relative;">
@@ -476,7 +476,7 @@ $temperaments = get_terms(array(
 
             <div class="form-row-top">
                 <div class="setae-form-group date-group">
-                    <label><img src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4c5.svg" class="label-icon">
+                    <label><img src="<?php echo plugins_url( 'assets/images/emoji/1f4c5.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" class="label-icon">
                         日付</label>
                     <input type="date" id="log-date" class="setae-input-sm" required>
                 </div>
