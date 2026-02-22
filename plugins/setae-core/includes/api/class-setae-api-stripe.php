@@ -154,14 +154,13 @@ class Setae_API_Stripe
                         update_user_meta($user_id, '_setae_is_premium', true);
 
                         // 期間満了での解約が予約されているかチェック
-                        if ($subscription->cancel_at_period_end) {
-                            // 終了予定のUNIXタイムスタンプを保存
-                            update_user_meta($user_id, '_setae_premium_cancel_at', $subscription->current_period_end);
-                            update_user_meta($user_id, '_setae_stripe_cancel_at_period_end', true);
+                        if ($subscription->cancel_at || $subscription->cancel_at_period_end) {
+                            // 終了予定のUNIXタイムスタンプを保存（cancel_at があればそれを使用、なければ current_period_end）
+                            $cancel_time = $subscription->cancel_at ? $subscription->cancel_at : $subscription->current_period_end;
+                            update_user_meta($user_id, '_setae_premium_cancel_at', $cancel_time);
                         } else {
                             // 解約予約がキャンセル（再開）された場合はメタデータを削除
                             delete_user_meta($user_id, '_setae_premium_cancel_at');
-                            update_user_meta($user_id, '_setae_stripe_cancel_at_period_end', false);
                         }
 
                     } else {

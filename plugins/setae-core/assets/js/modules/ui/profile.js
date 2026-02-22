@@ -33,7 +33,6 @@ var SetaeUIProfile = (function ($) {
         const spiderLimit = currentUser.spider_limit || 5;
         const refCode = currentUser.referral_code || '未発行';
         const bonusLimit = currentUser.bonus_limit || 0;
-        const isCanceled = currentUser.cancel_at_period_end === true || currentUser.cancel_at_period_end === "1";
 
         const html = `
         <div class="setae-modal-overlay active" id="setae-profile-modal" style="display:flex;">
@@ -86,21 +85,33 @@ var SetaeUIProfile = (function ($) {
 
                     <div class="setae-form-group">
                         <label>${__('Premium Plan')}</label>
-                        ${currentUser.is_premium
-                ? `<div class="premium-status" style="padding:15px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;">
-                        <div style="font-weight:bold;color:#b28900;margin-bottom:5px;">
-                            <img draggable="false" role="img" class="emoji" alt="🌟" src="/wp-content/plugins/setae-core/assets/images/emoji/1f31f.svg"> ${__('You are a Premium Member')}
-                        </div>
-                        ${isCanceled
-                    ? `<div style="font-size:12px; color:#e74c3c; margin-bottom:10px; font-weight:bold;">${__('解約手続き済み（期間終了まで利用可）')}</div>`
-                    : `<div style="font-size:12px; color:#27ae60; margin-bottom:10px; font-weight:bold;">${__('自動更新有効')}</div>`
+                        ${(function () {
+                if (currentUser.is_premium) {
+                    let dateHtml = '';
+                    if (currentUser.premium_cancel_at) {
+                        // 解約予定がある場合（UNIXタイムスタンプを日付に変換）
+                        const cancelDate = new Date(currentUser.premium_cancel_at * 1000);
+                        const dateString = cancelDate.toLocaleDateString('ja-JP');
+                        dateHtml = `<div style="font-size:12px; color:#e74c3c; margin-bottom:10px; font-weight:bold;">サービスは ${dateString} に終了します</div>`;
+                    } else {
+                        // 自動更新が有効な場合
+                        dateHtml = `<div style="font-size:12px; color:#27ae60; margin-bottom:10px; font-weight:bold;">${__('自動更新有効')}</div>`;
+                    }
+
+                    return `
+                                <div class="premium-status" style="padding:15px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;">
+                                    <div style="font-weight:bold;color:#b28900;margin-bottom:5px;">
+                                        <img draggable="false" role="img" class="emoji" alt="🌟" src="/wp-content/plugins/setae-core/assets/images/emoji/1f31f.svg"> ${__('You are a Premium Member')}
+                                    </div>
+                                    ${dateHtml}
+                                    <button type="button" id="btn-manage-subscription" class="setae-btn">
+                                        ${__('プランの管理・解約手続き')}
+                                    </button>
+                                </div>`;
+                } else {
+                    return `<button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn" style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">✨ ${__('Upgrade to Premium')}</button>`;
                 }
-                        <button type="button" id="btn-manage-subscription" class="setae-btn">
-                            ${__('プランの管理・解約手続き')}
-                        </button>
-                   </div>`
-                : `<button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn" style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">✨ ${__('Upgrade to Premium')}</button>`
-            }
+            })()}
                     </div>
 
                     <div class="setae-form-group" style="text-align: center; margin-top: 10px;">

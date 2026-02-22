@@ -43,7 +43,6 @@ class Setae_Dashboard
         // ▼▼▼ 追加・修正: ユーザーの登録数と上限を取得するロジック ▼▼▼
         $user_id = get_current_user_id();
         $is_premium = get_user_meta($user_id, '_setae_is_premium', true);
-        $cancel_at_period_end = get_user_meta($user_id, '_setae_stripe_cancel_at_period_end', true);
         $spider_count = count_user_posts($user_id, 'setae_spider', true);
         $base_limit = (int) get_option('setae_free_spider_limit', 5);
         $bonus_limit = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
@@ -82,7 +81,6 @@ class Setae_Dashboard
                 'email' => wp_get_current_user()->user_email,
                 'avatar' => get_avatar_url($user_id),
                 'is_premium' => $is_premium,
-                'cancel_at_period_end' => $cancel_at_period_end,
                 'spider_count' => $spider_count, // 追加
                 'spider_limit' => $spider_limit, // 追加
                 'referral_code' => $referral_code,
