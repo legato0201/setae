@@ -17,6 +17,13 @@ var SetaeUIDetail = (function ($) {
     });
     function loadSpiderDetail(id) {
         currentSpiderId = id;
+
+        // ★追加: 前回のHTML要素(絵文字)が残らないよう empty() で中身も消去
+        $('#section-my-detail .hero-backdrop').css('background-image', 'none').css('background-color', 'transparent').empty();
+        $('#detail-spider-name').text('Loading...');
+        $('#detail-spider-species').text('-');
+        $('#detail-spider-id-badge').text(`#${id}`);
+
         $.ajax({
             url: SetaeCore.state.apiRoot + '/spider/' + id,
             method: 'GET',
@@ -35,14 +42,37 @@ var SetaeUIDetail = (function ($) {
         currentClassification = spider.classification || 'tarantula'; // ★分類を保存
 
         const $heroBackdrop = $('#section-my-detail .hero-backdrop');
-        const imgUrl = spider.image_url || spider.thumb || spider.src || spider.full_image;
+        let imgUrl = spider.image_url || spider.thumb || spider.src || spider.full_image;
+
+        // ★追加: 万が一APIから文字列の 'false' や 'null' が返ってきた場合の誤表示を防ぐ
+        if (imgUrl === 'false' || imgUrl === 'null' || imgUrl === false) {
+            imgUrl = null;
+        }
 
         if (imgUrl) {
             $heroBackdrop.css('background-image', `url('${imgUrl}')`);
+            $heroBackdrop.css('background-color', 'transparent');
+            $heroBackdrop.empty(); // 実画像がある場合は中の要素をクリア
         } else {
-            // 背景用のSVGプレースホルダー（カメラアイコンを少し大きめに中央配置）
-            const heroNoImageSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f1f5f9'/%3E%3Cg transform='translate(276, 176) scale(2)' fill='none' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/g%3E%3C/svg%3E";
-            $heroBackdrop.css('background-image', `url('${heroNoImageSvg}')`);
+            let emojiSvgName = '1f577.svg'; // 🕷️
+            switch (currentClassification) {
+                case 'plant': emojiSvgName = '1f33f.svg'; break; // 🌿
+                case 'reptile': emojiSvgName = '1f98e.svg'; break; // 🦎
+                case 'scorpion': emojiSvgName = '1f982.svg'; break; // 🦂
+                case 'other': emojiSvgName = '1f4e6.svg'; break; // 📦
+                case 'tarantula':
+                default: emojiSvgName = '1f577.svg'; break; // 🕷️
+            }
+            const emojiUrl = `https://s.w.org/images/core/emoji/17.0.2/svg/${emojiSvgName}`;
+
+            // ★修正: background-image ではなく、HTML要素として直接埋め込む
+            $heroBackdrop.css('background-image', 'none');
+            $heroBackdrop.css('background-color', '#f1f5f9');
+            $heroBackdrop.html(`
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <img src="${emojiUrl}" style="width: 140px; height: 140px; filter: grayscale(100%) opacity(0.25);" alt="No Image">
+                </div>
+            `);
         }
 
         // Basic Info & Dates

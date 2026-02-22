@@ -192,9 +192,28 @@ var SetaeUIList = (function ($) {
         const cls = spider.classification || 'tarantula';
         const status = spider.status || 'normal';
         const statusColor = getStatusColor(status);
-        // プロフェッショナルなSVGプレースホルダー（上品なグレー背景＋カメラアイコン）
-        const noImageSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f1f5f9'/%3E%3Cg transform='translate(38, 38)' fill='none' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/g%3E%3C/svg%3E";
-        const thumb = spider.thumb || noImageSvg;
+        // ★修正: HTMLタグを直接生成する方式に変更
+        let thumbHtml = '';
+        if (spider.thumb) {
+            thumbHtml = `<img src="${spider.thumb}" class="setae-avatar-img" alt="Thumbnail">`;
+        } else {
+            let emojiSvgName = '1f577.svg'; // 🕷️
+            switch (cls) {
+                case 'plant': emojiSvgName = '1f33f.svg'; break; // 🌿
+                case 'reptile': emojiSvgName = '1f98e.svg'; break; // 🦎
+                case 'scorpion': emojiSvgName = '1f982.svg'; break; // 🦂
+                case 'other': emojiSvgName = '1f4e6.svg'; break; // 📦
+                case 'tarantula':
+                default: emojiSvgName = '1f577.svg'; break; // 🕷️
+            }
+            const emojiUrl = `https://s.w.org/images/core/emoji/17.0.2/svg/${emojiSvgName}`;
+
+            // Flexboxを使ってグレー背景の中央にTwemojiを配置
+            thumbHtml = `
+            <div class="setae-avatar-img" style="background-color: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                <img src="${emojiUrl}" style="width: 50%; height: 50%; filter: grayscale(100%) opacity(0.35);" alt="No Image">
+            </div>`;
+        }
 
         const feedRel = SetaeCore.formatRelativeDate(spider.last_feed);
         const moltRel = SetaeCore.formatRelativeDate(spider.last_molt);
@@ -278,7 +297,7 @@ var SetaeUIList = (function ($) {
                     <div class="setae-status-strip" style="background-color:${statusColor}"></div>
                     
                     <div class="setae-avatar-container">
-                        <img src="${thumb}" class="setae-avatar-img" alt="Thumbnail">
+                        ${thumbHtml}
                         ${icon ? `<span style="position:absolute; bottom:-5px; right:-5px; font-size:16px; background:#fff; border-radius:50%; padding:2px;">${icon}</span>` : ''}
                     </div>
 
