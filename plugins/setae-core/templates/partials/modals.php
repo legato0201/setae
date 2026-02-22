@@ -5,44 +5,64 @@
 ?>
 <!-- Modals (Moved to Root) -->
 <div id="setae-profile-modal" class="setae-modal" style="display:none;">
-    <div class="setae-modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 style="margin:0;">Profile Settings</h3>
-            <div class="setae-profile-avatar" id="profile-avatar-preview-container"
-                style="width:60px; height:60px; border-radius:50%; overflow:hidden; border:2px solid #00ffcc; position:relative;">
-                <?php echo get_avatar(get_current_user_id(), 60); ?>
-            </div>
+    <div class="setae-modal-content" style="max-width: 420px;">
+
+        <div class="profile-header">
+            <h3><?php esc_html_e('Profile Settings', 'setae-core'); ?></h3>
+            <span class="setae-close" id="close-profile-modal">×</span>
         </div>
 
         <form id="setae-profile-form">
-            <div class="setae-form-group">
-                <label>Display Name</label>
-                <input type="text" id="prof-display-name" class="setae-input"
-                    value="<?php echo esc_attr(wp_get_current_user()->display_name); ?>">
-            </div>
-            <div class="setae-form-group">
-                <label>Icon Photo</label>
-                <!-- Hidden Input -->
+            <div class="profile-avatar-section">
+                <div class="avatar-wrapper" id="trigger-avatar-upload"
+                    title="<?php esc_attr_e('写真・アイコンを変更', 'setae-core'); ?>">
+                    <div class="profile-avatar-preview" id="profile-avatar-preview-container">
+                        <?php echo get_avatar(get_current_user_id(), 150); ?>
+                    </div>
+                    <div class="avatar-edit-badge">📷</div>
+                </div>
                 <input type="file" id="prof-icon" accept="image/*" style="display:none;">
-                <!-- Custom Button -->
-                <button type="button" id="btn-trigger-prof-upload" class="setae-btn-upload" style="width:100%;">
-                    📸 写真を変更
+            </div>
+
+            <div class="setae-form-group">
+                <label><?php esc_html_e('Display Name', 'setae-core'); ?></label>
+                <input type="text" id="prof-display-name" class="setae-input"
+                    value="<?php echo esc_attr(wp_get_current_user()->display_name); ?>"
+                    placeholder="<?php esc_attr_e('ニックネーム', 'setae-core'); ?>">
+            </div>
+
+            <div class="setae-form-group">
+                <label><?php esc_html_e('Email Address', 'setae-core'); ?></label>
+                <input type="email" id="prof-email" class="setae-input"
+                    value="<?php echo esc_attr(wp_get_current_user()->user_email); ?>" placeholder="example@mail.com">
+            </div>
+
+            <div class="setae-form-group">
+                <label><?php esc_html_e('New Password', 'setae-core'); ?> <small
+                        style="font-weight:normal; text-transform:none;"><?php esc_html_e('(Leave empty to keep current)', 'setae-core'); ?></small></label>
+                <input type="password" id="prof-password" class="setae-input" placeholder="********"
+                    autocomplete="new-password">
+            </div>
+
+            <div class="setae-form-group">
+                <label><?php esc_html_e('Premium Plan', 'setae-core'); ?></label>
+                <button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn"
+                    style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">
+                    ✨ <?php esc_html_e('Upgrade to Premium', 'setae-core'); ?>
                 </button>
             </div>
-            <div class="setae-form-group">
-                <label>Email Address</label>
-                <input type="email" id="prof-email" class="setae-input"
-                    value="<?php echo esc_attr(wp_get_current_user()->user_email); ?>">
-            </div>
-            <div class="setae-form-group">
-                <label>New Password (empty to keep current)</label>
-                <input type="password" id="prof-password" class="setae-input" placeholder="********">
-            </div>
-            <div class="setae-form-actions" style="margin-top:25px;">
-                <button type="button" class="setae-btn setae-btn-secondary" id="setae-logout-btn"
-                    style="margin-right:auto; color:#ff4d4d; border-color:rgba(255,77,77,0.3);">Logout</button>
-                <button type="button" class="setae-btn setae-btn-secondary" id="close-profile-modal">Close</button>
-                <button type="submit" class="setae-btn setae-btn-primary">Save Changes</button>
+
+            <div class="setae-form-actions">
+                <button type="button" class="setae-btn setae-btn-danger-ghost" id="setae-logout-btn">
+                    <span>↪</span> <?php esc_html_e('Logout', 'setae-core'); ?>
+                </button>
+
+                <div class="actions-right">
+                    <button type="button" class="setae-btn setae-btn-secondary"
+                        id="close-profile-modal-btn"><?php esc_html_e('Cancel', 'setae-core'); ?></button>
+                    <button type="submit"
+                        class="setae-btn setae-btn-primary"><?php esc_html_e('Save Changes', 'setae-core'); ?></button>
+                </div>
             </div>
         </form>
     </div>

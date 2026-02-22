@@ -387,27 +387,27 @@ var SetaeUIBL = (function ($) {
         const contentHtml = `
             <div id="tab-incoming" class="bl-tab-pane active">
                 <div class="setae-list-header">
-                    <span class="col-status">Status</span>
-                    <span class="col-main">Details</span>
-                    <span class="col-actions">Actions</span>
+                    <span class="col-status">${__('Status')}</span>
+                    <span class="col-main">${__('Details')}</span>
+                    <span class="col-actions">${__('Actions')}</span>
                 </div>
                 <div class="setae-list-group">
                     ${incoming.length > 0
                 ? incoming.map(c => createContractRow(c, true)).join('')
-                : '<div class="empty-tab-msg">受信したリクエストはありません</div>'}
+                : '<div class="empty-tab-msg">' + __('No received requests') + '</div>'}
                 </div>
             </div>
             
             <div id="tab-outgoing" class="bl-tab-pane" style="display:none;">
                 <div class="setae-list-header">
-                    <span class="col-status">Status</span>
-                    <span class="col-main">Details</span>
-                    <span class="col-actions">Actions</span>
+                    <span class="col-status">${__('Status')}</span>
+                    <span class="col-main">${__('Details')}</span>
+                    <span class="col-actions">${__('Actions')}</span>
                 </div>
                 <div class="setae-list-group">
                     ${outgoing.length > 0
                 ? outgoing.map(c => createContractRow(c, false)).join('')
-                : '<div class="empty-tab-msg">送信したリクエストはありません</div>'}
+                : '<div class="empty-tab-msg">' + __('No sent requests') + '</div>'}
                 </div>
             </div>
         `;
@@ -464,7 +464,7 @@ var SetaeUIBL = (function ($) {
         const statusLabel = c.display_status || c.status;
 
         // 相手の名前
-        const partnerLabel = isOwner ? 'From: ' + c.breeder_name : 'Owner: ' + c.owner_name;
+        const partnerLabel = isOwner ? __('From:') + ' ' + c.breeder_name : __('Owner:') + ' ' + c.owner_name;
 
         // 最新メッセージ（長い場合は省略）
         let msgSnippet = c.message || '';

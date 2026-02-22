@@ -335,3 +335,54 @@ msgstr "キャンセル"
 
 msgid "Send Request"
 msgstr "リクエスト送信"
+
+msgid "From:"
+msgstr "送信元:"
+
+msgid "Owner:"
+msgstr "オーナー:"
+
+msgid "No received requests"
+msgstr "受信したリクエストはありません"
+
+msgid "No sent requests"
+msgstr "送信したリクエストはありません"
+
+msgid "Profile Settings"
+msgstr "プロフィール設定"
+
+msgid "写真・アイコンを変更"
+msgstr "写真・アイコンを変更"
+
+msgid "Display Name"
+msgstr "表示名"
+
+msgid "ニックネーム"
+msgstr "ニックネーム"
+
+msgid "Email Address"
+msgstr "メールアドレス"
+
+msgid "New Password"
+msgstr "新しいパスワード"
+
+msgid "(Leave empty to keep current)"
+msgstr "(変更しない場合は空白のまま)"
+
+msgid "Premium Plan"
+msgstr "プレミアムプラン"
+
+msgid "Upgrade to Premium"
+msgstr "プレミアムプランへアップグレード"
+
+msgid "Logout"
+msgstr "ログアウト"
+
+msgid "Save Changes"
+msgstr "変更を保存"
+
+msgid "You are a Premium Member"
+msgstr "プレミアムメンバーです"
+
+msgid "プランの管理・解約手続き"
+msgstr "プランの管理・解約手続き"

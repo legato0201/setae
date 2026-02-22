@@ -169,6 +169,24 @@ class Setae_Dashboard
             'Send Request' => __('Send Request', 'setae-core'),
             'Requests Received' => __('Requests Received', 'setae-core'),
             'Requests Sent' => __('Requests Sent', 'setae-core'),
+            'From:' => __('送信元:', 'setae-core'),
+            'Owner:' => __('オーナー:', 'setae-core'),
+            'No received requests' => __('受信したリクエストはありません', 'setae-core'),
+            'No sent requests' => __('送信したリクエストはありません', 'setae-core'),
+            // ▼ 以下をさらに追加 (Profile Settings等用)
+            'Profile Settings' => __('Profile Settings', 'setae-core'),
+            '写真・アイコンを変更' => __('写真・アイコンを変更', 'setae-core'),
+            'Display Name' => __('Display Name', 'setae-core'),
+            'ニックネーム' => __('ニックネーム', 'setae-core'),
+            'Email Address' => __('Email Address', 'setae-core'),
+            'New Password' => __('New Password', 'setae-core'),
+            '(Leave empty to keep current)' => __('(Leave empty to keep current)', 'setae-core'),
+            'Premium Plan' => __('Premium Plan', 'setae-core'),
+            'You are a Premium Member' => __('You are a Premium Member', 'setae-core'),
+            'プランの管理・解約手続き' => __('プランの管理・解約手続き', 'setae-core'),
+            'Upgrade to Premium' => __('Upgrade to Premium', 'setae-core'),
+            'Logout' => __('Logout', 'setae-core'),
+            'Save Changes' => __('Save Changes', 'setae-core'),
         );
         wp_localize_script('setae-ui-breeding-loan', 'SetaeBL_i18n', $bl_i18n_strings);
 

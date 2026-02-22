@@ -1,6 +1,11 @@
 var SetaeUIProfile = (function ($) {
     'use strict';
 
+    // ▼ 追加: 翻訳用の関数を定義 (PHPで定義した SetaeBL_i18n を参照します)
+    const __ = function (text) {
+        return (typeof SetaeBL_i18n !== 'undefined' && SetaeBL_i18n[text]) ? SetaeBL_i18n[text] : text;
+    };
+
     function init() {
         // 1. プロフィールモーダルを開く
         $(document).on('click', '#setae-profile-trigger', function (e) {
@@ -31,13 +36,13 @@ var SetaeUIProfile = (function ($) {
             <div class="setae-modal-content" style="max-width: 420px;">
                 
                 <div class="profile-header">
-                    <h3>Profile Settings</h3>
+                    <h3>${__('Profile Settings')}</h3>
                     <span class="setae-close" id="close-profile-modal">&times;</span>
                 </div>
 
                 <form id="setae-profile-form">
                     <div class="profile-avatar-section">
-                        <div class="avatar-wrapper" id="trigger-avatar-upload" title="写真・アイコンを変更">
+                        <div class="avatar-wrapper" id="trigger-avatar-upload" title="${__('写真・アイコンを変更')}">
                             <div class="profile-avatar-preview" id="profile-avatar-preview-container">
                                 <img src="${avatarUrl}" alt="Avatar">
                             </div>
@@ -47,43 +52,43 @@ var SetaeUIProfile = (function ($) {
                     </div>
 
                     <div class="setae-form-group">
-                        <label>Display Name</label>
-                        <input type="text" id="prof-display-name" class="setae-input" value="${displayName}" placeholder="ニックネーム">
+                        <label>${__('Display Name')}</label>
+                        <input type="text" id="prof-display-name" class="setae-input" value="${displayName}" placeholder="${__('ニックネーム')}">
                     </div>
 
                     <div class="setae-form-group">
-                        <label>Email Address</label>
+                        <label>${__('Email Address')}</label>
                         <input type="email" id="prof-email" class="setae-input" value="${email}" placeholder="example@mail.com">
                     </div>
 
                     <div class="setae-form-group">
-                        <label>New Password <small style="font-weight:normal; text-transform:none;">(Leave empty to keep current)</small></label>
+                        <label>${__('New Password')} <small style="font-weight:normal; text-transform:none;">${__('(Leave empty to keep current)')}</small></label>
                         <input type="password" id="prof-password" class="setae-input" placeholder="********" autocomplete="new-password">
                     </div>
 
                     <div class="setae-form-group">
-                        <label>Premium Plan</label>
+                        <label>${__('Premium Plan')}</label>
                         ${currentUser.is_premium
                 ? `<div class="premium-status" style="padding:15px;background:#fffbea;border:1px solid #fce8a6;border-radius:8px;text-align:center;">
                                 <div style="font-weight:bold;color:#b28900;margin-bottom:10px;">
-                                    <img draggable="false" role="img" class="emoji" alt="🌟" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f31f.svg"> You are a Premium Member
+                                    <img draggable="false" role="img" class="emoji" alt="🌟" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f31f.svg"> ${__('You are a Premium Member')}
                                 </div>
                                 <button type="button" id="btn-manage-subscription" class="setae-btn">
-                                    プランの管理・解約手続き
+                                    ${__('プランの管理・解約手続き')}
                                 </button>
                                </div>`
-                : '<button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn" style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">✨ Upgrade to Premium</button>'
+                : `<button type="button" class="setae-btn setae-btn-primary" id="upgrade-premium-btn" style="width:100%;height:44px;background:linear-gradient(135deg, #FFD700, #FDB931);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">✨ ${__('Upgrade to Premium')}</button>`
             }
                     </div>
 
                     <div class="setae-form-actions">
                         <button type="button" class="setae-btn setae-btn-danger-ghost" id="setae-logout-btn">
-                            <span>↪</span> Logout
+                            <span>↪</span> ${__('Logout')}
                         </button>
                         
                         <div class="actions-right">
-                            <button type="button" class="setae-btn setae-btn-secondary" id="close-profile-modal-btn">Cancel</button>
-                            <button type="submit" class="setae-btn setae-btn-primary">Save Changes</button>
+                            <button type="button" class="setae-btn setae-btn-secondary" id="close-profile-modal-btn">${__('Cancel')}</button>
+                            <button type="submit" class="setae-btn setae-btn-primary">${__('Save Changes')}</button>
                         </div>
                     </div>
                 </form>
