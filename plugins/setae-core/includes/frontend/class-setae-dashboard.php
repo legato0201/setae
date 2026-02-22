@@ -88,6 +88,10 @@ class Setae_Dashboard
                 'referral_code' => $referral_code,
                 'bonus_limit' => (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true),
                 'premium_cancel_at' => get_user_meta($user_id, '_setae_premium_cancel_at', true),
+
+                // ▼▼▼ デバッグ用に追加 ▼▼▼
+                'debug_stripe_customer_id' => get_user_meta($user_id, '_setae_stripe_customer_id', true),
+                // ▲▲▲ 追加ここまで ▲▲▲
             )
         ));
         // ▲▲▲ 追加・修正ここまで ▲▲▲
