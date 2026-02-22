@@ -139,7 +139,7 @@ class Setae_API_Topics
         }
 
         $title = sanitize_text_field($request->get_param('title'));
-        $content = sanitize_textarea_field($request->get_param('content'));
+        $content = trim(sanitize_textarea_field($request->get_param('content')));
         $type = sanitize_text_field($request->get_param('type')) ?: 'general';
 
         if (empty($title)) {
@@ -202,13 +202,17 @@ class Setae_API_Topics
                 $c_avatar = '';
             }
 
+            // ★追加: wpautop後に空の <p></p> を正規表現で削除
+            $comment_content = wpautop(trim($c->comment_content));
+            $comment_content = preg_replace('/<p>[\s\r\n]*<\/p>/i', '', $comment_content);
+
             $comments_data[] = array(
                 'id' => $c->comment_ID,
                 'author_name' => $c->comment_author,
                 'author_avatar' => $c_avatar,
                 'author_initial' => mb_substr($c->comment_author, 0, 1, 'UTF-8'),
                 'date' => $c->comment_date,
-                'content' => wpautop($c->comment_content),
+                'content' => $comment_content, // ★変更
                 'image' => $image_url, // ★追加: レスポンスに含める
             );
         }
@@ -222,10 +226,14 @@ class Setae_API_Topics
             $author_avatar = '';
         }
 
+        // ★追加: wpautop後に空の <p></p> を正規表現で削除
+        $topic_content = wpautop(trim($post->post_content));
+        $topic_content = preg_replace('/<p>[\s\r\n]*<\/p>/i', '', $topic_content);
+
         $data = array(
             'id' => $post->ID,
             'title' => $post->post_title,
-            'content' => wpautop($post->post_content),
+            'content' => $topic_content, // ★変更
             'date' => $post->post_date,
             'author_name' => $author_name,
             'author_avatar' => $author_avatar,
@@ -252,7 +260,7 @@ class Setae_API_Topics
         }
 
         $id = $request['id'];
-        $content = sanitize_textarea_field($request->get_param('content'));
+        $content = trim(sanitize_textarea_field($request->get_param('content')));
 
         // ▼ 追加: 文字数制限 (1000文字)
         if (mb_strlen($content) > 1000) {

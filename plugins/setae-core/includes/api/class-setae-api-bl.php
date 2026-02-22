@@ -384,7 +384,8 @@ class Setae_API_BL
         $spider_title = get_the_title($contract->spider_id);
         $post_data = array(
             'post_title' => '繁殖報告: ' . $spider_title,
-            'post_content' => "\n{$spider_title}の繁殖に成功しました！\n\n<small style=\"color: #888;\">※この報告はブリーディングローン機能により自動投稿されました。</small>\n",
+            // ★修正: 先頭の \n と 末尾の \n を削除しました
+            'post_content' => "{$spider_title}の繁殖に成功しました！\n\n<small style=\"color: #888;\">※この報告はブリーディングローン機能により自動投稿されました。</small>",
             'post_status' => 'publish',
             'post_type' => 'setae_topic',
             'post_author' => $contract->breeder_id
