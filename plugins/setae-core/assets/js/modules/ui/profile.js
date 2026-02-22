@@ -81,6 +81,12 @@ var SetaeUIProfile = (function ($) {
             }
                     </div>
 
+                    <div class="setae-form-group" style="text-align: center; margin-top: 10px;">
+                        <button type="button" id="btn-open-credits" style="background: none; border: none; color: #888; font-size: 13px; cursor: pointer; text-decoration: underline;">
+                            ${__('アプリについて / クレジット')}
+                        </button>
+                    </div>
+
                     <div class="setae-form-actions">
                         <button type="button" class="setae-btn setae-btn-danger-ghost" id="setae-logout-btn">
                             <span>↪</span> ${__('Logout')}
@@ -134,6 +140,19 @@ var SetaeUIProfile = (function ($) {
         $('#setae-logout-btn').on('click', function () {
             if (confirm('ログアウトしますか？')) {
                 window.location.href = SetaeSettings.logout_url;
+            }
+        });
+
+        // クレジットモーダルを開く
+        $('#setae-profile-modal').on('click', '#btn-open-credits', function (e) {
+            e.preventDefault();
+            $('#setae-credits-modal').fadeIn(200);
+        });
+
+        // クレジットモーダルを閉じる
+        $(document).on('click', '#close-credits-modal, #setae-credits-modal', function (e) {
+            if (e.target === this) {
+                $('#setae-credits-modal').fadeOut(200);
             }
         });
 

@@ -598,3 +598,7 @@ $temperaments = get_terms(array(
         </div>
     </div>
 </div>
+
+<?php
+include plugin_dir_path(__FILE__) . 'modal-credits.php';
+?>
