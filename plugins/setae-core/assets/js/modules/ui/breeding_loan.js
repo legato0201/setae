@@ -154,7 +154,8 @@ var SetaeUIBL = (function ($) {
                 </button>
             `;
         } else {
-            actionBtn = `<span class="badge-mine">${__('Your Listing', 'setae-core')}</span>`;
+            // ★変更：「自分の募集」バッジの代わりに設定へ飛ぶボタンを設置
+            actionBtn = `<button class="setae-btn-xs btn-secondary btn-edit-my-bl" data-id="${spider.id}">⚙️ 設定</button>`;
         }
 
         const dateStr = 'ID: ' + spider.id;
@@ -218,6 +219,28 @@ var SetaeUIBL = (function ($) {
                 owner: $(this).data('owner')
             };
             openRequestModal(data); // オブジェクトごと渡す
+        });
+
+        // ★追加: 自分の募集の設定ボタン用イベント
+        $('.btn-edit-my-bl').off('click').on('click', function () {
+            const id = $(this).data('id');
+            if (window.SetaeUIDetail && SetaeUIDetail.loadSpiderDetail) {
+                // ナビゲーションを「My List」状態にする
+                $('.setae-nav-item').removeClass('active');
+                $('.setae-nav-item[data-target="section-my"]').addClass('active');
+
+                // 現在の画面を隠して、個体詳細画面を表示
+                $('.setae-section').hide();
+                $('#section-my-detail').fadeIn();
+
+                // 対象の個体データをロード
+                SetaeUIDetail.loadSpiderDetail(id);
+
+                // レンダリングを待ってから「設定 / BL」タブを自動で開く
+                setTimeout(function () {
+                    $('#btn-tab-settings').click();
+                }, 200);
+            }
         });
     }
 

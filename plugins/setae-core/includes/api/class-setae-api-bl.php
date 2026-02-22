@@ -366,11 +366,11 @@ class Setae_API_BL
     {
         $spider_title = get_the_title($contract->spider_id);
         $post_data = array(
-            'post_title' => '繁殖レポート: ' . $spider_title,
-            'post_content' => "<!-- wp:paragraph -->\n繁殖成功！\n\n**ペアリング情報**\n- 親個体: {$spider_title}\n- パートナー: (未記入)\n- 成功日: " . date('Y-m-d') . "\n\n詳細な記録をここに追記してください。\n<!-- /wp:paragraph -->",
+            'post_title' => '繁殖報告: ' . $spider_title,
+            'post_content' => "\n{$spider_title}の繁殖に成功しました！\n\n<small style=\"color: #888;\">※この報告はブリーディングローン機能により自動投稿されました。</small>\n",
             'post_status' => 'publish',
             'post_type' => 'setae_topic',
-            'post_author' => $contract->breeder_id // Note: Usually the breeder creates the report? Or owner? Request says "User". Breeder makes sense as they have the egg sac.
+            'post_author' => $contract->breeder_id
         );
 
         $topic_id = wp_insert_post($post_data);
