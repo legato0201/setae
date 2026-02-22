@@ -285,65 +285,86 @@ $temperaments = get_terms(array(
 <div id="modal-add-spider" class="setae-modal" style="display:none;">
     <div class="setae-modal-content">
         <span class="setae-close">×</span>
-        <h3>新規個体登録</h3>
+        <h3>
+            <?php esc_html_e('新規個体登録', 'setae-core'); ?>
+        </h3>
 
         <div id="add-spider-limit-message"
             style="display:none; padding:20px; background:#fffbea; border:1px solid #fce8a6; border-radius:12px; text-align:center; margin-bottom:15px;">
             <div style="font-weight:bold; color:#b28900; margin-bottom:10px; font-size:16px;">
                 <img draggable="false" role="img" class="emoji" alt="⚠️"
-                    src="https://s.w.org/images/core/emoji/17.0.2/svg/26a0.svg"> 生体の登録上限に達しています
+                    src="https://s.w.org/images/core/emoji/17.0.2/svg/26a0.svg">
+                <?php esc_html_e('生体の登録上限に達しています', 'setae-core'); ?>
             </div>
             <p style="font-size:13px; color:#555; margin-bottom:20px; line-height:1.5;">
-                無料プランの登録上限（<span id="limit-msg-count"></span>匹）に達しました。<br>
-                引き続き登録するには、以下のいずれかの方法をご利用ください。
+                <?php echo wp_kses_post(__('無料プランの登録上限（<span id="limit-msg-count"></span>匹）に達しました。<br>引き続き登録するには、以下のいずれかの方法をご利用ください。', 'setae-core')); ?>
             </p>
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <button type="button" class="setae-btn setae-btn-primary" id="limit-upgrade-premium-btn"
                     style="background:linear-gradient(135deg, #FFD700, #FDB931); border:none; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(253, 185, 49, 0.3);">
-                    ✨ プレミアムプランにアップグレード (無制限)
+                    <img draggable="false" role="img" class="emoji" alt="✨"
+                        src="https://s.w.org/images/core/emoji/17.0.2/svg/2728.svg">
+                    <?php esc_html_e('プレミアムプランにアップグレード (無制限)', 'setae-core'); ?>
                 </button>
                 <button type="button" class="setae-btn"
                     style="background:#fff; border:1px solid #ddd; color:#333; font-size:13px;"
                     onclick="jQuery('#modal-add-spider').fadeOut(); jQuery('.setae-nav-item[data-target=\'section-enc\']').click();">
-                    📖 図鑑へ写真提供してボーナス枠を獲得 (+1枠)
+                    <img draggable="false" role="img" class="emoji" alt="📖"
+                        src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4d6.svg">
+                    <?php esc_html_e('図鑑へ写真提供してボーナス枠を獲得 (+1枠)', 'setae-core'); ?>
                 </button>
             </div>
         </div>
 
         <form id="form-add-spider">
-
             <div class="setae-form-group">
-                <label>カテゴリー</label>
+                <label>
+                    <?php esc_html_e('カテゴリー', 'setae-core'); ?>
+                </label>
                 <div class="setae-radio-group" style="display:flex; gap:10px; flex-wrap:wrap;">
                     <label class="radio-chip active">
-                        <input type="radio" name="classification" value="tarantula" checked hidden>
-                        🕷️ Tarantula
+                        <input type="radio" name="classification" value="tarantula" checked="" hidden="">
+                        <img draggable="false" role="img" class="emoji" alt="🕷️"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f577.svg">
+                        <?php esc_html_e('Tarantula', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
-                        <input type="radio" name="classification" value="scorpion" hidden>
-                        🦂 Scorpion
+                        <input type="radio" name="classification" value="scorpion" hidden="">
+                        <img draggable="false" role="img" class="emoji" alt="🦂"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f982.svg">
+                        <?php esc_html_e('Scorpion', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
-                        <input type="radio" name="classification" value="reptile" hidden>
-                        🦎 Reptile
+                        <input type="radio" name="classification" value="reptile" hidden="">
+                        <img draggable="false" role="img" class="emoji" alt="🦎"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f98e.svg">
+                        <?php esc_html_e('Reptile', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
-                        <input type="radio" name="classification" value="plant" hidden>
-                        🌿 Plant
+                        <input type="radio" name="classification" value="plant" hidden="">
+                        <img draggable="false" role="img" class="emoji" alt="🌿"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f33f.svg">
+                        <?php esc_html_e('Plant', 'setae-core'); ?>
                     </label>
                     <label class="radio-chip">
-                        <input type="radio" name="classification" value="other" hidden>
-                        📦 Other
+                        <input type="radio" name="classification" value="other" hidden="">
+                        <img draggable="false" role="img" class="emoji" alt="📦"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4e6.svg">
+                        <?php esc_html_e('Other', 'setae-core'); ?>
                     </label>
                 </div>
             </div>
             <div class="setae-form-group">
-                <label>写真 (任意)</label>
+                <label>
+                    <?php esc_html_e('写真 (任意)', 'setae-core'); ?>
+                </label>
                 <div class="setae-file-upload-wrapper">
                     <input type="file" id="spider-image" accept="image/*" style="display:none;">
                     <button type="button" id="btn-trigger-upload-add" class="setae-btn"
                         style="width:100%; border:2px dashed #ccc; background:#fafafa; color:#888; padding:15px; margin-top:5px;">
-                        📸 写真を選択
+                        <img draggable="false" role="img" class="emoji" alt="📸"
+                            src="https://s.w.org/images/core/emoji/17.0.2/svg/1f4f8.svg">
+                        <?php esc_html_e('写真を選択', 'setae-core'); ?>
                     </button>
                     <div id="spider-image-preview" style="display:none; margin-top:10px; position:relative;">
                         <img id="preview-img-tag-add" src=""
@@ -354,26 +375,34 @@ $temperaments = get_terms(array(
                 </div>
             </div>
             <div class="setae-form-group">
-                <label>種類 / 品種名</label>
+                <label>
+                    <?php esc_html_e('種類 / 品種名', 'setae-core'); ?>
+                </label>
 
                 <div id="wrapper-species-search" class="setae-autocomplete-wrapper" style="position:relative;">
-                    <input type="text" id="spider-species-search" class="setae-input" placeholder="学名・和名を入力 (DB検索)..."
-                        autocomplete="off">
-                    <input type="hidden" id="spider-species-select">
+                    <input type="text" id="spider-species-search" class="setae-input"
+                        placeholder="<?php esc_attr_e('学名・和名を入力 (DB検索)...', 'setae-core'); ?>" autocomplete="off">
+                    <input type="hidden" id="spider-species-select" value="">
                     <div id="spider-species-suggestions"
                         style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ddd; max-height:200px; overflow-y:auto; z-index:1000; display:none; border-radius:0 0 8px 8px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
                     </div>
                 </div>
 
                 <input type="text" id="spider-custom-species" class="setae-input"
-                    placeholder="種類名を入力 (例: Monstera deliciosa)" style="display:none;">
+                    placeholder="<?php esc_attr_e('種類名を入力 (例: Monstera deliciosa)', 'setae-core'); ?>"
+                    style="display:none;">
             </div>
             <div class="setae-form-group">
-                <label>ニックネーム (任意)</label>
-                <input type="text" id="spider-name" placeholder="Name/ID" class="setae-input">
+                <label>
+                    <?php esc_html_e('ニックネーム (任意)', 'setae-core'); ?>
+                </label>
+                <input type="text" id="spider-name" placeholder="<?php esc_attr_e('Name/ID', 'setae-core'); ?>"
+                    class="setae-input">
             </div>
 
-            <button type="submit" class="setae-btn setae-btn-primary">登録</button>
+            <button type="submit" class="setae-btn setae-btn-primary">
+                <?php esc_html_e('登録', 'setae-core'); ?>
+            </button>
         </form>
     </div>
 </div>
