@@ -135,6 +135,20 @@ var SetaeUILogModal = (function ($) {
         $('#log-spider-id').val(idToUse);
         // ▼▼▼ 修正: isPlantフラグを渡す ▼▼▼
         renderLogPreyButtons(isPlant);
+
+        // ▼▼▼ 追加: 前回のサイズ情報を取得して表示 ▼▼▼
+        $('#log-size').val('');
+        $('#log-prev-size-label').hide();
+        let prevSize = '';
+        if (spider && spider.size) {
+            prevSize = spider.size;
+        }
+        if (prevSize && prevSize !== '--' && prevSize !== '未設定') {
+            $('#log-prev-size-val').text(prevSize);
+            $('#log-prev-size-label').show();
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         $('#setae-log-modal').fadeIn();
 
         const typeToSelect = (typeof initialType === 'string') ? initialType : 'feed';
@@ -230,7 +244,14 @@ var SetaeUILogModal = (function ($) {
             }
             dataPayload = { prey_type: prey, refused: refused };
         } else if (type === 'growth') {
-            dataPayload = { size: $('#log-size').val() };
+            // ▼▼▼ 修正: 数値のみを抽出して送信 ▼▼▼
+            let rawSize = $('#log-size').val();
+            if (rawSize) {
+                // 万が一コピペ等で「cm」が含まれても数字と小数点以外を除去する
+                rawSize = rawSize.toString().replace(/[^\d.]/g, '');
+                dataPayload = { size: rawSize };
+            }
+            // ▲▲▲ 修正ここまで ▲▲▲
         }
 
         if (note && note.trim() !== '') {

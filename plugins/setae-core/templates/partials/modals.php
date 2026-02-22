@@ -512,8 +512,16 @@ $temperaments = get_terms(array(
                 </div>
 
                 <div id="log-growth-options" class="log-option-group" style="display:none;">
-                    <label>サイズ (cm)</label>
-                    <input type="text" id="log-size" class="setae-input-sm" placeholder="e.g. 5cm">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 5px;">
+                        <label style="margin-bottom:0;">サイズ</label>
+                        <span id="log-prev-size-label" style="font-size:11px; color:#888; display:none;">前回: <span
+                                id="log-prev-size-val" style="font-weight:bold; color:#555;">--</span></span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="number" id="log-size" class="setae-input-sm" placeholder="例: 5.5" step="0.1"
+                            inputmode="decimal" style="flex-grow:1; margin-bottom:0;">
+                        <span style="color:#666; font-size:14px; font-weight:bold;">cm</span>
+                    </div>
                 </div>
             </div>
 

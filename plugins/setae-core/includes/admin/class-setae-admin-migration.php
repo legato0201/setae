@@ -606,17 +606,40 @@ class Setae_Admin_Migration
                 $extra_info = [];
                 if (!empty($log['record_weight']))
                     $extra_info[] = floatval($log['record_weight']) . 'g';
-                if (!empty($log['record_length']))
+
+                if (!empty($log['record_length'])) {
+                    // 旧DBでcm以外の単位があればそれも考慮したいが、record_lengthは基本cmとして扱う
                     $extra_info[] = floatval($log['record_length']) . 'cm';
+                }
 
                 if (preg_match('/(?:齢数|instar)[:：\s]*(\d+)/ui', $comment_norm, $m))
                     $extra_info[] = intval($m[1]) . '齢';
-                if (preg_match('/(?:体重|weight)[:：\s]*(\d+(?:\.\d+)?)\s*(kg|g)?/ui', $comment_norm, $m))
-                    $extra_info[] = floatval($m[1]) . (!empty($m[2]) ? strtolower($m[2]) : 'g');
 
-                // 体長・レッグスパンを区別せず、単一の「サイズ」として抽出 (05cm -> 5cm に変換)
-                if (preg_match('/(?:体長|レッグスパン|length|leg_span)[:：\s]*(\d+(?:\.\d+)?)\s*(mm|cm|m)?/ui', $comment_norm, $m))
-                    $extra_info[] = floatval($m[1]) . (!empty($m[2]) ? strtolower($m[2]) : 'cm');
+                if (preg_match('/(?:体重|weight)[:：\s]*(\d+(?:\.\d+)?)\s*(kg|g)?/ui', $comment_norm, $m)) {
+                    $weight_val = floatval($m[1]);
+                    $weight_unit = !empty($m[2]) ? strtolower($m[2]) : 'g';
+                    // 体重の単位統一(任意ですが、ここではkgをgに変換する例として残します)
+                    if ($weight_unit === 'kg') {
+                        $weight_val *= 1000;
+                        $weight_unit = 'g';
+                    }
+                    $extra_info[] = $weight_val . $weight_unit;
+                }
+
+                // ▼ 修正: 体長・レッグスパンを抽出し、単位を cm に統一してプレビュー表示 ▼
+                if (preg_match('/(?:体長|レッグスパン|length|leg_span)[:：\s]*(\d+(?:\.\d+)?)\s*(mm|cm|m)?/ui', $comment_norm, $m)) {
+                    $size_val = floatval($m[1]);
+                    $size_unit = !empty($m[2]) ? strtolower($m[2]) : 'cm'; // 省略時はcmとする
+
+                    if ($size_unit === 'mm') {
+                        $size_val = $size_val / 10;
+                    } elseif ($size_unit === 'm') {
+                        $size_val = $size_val * 100;
+                    }
+                    // cmに統一された結果をプレビューに追加
+                    $extra_info[] = $size_val . 'cm';
+                }
+                // ▲ 修正ここまで ▲
 
                 $logs_preview[] = array(
                     'date' => date('Y-m-d H:i', strtotime($log['created_at'])),
@@ -892,7 +915,7 @@ class Setae_Admin_Migration
                     }
                 }
 
-                // ▼ 修正: Setaeが要求するJSON構造にすべての要素をパースして追加 ▼
+                // ▼ 修正: JSON構造にすべての要素をパースし、単位をcmに変換して追加 ▼
                 $log_json_data = array();
 
                 // 基本のタイプ別データ
@@ -906,8 +929,8 @@ class Setae_Admin_Migration
                     $log_json_data['weight'] = (float) $record['record_weight'];
                 }
                 if (!empty($record['record_length'])) {
+                    // 旧DBの record_length は基本的に cm として扱う
                     $log_json_data['size'] = (float) $record['record_length'];
-                    $log_json_data['size_unit'] = 'cm';
                 }
 
                 // 全角英数字・スペースを半角に変換
@@ -917,18 +940,31 @@ class Setae_Admin_Migration
                 if (preg_match('/(?:齢数|instar)[:：\s]*(\d+)/ui', $comment_norm, $matches)) {
                     $log_json_data['instar'] = (int) $matches[1];
                 }
+
                 if (preg_match('/(?:体重|weight)[:：\s]*(\d+(?:\.\d+)?)\s*(kg|g)?/ui', $comment_norm, $matches)) {
-                    $log_json_data['weight'] = floatval($matches[1]);
-                    $log_json_data['weight_unit'] = !empty($matches[2]) ? strtolower($matches[2]) : 'g';
+                    $weight_val = floatval($matches[1]);
+                    $weight_unit = !empty($matches[2]) ? strtolower($matches[2]) : 'g';
+                    if ($weight_unit === 'kg') {
+                        $weight_val *= 1000; // kg を g に統一
+                    }
+                    $log_json_data['weight'] = $weight_val;
                 }
 
-                // 体長とレッグスパンを区別せず統合して size として記録
+                // 体長とレッグスパンを区別せず統合し、単位を cm に変換して size として記録
                 if (preg_match('/(?:体長|レッグスパン|length|leg_span)[:：\s]*(\d+(?:\.\d+)?)\s*(mm|cm|m)?/ui', $comment_norm, $matches)) {
-                    $val = floatval($matches[1]); // 05 を 5 に変換
-                    $unit = !empty($matches[2]) ? strtolower($matches[2]) : 'cm';
-                    $log_json_data['size'] = $val;
-                    $log_json_data['size_unit'] = $unit;
-                    $log_json_data['size_str'] = $val . $unit; // 5cmなどの文字列としても持たせる
+                    $size_val = floatval($matches[1]); // 05 を 5 に変換
+                    $size_unit = !empty($matches[2]) ? strtolower($matches[2]) : 'cm'; // 単位なしの場合はcmとする
+
+                    // 単位の変換処理 (mm -> cm, m -> cm)
+                    if ($size_unit === 'mm') {
+                        $size_val = $size_val / 10;
+                    } elseif ($size_unit === 'm') {
+                        $size_val = $size_val * 100;
+                    }
+
+                    // Setaeの仕様に合わせて、数値のみを size に保存（単位はcm固定のため不要だが念のため持たせることも可）
+                    $log_json_data['size'] = $size_val;
+                    // $log_json_data['size_unit'] = 'cm'; // ←Setae側で単位を決め打ちしている場合は不要
                 }
 
                 // その他のイベントフラグ (Setae側で将来的に利用可能にする)
