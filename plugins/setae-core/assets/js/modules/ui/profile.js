@@ -70,6 +70,7 @@ var SetaeUIProfile = (function ($) {
                         <input type="password" id="prof-password" class="setae-input" placeholder="********" autocomplete="new-password">
                     </div>
 
+                    ${!currentUser.is_premium ? `
                     <div class="setae-form-group" style="background:#f5f7fa; padding:15px; border-radius:8px; border:1px dashed #ccc;">
                         <label style="color:#333; font-weight:bold;">🎁 ${__('あなたの紹介コード')}</label>
                         <p style="font-size:12px; color:#666; margin-bottom:10px;">
@@ -81,6 +82,7 @@ var SetaeUIProfile = (function ($) {
                             <button type="button" class="setae-btn" id="btn-copy-referral" style="white-space:nowrap; background:#e0e6ed; color:#333;">${__('コピー')}</button>
                         </div>
                     </div>
+                    ` : ''}
 
                     <div class="setae-form-group">
                         <label>${__('Premium Plan')}</label>
