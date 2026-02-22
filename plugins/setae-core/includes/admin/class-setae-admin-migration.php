@@ -626,9 +626,14 @@ class Setae_Admin_Migration
         $imported_animals = 0;
         $animal_id_map = array();
 
-        // ▼ 追加: 同一サーバー(同一IP)からの画像ダウンロードブロック(SSRF保護)を解除するフィルター ▼
+        // ▼ 追加: 画像ダウンロード時の「直リンク禁止」や「SSRF保護」を突破するためのフィルター
         $allow_unsafe_urls = function ($args) {
             $args['reject_unsafe_urls'] = false;
+            if (!isset($args['headers']))
+                $args['headers'] = array();
+            // ブラウザからのアクセスに見せかけ、自サイトからのアクセス(Referer)として偽装する
+            $args['headers']['Referer'] = site_url();
+            $args['headers']['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
             return $args;
         };
 
@@ -637,7 +642,6 @@ class Setae_Admin_Migration
                 continue;
             }
 
-            // 既に移行済みかチェック
             $existing = get_posts(array(
                 'post_type' => 'setae_spider',
                 'meta_key' => '_legacy_animal_id',
@@ -649,7 +653,6 @@ class Setae_Admin_Migration
             $is_update_animal = !empty($existing);
             $new_post_id = $is_update_animal ? $existing[0] : 0;
 
-            // 新規の場合のみ投稿を作成（既存ならIDを使い回してメタを更新する）
             if (!$is_update_animal) {
                 $post_title = $animal['japanese_name'] ?: ($animal['management_no'] ?: 'No Name (' . $animal['id'] . ')');
                 $post_data = array(
@@ -657,7 +660,7 @@ class Setae_Admin_Migration
                     'post_type' => 'setae_spider',
                     'post_status' => 'publish',
                     'post_author' => $new_wp_user_id,
-                    'post_date' => $animal['created_at'] !== '0000-00-00 00:00:00' ? $animal['created_at'] : current_time('mysql'),
+                    'post_date' => (!empty($animal['created_at']) && $animal['created_at'] !== '0000-00-00 00:00:00') ? $animal['created_at'] : current_time('mysql'),
                 );
                 $new_post_id = wp_insert_post($post_data);
             }
@@ -671,10 +674,8 @@ class Setae_Admin_Migration
                 update_post_meta($new_post_id, '_setae_owner_id', $new_wp_user_id);
                 update_post_meta($new_post_id, '_legacy_animal_id', $animal['id']);
 
-                // 分類と種類のマッピング適用
                 if (isset($mapping[$animal['id']])) {
                     $map_data = $mapping[$animal['id']];
-
                     if (!empty($map_data['classification'])) {
                         wp_set_object_terms($new_post_id, sanitize_text_field($map_data['classification']), 'setae_classification');
                     }
@@ -685,33 +686,40 @@ class Setae_Admin_Migration
                     }
                 }
 
-                // ログ紐付け用にIDをマップに保持（既存個体の場合もスキップせずにここを通す）
                 $animal_id_map[$animal['id']] = $new_post_id;
-
-                if (!$is_update_animal) {
+                if (!$is_update_animal)
                     $imported_animals++;
-                }
 
-                // ▼ 修正: 個体のアイコン写真をダウンロードしてアイキャッチに設定 ▼
-                if (!empty($animal['photo']) && !has_post_thumbnail($new_post_id)) {
-                    $photo_url = trim($animal['photo']);
+                // ▼ 修正: 個体アイコン(サムネイル)のダウンロードとメタデータへの保存 ▼
+                if (!empty($animal['photo'])) {
+                    $current_img = get_post_meta($new_post_id, '_setae_spider_image', true);
+                    if (empty($current_img) || strpos($current_img, wp_upload_dir()['baseurl']) === false) {
 
-                    add_filter('https_ssl_verify', '__return_false');
-                    add_filter('http_request_args', $allow_unsafe_urls); // ブロック解除
+                        add_filter('https_ssl_verify', '__return_false');
+                        add_filter('https_local_ssl_verify', '__return_false');
+                        add_filter('http_request_args', $allow_unsafe_urls);
 
-                    $attach_id = media_sideload_image(esc_url_raw($photo_url), $new_post_id, null, 'id');
+                        $attach_id = media_sideload_image(esc_url_raw(trim($animal['photo'])), $new_post_id, null, 'id');
 
-                    remove_filter('https_ssl_verify', '__return_false');
-                    remove_filter('http_request_args', $allow_unsafe_urls);
+                        remove_filter('https_ssl_verify', '__return_false');
+                        remove_filter('https_local_ssl_verify', '__return_false');
+                        remove_filter('http_request_args', $allow_unsafe_urls);
 
-                    if (!is_wp_error($attach_id)) {
-                        set_post_thumbnail($new_post_id, $attach_id);
+                        if (!is_wp_error($attach_id)) {
+                            $dl_url = wp_get_attachment_url($attach_id);
+                            update_post_meta($new_post_id, '_setae_spider_image', $dl_url);
+                        } else {
+                            // ダウンロード失敗時は元のURLを直接設定
+                            update_post_meta($new_post_id, '_setae_spider_image', trim($animal['photo']));
+                        }
                     }
                 }
             }
         }
 
-        // 2. 飼育ログの移行
+        // ==========================================
+        // 2. 飼育ログの移行 (完全修正版)
+        // ==========================================
         $records = $ext_db->get_results($ext_db->prepare("SELECT * FROM {$table_records} WHERE user_id = %d", $legacy_user_id), ARRAY_A);
         $imported_records = 0;
         $imported_images = 0;
@@ -721,7 +729,21 @@ class Setae_Admin_Migration
                 continue;
             $new_spider_id = $animal_id_map[$record['animal_id']];
 
-            // すでに作成済みのログを検索
+            // 日付の正規化 (0000-00-00 対策)
+            $record_date = (!empty($record['created_at']) && $record['created_at'] !== '0000-00-00 00:00:00') ? $record['created_at'] : current_time('mysql');
+            $parsed_date = date('Y-m-d', strtotime($record_date));
+
+            // ▼ 修正: Setae形式のログタイプを判定 ▼
+            $log_type = 'note';
+            if (!empty($record['is_molt'])) {
+                $log_type = 'molt';
+            } elseif (!empty($record['food_type']) || !empty($record['is_refusal'])) {
+                $log_type = 'feed';
+            }
+
+            $log_title = sprintf('%s - %s (%s)', get_the_title($new_spider_id), ucfirst($log_type), $parsed_date);
+
+            // 既存の失敗したログの検索
             $existing_log = get_posts(array(
                 'post_type' => 'setae_log',
                 'meta_key' => '_legacy_record_id',
@@ -734,87 +756,85 @@ class Setae_Admin_Migration
             $new_log_id = $is_update_log ? $existing_log[0] : 0;
 
             if ($is_update_log) {
-                // すでにログが存在する場合は親IDだけ再設定する
+                // Setaeの仕様に合わせて post_content にコメントを入れる
                 wp_update_post(array(
                     'ID' => $new_log_id,
-                    'post_parent' => $new_spider_id
+                    'post_title' => $log_title,
+                    'post_parent' => $new_spider_id,
+                    'post_content' => !empty($record['comment']) ? $record['comment'] : ''
                 ));
             } else {
-                // 新規ログの作成
                 $log_post_data = array(
-                    'post_title' => 'Log - ' . date('Y-m-d', strtotime($record['created_at'])),
+                    'post_title' => $log_title,
                     'post_type' => 'setae_log',
                     'post_status' => 'publish',
                     'post_author' => $new_wp_user_id,
-                    'post_date' => $record['created_at'] !== '0000-00-00 00:00:00' ? $record['created_at'] : current_time('mysql'),
-                    'post_parent' => $new_spider_id
+                    'post_date' => $record_date,
+                    'post_parent' => $new_spider_id,
+                    'post_content' => !empty($record['comment']) ? $record['comment'] : ''
                 );
                 $new_log_id = wp_insert_post($log_post_data);
             }
 
             if (!is_wp_error($new_log_id)) {
+
+                // --- 画像のダウンロード処理 ---
                 $new_image_url = '';
                 $photo_url = trim($record['photo']);
 
                 if (!empty($photo_url)) {
-                    // まだSetaeのURLになっていない場合のみDL実行
-                    if (strpos($photo_url, wp_upload_dir()['baseurl']) === false) {
+                    $current_img = get_post_meta($new_log_id, '_setae_log_image', true);
+
+                    if (empty($current_img) || strpos($current_img, wp_upload_dir()['baseurl']) === false) {
 
                         add_filter('https_ssl_verify', '__return_false');
+                        add_filter('https_local_ssl_verify', '__return_false');
                         add_filter('http_request_args', $allow_unsafe_urls); // ブロック解除
 
                         $sideloaded_src = media_sideload_image(esc_url_raw($photo_url), $new_log_id, null, 'src');
 
                         remove_filter('https_ssl_verify', '__return_false');
+                        remove_filter('https_local_ssl_verify', '__return_false');
                         remove_filter('http_request_args', $allow_unsafe_urls);
 
                         if (!is_wp_error($sideloaded_src)) {
                             $new_image_url = $sideloaded_src;
                             $imported_images++;
                         } else {
-                            $new_image_url = $photo_url; // DL失敗時は元のURLを保持
-                            update_post_meta($new_log_id, '_mig_img_error', $sideloaded_src->get_error_message());
+                            $new_image_url = $photo_url; // DL失敗時は元のURL
                         }
                     } else {
-                        $new_image_url = $photo_url;
-                    }
-                } else {
-                    // 更新時に既存の画像URLを消さないように保持
-                    if ($is_update_log) {
-                        $old_data = json_decode(get_post_meta($new_log_id, '_setae_log_data', true), true);
-                        if (!empty($old_data['image'])) {
-                            $new_image_url = $old_data['image'];
-                        }
+                        $new_image_url = $current_img;
                     }
                 }
 
-                // ▼ 修正: Setaeの表示に必要な項目(date)を追加し、URLのスラッシュがエスケープされないよう設定 ▼
-                $log_json_data = array(
-                    'date' => date('Y-m-d', strtotime($record['created_at'])),
-                    'note' => $record['comment'] ? $record['comment'] : '',
-                    'food_type' => $record['food_type'] ? $record['food_type'] : '',
-                    'molt' => $record['is_molt'] ? true : false,
-                    'image' => $new_image_url
-                );
-
-                if (!empty($record['record_weight'])) {
-                    $log_json_data['weight'] = $record['record_weight'];
+                // ▼ 修正: Setaeが要求するメタデータの構造に合わせる ▼
+                $log_json_data = array();
+                if ($log_type === 'feed') {
+                    $log_json_data['prey_type'] = !empty($record['food_type']) ? $record['food_type'] : '';
+                    $log_json_data['refused'] = !empty($record['is_refusal']);
                 }
 
+                // 必須メタデータの保存（これらがないとSetaeで表示されない）
                 update_post_meta($new_log_id, '_setae_log_spider_id', intval($new_spider_id));
-                update_post_meta($new_log_id, '_setae_log_data', json_encode($log_json_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                update_post_meta($new_log_id, '_setae_log_type', $log_type);
+                update_post_meta($new_log_id, '_setae_log_date', $parsed_date);
+                update_post_meta($new_log_id, '_setae_log_data', json_encode($log_json_data, JSON_UNESCAPED_UNICODE));
+
+                if (!empty($new_image_url)) {
+                    update_post_meta($new_log_id, '_setae_log_image', $new_image_url);
+                }
                 update_post_meta($new_log_id, '_legacy_record_id', $record['id']);
 
-                if (!$is_update_log) {
+                if (!$is_update_log)
                     $imported_records++;
-                }
             }
         }
 
         wp_send_json_success(array(
             'imported_animals' => $imported_animals,
             'imported_records' => $imported_records,
-            'imported_images' => $imported_images // 結果に追加
+            'imported_images' => $imported_images
         ));
     }
 
