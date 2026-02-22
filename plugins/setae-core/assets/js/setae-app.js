@@ -39,6 +39,8 @@ jQuery(document).ready(function ($) {
             username: $('#reg-username').val(),
             email: $('#reg-email').val(),
             password: $('#reg-password').val(),
+            // ▼ 追加: 紹介コードを送信データに含める
+            referral_code: $('#reg-referral-code').val()
         };
 
         var ajaxUrl = (typeof setae_vars !== 'undefined' && setae_vars.ajax_url) ? setae_vars.ajax_url : '/wp-admin/admin-ajax.php';

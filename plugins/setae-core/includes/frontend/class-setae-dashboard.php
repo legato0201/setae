@@ -64,6 +64,8 @@ class Setae_Dashboard
                 'is_premium' => $is_premium,
                 'spider_count' => $spider_count, // 追加
                 'spider_limit' => $spider_limit, // 追加
+                'referral_code' => get_user_meta($user_id, '_setae_referral_code', true),
+                'bonus_limit' => (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true),
             )
         ));
         // ▲▲▲ 追加・修正ここまで ▲▲▲

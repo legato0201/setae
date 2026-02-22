@@ -31,6 +31,10 @@ var SetaeUIProfile = (function ($) {
         const displayName = currentUser.display_name || '';
         const email = currentUser.email || '';
 
+        // ▼ 追加: 紹介コードとボーナス枠の変数を取得
+        const refCode = currentUser.referral_code || '未発行';
+        const bonusLimit = currentUser.bonus_limit || 0;
+
         const html = `
         <div class="setae-modal-overlay active" id="setae-profile-modal" style="display:flex;">
             <div class="setae-modal-content" style="max-width: 420px;">
@@ -64,6 +68,18 @@ var SetaeUIProfile = (function ($) {
                     <div class="setae-form-group">
                         <label>${__('New Password')} <small style="font-weight:normal; text-transform:none;">${__('(Leave empty to keep current)')}</small></label>
                         <input type="password" id="prof-password" class="setae-input" placeholder="********" autocomplete="new-password">
+                    </div>
+
+                    <div class="setae-form-group" style="background:#f5f7fa; padding:15px; border-radius:8px; border:1px dashed #ccc;">
+                        <label style="color:#333; font-weight:bold;">🎁 ${__('あなたの紹介コード')}</label>
+                        <p style="font-size:12px; color:#666; margin-bottom:10px;">
+                            ${__('このコードをSNS等でシェアして新規ユーザーが登録すると、お互いの生体登録枠が＋1されます。')}
+                            <br>${__('現在の獲得ボーナス枠:')} <strong style="color:#d35400;">+${bonusLimit} 枠</strong>
+                        </p>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="prof-my-referral" class="setae-input" value="${refCode}" readonly style="background:#fff; font-family:monospace; font-weight:bold; color:#2980b9;">
+                            <button type="button" class="setae-btn" id="btn-copy-referral" style="white-space:nowrap; background:#e0e6ed; color:#333;">${__('コピー')}</button>
+                        </div>
                     </div>
 
                     <div class="setae-form-group">

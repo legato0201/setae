@@ -45,6 +45,14 @@ if (!is_user_logged_in()) {
                         <input type="password" id="reg-password" class="setae-input" required minlength="6">
                     </div>
 
+                    <div class="setae-form-group">
+                        <label>紹介コード (任意)</label>
+                        <input type="text" id="reg-referral-code" class="setae-input" placeholder="例: ST-XXXXXXXX">
+                        <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">
+                            ※コードを入力して登録すると、生体の登録上限枠が＋1されます
+                        </small>
+                    </div>
+
                     <?php $tos_url = get_option('setae_tos_url', '#'); ?>
                     <div class="setae-form-group" style="margin-top: 15px;">
                         <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px; line-height: 1.4;">
