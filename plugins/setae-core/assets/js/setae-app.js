@@ -278,4 +278,133 @@ jQuery(document).ready(function ($) {
 
     // ▲▲▲ 追加機能終了 ▲▲▲
 
+    // ▼▼▼ 追加機能: PWA向け Pull-to-Refresh (プロ仕様UI版) ▼▼▼
+    (function () {
+        // 1. プロ仕様のモダングラスモーフィズム・デザイン
+        const ptrContainer = document.createElement('div');
+        ptrContainer.id = 'setae-ptr-container';
+        ptrContainer.innerHTML = `
+            <div id="setae-ptr-spinner" style="
+                width: 42px; height: 42px;
+                background: rgba(35, 35, 35, 0.85); /* サイトに馴染むダーク透過 */
+                backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* グラス効果 */
+                border: 1px solid rgba(255, 255, 255, 0.15); /* 繊細なエッジ */
+                border-radius: 50%;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+                display: flex; align-items: center; justify-content: center;
+                color: #aaa; transition: color 0.3s, border-color 0.3s;
+            ">
+                <svg id="setae-ptr-icon" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.1s;">
+                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                    <path d="M21 3v5h-5"></path>
+                </svg>
+            </div>
+        `;
+
+        // 2. ノッチ対策: 基準(top)をセーフエリア+16pxに設定し、そこから上に隠す（-80px）
+        Object.assign(ptrContainer.style, {
+            position: 'fixed',
+            top: 'calc(16px + env(safe-area-inset-top))', // ノッチを確実に回避する絶対基準点
+            left: '50%',
+            transform: 'translate(-50%, -80px) scale(0.8)', // 初期状態（上に隠しつつ縮小）
+            opacity: '0', // 初期は透明
+            zIndex: '9999',
+            pointerEvents: 'none',
+            transition: 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'
+        });
+        document.body.prepend(ptrContainer);
+
+        const spinner = document.getElementById('setae-ptr-spinner');
+        const icon = document.getElementById('setae-ptr-icon');
+        let touchStartY = 0;
+        let pullDistance = 0;
+        const PULL_THRESHOLD = 70; // 基準点が下がっているため、引き量は標準的でOK
+        const MAX_PULL = 120;
+        let isAtTop = false;
+        let isRefreshing = false;
+
+        // タッチ開始時
+        window.addEventListener('touchstart', function (e) {
+            if (isRefreshing) return;
+            if (window.scrollY <= 1) {
+                isAtTop = true;
+                touchStartY = e.touches[0].clientY;
+                ptrContainer.style.transition = 'none';
+            } else {
+                isAtTop = false;
+            }
+        }, { passive: true });
+
+        // タッチ移動時
+        window.addEventListener('touchmove', function (e) {
+            if (!isAtTop || isRefreshing) return;
+
+            pullDistance = e.touches[0].clientY - touchStartY;
+
+            if (pullDistance > 0) {
+                let resistance = pullDistance * 0.45;
+                if (resistance > MAX_PULL) resistance = MAX_PULL;
+
+                // 3. ネイティブライクな動き: 下がるにつれてフェードイン＆拡大
+                let translateY = -80 + resistance;
+                let opacity = Math.min(1, resistance / 50);
+                let scale = 0.8 + Math.min(0.2, resistance / 100);
+
+                ptrContainer.style.transform = `translate(-50%, ${translateY}px) scale(${scale})`;
+                ptrContainer.style.opacity = opacity;
+
+                // 枠全体ではなく、中のアイコンだけを回転させて上品に
+                icon.style.transform = `rotate(${resistance * 4}deg)`;
+
+                // 閾値を超えたら洗練されたブルーのアクセントカラーに
+                if (resistance >= PULL_THRESHOLD) {
+                    spinner.style.color = '#4ea8de';
+                    spinner.style.borderColor = 'rgba(78, 168, 222, 0.5)';
+                } else {
+                    spinner.style.color = '#aaa';
+                    spinner.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                }
+
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        // タッチ終了時
+        window.addEventListener('touchend', function () {
+            if (!isAtTop || isRefreshing) return;
+
+            ptrContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+
+            let resistance = pullDistance * 0.45;
+
+            if (resistance >= PULL_THRESHOLD) {
+                isRefreshing = true;
+
+                // 4. 更新中はノッチ下の定位置(translateY: 0px)で固定
+                ptrContainer.style.transform = `translate(-50%, 0px) scale(1)`;
+                ptrContainer.style.opacity = '1';
+
+                icon.style.transition = 'transform 1s linear';
+                let currentRotation = resistance * 4;
+                icon.style.transform = `rotate(${currentRotation + 1080}deg)`;
+
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 500);
+
+            } else {
+                // キャンセル時は元の隠れ位置へ戻す
+                ptrContainer.style.transform = 'translate(-50%, -80px) scale(0.8)';
+                ptrContainer.style.opacity = '0';
+                spinner.style.color = '#aaa';
+                spinner.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            }
+
+            touchStartY = 0;
+            pullDistance = 0;
+            isAtTop = false;
+        });
+    })();
+    // ▲▲▲ 追加機能終了 ▲▲▲
+
 }); // ← この閉じカッコの中に全てのコードが入っている必要があります
