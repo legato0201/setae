@@ -40,7 +40,9 @@ var SetaeUIDetail = (function ($) {
         if (imgUrl) {
             $heroBackdrop.css('background-image', `url('${imgUrl}')`);
         } else {
-            $heroBackdrop.css('background-image', `url('https://placehold.co/600x400/333/999?text=No+Image')`);
+            // 背景用のSVGプレースホルダー（カメラアイコンを少し大きめに中央配置）
+            const heroNoImageSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f1f5f9'/%3E%3Cg transform='translate(276, 176) scale(2)' fill='none' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/g%3E%3C/svg%3E";
+            $heroBackdrop.css('background-image', `url('${heroNoImageSvg}')`);
         }
 
         // Basic Info & Dates
