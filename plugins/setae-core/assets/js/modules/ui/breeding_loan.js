@@ -74,11 +74,11 @@ var SetaeUIBL = (function ($) {
 
         // 1. タブナビゲーション
         const tabsHtml = `
-            <div class="setae-segment-nav">
-                <button class="segment-btn active" data-target="tab-community-list">
+            <div class="setae-sub-tabs">
+                <button class="sub-tab-btn active" data-target="tab-community-list">
                     ${__('Community Listings', 'setae-core')} <span class="count-badge-inline">${otherSpiders.length}</span>
                 </button>
-                <button class="segment-btn" data-target="tab-mylistings-list">
+                <button class="sub-tab-btn" data-target="tab-mylistings-list">
                     ${__('My Listings', 'setae-core')} <span class="count-badge-inline">${mySpiders.length}</span>
                 </button>
             </div>
@@ -99,7 +99,7 @@ var SetaeUIBL = (function ($) {
                 </div>
             </div>
             
-            <div id="tab-mylistings-list" class="bl-tab-pane" style="display:none;">
+            <div id="tab-mylistings-list" class="bl-tab-pane">
                 <div class="setae-list-header">
                     <span class="col-status">${__('Status', 'setae-core')}</span>
                     <span class="col-main">${__('Details', 'setae-core')}</span>
@@ -116,12 +116,12 @@ var SetaeUIBL = (function ($) {
         container.html(tabsHtml + contentHtml);
 
         // タブイベント (既存のContractsと競合しないよう、ID指定で制御)
-        $('#setae-bl-grid .segment-btn').on('click', function () {
+        $('#setae-bl-grid .sub-tab-btn').on('click', function () {
             $(this).siblings().removeClass('active');
             $(this).addClass('active');
             const target = $(this).data('target');
-            $('#setae-bl-grid .bl-tab-pane').hide();
-            $('#' + target).fadeIn(200);
+            $('#setae-bl-grid .bl-tab-pane').removeClass('active');
+            $('#' + target).addClass('active');
         });
 
         bindCardEvents();
@@ -396,11 +396,11 @@ var SetaeUIBL = (function ($) {
 
         // 1. タブナビゲーション
         const tabsHtml = `
-            <div class="setae-segment-nav">
-                <button class="segment-btn active" data-target="tab-incoming">
+            <div class="setae-sub-tabs">
+                <button class="sub-tab-btn active" data-target="tab-incoming">
                     ${__('Requests Received', 'setae-core')} <span class="count-badge-inline">${incoming.length}</span>
                 </button>
-                <button class="segment-btn" data-target="tab-outgoing">
+                <button class="sub-tab-btn" data-target="tab-outgoing">
                     ${__('Requests Sent', 'setae-core')} <span class="count-badge-inline">${outgoing.length}</span>
                 </button>
             </div>
@@ -421,7 +421,7 @@ var SetaeUIBL = (function ($) {
                 </div>
             </div>
             
-            <div id="tab-outgoing" class="bl-tab-pane" style="display:none;">
+            <div id="tab-outgoing" class="bl-tab-pane">
                 <div class="setae-list-header">
                     <span class="col-status">${__('Status')}</span>
                     <span class="col-main">${__('Details')}</span>
@@ -438,11 +438,12 @@ var SetaeUIBL = (function ($) {
         container.html(tabsHtml + contentHtml);
 
         // タブ切り替えイベント
-        $('.segment-btn').on('click', function () {
-            $('.segment-btn').removeClass('active');
+        $('#setae-contracts-list .sub-tab-btn').on('click', function () {
+            $(this).siblings().removeClass('active');
             $(this).addClass('active');
-            $('.bl-tab-pane').hide();
-            $('#' + $(this).data('target')).fadeIn(200);
+            const target = $(this).data('target');
+            $('#setae-contracts-list .bl-tab-pane').removeClass('active');
+            $('#' + target).addClass('active');
         });
 
         // ボタン等のイベントバインド
