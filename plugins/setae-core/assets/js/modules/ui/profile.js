@@ -123,6 +123,27 @@ var SetaeUIProfile = (function ($) {
 
         // --- イベントリスナーの設定 ---
 
+        // ▼▼▼ ここから追加: 紹介コードのコピー処理 ▼▼▼
+        $('#setae-profile-modal').on('click', '#btn-copy-referral', function () {
+            const copyInput = document.getElementById("prof-my-referral");
+            // 入力欄を選択状態にする
+            copyInput.select();
+            copyInput.setSelectionRange(0, 99999); // モバイル端末への対応
+
+            // クリップボードにコピー
+            navigator.clipboard.writeText(copyInput.value).then(() => {
+                // コピー成功時にトースト通知を表示
+                if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
+                    SetaeCore.showToast(__('紹介コードをコピーしました'), 'success');
+                } else {
+                    alert(__('紹介コードをコピーしました'));
+                }
+            }).catch(err => {
+                alert(__('コピーに失敗しました'));
+            });
+        });
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         // モーダルを閉じる (オーバーレイクリック、×ボタン、Cancelボタン)
         $('#setae-profile-modal, #close-profile-modal, #close-profile-modal-btn').on('click', function (e) {
             if (e.target !== this) return; // バブリング防止 (オーバーレイのみ)
