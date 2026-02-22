@@ -117,6 +117,23 @@ class Setae_API_BL
             return new WP_Error('forbidden', 'Access denied', array('status' => 403));
         }
 
+        // ★追加: 連投・重複送信チェック
+        $last_msg = $db->get_latest_chat_from_user($contract_id, $user_id);
+        if ($last_msg) {
+            // WordPressのローカル時間との差分を秒で計算
+            $time_diff = current_time('timestamp') - strtotime($last_msg->created_at);
+
+            // 完全に同じメッセージで、かつ30秒以内の場合は重複送信とみなす
+            if ($last_msg->message === $message && $time_diff < 30) {
+                return new WP_Error('duplicate_message', '同じメッセージが連続して送信されています。', array('status' => 400));
+            }
+
+            // どんなメッセージでも2秒以内の連続送信はスパム・連打とみなして弾く
+            if ($time_diff < 2) {
+                return new WP_Error('too_fast', '送信が早すぎます。少し待ってから再度送信してください。', array('status' => 400));
+            }
+        }
+
         $result = $db->send_chat_message($contract_id, $user_id, $message);
 
         if ($result) {

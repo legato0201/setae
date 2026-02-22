@@ -643,8 +643,16 @@ var SetaeUIBL = (function ($) {
                 $input.val(''); // クリア
                 loadChatMessages(contractId); // リロード
             },
+            // ★追加: サーバー側で弾かれたときのエラーハンドリング
+            error: function (xhr) {
+                const errMsg = xhr.responseJSON?.message || "送信に失敗しました";
+                SetaeCore.showToast(errMsg, "error");
+            },
             complete: function () {
-                $('#btn-send-chat').prop('disabled', false);
+                // ★修正: ネットワークが早い場合の連打を防ぐため、1秒のクールダウンを入れる
+                setTimeout(() => {
+                    $('#btn-send-chat').prop('disabled', false);
+                }, 1000);
             }
         });
     }
