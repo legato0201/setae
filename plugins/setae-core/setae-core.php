@@ -60,6 +60,11 @@ register_deactivation_hook(__FILE__, 'deactivate_setae_core');
  */
 require_once SETAE_PLUGIN_DIR . 'includes/class-setae-core.php';
 
+// データ移行ツールの読み込み
+if (is_admin()) {
+	require_once plugin_dir_path(__FILE__) . 'includes/admin/class-setae-admin-migration.php';
+}
+
 /**
  * プラグインのテキストドメイン（翻訳ファイル）を読み込む
  */
