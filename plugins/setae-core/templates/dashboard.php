@@ -17,7 +17,7 @@ $is_premium = get_user_meta(get_current_user_id(), '_setae_is_premium', true);
         </div>
         <div class="setae-user-actions" id="setae-profile-trigger">
             <span id="header-user-name"
-                class="<?php echo $is_premium ? 'is-premium' : ''; ?>"><?php echo esc_html(wp_get_current_user()->display_name); ?></span>
+                class="<?php echo $is_premium ? '' : ''; ?>"><?php echo esc_html(wp_get_current_user()->display_name); ?></span>
             <?php echo get_avatar(get_current_user_id(), 32, '', 'Profile', array('class' => 'header-user-icon', 'style' => 'object-fit:cover; border-radius:50%;')); ?>
         </div>
     </div>

@@ -701,19 +701,36 @@
     /* Limit name width */
 }
 
-/* Premium Badge styling */
+/* プレミアムユーザーの場合はバッジ表示用の右余白を確保 */
+#header-user-name.is-premium {
+    position: relative;
+    padding-right: 42px;
+    /* バッジ幅 + 余白 */
+    max-width: 160px;
+    /* バッジが追加される分だけ最大幅を拡張 */
+}
+
+/* Premium Badge styling (絶対配置にして省略を回避＆デザインを洗練) */
 #header-user-name.is-premium::after {
-    content: 'PREMIUM';
-    display: inline-block;
+    content: 'PRO';
+    /* PREMIUMからPROに変更してスタイリッシュに */
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    /* 縦方向の中央揃え */
+
+    /* サイトデザインに調和するプレミアム感の演出 */
     background: linear-gradient(135deg, #FFD700, #FDB931);
     color: #fff;
-    font-size: 0.75rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    vertical-align: middle;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(253, 185, 49, 0.4);
+    /* ゴールド系の発光シャドウ */
+    line-height: 1;
 }
 
 .header-user-icon {

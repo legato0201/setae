@@ -137,6 +137,12 @@ var SetaeTutorial = (function ($) {
             attempts++;
             if ($('#section-enc').is(':visible') && !$('.setae-modal').is(':visible') && $('.species-card').length > 0) {
                 clearInterval(checkInterval);
+
+                // --- 追加: 図鑑チュートリアル開始前に最上部へスクロール ---
+                window.scrollTo(0, 0);
+                $('#section-enc').scrollTop(0);
+                // --------------------------------------------------------
+
                 startScenario('encyclopedia');
             } else if (attempts > 40) {
                 clearInterval(checkInterval);
