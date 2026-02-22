@@ -33,29 +33,36 @@
 
         <div class="setae-decks-scroll">
             <button class="deck-pill active" data-deck="all">
-                すべて <span class="count-badge">0</span>
+                <?php esc_html_e('すべて', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
             <button class="deck-pill" data-deck="hungry">
-                <span class="pill-icon">🦗</span> 空腹 <span class="count-badge">0</span>
+                <span class="pill-icon">🦗</span>
+                <?php esc_html_e('空腹', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
             <button class="deck-pill" data-deck="pre_molt">
-                <span class="pill-icon">⚠️</span> 脱皮前 <span class="count-badge">0</span>
+                <span class="pill-icon">⚠️</span>
+                <?php esc_html_e('脱皮前', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
 
             <button class="deck-pill" data-deck="cat_tarantula" style="display:none;">
-                <span class="pill-icon">🕷️</span> Tarantula <span class="count-badge">0</span>
+                <span class="pill-icon">🕷️</span>
+                <?php esc_html_e('Tarantula', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
             <button class="deck-pill" data-deck="cat_scorpion" style="display:none;">
-                <span class="pill-icon">🦂</span> Scorpion <span class="count-badge">0</span>
+                <span class="pill-icon">🦂</span>
+                <?php esc_html_e('Scorpion', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
             <button class="deck-pill" data-deck="cat_reptile" style="display:none;">
-                <span class="pill-icon">🦎</span> Reptile <span class="count-badge">0</span>
+                <span class="pill-icon">🦎</span>
+                <?php esc_html_e('Reptile', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
             <button class="deck-pill" data-deck="cat_plant" style="display:none;">
-                <span class="pill-icon">🌿</span> Plant <span class="count-badge">0</span>
+                <span class="pill-icon">🌿</span>
+                <?php esc_html_e('Plant', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
             <button class="deck-pill" data-deck="cat_other" style="display:none;">
-                <span class="pill-icon">📦</span> Other <span class="count-badge">0</span>
+                <span class="pill-icon">📦</span>
+                <?php esc_html_e('Other', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
         </div>
     </div>

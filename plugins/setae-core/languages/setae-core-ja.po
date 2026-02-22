@@ -386,3 +386,27 @@ msgstr "プレミアムメンバーです"
 
 msgid "プランの管理・解約手続き"
 msgstr "プランの管理・解約手続き"
+
+msgid "すべて"
+msgstr "すべて"
+
+msgid "空腹"
+msgstr "空腹"
+
+msgid "脱皮前"
+msgstr "脱皮前"
+
+msgid "Tarantula"
+msgstr "クモ"
+
+msgid "Scorpion"
+msgstr "サソリ"
+
+msgid "Reptile"
+msgstr "爬虫類"
+
+msgid "Plant"
+msgstr "植物"
+
+msgid "Other"
+msgstr "その他"
