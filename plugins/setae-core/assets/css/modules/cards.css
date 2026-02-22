@@ -430,7 +430,19 @@
     .setae-info-column {
         flex: 1;
         max-width: 250px;
+        min-width: 0;
     }
+
+    /* ニックネームを1行に制限し、はみ出た分を「...」にする */
+    .setae-nickname {
+        display: block;
+        /* または inline-block */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
 }
 
 /* 各ステーション（駅） */
