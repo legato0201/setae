@@ -422,9 +422,15 @@ var SetaeUIActions = (function ($) {
     }
 
     function initDesktopClickLogic() {
-        if ('ontouchstart' in window) return;
+        // スマホやタブレットでも誤作動する環境があるため、以前の判定を削除
+        // if ('ontouchstart' in window) return;
 
         $(document).on('click', '.setae-spider-list-row', function (e) {
+            // ▼▼▼ 追加: 操作元が「タッチ（スマホ等）」の場合はこの処理をスキップし、詳細画面を開く処理へ任せる ▼▼▼
+            if (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen')) {
+                return;
+            }
+
             const $row = $(this);
             const $card = $row.find('.setae-list-content');
 
