@@ -198,16 +198,16 @@ class Setae_API_BL
 
             $candidates[] = array(
                 'id' => $post->ID,
-                'name' => $post->post_title,
-                'title' => $post->post_title, // Keep title for compatibility
-                'species' => $species_name,
-                'image' => $img_url,
-                'gender' => get_post_meta($post->ID, '_setae_gender', true) ?: 'unknown',
+                // タイトルなどの文字列も安全に出力するためエスケープ処理を噛ませます
+                'name' => sanitize_text_field($post->post_title),
+                'title' => sanitize_text_field($post->post_title),
+                'species' => sanitize_text_field($species_name),
+                'image' => esc_url_raw($img_url), // URLの無害化
+                'gender' => sanitize_text_field(get_post_meta($post->ID, '_setae_gender', true) ?: 'unknown'),
                 'owner_id' => $post->post_author,
-                'owner_name' => get_the_author_meta('display_name', $post->post_author),
-                // ▼追加データ
-                'last_molt' => $last_molt,
-                'bl_terms' => $bl_terms
+                'owner_name' => sanitize_text_field(get_the_author_meta('display_name', $post->post_author)),
+                'last_molt' => sanitize_text_field($last_molt), // ★サニタイズ追加
+                'bl_terms' => sanitize_textarea_field($bl_terms) // ★サニタイズ追加（改行を許容）
             );
         }
 

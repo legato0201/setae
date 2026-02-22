@@ -180,7 +180,7 @@ var SetaeUIBL = (function ($) {
                 ${actionBtn}
                 <button class="setae-btn-xs btn-icon btn-view-bl-detail" 
                     data-name="${spider.name}" 
-                    data-molt="${spider.last_molt_date || '-'}" 
+                    data-molt="${spider.last_molt || '-'}" 
                     data-terms="${encodeURIComponent(spider.bl_terms || '')}">
                     <span class="icon">ℹ️</span>
                 </button>
