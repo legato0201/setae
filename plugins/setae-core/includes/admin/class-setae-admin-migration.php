@@ -326,11 +326,24 @@ class Setae_Admin_Migration
                                 // ログHTML
                                 let logsHtml = animal.logs.length > 0 ? '' : '<p style="color:#999;">ログなし</p>';
                                 animal.logs.forEach(log => {
+                                    // ▼ 修正: プレビュー画面のバッジ表示を拡張 ▼
                                     let imgHtml = log.photo ? `<img src="${log.photo}" class="mig-log-img">` : `<div class="mig-log-img" style="background:#ddd; display:flex; align-items:center; justify-content:center; color:#999; font-size:10px;">NoImg</div>`;
                                     let metaHtml = '';
                                     if (log.molt === 'Yes') metaHtml += `<span class="molt">脱皮</span>`;
                                     if (log.food) metaHtml += `<span class="food">餌: ${log.food}</span>`;
+
+                                    // 追加タグ(掃除や潅水など)
+                                    if (log.tags) {
+                                        let tagArr = log.tags.split(', ');
+                                        tagArr.forEach(t => { if (t) metaHtml += `<span style="background:#2196f3; color:#fff;">${t}</span>`; });
+                                    }
+                                    // 追加計測情報(体重や体長など)
+                                    if (log.extra_info) {
+                                        metaHtml += `<span style="background:#9c27b0; color:#fff;">📈 ${log.extra_info}</span>`;
+                                    }
+
                                     logsHtml += `<div class="mig-log-item">${imgHtml}<div><div style="font-weight:bold; color:#555;">${log.date}</div><div class="mig-log-meta">${metaHtml}</div><div style="margin-top:2px;">${log.note || '-'}</div></div></div>`;
+                                    // ▲ 修正ここまで ▲
                                 });
 
                                 // ラジオボタングループHTML生成
@@ -563,16 +576,59 @@ class Setae_Admin_Migration
                 return $r['animal_id'] == $animal['id'];
             });
 
+            // ▼ 修正: プレビュー用のデータ抽出ロジック ▼
             $logs_preview = array();
             foreach ($animal_logs as $log) {
+
+                $comment = !empty($log['comment']) ? $log['comment'] : '';
+                // 全角英数字やスペースを半角に変換してパース精度を上げる
+                $comment_norm = mb_convert_kana($comment, 'ans', 'UTF-8');
+
+                // 脱皮・給餌判定
+                $is_molt = !empty($log['is_molt']) || strpos($comment, '{脱皮}') !== false;
+                $food_val = !empty($log['food_type']) ? $log['food_type'] : '';
+                if (empty($food_val) && strpos($comment, '{給餌}') !== false) {
+                    $food_val = '(メモ指定)';
+                }
+
+                // その他のイベントタグ抽出
+                $tags = [];
+                if (strpos($comment, '{掃除}') !== false)
+                    $tags[] = '掃除';
+                if (strpos($comment, '{潅水}') !== false)
+                    $tags[] = '潅水';
+                if (strpos($comment, '{施肥}') !== false)
+                    $tags[] = '施肥';
+                if (strpos($comment, '{開花}') !== false)
+                    $tags[] = '開花';
+
+                // 成長情報(計測データ)の抽出
+                $extra_info = [];
+                if (!empty($log['record_weight']))
+                    $extra_info[] = floatval($log['record_weight']) . 'g';
+                if (!empty($log['record_length']))
+                    $extra_info[] = floatval($log['record_length']) . 'cm';
+
+                if (preg_match('/(?:齢数|instar)[:：\s]*(\d+)/ui', $comment_norm, $m))
+                    $extra_info[] = intval($m[1]) . '齢';
+                if (preg_match('/(?:体重|weight)[:：\s]*(\d+(?:\.\d+)?)\s*(kg|g)?/ui', $comment_norm, $m))
+                    $extra_info[] = floatval($m[1]) . (!empty($m[2]) ? strtolower($m[2]) : 'g');
+
+                // 体長・レッグスパンを区別せず、単一の「サイズ」として抽出 (05cm -> 5cm に変換)
+                if (preg_match('/(?:体長|レッグスパン|length|leg_span)[:：\s]*(\d+(?:\.\d+)?)\s*(mm|cm|m)?/ui', $comment_norm, $m))
+                    $extra_info[] = floatval($m[1]) . (!empty($m[2]) ? strtolower($m[2]) : 'cm');
+
                 $logs_preview[] = array(
                     'date' => date('Y-m-d H:i', strtotime($log['created_at'])),
-                    'note' => $log['comment'],
-                    'food' => $log['food_type'],
-                    'molt' => $log['is_molt'] ? 'Yes' : 'No',
+                    'note' => $comment,
+                    'food' => $food_val,
+                    'molt' => $is_molt ? 'Yes' : 'No',
+                    'tags' => implode(', ', $tags),
+                    'extra_info' => implode(', ', array_unique($extra_info)),
                     'photo' => $log['photo']
                 );
             }
+            // ▲ 修正ここまで ▲
 
             $preview_data[] = array(
                 'legacy_id' => $animal['id'],
@@ -626,13 +682,17 @@ class Setae_Admin_Migration
         $imported_animals = 0;
         $animal_id_map = array();
 
-        // ▼ 追加: 画像ダウンロード時の「直リンク禁止」や「SSRF保護」を突破するためのフィルター
-        $allow_unsafe_urls = function ($args) {
+        // ▼ 変更: 直リンク禁止やSSRF保護を突破するため、画像の元ドメインをRefererに偽装する ▼
+        $allow_unsafe_urls = function ($args, $url) {
             $args['reject_unsafe_urls'] = false;
             if (!isset($args['headers']))
                 $args['headers'] = array();
-            // ブラウザからのアクセスに見せかけ、自サイトからのアクセス(Referer)として偽装する
-            $args['headers']['Referer'] = site_url();
+
+            // 対象画像のホストをRefererとして偽装する (例: https://nakano2835.com/)
+            $parsed = parse_url($url);
+            $referer = isset($parsed['host']) ? $parsed['scheme'] . '://' . $parsed['host'] . '/' : site_url();
+
+            $args['headers']['Referer'] = $referer;
             $args['headers']['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
             return $args;
         };
@@ -690,27 +750,39 @@ class Setae_Admin_Migration
                 if (!$is_update_animal)
                     $imported_animals++;
 
-                // ▼ 修正: 個体アイコン(サムネイル)のダウンロードとメタデータへの保存 ▼
+                // ▼ 修正: 個体アイコンのダウンロード（不要な相対パス・固定アイコンは除外） ▼
                 if (!empty($animal['photo'])) {
-                    $current_img = get_post_meta($new_post_id, '_setae_spider_image', true);
-                    if (empty($current_img) || strpos($current_img, wp_upload_dir()['baseurl']) === false) {
+                    $photo_url = trim($animal['photo']);
 
-                        add_filter('https_ssl_verify', '__return_false');
-                        add_filter('https_local_ssl_verify', '__return_false');
-                        add_filter('http_request_args', $allow_unsafe_urls);
+                    // 変更: clean-icon, feed-icon, shed-icon が含まれているか、相対パスの場合は除外
+                    if (strpos($photo_url, '/wp-content/') === 0 || preg_match('/(clean-icon|feed-icon|shed-icon)/i', $photo_url)) {
+                        $photo_url = '';
+                    }
 
-                        $attach_id = media_sideload_image(esc_url_raw(trim($animal['photo'])), $new_post_id, null, 'id');
+                    if (!empty($photo_url)) {
+                        $current_img = get_post_meta($new_post_id, '_setae_spider_image', true);
+                        if (empty($current_img) || strpos($current_img, wp_upload_dir()['baseurl']) === false) {
 
-                        remove_filter('https_ssl_verify', '__return_false');
-                        remove_filter('https_local_ssl_verify', '__return_false');
-                        remove_filter('http_request_args', $allow_unsafe_urls);
+                            add_filter('https_ssl_verify', '__return_false');
+                            add_filter('https_local_ssl_verify', '__return_false');
+                            // フィルターに2つの引数を渡すように指定
+                            add_filter('http_request_args', $allow_unsafe_urls, 10, 2);
 
-                        if (!is_wp_error($attach_id)) {
-                            $dl_url = wp_get_attachment_url($attach_id);
-                            update_post_meta($new_post_id, '_setae_spider_image', $dl_url);
-                        } else {
-                            // ダウンロード失敗時は元のURLを直接設定
-                            update_post_meta($new_post_id, '_setae_spider_image', trim($animal['photo']));
+                            $attach_id = media_sideload_image(esc_url_raw($photo_url), $new_post_id, null, 'id');
+
+                            remove_filter('https_ssl_verify', '__return_false');
+                            remove_filter('https_local_ssl_verify', '__return_false');
+                            remove_filter('http_request_args', $allow_unsafe_urls, 10);
+
+                            if (!is_wp_error($attach_id)) {
+                                $dl_url = wp_get_attachment_url($attach_id);
+                                update_post_meta($new_post_id, '_setae_spider_image', $dl_url);
+                                set_post_thumbnail($new_post_id, $attach_id); // サムネイルも設定
+                            } else {
+                                // ダウンロード失敗時はURLを空にし、元の直リンクURLを入れない
+                                delete_post_meta($new_post_id, '_setae_spider_image');
+                                update_post_meta($new_post_id, '_mig_img_error', $attach_id->get_error_message());
+                            }
                         }
                     }
                 }
@@ -733,12 +805,17 @@ class Setae_Admin_Migration
             $record_date = (!empty($record['created_at']) && $record['created_at'] !== '0000-00-00 00:00:00') ? $record['created_at'] : current_time('mysql');
             $parsed_date = date('Y-m-d', strtotime($record_date));
 
-            // ▼ 修正: Setae形式のログタイプを判定 ▼
+            // ▼▼ 修正: ログタイプの判定とJSONへのデータ取り込み ▼▼
+            $comment = !empty($record['comment']) ? $record['comment'] : '';
             $log_type = 'note';
-            if (!empty($record['is_molt'])) {
+
+            // 1. Setae形式のログタイプ判定
+            if (!empty($record['is_molt']) || strpos($comment, '{脱皮}') !== false) {
                 $log_type = 'molt';
-            } elseif (!empty($record['food_type']) || !empty($record['is_refusal'])) {
+            } elseif (!empty($record['food_type']) || !empty($record['is_refusal']) || strpos($comment, '{給餌}') !== false) {
                 $log_type = 'feed';
+            } elseif (!empty($record['record_weight']) || !empty($record['record_length']) || preg_match('/(?:体重|体長|レッグスパン|齢数)/u', $comment)) {
+                $log_type = 'growth'; // 計測データがある場合は growth 優先
             }
 
             $log_title = sprintf('%s - %s (%s)', get_the_title($new_spider_id), ucfirst($log_type), $parsed_date);
@@ -778,9 +855,14 @@ class Setae_Admin_Migration
 
             if (!is_wp_error($new_log_id)) {
 
-                // --- 画像のダウンロード処理 ---
+                // ▼ 修正: ログ画像のダウンロード処理 ▼
                 $new_image_url = '';
                 $photo_url = trim($record['photo']);
+
+                // 変更: clean-icon, feed-icon, shed-icon が含まれているか、相対パスの場合は除外
+                if (strpos($photo_url, '/wp-content/') === 0 || preg_match('/(clean-icon|feed-icon|shed-icon)/i', $photo_url)) {
+                    $photo_url = '';
+                }
 
                 if (!empty($photo_url)) {
                     $current_img = get_post_meta($new_log_id, '_setae_log_image', true);
@@ -789,37 +871,82 @@ class Setae_Admin_Migration
 
                         add_filter('https_ssl_verify', '__return_false');
                         add_filter('https_local_ssl_verify', '__return_false');
-                        add_filter('http_request_args', $allow_unsafe_urls); // ブロック解除
+                        add_filter('http_request_args', $allow_unsafe_urls, 10, 2); // ブロック解除
 
                         $sideloaded_src = media_sideload_image(esc_url_raw($photo_url), $new_log_id, null, 'src');
 
                         remove_filter('https_ssl_verify', '__return_false');
                         remove_filter('https_local_ssl_verify', '__return_false');
-                        remove_filter('http_request_args', $allow_unsafe_urls);
+                        remove_filter('http_request_args', $allow_unsafe_urls, 10);
 
                         if (!is_wp_error($sideloaded_src)) {
                             $new_image_url = $sideloaded_src;
                             $imported_images++;
                         } else {
-                            $new_image_url = $photo_url; // DL失敗時は元のURL
+                            // ダウンロード失敗時はエラーを記録し、画像URLは空にする
+                            $new_image_url = '';
+                            update_post_meta($new_log_id, '_mig_img_error', $sideloaded_src->get_error_message());
                         }
                     } else {
                         $new_image_url = $current_img;
                     }
                 }
 
-                // ▼ 修正: Setaeが要求するメタデータの構造に合わせる ▼
+                // ▼ 修正: Setaeが要求するJSON構造にすべての要素をパースして追加 ▼
                 $log_json_data = array();
+
+                // 基本のタイプ別データ
                 if ($log_type === 'feed') {
                     $log_json_data['prey_type'] = !empty($record['food_type']) ? $record['food_type'] : '';
                     $log_json_data['refused'] = !empty($record['is_refusal']);
                 }
 
-                // 必須メタデータの保存（これらがないとSetaeで表示されない）
+                // DBカラムからの取り込み
+                if (!empty($record['record_weight'])) {
+                    $log_json_data['weight'] = (float) $record['record_weight'];
+                }
+                if (!empty($record['record_length'])) {
+                    $log_json_data['size'] = (float) $record['record_length'];
+                    $log_json_data['size_unit'] = 'cm';
+                }
+
+                // 全角英数字・スペースを半角に変換
+                $comment_norm = mb_convert_kana($comment, 'ans', 'UTF-8');
+
+                // メモ(comment)からの正規表現パース
+                if (preg_match('/(?:齢数|instar)[:：\s]*(\d+)/ui', $comment_norm, $matches)) {
+                    $log_json_data['instar'] = (int) $matches[1];
+                }
+                if (preg_match('/(?:体重|weight)[:：\s]*(\d+(?:\.\d+)?)\s*(kg|g)?/ui', $comment_norm, $matches)) {
+                    $log_json_data['weight'] = floatval($matches[1]);
+                    $log_json_data['weight_unit'] = !empty($matches[2]) ? strtolower($matches[2]) : 'g';
+                }
+
+                // 体長とレッグスパンを区別せず統合して size として記録
+                if (preg_match('/(?:体長|レッグスパン|length|leg_span)[:：\s]*(\d+(?:\.\d+)?)\s*(mm|cm|m)?/ui', $comment_norm, $matches)) {
+                    $val = floatval($matches[1]); // 05 を 5 に変換
+                    $unit = !empty($matches[2]) ? strtolower($matches[2]) : 'cm';
+                    $log_json_data['size'] = $val;
+                    $log_json_data['size_unit'] = $unit;
+                    $log_json_data['size_str'] = $val . $unit; // 5cmなどの文字列としても持たせる
+                }
+
+                // その他のイベントフラグ (Setae側で将来的に利用可能にする)
+                if (strpos($comment, '{掃除}') !== false)
+                    $log_json_data['event_clean'] = true;
+                if (strpos($comment, '{潅水}') !== false)
+                    $log_json_data['event_water'] = true;
+                if (strpos($comment, '{施肥}') !== false)
+                    $log_json_data['event_fertilizer'] = true;
+                if (strpos($comment, '{開花}') !== false)
+                    $log_json_data['event_bloom'] = true;
+
+                // 必須メタデータの保存
                 update_post_meta($new_log_id, '_setae_log_spider_id', intval($new_spider_id));
                 update_post_meta($new_log_id, '_setae_log_type', $log_type);
                 update_post_meta($new_log_id, '_setae_log_date', $parsed_date);
-                update_post_meta($new_log_id, '_setae_log_data', json_encode($log_json_data, JSON_UNESCAPED_UNICODE));
+                update_post_meta($new_log_id, '_setae_log_data', json_encode($log_json_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                // ▲ 修正ここまで ▲
 
                 if (!empty($new_image_url)) {
                     update_post_meta($new_log_id, '_setae_log_image', $new_image_url);
