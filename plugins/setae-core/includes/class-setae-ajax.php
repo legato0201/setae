@@ -225,12 +225,55 @@ class Setae_Ajax
     }
 
 
+    // ▼▼▼ 新規追加: ひらがな5文字のランダムコード生成メソッド ▼▼▼
+    private function generate_hiragana_referral_code()
+    {
+        $hiragana = array('あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ', 'さ', 'し', 'す', 'せ', 'そ', 'た', 'ち', 'つ', 'て', 'と', 'な', 'に', 'ぬ', 'ね', 'の', 'は', 'ひ', 'ふ', 'へ', 'ほ', 'ま', 'み', 'む', 'め', 'も', 'や', 'ゆ', 'よ', 'ら', 'り', 'る', 'れ', 'ろ', 'わ', 'ん');
+        $code = '';
+        for ($i = 0; $i < 5; $i++) {
+            $code .= $hiragana[array_rand($hiragana)];
+        }
+
+        // 重複チェック
+        global $wpdb;
+        $exists = $wpdb->get_var($wpdb->prepare("SELECT user_id FROM $wpdb->usermeta WHERE meta_key = '_setae_referral_code' AND meta_value = %s", $code));
+        if ($exists) {
+            return $this->generate_hiragana_referral_code(); // 重複時は再生成
+        }
+        return $code;
+    }
+    // ▲▲▲ 新規追加ここまで ▲▲▲
+
     public function handle_register_user()
     {
         // 設定がOFFなら拒否
         if (!get_option('setae_enable_registration')) {
             wp_send_json_error('現在、新規登録は受け付けていません。');
         }
+
+        // ▼▼▼ 新規追加: IPアドレスの取得と重複チェック ▼▼▼
+        $client_ip = '';
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $client_ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $client_ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]; // プロキシ経由時の元のIPを取得
+        } else {
+            $client_ip = $_SERVER['REMOTE_ADDR'];
+        }
+        $client_ip = sanitize_text_field(trim($client_ip));
+
+        global $wpdb;
+        // 修正: 存在チェックではなく、同一IPの登録数をカウントする
+        $ip_count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(user_id) FROM $wpdb->usermeta WHERE meta_key = '_setae_registration_ip' AND meta_value = %s",
+            $client_ip
+        ));
+
+        // 3アカウント以上登録されている場合はブロック
+        if ($ip_count >= 3) {
+            wp_send_json_error('このネットワーク（IPアドレス）からの登録上限（3アカウント）に達しています。不正利用防止のため、これ以上の作成はできません。');
+        }
+        // ▲▲▲ 新規追加ここまで ▲▲▲
 
         // 入力データの取得とサニタイズ
         $username = isset($_POST['username']) ? sanitize_user($_POST['username']) : '';
@@ -261,10 +304,14 @@ class Setae_Ajax
             wp_send_json_error($user_id->get_error_message());
         }
 
+        // ▼▼▼ 新規追加: 登録成功時にIPアドレスをユーザーメタとして保存 ▼▼▼
+        update_user_meta($user_id, '_setae_registration_ip', $client_ip);
+        // ▲▲▲ 新規追加ここまで ▲▲▲
+
         // ▼▼▼ 新規追加: 紹介コードの生成とボーナス枠付与の処理 ▼▼▼
 
-        // 1. 新規ユーザー自身の紹介コードを生成して保存（例: ST-ランダムな8文字）
-        $new_user_referral_code = 'ST-' . wp_generate_password(8, false, false);
+        // 1. 新規ユーザー自身の紹介コードを生成して保存（ひらがな5文字）
+        $new_user_referral_code = $this->generate_hiragana_referral_code();
         update_user_meta($user_id, '_setae_referral_code', $new_user_referral_code);
 
         // デフォルトのボーナス枠を0で初期化

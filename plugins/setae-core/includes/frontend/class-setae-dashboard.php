@@ -48,6 +48,25 @@ class Setae_Dashboard
         $bonus_limit = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
         $spider_limit = $is_premium ? -1 : ($base_limit + $bonus_limit); // -1は無制限のフラグ
 
+        // ▼▼▼ 追加: 既存ユーザーで紹介コードが未発行の場合は自動生成する ▼▼▼
+        $referral_code = get_user_meta($user_id, '_setae_referral_code', true);
+        if (empty($referral_code)) {
+            // ひらがな5文字を生成
+            $hiragana = array('あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ', 'さ', 'し', 'す', 'せ', 'そ', 'た', 'ち', 'つ', 'て', 'と', 'な', 'に', 'ぬ', 'ね', 'の', 'は', 'ひ', 'ふ', 'へ', 'ほ', 'ま', 'み', 'む', 'め', 'も', 'や', 'ゆ', 'よ', 'ら', 'り', 'る', 'れ', 'ろ', 'わ', 'ん');
+            $referral_code = '';
+            for ($i = 0; $i < 5; $i++) {
+                $referral_code .= $hiragana[array_rand($hiragana)];
+            }
+            // DBに保存
+            update_user_meta($user_id, '_setae_referral_code', $referral_code);
+
+            // ボーナス枠のメタデータが存在しない場合のみ0で初期化
+            if (get_user_meta($user_id, '_setae_bonus_spider_limit', true) === '') {
+                update_user_meta($user_id, '_setae_bonus_spider_limit', 0);
+            }
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         // Localize Script for Core (Pass API Root, Nonce, etc.)
         wp_localize_script('setae-app-core', 'SetaeSettings', array(
             'api_root' => esc_url_raw(rest_url()),
@@ -64,7 +83,7 @@ class Setae_Dashboard
                 'is_premium' => $is_premium,
                 'spider_count' => $spider_count, // 追加
                 'spider_limit' => $spider_limit, // 追加
-                'referral_code' => get_user_meta($user_id, '_setae_referral_code', true),
+                'referral_code' => $referral_code,
                 'bonus_limit' => (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true),
             )
         ));
