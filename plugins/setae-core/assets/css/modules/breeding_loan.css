@@ -953,28 +953,48 @@
    Chat Modal (Pro Design Refined)
    ========================================= */
 
-/* モーダルコンテンツ設定（縦幅確保） */
+/* モーダルコンテンツ設定（ベース） */
 .chat-modal {
     display: flex;
     flex-direction: column;
     height: 80vh;
-    /* 画面の80%を使用 */
     max-height: 700px;
-    background: #fff;
+    background: #f2f2f7;
+    /* iOSライクな背景色 */
     padding: 0 !important;
-    /* デフォルトのpaddingをリセット */
+    /* デフォルトパディングをリセット */
     overflow: hidden;
     border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* モバイル（スマホ）画面用のフルスクリーン化 & キーボード対策 */
+@media screen and (max-width: 768px) {
+    .setae-modal-overlay {
+        align-items: flex-end;
+        /* 下から生えるように配置 */
+    }
+
+    .chat-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 90dvh !important;
+        /* キーボード展開時に対応する動的高さ */
+        max-height: none !important;
+        border-radius: 20px 20px 0 0 !important;
+        /* 上部のみ角丸 */
+        margin: 0 !important;
+    }
 }
 
 /* ヘッダー */
 .chat-header {
     flex-shrink: 0;
-    padding: 14px 20px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    background: rgba(255, 255, 255, 0.95);
-    /* すりガラス効果用ベース */
-    backdrop-filter: blur(10px);
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -984,60 +1004,75 @@
 .chat-header h3 {
     margin: 0;
     font-size: 16px;
+    font-weight: 700;
     color: #1c1c1e;
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    gap: 8px;
     line-height: 1.2;
 }
 
 .chat-header h3 small {
     font-size: 11px;
     color: #8e8e93;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-top: 2px;
 }
 
-/* メッセージエリア（スクロール部分） */
+/* 閉じるボタン */
+.btn-close-modal {
+    background: #e5e5ea;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 20px;
+    color: #8e8e93;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.btn-close-modal:hover {
+    background: #d1d1d6;
+    color: #1c1c1e;
+}
+
+/* メッセージ表示エリア */
 .chat-body {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 20px 16px;
     background-color: #f2f2f7;
-    /* iOS背景色 */
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
     /* 気泡間の隙間 */
     scroll-behavior: smooth;
-}
-
-/* 空の状態 */
-.chat-empty {
-    text-align: center;
-    color: #8e8e93;
-    font-size: 13px;
-    margin-top: auto;
-    margin-bottom: auto;
-    line-height: 1.6;
+    overscroll-behavior-y: contain;
+    /* スクロールが裏に貫通するのを防ぐ */
 }
 
 /* チャット行（アバター＋気泡） */
 .chat-bubble-row {
     display: flex;
     gap: 10px;
-    max-width: 85%;
-    margin-bottom: 4px;
+    max-width: 90%;
+    align-items: flex-end;
+    /* アバターと気泡の下端を揃える */
 }
 
-/* 自分のメッセージ（右寄せ） */
+/* 自分のメッセージ */
 .chat-bubble-row.mine {
     align-self: flex-end;
     flex-direction: row-reverse;
 }
 
-/* 相手のメッセージ（左寄せ） */
+/* 相手のメッセージ */
 .chat-bubble-row.partner {
     align-self: flex-start;
 }
@@ -1050,124 +1085,118 @@
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
-    align-self: flex-end;
-    /* 下揃え */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* コンテンツラッパー（ここが重要：Flex化して配置を制御） */
+/* コンテンツラッパー（幅の自動調整用） */
 .chat-content {
     display: flex;
     flex-direction: column;
-    flex: 1;
     min-width: 0;
 }
 
-/* 自分のメッセージ配置（右寄せ・幅自動） */
 .chat-bubble-row.mine .chat-content {
     align-items: flex-end;
-    /* 右端に寄せつつ、幅を中身に合わせる */
 }
 
-/* 相手のメッセージ配置（左寄せ・幅自動） */
 .chat-bubble-row.partner .chat-content {
     align-items: flex-start;
-    /* 左端に寄せつつ、幅を中身に合わせる */
 }
 
 /* 気泡デザイン（共通） */
 .chat-bubble {
-    padding: 10px 14px;
+    padding: 10px 16px;
     border-radius: 18px;
     font-size: 14px;
     line-height: 1.5;
-    position: relative;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    word-wrap: break-word;
+    word-break: break-word;
     white-space: pre-wrap;
-
-    /* 幅の制御（念のため fit-content も残す） */
-    width: fit-content;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     max-width: 100%;
 }
 
-/* 自分の気泡色 */
+/* 自分の気泡色（ブランドカラーの濃紺） */
 .chat-bubble.mine {
-    background: linear-gradient(135deg, var(--setae-primary, #2c3e50), #34495e);
-    color: #fff;
+    background: var(--setae-primary, #2c3e50);
+    color: #ffffff;
     border-bottom-right-radius: 4px;
-    /* 明示的にサイズ合わせを指定 */
-    align-self: flex-end;
+    /* 吹き出しの尻尾表現 */
 }
 
-/* 相手の気泡色 */
+/* 相手の気泡色（白） */
 .chat-bubble.partner {
-    background: #fff;
+    background: #ffffff;
     color: #1c1c1e;
     border-bottom-left-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    /* 明示的にサイズ合わせを指定 */
-    align-self: flex-start;
 }
 
 /* 日時メタ情報 */
 .chat-meta {
-    font-size: 10px;
+    font-size: 11px;
     color: #aeaeb2;
     margin-top: 4px;
-    padding: 0 2px;
+    padding: 0 4px;
+    font-weight: 500;
 }
 
-.chat-bubble-row.mine .chat-meta {
-    text-align: right;
-    align-self: flex-end;
-    /* 日付も右寄せ */
+/* 空の状態 */
+.chat-empty {
+    text-align: center;
+    color: #8e8e93;
+    font-size: 13px;
+    margin: auto;
+    padding: 40px 20px;
 }
 
-.chat-bubble-row.partner .chat-meta {
-    text-align: left;
-    align-self: flex-start;
-    /* 日付も左寄せ */
-}
-
-/* フッター（入力エリア） */
+/* =========================================
+   フッター（入力エリア）
+   ========================================= */
 .chat-footer {
     flex-shrink: 0;
-    padding: 12px 16px;
-    background: #fff;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    /* env() でiPhoneの下部ホームインジケーターとの被りを防ぐ */
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: #ffffff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
     display: flex;
     align-items: flex-end;
-    /* 下揃え */
-    gap: 10px;
+    gap: 12px;
+    z-index: 10;
 }
 
 /* 入力欄 */
 #chat-input {
     flex: 1;
-    border: 1px solid #e5e5ea;
-    background: #f9f9f9;
+    border: 1px solid #d1d1d6;
+    background: #f4f4f5;
     border-radius: 20px;
-    /* カプセル型 */
     padding: 10px 16px;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.4;
-    max-height: 100px;
+    max-height: 120px;
     min-height: 40px;
     resize: none;
     outline: none;
     transition: all 0.2s;
     box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* iOSの入力時強制ズームを防ぐため、スマホでは16pxに強制する */
+@media screen and (max-width: 768px) {
+    #chat-input {
+        font-size: 16px;
+    }
 }
 
 #chat-input:focus {
-    background: #fff;
+    background: #ffffff;
     border-color: var(--setae-primary, #2c3e50);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
 }
 
-/* 送信ボタン（アイコン化） */
+/* 送信ボタン */
 .btn-send {
     width: 40px;
     height: 40px;
@@ -1180,8 +1209,9 @@
     justify-content: center;
     cursor: pointer;
     transition: transform 0.1s, background 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
+    margin-bottom: 2px;
+    /* 入力欄の下端に合わせる微調整 */
 }
 
 .btn-send:hover:not(:disabled) {
@@ -1196,7 +1226,6 @@
 .btn-send:disabled {
     background: #d1d1d6;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 .btn-send svg {
@@ -1207,50 +1236,9 @@
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
-    margin-left: 2px;
-    /* 視覚的な中心調整 */
-}
-
-.chat-bubble {
-    padding: 10px 14px;
-    border-radius: 18px;
-    font-size: 14px;
-    line-height: 1.5;
-    position: relative;
-    word-break: break-word;
-}
-
-/* 自分の吹き出し */
-.chat-bubble.mine {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    color: #fff;
-    border-bottom-right-radius: 4px;
-    /* 右下を少し角張らせる */
-}
-
-/* 相手の吹き出し */
-.chat-bubble.partner {
-    background: #e9ecef;
-    color: #333;
-    border-bottom-left-radius: 4px;
-}
-
-.chat-meta {
-    font-size: 10px;
-    color: #aaa;
-    margin-top: 4px;
-    text-align: right;
-}
-
-.chat-bubble-row.partner .chat-meta {
-    text-align: left;
-}
-
-.chat-empty {
-    text-align: center;
-    color: #ccc;
-    font-size: 13px;
-    margin-top: 40px;
+    margin-left: -2px;
+    /* 紙飛行機アイコンを視覚的に中央に配置 */
+    margin-top: 1px;
 }
 
 /* =========================================
@@ -1817,9 +1805,11 @@
         max-width: none;
     }
 }
+
 /* ▼ 追加: Recruiting Status Dot Color */
 .status-dot.status-RECRUITING {
-    background: #34c759; /* Green */
+    background: #34c759;
+    /* Green */
 }
 
 /* Gender Mark in List Title */
@@ -1828,9 +1818,18 @@
     margin-left: 4px;
     font-weight: 700;
 }
-.gender-mark.male { color: #007aff; }
-.gender-mark.female { color: #ff3b30; }
-.gender-mark.unknown { color: #8e8e93; }
+
+.gender-mark.male {
+    color: #007aff;
+}
+
+.gender-mark.female {
+    color: #ff3b30;
+}
+
+.gender-mark.unknown {
+    color: #8e8e93;
+}
 
 /* Meta Divider */
 .list-meta .divider {
