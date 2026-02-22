@@ -626,13 +626,18 @@ class Setae_Admin_Migration
         $imported_animals = 0;
         $animal_id_map = array();
 
+        // ▼ 追加: 同一サーバー(同一IP)からの画像ダウンロードブロック(SSRF保護)を解除するフィルター ▼
+        $allow_unsafe_urls = function ($args) {
+            $args['reject_unsafe_urls'] = false;
+            return $args;
+        };
+
         foreach ($animals as $animal) {
-            // ▼ 追加: mappingに含まれない（チェックされていない）個体はスキップ ▼
             if (!isset($mapping[$animal['id']])) {
                 continue;
             }
-            // ▲ 追加ここまで ▲
 
+            // 既に移行済みかチェック
             $existing = get_posts(array(
                 'post_type' => 'setae_spider',
                 'meta_key' => '_legacy_animal_id',
@@ -641,22 +646,21 @@ class Setae_Admin_Migration
                 'fields' => 'ids'
             ));
 
-            if (!empty($existing)) {
-                $animal_id_map[$animal['id']] = $existing[0];
-                continue;
+            $is_update_animal = !empty($existing);
+            $new_post_id = $is_update_animal ? $existing[0] : 0;
+
+            // 新規の場合のみ投稿を作成（既存ならIDを使い回してメタを更新する）
+            if (!$is_update_animal) {
+                $post_title = $animal['japanese_name'] ?: ($animal['management_no'] ?: 'No Name (' . $animal['id'] . ')');
+                $post_data = array(
+                    'post_title' => $post_title,
+                    'post_type' => 'setae_spider',
+                    'post_status' => 'publish',
+                    'post_author' => $new_wp_user_id,
+                    'post_date' => $animal['created_at'] !== '0000-00-00 00:00:00' ? $animal['created_at'] : current_time('mysql'),
+                );
+                $new_post_id = wp_insert_post($post_data);
             }
-
-            $post_title = $animal['japanese_name'] ?: ($animal['management_no'] ?: 'No Name (' . $animal['id'] . ')');
-
-            $post_data = array(
-                'post_title' => $post_title,
-                'post_type' => 'setae_spider',
-                'post_status' => 'publish',
-                'post_author' => $new_wp_user_id,
-                'post_date' => $animal['created_at'] !== '0000-00-00 00:00:00' ? $animal['created_at'] : current_time('mysql'),
-            );
-
-            $new_post_id = wp_insert_post($post_data);
 
             if (!is_wp_error($new_post_id)) {
                 update_post_meta($new_post_id, '_setae_gender', $this->map_gender($animal['gender']));
@@ -671,12 +675,9 @@ class Setae_Admin_Migration
                 if (isset($mapping[$animal['id']])) {
                     $map_data = $mapping[$animal['id']];
 
-                    // 1. 大分類 (Classification) の登録
                     if (!empty($map_data['classification'])) {
                         wp_set_object_terms($new_post_id, sanitize_text_field($map_data['classification']), 'setae_classification');
                     }
-
-                    // 2. 種類の登録
                     if ($map_data['type'] === 'tarantula' && !empty($map_data['species_id'])) {
                         update_post_meta($new_post_id, '_setae_species_id', intval($map_data['species_id']));
                     } else if ($map_data['type'] === 'other' && !empty($map_data['custom_name'])) {
@@ -684,43 +685,43 @@ class Setae_Admin_Migration
                     }
                 }
 
+                // ログ紐付け用にIDをマップに保持（既存個体の場合もスキップせずにここを通す）
                 $animal_id_map[$animal['id']] = $new_post_id;
-                $imported_animals++;
 
-                // ▼▼ 追加: 個体のアイコン写真をダウンロードしてアイキャッチに設定 ▼▼
-                if (!empty($animal['photo'])) {
+                if (!$is_update_animal) {
+                    $imported_animals++;
+                }
+
+                // ▼ 修正: 個体のアイコン写真をダウンロードしてアイキャッチに設定 ▼
+                if (!empty($animal['photo']) && !has_post_thumbnail($new_post_id)) {
                     $photo_url = trim($animal['photo']);
-                    // SSL証明書エラー(ループバック)を回避
-                    add_filter('https_ssl_verify', '__return_false');
-                    add_filter('https_local_ssl_verify', '__return_false');
 
-                    // アタッチメントIDを取得 ('id' を指定)
+                    add_filter('https_ssl_verify', '__return_false');
+                    add_filter('http_request_args', $allow_unsafe_urls); // ブロック解除
+
                     $attach_id = media_sideload_image(esc_url_raw($photo_url), $new_post_id, null, 'id');
 
                     remove_filter('https_ssl_verify', '__return_false');
-                    remove_filter('https_local_ssl_verify', '__return_false');
+                    remove_filter('http_request_args', $allow_unsafe_urls);
 
                     if (!is_wp_error($attach_id)) {
                         set_post_thumbnail($new_post_id, $attach_id);
                     }
                 }
-                // ▲▲ 追加ここまで ▲▲
             }
         }
 
-        // ----------------------------------------------------------------------------------
-        // ▼▼ 修正: 2. 飼育ログの移行 (ここから下をまるごと差し替えてください) ▼▼
-        // ----------------------------------------------------------------------------------
+        // 2. 飼育ログの移行
         $records = $ext_db->get_results($ext_db->prepare("SELECT * FROM {$table_records} WHERE user_id = %d", $legacy_user_id), ARRAY_A);
         $imported_records = 0;
-        $imported_images = 0; // 追加: ダウンロード成功した画像数
+        $imported_images = 0;
 
         foreach ($records as $record) {
             if (!isset($animal_id_map[$record['animal_id']]))
                 continue;
             $new_spider_id = $animal_id_map[$record['animal_id']];
 
-            // 既に作成済みの紐付いていないログを取得
+            // すでに作成済みのログを検索
             $existing_log = get_posts(array(
                 'post_type' => 'setae_log',
                 'meta_key' => '_legacy_record_id',
@@ -729,59 +730,57 @@ class Setae_Admin_Migration
                 'fields' => 'ids'
             ));
 
-            $is_update = !empty($existing_log);
-            $new_log_id = $is_update ? $existing_log[0] : 0;
+            $is_update_log = !empty($existing_log);
+            $new_log_id = $is_update_log ? $existing_log[0] : 0;
 
-            if ($is_update) {
-                // 既存ログがある場合は親ID(post_parent)を正しく紐付け直す
+            if ($is_update_log) {
+                // すでにログが存在する場合は親IDだけ再設定する
                 wp_update_post(array(
                     'ID' => $new_log_id,
                     'post_parent' => $new_spider_id
                 ));
             } else {
-                // 新規作成
+                // 新規ログの作成
                 $log_post_data = array(
                     'post_title' => 'Log - ' . date('Y-m-d', strtotime($record['created_at'])),
                     'post_type' => 'setae_log',
                     'post_status' => 'publish',
                     'post_author' => $new_wp_user_id,
                     'post_date' => $record['created_at'] !== '0000-00-00 00:00:00' ? $record['created_at'] : current_time('mysql'),
-                    'post_parent' => $new_spider_id // Setaeの仕様で必須
+                    'post_parent' => $new_spider_id
                 );
                 $new_log_id = wp_insert_post($log_post_data);
             }
 
             if (!is_wp_error($new_log_id)) {
-
-                // 画像のダウンロード
                 $new_image_url = '';
                 $photo_url = trim($record['photo']);
 
                 if (!empty($photo_url)) {
                     // まだSetaeのURLになっていない場合のみDL実行
                     if (strpos($photo_url, wp_upload_dir()['baseurl']) === false) {
-                        // 同一サーバー間でのSSL検証エラー(ループバック)を強制バイパス
+
                         add_filter('https_ssl_verify', '__return_false');
-                        add_filter('https_local_ssl_verify', '__return_false');
+                        add_filter('http_request_args', $allow_unsafe_urls); // ブロック解除
 
                         $sideloaded_src = media_sideload_image(esc_url_raw($photo_url), $new_log_id, null, 'src');
 
                         remove_filter('https_ssl_verify', '__return_false');
-                        remove_filter('https_local_ssl_verify', '__return_false');
+                        remove_filter('http_request_args', $allow_unsafe_urls);
 
                         if (!is_wp_error($sideloaded_src)) {
                             $new_image_url = $sideloaded_src;
                             $imported_images++;
                         } else {
-                            $new_image_url = $photo_url;
+                            $new_image_url = $photo_url; // DL失敗時は元のURLを保持
                             update_post_meta($new_log_id, '_mig_img_error', $sideloaded_src->get_error_message());
                         }
                     } else {
                         $new_image_url = $photo_url;
                     }
                 } else {
-                    // アップデート時、既存画像URLがあれば消さないように保持
-                    if ($is_update) {
+                    // 更新時に既存の画像URLを消さないように保持
+                    if ($is_update_log) {
                         $old_data = json_decode(get_post_meta($new_log_id, '_setae_log_data', true), true);
                         if (!empty($old_data['image'])) {
                             $new_image_url = $old_data['image'];
@@ -789,7 +788,7 @@ class Setae_Admin_Migration
                     }
                 }
 
-                // JSONデータの構築（Setae側で日付が表示されるよう 'date' を追加し、スラッシュのエスケープを防ぐ）
+                // ▼ 修正: Setaeの表示に必要な項目(date)を追加し、URLのスラッシュがエスケープされないよう設定 ▼
                 $log_json_data = array(
                     'date' => date('Y-m-d', strtotime($record['created_at'])),
                     'note' => $record['comment'] ? $record['comment'] : '',
@@ -802,12 +801,11 @@ class Setae_Admin_Migration
                     $log_json_data['weight'] = $record['record_weight'];
                 }
 
-                // 文字列の数字ではなく、int型として明示的に保存する
                 update_post_meta($new_log_id, '_setae_log_spider_id', intval($new_spider_id));
                 update_post_meta($new_log_id, '_setae_log_data', json_encode($log_json_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                 update_post_meta($new_log_id, '_legacy_record_id', $record['id']);
 
-                if (!$is_update) {
+                if (!$is_update_log) {
                     $imported_records++;
                 }
             }
