@@ -93,7 +93,7 @@ class Setae_BL_Contracts
     public function create_request($owner_id, $breeder_id, $spider_id, $message = '')
     {
         global $wpdb;
-        return $wpdb->insert(
+        $result = $wpdb->insert(
             $this->table_name,
             array(
                 'owner_id' => $owner_id,
@@ -105,6 +105,19 @@ class Setae_BL_Contracts
             ),
             array('%d', '%d', '%d', '%s', '%s', '%s')
         );
+
+        // ★追加: 契約レコード作成成功時に、チャット履歴にも初回メッセージを登録する
+        if ($result) {
+            $contract_id = $wpdb->insert_id;
+
+            if (!empty($message)) {
+                $this->send_chat_message($contract_id, $breeder_id, "【申請メッセージ】\n" . $message);
+            } else {
+                $this->send_chat_message($contract_id, $breeder_id, "【システム通知】\nブリーディングローンの申請を行いました。");
+            }
+        }
+
+        return $result;
     }
 
     public function update_status($id, $status)
@@ -116,7 +129,7 @@ class Setae_BL_Contracts
             return false;
         }
 
-        return $wpdb->update(
+        $result = $wpdb->update(
             $this->table_name,
             array(
                 'status' => $status,
@@ -126,6 +139,37 @@ class Setae_BL_Contracts
             array('%s', '%s'),
             array('%d')
         );
+
+        // ★追加: ステータス更新成功時に、自動的にチャットメッセージ(システム通知)を送信する
+        if ($result) {
+            $current_user_id = get_current_user_id();
+            $system_message = "";
+
+            switch ($status) {
+                case 'APPROVED':
+                    $system_message = "【システム通知】\nリクエストを「承認」しました。取引を進めてください。";
+                    break;
+                case 'REJECTED':
+                    $system_message = "【システム通知】\n残念ながらリクエストは「拒否」されました。";
+                    break;
+                case 'PAIRED':
+                    $system_message = "【システム通知】\n「ペアリング開始」を報告しました。";
+                    break;
+                case 'SUCCESS':
+                    $system_message = "【システム通知】\n「繁殖成功」を報告しました！";
+                    break;
+                case 'FAIL':
+                    $system_message = "【システム通知】\n今回は「繁殖失敗」として報告しました。";
+                    break;
+            }
+
+            // メッセージがあり、かつユーザーがログインしていればチャットを送信
+            if (!empty($system_message) && $current_user_id) {
+                $this->send_chat_message($id, $current_user_id, $system_message);
+            }
+        }
+
+        return $result;
     }
 
     public function get_contracts_by_user($user_id)
