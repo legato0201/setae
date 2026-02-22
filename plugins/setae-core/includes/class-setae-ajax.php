@@ -237,6 +237,10 @@ class Setae_Ajax
         $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
         $password = isset($_POST['password']) ? $_POST['password'] : '';
 
+        // ▼▼▼ 追加: 紹介コードの取得 ▼▼▼
+        $referral_code = isset($_POST['referral_code']) ? sanitize_text_field($_POST['referral_code']) : '';
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         // バリデーション
         if (empty($username) || empty($email) || empty($password)) {
             wp_send_json_error('すべての項目を入力してください。');
@@ -256,6 +260,39 @@ class Setae_Ajax
         if (is_wp_error($user_id)) {
             wp_send_json_error($user_id->get_error_message());
         }
+
+        // ▼▼▼ 新規追加: 紹介コードの生成とボーナス枠付与の処理 ▼▼▼
+
+        // 1. 新規ユーザー自身の紹介コードを生成して保存（例: ST-ランダムな8文字）
+        $new_user_referral_code = 'ST-' . wp_generate_password(8, false, false);
+        update_user_meta($user_id, '_setae_referral_code', $new_user_referral_code);
+
+        // デフォルトのボーナス枠を0で初期化
+        update_user_meta($user_id, '_setae_bonus_spider_limit', 0);
+
+        // 2. 紹介コードが入力されている場合の処理
+        if (!empty($referral_code)) {
+            // 紹介コードを持つ既存ユーザーを検索
+            $referrers = get_users(array(
+                'meta_key' => '_setae_referral_code',
+                'meta_value' => $referral_code,
+                'number' => 1,
+                'fields' => 'ids' // ユーザーIDのみ取得して軽量化
+            ));
+
+            if (!empty($referrers)) {
+                $referrer_id = $referrers[0];
+
+                // 紹介された側（新規ユーザー）のボーナス枠を+1
+                $current_bonus_new = (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true);
+                update_user_meta($user_id, '_setae_bonus_spider_limit', $current_bonus_new + 1);
+
+                // 紹介した側（既存ユーザー）のボーナス枠を+1
+                $current_bonus_ref = (int) get_user_meta($referrer_id, '_setae_bonus_spider_limit', true);
+                update_user_meta($referrer_id, '_setae_bonus_spider_limit', $current_bonus_ref + 1);
+            }
+        }
+        // ▲▲▲ 新規追加ここまで ▲▲▲
 
         // 成功
         wp_send_json_success('登録完了');

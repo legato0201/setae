@@ -431,6 +431,12 @@ var SetaeUIActions = (function ($) {
                 return;
             }
 
+            // ▼▼▼ ここから追加: iOS Safariなど pointerType が判定できないタッチデバイス向けの対策 ▼▼▼
+            if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+                return;
+            }
+            // ▲▲▲ 追加ここまで ▲▲▲
+
             const $row = $(this);
             const $card = $row.find('.setae-list-content');
 

@@ -1,7 +1,15 @@
 var SetaeUIDesktop = (function ($) {
     'use strict';
 
+    // ▼▼▼ 追加: タッチ操作を確実に検知するためのフラグ ▼▼▼
+    let isTouch = false;
+
     function init() {
+        // ▼▼▼ 追加: 一度でも画面がタッチされたらフラグを立てる ▼▼▼
+        $(document).on('touchstart', function () {
+            isTouch = true;
+        });
+
         // マウスが動いた時の処理（ホバーで背景チラ見せ）
         $(document).on('mousemove', '.setae-spider-list-row', handleMouseMove);
 
@@ -13,8 +21,8 @@ var SetaeUIDesktop = (function ($) {
     }
 
     function handleMouseMove(e) {
-        // モバイルでスワイプ中の場合は無視
-        if ('ontouchstart' in window) return;
+        // ▼▼▼ 修正: タッチデバイスの場合はホバー処理も完全に無視する ▼▼▼
+        if (isTouch || ('ontouchstart' in window) || navigator.maxTouchPoints > 0) return;
 
         const $row = $(this);
         const width = $row.outerWidth();
@@ -85,6 +93,12 @@ var SetaeUIDesktop = (function ($) {
     function handleClick(e) {
         // ボタン類をクリックした場合は発火させない
         if ($(e.target).closest('button, .setae-btn').length) return;
+
+        // ▼▼▼ 修正: タッチ操作（スマホ・タブレット等）をより強力にブロックする ▼▼▼
+        if (isTouch || ('ontouchstart' in window) || navigator.maxTouchPoints > 0) {
+            return;
+        }
+        // ▲▲▲ 修正ここまで ▲▲▲
 
         const $row = $(this);
         const width = $row.outerWidth();
