@@ -131,22 +131,82 @@ class Setae_API_Stripe
         // イベントごとの処理
         switch ($event->type) {
             case 'checkout.session.completed':
+                // 初回決済完了時
                 $session = $event->data->object;
                 $user_id = $session->client_reference_id; // セッション作成時に渡したユーザーID
                 if ($user_id) {
                     update_user_meta($user_id, '_setae_is_premium', true);
-                    // 必要に応じてStripeのCustomerIDも保存しておくとポータル連携で便利です
+                    // カスタマーポータル連携用にStripeのCustomerIDを保存
                     update_user_meta($user_id, '_setae_stripe_customer_id', $session->customer);
                 }
                 break;
 
-            case 'customer.subscription.deleted':
-                // サブスク解約や支払い失敗によるキャンセル時
+            case 'customer.subscription.updated':
+                // サブスクリプションの内容やステータスが更新された時（解約予約を含む）
                 $subscription = $event->data->object;
-                // customer ID から ユーザーを逆引きして権限を false にする処理
                 $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $subscription->customer]);
+
                 if (!empty($users)) {
-                    update_user_meta($users[0]->ID, '_setae_is_premium', false);
+                    $user_id = $users[0]->ID;
+
+                    // ステータスが active（有効）または trialing（トライアル中）の場合は権限を付与・維持
+                    if (in_array($subscription->status, ['active', 'trialing'])) {
+                        update_user_meta($user_id, '_setae_is_premium', true);
+
+                        // 期間満了での解約が予約されているかチェック
+                        if ($subscription->cancel_at_period_end) {
+                            // 終了予定のUNIXタイムスタンプを保存
+                            update_user_meta($user_id, '_setae_premium_cancel_at', $subscription->current_period_end);
+                            update_user_meta($user_id, '_setae_stripe_cancel_at_period_end', true);
+                        } else {
+                            // 解約予約がキャンセル（再開）された場合はメタデータを削除
+                            delete_user_meta($user_id, '_setae_premium_cancel_at');
+                            update_user_meta($user_id, '_setae_stripe_cancel_at_period_end', false);
+                        }
+
+                    } else {
+                        // past_due（支払い遅延）や unpaid（未払い）等になった場合は権限を剥奪
+                        update_user_meta($user_id, '_setae_is_premium', false);
+                        delete_user_meta($user_id, '_setae_premium_cancel_at');
+                    }
+                }
+                break;
+
+            case 'customer.subscription.deleted':
+                // サブスク解約（期間満了での解約を含む）や支払い失敗による完全キャンセル時
+                $subscription = $event->data->object;
+                $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $subscription->customer]);
+
+                if (!empty($users)) {
+                    $user_id = $users[0]->ID;
+                    // プレミアム権限を剥奪し、解約予定日データも削除
+                    update_user_meta($user_id, '_setae_is_premium', false);
+                    delete_user_meta($user_id, '_setae_premium_cancel_at');
+                }
+                break;
+
+            case 'invoice.payment_succeeded':
+                // 定期支払いが成功した時（サブスク更新時）
+                $invoice = $event->data->object;
+                if ($invoice->subscription) {
+                    $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $invoice->customer]);
+                    if (!empty($users)) {
+                        update_user_meta($users[0]->ID, '_setae_is_premium', true);
+                    }
+                }
+                break;
+
+            case 'invoice.payment_failed':
+                // 定期支払いが失敗した時
+                $invoice = $event->data->object;
+                if ($invoice->subscription) {
+                    $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $invoice->customer]);
+                    if (!empty($users)) {
+                        // 支払い失敗時に権限を剥奪
+                        // （※Stripe側のリトライ設定で猶予を持たせる場合は、ここでは剥奪せず、
+                        // updatedイベントでステータスがpast_dueになった時に剥奪する設計でも可）
+                        update_user_meta($users[0]->ID, '_setae_is_premium', false);
+                    }
                 }
                 break;
         }
