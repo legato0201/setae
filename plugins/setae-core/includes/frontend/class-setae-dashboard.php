@@ -139,6 +139,9 @@ class Setae_Dashboard
             'repot' => esc_html__('植え替え', 'setae-core'),
             'shed' => esc_html__('脱皮', 'setae-core'),
             'unidentified' => esc_html__('未同定', 'setae-core'),
+            'growth' => esc_html__('成長記録', 'setae-core'),
+            'note' => esc_html__('メモ', 'setae-core'),
+            'refused' => esc_html__('拒食', 'setae-core'),
         );
         wp_localize_script('setae-app-core', 'setaeI18n', $setae_i18n);
 

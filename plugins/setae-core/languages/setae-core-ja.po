@@ -410,3 +410,24 @@ msgstr "植物"
 
 msgid "Other"
 msgstr "その他"
+
+msgid "給餌"
+msgstr "給餌"
+
+msgid "水やり"
+msgstr "水やり"
+
+msgid "脱皮"
+msgstr "脱皮"
+
+msgid "植え替え"
+msgstr "植え替え"
+
+msgid "成長記録"
+msgstr "成長記録"
+
+msgid "メモ"
+msgstr "メモ"
+
+msgid "拒食"
+msgstr "拒食"

@@ -274,7 +274,8 @@ var SetaeUIDetail = (function ($) {
                                 if (parsedData.prey_type) displayMeta += ` ${parsedData.prey_type}`;
                                 if (parsedData.refused) {
                                     isRefused = true;
-                                    displayMeta += ` <span style="color:#e74c3c; font-weight:bold; font-size:11px;">(REFUSED)</span>`;
+                                    // ★変更: REFUSED を日本語化
+                                    displayMeta += ` <span style="color:#e74c3c; font-weight:bold; font-size:11px;">(${setaeI18n.refused || '拒食'})</span>`;
                                 }
                                 if (e.type === 'growth' && parsedData.size) displayMeta += ` <b style="color:#3498db;">${parsedData.size}cm</b>`;
                             }
@@ -286,31 +287,36 @@ var SetaeUIDetail = (function ($) {
                         // ▼ 追加: 植物判定
                         const isPlant = (currentClassification === 'plant');
 
+                        // ★変更: typeLabel に setaeI18n オブジェクトの翻訳を割り当てる
                         if (typeKey === 'feed') {
                             if (isPlant) {
                                 iconChar = '💧'; // Water
                                 nodeClass = 'node-growth'; // 青系クラスを流用
-                                typeLabel = 'WATER';
+                                typeLabel = setaeI18n.water || '水やり';
                                 if (displayMeta) displayMeta = displayMeta.replace('Cricket', '').replace('Dubia', ''); // デフォルト値を消す
                             } else {
                                 iconChar = isRefused ? '✕' : '🦗';
                                 nodeClass = isRefused ? 'node-refused' : 'node-feed';
+                                typeLabel = setaeI18n.feed || '給餌';
                             }
                         } else if (typeKey === 'molt') {
                             if (isPlant) {
                                 iconChar = '🪴'; // Repot
                                 nodeClass = 'node-molt';
-                                typeLabel = 'REPOT';
+                                typeLabel = setaeI18n.repot || '植え替え';
                             } else {
                                 iconChar = '🧬';
                                 nodeClass = 'node-molt';
+                                typeLabel = setaeI18n.molt || '脱皮';
                             }
                         } else if (typeKey === 'growth') {
                             iconChar = '📏';
                             nodeClass = 'node-growth';
+                            typeLabel = setaeI18n.growth || '成長記録';
                         } else if (typeKey === 'note' || typeKey === 'memo') {
                             iconChar = '📝';
                             nodeClass = 'node-note';
+                            typeLabel = setaeI18n.note || 'メモ';
                         } else {
                             iconChar = '📝';
                             nodeClass = 'node-note';
