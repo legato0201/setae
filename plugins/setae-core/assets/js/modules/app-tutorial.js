@@ -15,7 +15,7 @@ var SetaeTutorial = (function ($) {
         EDIT_SUGGEST: 'setae_tutorial_edit_v1',
         ENC_DETAIL: 'setae_tutorial_enc_detail_v1', // ← 追加: 図鑑詳細用
         ADD_LOG: 'setae_tutorial_add_log_v1', // ← 追加: 記録を追加用
-        MY_DETAIL: 'setae_tutorial_my_detail_v1' // ← 追加: 個体詳細画面用
+        MY_DETAIL: 'setae_tutorial_my_detail_v2' // ← 追加: 個体詳細画面用
     };
 
     // --- シナリオ定義 ---
@@ -51,8 +51,8 @@ var SetaeTutorial = (function ($) {
         // 4. 図鑑画面
         encyclopedia: [
             { target: null, title: '図鑑へようこそ！', text: 'ここはみんなで作る生き物のデータベースです。<br>飼育に必要な情報や写真を共有しましょう。', position: 'center' },
-            { target: '#enc-search', title: '種類の検索', text: '学名や和名を入力して、<br>気になる生き物をすぐに探すことができます。', position: 'bottom' },
-            { target: '#btn-request-species', title: '追加リクエスト', text: 'もし探している種類が図鑑にない場合は、<br>ここから追加のリクエストを送ることができます。', position: 'bottom' },
+            { target: '#setae-enc-search', title: '種類の検索', text: '学名や和名を入力して、<br>気になる生き物をすぐに探すことができます。', position: 'bottom' },
+            //            { target: '#btn-request-species', title: '追加リクエスト', text: 'もし探している種類が図鑑にない場合は、<br>ここから追加のリクエストを送ることができます。', position: 'bottom' },
             { target: '.species-card:first', title: '詳細を見る', text: 'カードをタップすると、適温や湿度などの詳細データと、<br>みんなが投稿した写真ギャラリーを見ることができます。', position: 'bottom' }
         ],
 

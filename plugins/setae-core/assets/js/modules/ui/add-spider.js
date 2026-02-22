@@ -73,6 +73,32 @@ var SetaeUIAddSpider = (function ($) {
             $('#spider-image').click();
         });
 
+        // ▼▼▼ 新規追加: 上限モーダルからのX(Twitter)シェア処理 ▼▼▼
+        $('#btn-share-x-add-limit').on('click', function (e) {
+            e.preventDefault();
+
+            // SetaeSettingsから紹介コードを取得
+            var refCode = '未発行';
+            if (typeof SetaeSettings !== 'undefined' && SetaeSettings.current_user && SetaeSettings.current_user.referral_code) {
+                refCode = SetaeSettings.current_user.referral_code;
+            }
+
+            // Xに投稿するデフォルトテキストを組み立てる
+            var text = "奇蟲・爬虫類の飼育管理アプリ「Setae」を使っています！🕷️🦎\n"
+                + "以下の紹介コードを入力して登録すると、お互いの生体登録枠が＋1されます🎁\n\n"
+                + "紹介コード: 【 " + refCode + " 】\n\n";
+
+            var url = "https://setae.net"; // ※アプリのランディングページや登録用URLに変更してください
+            var hashTags = "Setae,奇蟲,爬虫類";
+
+            // Web Intent URLの生成
+            var shareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url) + "&hashtags=" + encodeURIComponent(hashTags);
+
+            // 別ウィンドウでXの投稿画面を開く
+            window.open(shareUrl, 'shareWindow', 'width=600,height=500,scrollbars=yes');
+        });
+        // ▲▲▲ 新規追加ここまで ▲▲▲
+
         // 写真プレビュー表示
         $(document).on('change', '#spider-image', function (e) {
             const file = e.target.files[0];
