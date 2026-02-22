@@ -146,10 +146,17 @@ var SetaeUIDetail = (function ($) {
 
     function getRelativeDateLabel(dateStr) {
         if (!dateStr) return '-';
-        const d = new Date(dateStr);
+
+        // ハイフンをスラッシュに置換してローカル時間としてパースさせる (UTCズレ防止とiOS Safari対策)
+        const safeDateStr = dateStr.replace(/-/g, '/');
+        const d = new Date(safeDateStr);
+        d.setHours(0, 0, 0, 0); // 時間を0時にリセット
+
         const now = new Date();
+        now.setHours(0, 0, 0, 0); // 現在時刻も0時にリセットして純粋な「日付」の差分をとる
+
         const diffTime = Math.abs(now - d);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // 切り上げ(ceil)ではなく切り捨て(floor)で日数化
 
         if (diffDays === 0) return setaeI18n.today || '今日';
         if (diffDays === 1) return setaeI18n.yesterday || '昨日';
