@@ -48,15 +48,41 @@ var SetaeUI = (function ($) {
 
         // カテゴリフィルタボタン
         $(document).on('click', '.com-filter-btn', function () {
-            $('.com-filter-btn').removeClass('active')
-            $(this).addClass('active')
+            $('.com-filter-btn').removeClass('active');
+            $(this).addClass('active');
             const type = $(this).data('type');
             loadTopics(type);
         });
 
         // "もっと見る" ボタン (トピック一覧)
         $(document).on('click', '#btn-load-more-topics', function () {
-            loadTopics(null, true); // type=null (維持), isLoadMore=true
+            loadTopics(currentTopicListType, true); // type=null (維持), isLoadMore=true
+        });
+
+        // Search & Sort Event Listeners for 2ch-Style Community
+        $(document).on('change', '#com-sort-select', function () {
+            currentTopicSort = $(this).val();
+            loadTopics(currentTopicListType, false);
+        });
+
+        $(document).on('keypress', '#com-search-input', function (e) {
+            if (e.which == 13) {
+                currentTopicSearch = $(this).val();
+                loadTopics(currentTopicListType, false);
+            }
+        });
+
+        $(document).on('click', '#com-search-btn', function () {
+            currentTopicSearch = $('#com-search-input').val();
+            loadTopics(currentTopicListType, false);
+        });
+
+        // 検索クリア（テキストボックスが空になったら再読み込み）
+        $(document).on('input', '#com-search-input', function () {
+            if ($(this).val() === '') {
+                currentTopicSearch = '';
+                loadTopics(currentTopicListType, false);
+            }
         });
 
         // 3. 新規トピック作成フォーム送信
@@ -408,6 +434,8 @@ var SetaeUI = (function ($) {
     // ==========================================
     let currentTopicListPage = 1;
     let currentTopicListType = 'all';
+    let currentTopicSearch = '';
+    let currentTopicSort = 'updated';
     let isTopicListLoading = false;
 
     function loadTopics(type = null, isLoadMore = false) {
@@ -429,7 +457,9 @@ var SetaeUI = (function ($) {
 
         SetaeAPI.fetchTopics({
             type: currentTopicListType,
-            page: currentTopicListPage
+            page: currentTopicListPage,
+            s: currentTopicSearch,
+            sort: currentTopicSort
         }, function (response) {
             isTopicListLoading = false;
             const container = $('#setae-topic-list');
@@ -476,30 +506,51 @@ var SetaeUI = (function ($) {
                     topicListAvatarHtml = `<span class="avatar-initial">${initial}</span>`;
                 }
 
+                // 2ch Style Topic Classes
+                const isArchived = topic.is_archived ? true : false;
+                const rowClass = isArchived ? 'thread-archived' : 'thread-active';
+                const limitClass = isArchived ? 'limit-reached' : '';
+                const maxCountDisplay = topic.comment_count > 1000 ? 1000 : topic.comment_count;
+
+                // 2ch Style Badge Display
+                let momentumBadge = '';
+                if (topic.momentum !== undefined) {
+                    momentumBadge = `<span class="thread-momentum">勢い: ${topic.momentum}</span>`;
+                }
+
                 const html = `
-                    <div class="setae-topic-row setae-card" data-id="${topic.id}">
+                    <div class="setae-topic-row setae-card ${rowClass}" data-id="${topic.id}">
                         <div class="setae-topic-row-header">
-                            <span class="setae-topic-badge badge-${topic.type}">${typeLabel}</span>
-                            <span class="setae-topic-time">${SetaeCore.formatRelativeDate(topic.date)}</span>
+                            <div class="thread-badges">
+                                <span class="setae-topic-badge badge-${topic.type}">${typeLabel}</span>
+                                ${momentumBadge}
+                            </div>
+                            <span class="setae-topic-time">${topic.date_display || SetaeCore.formatRelativeDate(topic.date)}</span>
                         </div>
                         
-                        <h3 class="setae-topic-title">${topic.title}</h3>
+                        <h3 class="setae-topic-title" ${isArchived ? 'style="color: #888;"' : ''}>
+                            ${topic.title}</span>
+                        </h3>
                         
-                        <div class="setae-topic-excerpt">
-                            ${topic.excerpt}
-                        </div>
+                        ${isArchived ? `
+                            <div class="setae-topic-excerpt" style="color: #999;">
+                                ※このスレッドは1000レスを超えたため過去ログ倉庫に移動しました。
+                            </div>
+                        ` : `
+                            <div>
+                            </div>
+                        `}
 
                         <div class="setae-topic-row-footer">
-                            <div class="setae-topic-author">
+                            <div class="setae-topic-author" ${isArchived ? 'style="opacity: 0.7;"' : ''}>
                                 <div class="setae-user-avatar avatar-sm">
                                     ${topicListAvatarHtml}
                                 </div>
                                 <span class="setae-author-name">${topic.author_name || 'Anonymous'}</span>
                             </div>
 
-                            <div class="setae-topic-comments-count">
-                                <img draggable="false" role="img" class="emoji" alt="💬" src="/wp-content/plugins/setae-core/assets/images/emoji/1f4ac.svg">
-                                <span class="count">${topic.comment_count}</span>
+                            <div class="thread-status-indicator">
+                                ${isArchived ? '<span class="status-archived">過去ログ</span>' : '<span class="status-active">書き込み可</span>'}
                             </div>
                         </div>
                     </div>

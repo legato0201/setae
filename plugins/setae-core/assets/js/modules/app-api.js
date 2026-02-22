@@ -188,6 +188,8 @@ var SetaeAPI = (function ($) {
         params = params || {};
         if (!params.page) params.page = 1;
         if (!params.type) params.type = 'all';
+        if (!params.sort) params.sort = 'updated';
+        if (!params.s) params.s = '';
 
         $.ajax({
             url: root + '/topics',

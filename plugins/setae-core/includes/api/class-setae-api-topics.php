@@ -62,19 +62,56 @@ class Setae_API_Topics
         $page = $request->get_param('page') ? intval($request->get_param('page')) : 1; // ★追加: ページ番号
         $per_page = 20; // ★設定: 1ページあたりの表示件数
 
+        $search = $request->get_param('s');
+        $sort = $request->get_param('sort') ?: 'updated';
+
         $args = array(
             'post_type' => 'setae_topic',
             'posts_per_page' => $per_page, // ★変更: 固定50から変数へ
             'paged' => $page, // ★追加: オフセット計算をWPに任せる
             'post_status' => 'publish',
-            'orderby' => 'modified',
-            'order' => 'DESC',
         );
+
+        // Sorting Logic
+        if ($sort === 'newest') {
+            $args['orderby'] = 'date';
+            $args['order'] = 'DESC';
+        } elseif ($sort === 'momentum') {
+            $args['meta_key'] = '_setae_momentum';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'DESC';
+        } else {
+            // Default: updated
+            $args['orderby'] = 'modified';
+            $args['order'] = 'DESC';
+        }
+
+        // Search Logic
+        if (!empty($search)) {
+            $args['s'] = $search;
+        }
 
         // カテゴリ絞り込み
         if (!empty($type) && $type !== 'all') {
-            $args['meta_key'] = 'setae_topic_type';
-            $args['meta_value'] = $type;
+            // _setae_momentum等で既にmeta_queryを使う可能性がある場合は配列化が安全
+            if (isset($args['meta_key'])) {
+                $meta_query = array(
+                    'relation' => 'AND',
+                    array(
+                        'key' => $args['meta_key'],
+                        'compare' => 'EXISTS'
+                    ),
+                    array(
+                        'key' => 'setae_topic_type',
+                        'value' => $type
+                    )
+                );
+                $args['meta_query'] = $meta_query;
+                unset($args['meta_key']);
+            } else {
+                $args['meta_key'] = 'setae_topic_type';
+                $args['meta_value'] = $type;
+            }
         }
 
         $query = new WP_Query($args);
@@ -102,6 +139,37 @@ class Setae_API_Topics
                 }
                 // ▲ 追加ここまで
 
+                $comment_count = get_comments_number();
+
+                // 勢いの取得
+                $momentum = get_post_meta($id, '_setae_momentum', true);
+                if ($momentum === '') {
+                    $momentum = 0;
+                }
+
+                // 最新のコメント2件を取得
+                $latest_comments_query = get_comments(array(
+                    'post_id' => $id,
+                    'status' => 'approve',
+                    'orderby' => 'comment_date',
+                    'order' => 'DESC',
+                    'number' => 2
+                ));
+
+                $latest_comments_html = '';
+                if (!empty($latest_comments_query)) {
+                    // 古い順に表示するためにリバース
+                    $reversed_comments = array_reverse($latest_comments_query);
+                    $res_offset = max(0, $comment_count - count($reversed_comments));
+
+                    foreach ($reversed_comments as $index => $c) {
+                        $res_num = $res_offset + $index + 1;
+                        $c_author = htmlspecialchars($c->comment_author);
+                        $c_content = wp_trim_words(strip_tags($c->comment_content), 30, '...');
+                        $latest_comments_html .= '<div class="latest-comment"><span class="res-num">' . $res_num . ':</span> <span class="res-name">' . $c_author . '</span> <span class="res-text">' . $c_content . '</span></div>';
+                    }
+                }
+
                 $data[] = array(
                     'id' => $id,
                     'title' => get_the_title(),
@@ -110,9 +178,12 @@ class Setae_API_Topics
                     'author_name' => $author_name,
                     'author_avatar' => $author_avatar, // ▼ 追加
                     'author_initial' => mb_substr($author_name, 0, 1, 'UTF-8'), // ▼ 追加
-                    'comment_count' => get_comments_number(),
+                    'comment_count' => $comment_count,
                     'type' => $topic_type, // カテゴリ
                     'link' => get_permalink(),
+                    'is_archived' => $comment_count >= 1000,
+                    'momentum' => round($momentum, 1),
+                    'latest_comments' => $latest_comments_html
                 );
             }
             wp_reset_postdata();
@@ -267,6 +338,16 @@ class Setae_API_Topics
             return new WP_Error('content_too_long', 'コメントは1000文字以内で入力してください', array('status' => 400));
         }
 
+        // ▼ 追加: 1000レス制限のチェック (アーカイブ)
+        $topic_post = get_post($id);
+        if (!$topic_post) {
+            return new WP_Error('not_found', 'Topic not found', array('status' => 404));
+        }
+        $current_comments_count = get_comments_number($id);
+        if ($current_comments_count >= 1000) {
+            return new WP_Error('thread_archived', 'このスレッドは1000レスを超過したため、新しい書き込みはできません。', array('status' => 403));
+        }
+
         // コンテンツも画像もない場合はエラー
         if (empty($content) && empty($_FILES['image']['name'])) {
             return new WP_Error('missing_content', 'コメントまたは画像を入力してください', array('status' => 400));
@@ -311,6 +392,16 @@ class Setae_API_Topics
             'post_modified' => current_time('mysql'),
             'post_modified_gmt' => current_time('mysql', 1)
         ));
+
+        // モメンタムの再計算 (総レス数 / 経過日数)
+        $new_comment_count = $current_comments_count + 1;
+        $topic_date = strtotime($topic_post->post_date);
+        $now = current_time('timestamp');
+        $days_elapsed = max(1, round(($now - $topic_date) / (60 * 60 * 24))); // 最低1日とする
+        $momentum = $new_comment_count / $days_elapsed;
+
+        // メタ情報を更新
+        update_post_meta($id, '_setae_momentum', $momentum);
 
         return new WP_REST_Response(array('id' => $comment_id, 'message' => 'Comment added'), 201);
     }

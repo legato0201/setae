@@ -1806,3 +1806,201 @@
 }
 
 /* Purple */
+
+/* =========================================
+   2ch-Style Community Pro UI Enhancements
+   ========================================= */
+
+/* --- Community Header & Search --- */
+.com-pro-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.com-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.com-title-area h3 {
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.com-stats {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: normal;
+}
+
+.com-search-box {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 2px 4px 2px 16px;
+    width: 100%;
+    max-width: 300px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.com-search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 6px 0;
+}
+
+/* User Agent CSSリセット: 検索ボックスのXアイコンを消す */
+.com-search-box input::-webkit-search-decoration,
+.com-search-box input::-webkit-search-cancel-button,
+.com-search-box input::-webkit-search-results-button,
+.com-search-box input::-webkit-search-results-decoration {
+    display: none;
+}
+
+.com-search-box .search-btn {
+    background: var(--setae-primary, #4CAF50);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.com-search-box .search-btn:hover {
+    filter: brightness(0.9);
+}
+
+.com-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.com-sort-box select.setae-select {
+    padding: 6px 12px;
+    border-radius: 16px;
+    border: 1px solid #e0e0e0;
+    background: #f9f9f9;
+    font-size: 0.8rem;
+    color: #555;
+    cursor: pointer;
+    outline: none;
+}
+
+/* --- Thread Cards (2ch style enhancements) --- */
+.setae-topic-row {
+    position: relative;
+    border-left: 4px solid transparent;
+    transition: 0.3s ease;
+}
+
+
+
+.thread-archived {
+    background-color: #f7f7f7;
+    border-left-color: #bbb;
+    opacity: 0.85;
+}
+
+.thread-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.thread-momentum {
+    font-size: 0.7rem;
+    color: #d32f2f;
+    font-weight: bold;
+    background: rgba(211, 47, 47, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Title & Res Count */
+.setae-topic-title {
+    font-size: 1.1rem;
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.thread-res-count {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: normal;
+    margin-left: 6px;
+}
+
+.thread-res-count.limit-reached {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+/* Latest Comments Preview */
+.thread-latest-comments {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.latest-comment {
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.latest-comment:last-child {
+    margin-bottom: 0;
+}
+
+.res-num {
+    color: #888;
+    margin-right: 4px;
+}
+
+.res-name {
+    color: var(--setae-primary, #2c3e50);
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+/* Status Indicator */
+.thread-status-indicator {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.status-active {
+    color: var(--setae-primary, #4CAF50);
+}
+
+.status-archived {
+    color: #777;
+    background: #e0e0e0;
+    padding: 2px 8px;
+    border-radius: 12px;
+}

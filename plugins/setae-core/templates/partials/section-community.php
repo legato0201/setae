@@ -4,22 +4,42 @@
  */
 ?>
 <div id="section-com" class="setae-section" style="display:none; padding-bottom: 80px;">
-    <div class="setae-header-bar">
-        <h3>Community</h3>
 
-        <div class="setae-pill-nav">
-            <button class="com-filter-btn active" data-type="all">
-                すべて
-            </button>
-            <button class="com-filter-btn" data-type="question">
-                <span class="badge-dot badge-question"></span> 質問
-            </button>
-            <button class="com-filter-btn" data-type="chat">
-                <span class="badge-dot badge-chat"></span> 雑談
-            </button>
-            <button class="com-filter-btn" data-type="breeding">
-                <span class="badge-dot badge-breeding"></span> ブリード
-            </button>
+    <div class="setae-header-bar com-pro-header" style="margin-top: 10px;">
+        <div class="com-header-top">
+            <div class="com-title-area">
+                <h3>Community</h3>
+                <span class="com-stats"></span>
+            </div>
+
+            <div class="com-search-box">
+                <input type="text" id="com-search-input" placeholder="スレッド名・本文で検索...">
+                <button type="button" id="com-search-btn" class="search-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="com-controls">
+            <div class="setae-pill-nav" style="margin-left: -5px;">
+                <button class="com-filter-btn active" data-type="all">すべて</button>
+                <button class="com-filter-btn" data-type="question"><span class="badge-dot badge-question"></span>
+                    質問</button>
+                <button class="com-filter-btn" data-type="chat"><span class="badge-dot badge-chat"></span> 雑談</button>
+                <button class="com-filter-btn" data-type="breeding"><span class="badge-dot badge-breeding"></span>
+                    ブリード</button>
+            </div>
+
+            <div class="com-sort-box">
+                <select id="com-sort-select" class="setae-select">
+                    <option value="updated">最終書き込み順</option>
+                    <option value="momentum">勢い順</option>
+                    <option value="newest">スレ立て新着順</option>
+                </select>
+            </div>
         </div>
     </div>
 
