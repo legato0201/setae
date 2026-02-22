@@ -565,7 +565,7 @@ var SetaeUI = (function ($) {
                             <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="/wp-content/plugins/setae-core/assets/images/emoji/1f4c5.svg"> ${data.date}
                         </div>
                         <div class="setae-topic-body">
-                            <p>${data.content}</p>
+                            ${data.content}
                         </div>
                     </div>
                 `);
