@@ -1189,6 +1189,52 @@
 }
 
 /* =========================================
+   Timeline Card Header (被り防止・レイアウト制御)
+   ========================================= */
+.timeline-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.timeline-card-title {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.4;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    display: block;
+}
+
+.timeline-card-subtitle {
+    font-weight: normal;
+    color: #666;
+    font-size: 13px;
+}
+
+.timeline-card-badge {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.timeline-card-date {
+    color: #aaa;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+/* スマホ表示時のアイコン被り防止 */
+@media (max-width: 768px) {
+    .timeline-card-header {
+        /* 右上に絶対配置されるゴミ箱アイコンの領域(約36px)を確保し、日付との重なりを防ぐ */
+        padding-right: 36px;
+    }
+}
+
+/* =========================================
    Floating Action Button (Record Log)
    ========================================= */
 .setae-fab-record {

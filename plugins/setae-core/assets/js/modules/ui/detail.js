@@ -345,12 +345,12 @@ var SetaeUIDetail = (function ($) {
                                         </svg>
                                     </button>
                                     <div class="timeline-card">
-                                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                                            <span style="font-weight:600; font-size:14px; color:#333;">
-                                                ${typeLabel} <span style="font-weight:normal; color:#666; font-size:13px;">${displayMeta}</span>
-                                            </span>
-                                            <span style="color:#aaa; font-size:11px;">${e.date}</span>
+                                    <div class="timeline-card-header">
+                                        <div class="timeline-card-title">
+                                            ${typeLabel} <span class="timeline-card-subtitle">${displayMeta}</span>
                                         </div>
+                                        <div class="timeline-card-date">${e.date}</div>
+                                    </div>
                                         ${imageHtml}  ${noteHtml} 
                                     </div>
                                 </div>
