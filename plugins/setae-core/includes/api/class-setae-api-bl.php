@@ -382,10 +382,15 @@ class Setae_API_BL
     private function create_lineage_thread($contract)
     {
         $spider_title = get_the_title($contract->spider_id);
+
+        // ▼ 追加: 蜘蛛のIDから学名（種類）を取得
+        $species_id = get_post_meta($contract->spider_id, '_setae_species_id', true);
+        $species_name = $species_id ? get_the_title($species_id) : '不明な種類';
+
         $post_data = array(
-            'post_title' => '繁殖報告: ' . $spider_title,
-            // ★修正: 先頭の \n と 末尾の \n を削除しました
-            'post_content' => "{$spider_title}の繁殖に成功しました！\n\n<small style=\"color: #888;\">※この報告はブリーディングローン機能により自動投稿されました。</small>",
+            // ▼ 変更: タイトルと本文を学名に変更（個体名も補足として残しています）
+            'post_title' => '繁殖報告: ' . $species_name,
+            'post_content' => "{$species_name}（個体名: {$spider_title}）の繁殖に成功しました！\n\n<small style=\"color: #888;\">※この報告はブリーディングローン機能により自動投稿されました。</small>",
             'post_status' => 'publish',
             'post_type' => 'setae_topic',
             'post_author' => $contract->breeder_id
