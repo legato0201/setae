@@ -106,6 +106,13 @@ class Setae_Core
         // ▼ 追加: 管理画面アクセス制限のフックを登録
         $this->loader->add_action('admin_init', $this, 'restrict_admin_access');
 
+        // ▼▼▼ 新規追加: 管理画面（WP管理バーやプロフィール設定）でもアバター書き換えを有効にする ▼▼▼
+        $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 10, 5);
+        $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 10, 3);
+        $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 10, 2);
+        $this->loader->add_filter('pre_get_avatar', $this, 'custom_pre_get_avatar', 1, 3);
+        // ▲▲▲ 新規追加ここまで ▲▲▲
+
         // ▼▼▼ 新規追加: 採用時のボーナス枠付与アクション ▼▼▼
         $this->loader->add_action('setae_on_best_shot_approved', $this, 'grant_bonus_spider_limit', 10, 1);
         $this->loader->add_action('setae_on_encyclopedia_approved', $this, 'grant_bonus_spider_limit', 10, 1);
@@ -208,6 +215,12 @@ class Setae_Core
             $url = wp_get_attachment_url($attachment_id);
         }
 
+        // ▼▼▼ 追加: 画像が更新されてIDが変わった瞬間だけURLが変わるようにする（最強のキャッシュ対策） ▼▼▼
+        if ($url) {
+            $url = add_query_arg('v', $attachment_id, $url);
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         return $url;
     }
 
@@ -261,8 +274,6 @@ class Setae_Core
         if ($user_id) {
             $img_url = $this->get_custom_avatar_url($user_id);
             if ($img_url) {
-                // ブラウザキャッシュ対策として現在のタイムスタンプをURLに付与
-                $img_url = add_query_arg('t', time(), $img_url);
 
                 $size = isset($args['size']) ? $args['size'] : 96;
                 $alt = isset($args['alt']) ? $args['alt'] : '';
