@@ -60,6 +60,9 @@ class Setae_Core
         // ▼▼▼ 追加: Best Shot承認用管理ページのクラスを読み込み ▼▼▼
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-best-shots.php';
 
+        // ▼▼▼ 追加: ユーザープロフィール拡張クラスを読み込み ▼▼▼
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-users.php';
+
         $this->loader = new Setae_Loader();
 
     }
@@ -92,6 +95,13 @@ class Setae_Core
 
         // ▼▼▼ 追加: Best Shot管理ページをインスタンス化 ▼▼▼
         $admin_best_shots = new Setae_Admin_Best_Shots();
+
+        // ▼▼▼ 追加: ユーザープロフィール管理拡張 ▼▼▼
+        $admin_users = new Setae_Admin_Users();
+        $this->loader->add_action('show_user_profile', $admin_users, 'add_custom_user_profile_fields');
+        $this->loader->add_action('edit_user_profile', $admin_users, 'add_custom_user_profile_fields');
+        $this->loader->add_action('personal_options_update', $admin_users, 'save_custom_user_profile_fields');
+        $this->loader->add_action('edit_user_profile_update', $admin_users, 'save_custom_user_profile_fields');
 
         // ▼ 追加: 管理画面アクセス制限のフックを登録
         $this->loader->add_action('admin_init', $this, 'restrict_admin_access');

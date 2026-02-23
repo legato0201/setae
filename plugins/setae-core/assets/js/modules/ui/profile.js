@@ -95,7 +95,6 @@ var SetaeUIProfile = (function ($) {
                         dateHtml = `<div style="font-size:12px; color:#e74c3c; margin-bottom:10px; font-weight:bold;">サービスは ${dateString} に終了します</div>`;
                     } else {
                         // 自動更新が有効な場合
-                        dateHtml = `<div style="font-size:12px; color:#27ae60; margin-bottom:10px; font-weight:bold;">${__('自動更新有効')}</div>`;
                     }
 
                     return `
