@@ -908,3 +908,101 @@
     transform: translateY(-1px);
     font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* =========================================================
+   Badges (Supporter & Bonus Slots)
+   ========================================================= */
+/* アバターラッパー（基準点） */
+.header-avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* プレミアムプランバッジ（右上・黄色） */
+.supporter-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: linear-gradient(135deg, #FFD700, #F89406);
+    /* イエロー〜オレンジの高級感 */
+    color: #fff;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    line-height: 1;
+}
+
+/* ボーナス登録枠バッジ（左下） */
+.bonus-badge {
+    position: absolute;
+    bottom: -2px;
+    left: -4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    /* ローマ数字が入るように微調整 */
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1;
+}
+
+/* ボーナスバッジの階級（ティア）カラー */
+/* 1〜10: ブロンズ */
+.bonus-badge.tier-basic {
+    background: linear-gradient(135deg, #E39D6A, #B8652A);
+}
+
+/* 11〜20: シルバー */
+.bonus-badge.tier-advanced {
+    background: linear-gradient(135deg, #E2E8F0, #94A3B8);
+    color: #1e293b;
+}
+
+/* 21〜30: エメラルド */
+.bonus-badge.tier-uncommon {
+    background: linear-gradient(135deg, #34D399, #059669);
+}
+
+/* 31〜40: サファイア */
+.bonus-badge.tier-rare {
+    background: linear-gradient(135deg, #60A5FA, #2563EB);
+}
+
+/* 41〜50: アメジスト */
+.bonus-badge.tier-epic {
+    background: linear-gradient(135deg, #A78BFA, #7C3AED);
+}
+
+/* 51〜: レジェンド（虹色にゆっくり輝く） */
+.bonus-badge.tier-legend {
+    background: linear-gradient(135deg, #ff007f, #7f00ff, #00d4ff);
+    background-size: 200% 200%;
+    animation: legend-glow 3s infinite linear;
+}
+
+@keyframes legend-glow {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}

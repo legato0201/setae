@@ -72,16 +72,23 @@ jQuery(document).ready(function ($) {
             data: data,
             success: function (response) {
                 if (response.success) {
+                    // アラートとリロードを削除し、トースト通知に変更
+                    const successMsg = '仮登録が完了しました。入力されたメールアドレスに認証リンクを送信しましたので、ご確認ください。';
+
                     if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
-                        SetaeCore.showToast(response.data, 'success');
+                        SetaeCore.showToast(successMsg, 'success');
                     } else {
-                        alert(response.data);
+                        alert(successMsg);
                     }
+
                     // モーダルを閉じてボタンを復元
                     $('#setae-register-modal').fadeOut(200);
                     $btn.text(originalText).prop('disabled', false);
+
                     // フォームをリセット
                     $('#setae-register-form')[0].reset();
+
+                    // ※仮登録状態のため location.reload() は行わず、そのまま待機させる
                 } else {
                     if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
                         SetaeCore.showToast('エラー: ' + (response.data || 'Unknown error'), 'error');
