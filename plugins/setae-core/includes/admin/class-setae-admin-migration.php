@@ -352,23 +352,23 @@ class Setae_Admin_Migration
                                 <div class="setae-radio-group mig-val-class-group" style="display:flex; gap:5px; flex-wrap:wrap;">
                                     <label class="radio-chip ${defaultClass === 'tarantula' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="tarantula" ${defaultClass === 'tarantula' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🕷️">クモ
+                                        <img src="<?php echo plugins_url('assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🕷️">クモ
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'scorpion' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="scorpion" ${defaultClass === 'scorpion' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f982.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🦂">サソリ
+                                        <img src="<?php echo plugins_url('assets/images/emoji/1f982.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🦂">サソリ
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'reptile' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="reptile" ${defaultClass === 'reptile' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f98e.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🦎">爬虫類
+                                        <img src="<?php echo plugins_url('assets/images/emoji/1f98e.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🦎">爬虫類
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'plant' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="plant" ${defaultClass === 'plant' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f33f.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="🌿">植物
+                                        <img src="<?php echo plugins_url('assets/images/emoji/1f33f.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🌿">植物
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'other' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="other" ${defaultClass === 'other' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url( 'assets/images/emoji/1f4e6.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>" alt="📦">その他
+                                        <img src="<?php echo plugins_url('assets/images/emoji/1f4e6.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="📦">その他
                                     </label>
                                 </div>
                             `;
@@ -760,7 +760,20 @@ class Setae_Admin_Migration
                 if (isset($mapping[$animal['id']])) {
                     $map_data = $mapping[$animal['id']];
                     if (!empty($map_data['classification'])) {
-                        wp_set_object_terms($new_post_id, sanitize_text_field($map_data['classification']), 'setae_classification');
+                        $class_slug = sanitize_text_field($map_data['classification']);
+                        $term = get_term_by('slug', $class_slug, 'setae_classification');
+                        if (!$term) {
+                            $inserted_term = wp_insert_term($class_slug, 'setae_classification', array('slug' => $class_slug));
+                            if (!is_wp_error($inserted_term)) {
+                                $term_id = (int) $inserted_term['term_id'];
+                            }
+                        } else {
+                            $term_id = (int) $term->term_id;
+                        }
+
+                        if (isset($term_id) && $term_id > 0) {
+                            wp_set_object_terms($new_post_id, array($term_id), 'setae_classification');
+                        }
                     }
                     if ($map_data['type'] === 'tarantula' && !empty($map_data['species_id'])) {
                         update_post_meta($new_post_id, '_setae_species_id', intval($map_data['species_id']));

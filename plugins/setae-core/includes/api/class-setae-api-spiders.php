@@ -121,7 +121,7 @@ class Setae_API_Spiders
 
         $args = array(
             'post_type' => 'setae_spider',
-            'posts_per_page' => $per_page, // -1から変更
+            'posts_per_page' => -1,//$per_page, // -1から変更
             'paged' => $paged,             // ページ番号を指定
             'author' => $user_id,
             'post_status' => 'publish',

@@ -583,6 +583,11 @@ class Setae_Ajax
                 }
                 // ログのステータスを承認済みに変更
                 update_post_meta($log_id, '_best_shot_status', 'approved');
+                $author_id = get_post_field('post_author', $log_id);
+                if ($author_id) {
+                    $current_bonus = (int) get_user_meta($author_id, '_setae_bonus_spider_limit', true);
+                    update_user_meta($author_id, '_setae_bonus_spider_limit', $current_bonus + 1);
+                }
                 wp_send_json_success(__('Approved and added to the gallery.', 'setae'));
             } elseif ($type === 'revoke') {
                 if ($index !== false) {
