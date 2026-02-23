@@ -107,9 +107,9 @@ class Setae_Core
         $this->loader->add_action('admin_init', $this, 'restrict_admin_access');
 
         // ▼▼▼ 新規追加: 管理画面（WP管理バーやプロフィール設定）でもアバター書き換えを有効にする ▼▼▼
-        $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 10, 5);
-        $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 10, 3);
-        $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 10, 2);
+        $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 9999, 6);
+        $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 9999, 3);
+        $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 9999, 2);
         $this->loader->add_filter('pre_get_avatar', $this, 'custom_pre_get_avatar', 1, 3);
         // ▲▲▲ 新規追加ここまで ▲▲▲
 
@@ -183,9 +183,9 @@ class Setae_Core
         $this->loader->add_action('wp_ajax_setae_update_profile', $ajax_handler, 'update_profile');
 
         // Avatar Filter (Optional: Enable custom avatar if stored)
-        $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 10, 5);
-        $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 10, 3);
-        $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 10, 2);
+        $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 9999, 6);
+        $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 9999, 3);
+        $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 9999, 2);
 
         // ▼ 新規追加: キャッシュプラグインより先に処理を奪い取り、古いアバターHTMLが返るのを防ぐ（優先度1）
         $this->loader->add_filter('pre_get_avatar', $this, 'custom_pre_get_avatar', 1, 3);
@@ -224,16 +224,20 @@ class Setae_Core
         return $url;
     }
 
-    public function custom_avatar_filter($avatar, $id_or_email, $size, $default, $alt)
+    public function custom_avatar_filter($avatar, $id_or_email, $size, $default, $alt, $args = null)
     {
         $user_id = $this->get_user_id_from_mixed($id_or_email);
         if ($user_id) {
-            // ヘルパーメソッドを使用
             $img_url = $this->get_custom_avatar_url($user_id);
-
             if ($img_url) {
-                // クラス名なども整形して返す
-                $avatar = "<img alt='{$alt}' src='{$img_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' style='object-fit:cover; border-radius:50%;'>";
+                $class = 'avatar avatar-' . $size . ' photo';
+                if (isset($args['class'])) {
+                    $class .= ' ' . (is_array($args['class']) ? implode(' ', $args['class']) : $args['class']);
+                }
+                $style = isset($args['style']) ? "style='" . esc_attr($args['style']) . "'" : "style='object-fit:cover; border-radius:50%;'";
+                $extra_attr = isset($args['extra_attr']) ? $args['extra_attr'] : '';
+
+                $avatar = "<img alt='" . esc_attr($alt) . "' src='" . esc_url($img_url) . "' class='" . esc_attr($class) . "' height='{$size}' width='{$size}' {$style} {$extra_attr}>";
             }
         }
         return $avatar;

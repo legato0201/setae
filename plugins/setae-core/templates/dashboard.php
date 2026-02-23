@@ -53,8 +53,11 @@ if ($bonus_slots >= 51) {
                 <?php
                 // アバターのHTMLを取得
                 $avatar_html = get_avatar(get_current_user_id(), 32, '', 'Profile', array('class' => 'header-user-icon', 'style' => 'object-fit:cover; border-radius:50%;'));
-                // キャッシュバスター（現在時刻のタイムスタンプ）をURLパラメータとして付与し、古い画像のキャッシュ読み込みを防ぐ
-                echo preg_replace('/(src=[\'"])([^\'"]+)([\'"])/i', '${1}${2}?t=' . time() . '${3}', $avatar_html);
+                // URLに既にパラメータが存在するか判定し、安全にキャッシュバスターを付与する
+                echo preg_replace_callback('/(src=[\'"])([^\'"]+)([\'"])/i', function ($m) {
+                    $sep = strpos($m[2], '?') !== false ? '&' : '?';
+                    return $m[1] . $m[2] . $sep . 't=' . time() . $m[3];
+                }, $avatar_html);
                 ?>
 
                 <?php if ($is_premium): ?>
