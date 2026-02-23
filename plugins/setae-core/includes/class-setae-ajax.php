@@ -341,8 +341,37 @@ class Setae_Ajax
         }
         // ▲▲▲ 新規追加ここまで ▲▲▲
 
-        // 成功
-        wp_send_json_success('登録完了');
+        // ▼▼▼ 修正: ここから仮登録（メール送信）処理を追加 ▼▼▼
+
+        // 1. 本登録用のセキュアなランダムトークンを生成・保存
+        $activation_token = bin2hex(random_bytes(16));
+        update_user_meta($user_id, '_setae_activation_token', $activation_token);
+        update_user_meta($user_id, '_setae_is_verified', 0); // 未認証(0)としてマーク
+
+        // 2. 認証用URLの生成 (パラメータとして付与)
+        $verify_url = add_query_arg(
+            array(
+                'setae_action' => 'verify_email',
+                'uid' => $user_id,
+                'token' => $activation_token
+            ),
+            home_url('/') // トップページにリダイレクト
+        );
+
+        // 3. 認証メールの送信
+        $subject = '【Setae】アカウント仮登録のお知らせと本登録のお願い';
+        $message = "{$username} 様\n\n";
+        $message .= "Setaeへのアカウント作成リクエストを受け付けました。\n";
+        $message .= "以下のURLにアクセスして、本登録を完了させてください。\n\n";
+        $message .= "{$verify_url}\n\n";
+        $message .= "※お心当たりのない場合は、このメールを破棄してください。\n";
+
+        wp_mail($email, $subject, $message);
+
+        // 成功レスポンスの文言を変更
+        wp_send_json_success('仮登録が完了しました。入力されたメールアドレスに認証リンクを送信しましたので、ご確認ください。');
+
+        // ▲▲▲ 修正ここまで ▲▲▲
     }
 
     public function update_profile()

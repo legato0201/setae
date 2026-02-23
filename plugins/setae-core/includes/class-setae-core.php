@@ -337,6 +337,51 @@ class Setae_Core
         return $this->version;
     }
 
-
-
 }
+
+// ▼▼▼ 追加: 認証URLクリック時の本登録処理 ▼▼▼
+add_action('init', 'setae_process_email_verification');
+function setae_process_email_verification()
+{
+    // URLパラメータを検知
+    if (isset($_GET['setae_action']) && $_GET['setae_action'] === 'verify_email' && isset($_GET['uid']) && isset($_GET['token'])) {
+        $user_id = intval($_GET['uid']);
+        $token = sanitize_text_field($_GET['token']);
+
+        $saved_token = get_user_meta($user_id, '_setae_activation_token', true);
+
+        // トークンが一致するか検証 (タイミング攻撃防止のため hash_equals を使用)
+        if ($saved_token && hash_equals($saved_token, $token)) {
+            // 認証成功：本登録済みに変更し、不要なトークンを削除
+            update_user_meta($user_id, '_setae_is_verified', 1);
+            delete_user_meta($user_id, '_setae_activation_token');
+
+            // 処理完了後、ログインページ等へリダイレクト（パラメータを付けてフロント側で「認証完了」のトーストを出せるようにする）
+            wp_redirect(home_url('/?verified=1')); // Main page handles login modal usually
+            exit;
+        } else {
+            wp_die('無効な認証リンクです。URLが正しいか、すでに本登録が完了していないか確認してください。');
+        }
+    }
+}
+// ▲▲▲ 追加ここまで ▲▲▲
+
+
+// ▼▼▼ 追加: 未認証ユーザーのログイン制限処理 ▼▼▼
+add_filter('wp_authenticate_user', 'setae_block_unverified_login', 10, 2);
+function setae_block_unverified_login($user, $password)
+{
+    if ($user instanceof WP_User) {
+        $is_verified = get_user_meta($user->ID, '_setae_is_verified', true);
+
+        // 明示的に 0 (未認証) と設定されている場合のみエラーを返す（過去に登録された既存ユーザーを締め出さないための配慮）
+        if ($is_verified !== '' && (int) $is_verified === 0) {
+            return new WP_Error(
+                'unverified_email',
+                'メールアドレスの認証が完了していません。受信トレイをご確認の上、記載のリンクから本登録を行ってください。'
+            );
+        }
+    }
+    return $user;
+}
+// ▲▲▲ 追加ここまで ▲▲▲

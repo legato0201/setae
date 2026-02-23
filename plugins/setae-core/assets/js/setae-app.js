@@ -14,6 +14,27 @@ jQuery(document).ready(function ($) {
     }
     // ▲▲▲ 追加終了 ▲▲▲
 
+    // ▼▼▼ 追加: メール認証完了後のトースト表示 ▼▼▼
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === '1') {
+        // 少し遅延させてから表示（UIが描画された後）
+        setTimeout(function () {
+            if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
+                SetaeCore.showToast('メール認証が完了しました。ログインしてください。', 'success');
+            } else {
+                alert('メール認証が完了しました。ログインしてください。');
+            }
+            // URLパラメータをクリーニング
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            // ログインモーダルを開く処理があればここに記述
+            if ($('#setae-login-modal').length) {
+                $('#setae-login-modal').fadeIn(200).css('display', 'flex');
+            }
+        }, 500);
+    }
+    // ▲▲▲ 追加終了 ▲▲▲
+
     // Note: SetaeUI (Renderer) auto-initializes on document.ready in app-ui-renderer.js
     // SetaeUIActions binds touch events automatically in app-ui-renderer.js
 
@@ -51,10 +72,22 @@ jQuery(document).ready(function ($) {
             data: data,
             success: function (response) {
                 if (response.success) {
-                    alert('登録が完了しました。ログインしてください。');
-                    location.reload();
+                    if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
+                        SetaeCore.showToast(response.data, 'success');
+                    } else {
+                        alert(response.data);
+                    }
+                    // モーダルを閉じてボタンを復元
+                    $('#setae-register-modal').fadeOut(200);
+                    $btn.text(originalText).prop('disabled', false);
+                    // フォームをリセット
+                    $('#setae-register-form')[0].reset();
                 } else {
-                    alert('エラー: ' + (response.data || 'Unknown error'));
+                    if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
+                        SetaeCore.showToast('エラー: ' + (response.data || 'Unknown error'), 'error');
+                    } else {
+                        alert('エラー: ' + (response.data || 'Unknown error'));
+                    }
                     $btn.text(originalText).prop('disabled', false);
                 }
             },
