@@ -17,6 +17,17 @@ var SetaeUIProfile = (function ($) {
                 console.error('User data not found in SetaeSettings');
             }
         });
+        // バッジ説明モーダルを閉じる
+        $(document).on('click', '#modal-badge-info-close, #btn-close-badge-info-bottom', function () {
+            $('#modal-badge-info').hide();
+        });
+
+        // オーバーレイクリックで閉じる
+        $(document).on('click', '#modal-badge-info', function (e) {
+            if (e.target === this) {
+                $(this).hide();
+            }
+        });
     }
 
     /**
@@ -49,6 +60,7 @@ var SetaeUIProfile = (function ($) {
                             <div class="profile-avatar-preview" id="profile-avatar-preview-container">
                                 <img src="${avatarUrl}" alt="Avatar">
                             </div>
+                            <div id="profile-my-badge-container"></div>
                             <div class="avatar-edit-badge">📷</div>
                         </div>
                         <input type="file" id="prof-icon" accept="image/*" style="display:none;">
@@ -70,16 +82,22 @@ var SetaeUIProfile = (function ($) {
                     </div>
 
                     ${!currentUser.is_premium ? `
-                    <div class="setae-form-group" style="background:#f5f7fa; padding:15px; border-radius:8px; border:1px dashed #ccc;">
-                        <label style="color:#333; font-weight:bold;">🎁 ${__('あなたの紹介コード')}</label>
+                    <div class="setae-form-group" style="background:#f5f7fa; padding:15px; border-radius:8px; border:1px dashed #ccc; margin-bottom: 20px;">
+                        <label style="color:#333; font-weight:bold; display: flex; align-items: center; justify-content: space-between;">
+                            <span><img draggable="false" role="img" class="emoji" alt="🎁" src="https://s.w.org/images/core/emoji/17.0.2/svg/1f381.svg" style="height: 1em; width: 1em; margin-right: 5px;"> ${__('あなたの紹介コード')}</span>
+                            <button type="button" id="btn-show-badge-info" style="font-size: 12px; color: #2980b9; text-decoration: underline; background: none; border: none; padding: 0; cursor: pointer;">${__('サポーターバッジとは？')}</button>
+                        </label>
                         <p style="font-size:12px; color:#666; margin-bottom:10px;">
                             ${__('このコードをSNS等でシェアして新規ユーザーが登録すると、お互いの生体登録枠が＋1されます。')}
                             <br>${__('現在の獲得ボーナス枠:')} <strong style="color:#d35400;">+${bonusLimit} 枠</strong>
                         </p>
-                        <div style="display:flex; gap:8px;">
-                            <input type="text" id="prof-my-referral" class="setae-input" value="${refCode}" readonly style="background:#fff; font-family:monospace; font-weight:bold; color:#2980b9;">
+                        <div style="display:flex; gap:8px; margin-bottom: 12px;">
+                            <input type="text" id="prof-my-referral" class="setae-input" value="${refCode}" readonly style="background:#fff; font-family:monospace; font-weight:bold; color:#2980b9; flex: 1;">
                             <button type="button" class="setae-btn" id="btn-copy-referral" style="white-space:nowrap; background:#e0e6ed; color:#333;">${__('コピー')}</button>
                         </div>
+                        <button type="button" class="setae-btn" id="btn-share-x-referral" style="width: 100%; background:#000; border:none; color:#fff; font-size:13px; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span style="font-size: 16px;">𝕏</span> ${__('紹介コードをシェアして枠を獲得')}
+                        </button>
                     </div>
                     ` : ''}
 
@@ -137,6 +155,17 @@ var SetaeUIProfile = (function ($) {
 
         $('body').append(html);
 
+        // バッジの動的生成
+        const badgeContainer = document.getElementById('profile-my-badge-container');
+        if (badgeContainer) {
+            const isPremium = currentUser.is_premium;
+            const badgeBonusLimit = currentUser.bonus_limit || 0;
+
+            if (typeof SetaeUIRenderer !== 'undefined' && typeof SetaeUIRenderer.generateUserBadgesHtml === 'function') {
+                badgeContainer.innerHTML = SetaeUIRenderer.generateUserBadgesHtml(isPremium, badgeBonusLimit);
+            }
+        }
+
         // --- イベントリスナーの設定 ---
 
         // ▼▼▼ ここから追加: 紹介コードのコピー処理 ▼▼▼
@@ -158,6 +187,23 @@ var SetaeUIProfile = (function ($) {
                 alert(__('コピーに失敗しました'));
             });
         });
+        // ====== 紹介コードのXシェア処理 ======
+        $('#setae-profile-modal').on('click', '#btn-share-x-referral', function () {
+            const referralCode = document.getElementById('prof-my-referral').value;
+            const appUrl = (typeof SetaeSettings !== 'undefined' && SetaeSettings.site_url) ? SetaeSettings.site_url : window.location.origin;
+
+            const shareText = `Setaeで奇蟲を管理しよう！\n新規登録時に紹介コード「${referralCode}」を入力すると生体登録枠が+1されます🎁✨\n#Setae`;
+            const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`;
+
+            window.open(tweetUrl, '_blank');
+        });
+
+        // ====== バッジ説明モーダルを開く ======
+        $('#setae-profile-modal').on('click', '#btn-show-badge-info', function (e) {
+            e.preventDefault();
+            $('#modal-badge-info').css('display', 'flex');
+        });
+
         // ▲▲▲ 追加ここまで ▲▲▲
 
         // モーダルを閉じる (オーバーレイクリック、×ボタン、Cancelボタン)

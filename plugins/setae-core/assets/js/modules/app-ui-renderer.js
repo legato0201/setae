@@ -781,7 +781,8 @@ var SetaeUI = (function ($) {
     return {
         initListeners: initListeners,
         renderMySpiders: SetaeUIList.renderMySpiders,
-        openSpeciesDetail: openSpeciesDetail
+        openSpeciesDetail: openSpeciesDetail,
+        generateUserBadgesHtml: generateUserBadgesHtml
     };
 
 })(jQuery);

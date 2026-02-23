@@ -1008,6 +1008,25 @@
 }
 
 /* =========================================
+   Profile Modal Badges
+   ========================================= */
+#profile-my-badge-container .bonus-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    bottom: 2px;
+    left: 2px;
+}
+
+#profile-my-badge-container .supporter-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    top: 2px;
+    right: 2px;
+}
+
+/* =========================================
    User Avatar (バッジ見切れ防止 & 小サイズ調整)
    ========================================= */
 

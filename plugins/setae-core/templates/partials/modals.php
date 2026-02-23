@@ -608,6 +608,116 @@ $temperaments = get_terms(array(
     </div>
 </div>
 
+<!-- サポーターバッジ説明モーダル -->
+<div id="modal-badge-info" class="setae-modal" style="display: none; z-index: 100001;">
+    <div class="setae-modal-content" style="max-width: 400px; border-radius: 12px; padding: 20px;">
+        <span class="setae-modal-close" id="modal-badge-info-close"
+            style="cursor: pointer; font-size: 24px; position: absolute; right: 15px; top: 10px;">&times;</span>
+        <h3
+            style="margin-top: 0; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+            <img draggable="false" role="img" class="emoji" alt="🏅"
+                src="https://s.w.org/images/core/emoji/17.0.2/svg/1f3c5.svg" style="height: 1.2em; width: 1.2em;">
+            サポーターバッジ
+        </h3>
+
+        <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+            図鑑への写真提供や、紹介コードを使ってアプリを紹介することで、生体登録枠が＋１されていきます。<br>
+            獲得したボーナス枠数に応じて、プロフィールアイコンに付与される<strong>サポーターバッジ</strong>がランクアップします！
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div
+                style="display: flex; align-items: center; gap: 15px; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <div style="position: relative; width: 44px; height: 44px;">
+                    <div
+                        style="width: 100%; height: 100%; background: #bdc3c7; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        B</div>
+                    <span class="bonus-badge tier-basic">I</span>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 14px; color: #B8652A;">ブロンズサポーター</div>
+                    <div style="font-size: 12px; color: #777;">ボーナス枠 1〜10 獲得</div>
+                </div>
+            </div>
+
+            <div
+                style="display: flex; align-items: center; gap: 15px; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <div style="position: relative; width: 44px; height: 44px;">
+                    <div
+                        style="width: 100%; height: 100%; background: #34495e; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        S</div>
+                    <span class="bonus-badge tier-advanced">II</span>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 14px; color: #64748B;">シルバーサポーター</div>
+                    <div style="font-size: 12px; color: #777;">ボーナス枠 11〜20 獲得</div>
+                </div>
+            </div>
+
+            <div
+                style="display: flex; align-items: center; gap: 15px; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <div style="position: relative; width: 44px; height: 44px;">
+                    <div
+                        style="width: 100%; height: 100%; background: #2ecc71; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        E</div>
+                    <span class="bonus-badge tier-uncommon">III</span>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 14px; color: #059669;">エメラルドサポーター</div>
+                    <div style="font-size: 12px; color: #777;">ボーナス枠 21〜30 獲得</div>
+                </div>
+            </div>
+
+            <div
+                style="display: flex; align-items: center; gap: 15px; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <div style="position: relative; width: 44px; height: 44px;">
+                    <div
+                        style="width: 100%; height: 100%; background: #3498db; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        S</div>
+                    <span class="bonus-badge tier-rare">IV</span>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 14px; color: #2563EB;">サファイアサポーター</div>
+                    <div style="font-size: 12px; color: #777;">ボーナス枠 31〜40 獲得</div>
+                </div>
+            </div>
+
+            <div
+                style="display: flex; align-items: center; gap: 15px; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <div style="position: relative; width: 44px; height: 44px;">
+                    <div
+                        style="width: 100%; height: 100%; background: #9b59b6; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        A</div>
+                    <span class="bonus-badge tier-epic">V</span>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 14px; color: #7C3AED;">アメジストサポーター</div>
+                    <div style="font-size: 12px; color: #777;">ボーナス枠 41〜50 獲得</div>
+                </div>
+            </div>
+
+            <div
+                style="display: flex; align-items: center; gap: 15px; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <div style="position: relative; width: 44px; height: 44px;">
+                    <div
+                        style="width: 100%; height: 100%; background: #2c3e50; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        L</div>
+                    <span class="bonus-badge tier-legend">★</span>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 14px; color: #d35400;">レジェンドサポーター</div>
+                    <div style="font-size: 12px; color: #777;">ボーナス枠 51〜 獲得</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button type="button" class="setae-btn" id="btn-close-badge-info-bottom"
+                style="width: 100%; background: #ecf0f1; color: #333; padding: 10px; font-weight: bold;">閉じる</button>
+        </div>
+    </div>
+</div>
+
 <?php
 include plugin_dir_path(__FILE__) . 'modal-credits.php';
 ?>
