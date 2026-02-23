@@ -1,5 +1,11 @@
 <?php
 // Main Dashboard Template
+
+// ▼ 追加: ページキャッシュプラグインによるキャッシュを無効化し、常に最新のPHP（アバター等）を出力させる
+if (!defined('DONOTCACHEPAGE')) {
+    define('DONOTCACHEPAGE', true);
+}
+
 // Create path to partials
 $partials_path = plugin_dir_path(__FILE__) . 'partials/';
 
