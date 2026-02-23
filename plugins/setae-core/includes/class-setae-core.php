@@ -179,6 +179,9 @@ class Setae_Core
         $this->loader->add_filter('get_avatar', $this, 'custom_avatar_filter', 10, 5);
         $this->loader->add_filter('get_avatar_url', $this, 'custom_avatar_url_filter', 10, 3);
         $this->loader->add_filter('get_avatar_data', $this, 'custom_avatar_data_filter', 10, 2);
+
+        // ▼ 新規追加: キャッシュプラグインより先に処理を奪い取り、古いアバターHTMLが返るのを防ぐ（優先度1）
+        $this->loader->add_filter('pre_get_avatar', $this, 'custom_pre_get_avatar', 1, 3);
     }
 
     /**
@@ -247,6 +250,50 @@ class Setae_Core
             }
         }
         return $args;
+    }
+
+    /**
+     * キャッシュプラグインによる古いアバターの強制出力をバイパスする
+     */
+    public function custom_pre_get_avatar($avatar, $id_or_email, $args)
+    {
+        $user_id = $this->get_user_id_from_mixed($id_or_email);
+        if ($user_id) {
+            $img_url = $this->get_custom_avatar_url($user_id);
+            if ($img_url) {
+                // ブラウザキャッシュ対策として現在のタイムスタンプをURLに付与
+                $img_url = add_query_arg('t', time(), $img_url);
+
+                $size = isset($args['size']) ? $args['size'] : 96;
+                $alt = isset($args['alt']) ? $args['alt'] : '';
+
+                // クラス名の構築
+                $class = 'avatar avatar-' . $size . ' photo';
+                if (isset($args['class'])) {
+                    if (is_array($args['class'])) {
+                        $class .= ' ' . implode(' ', $args['class']);
+                    } else {
+                        $class .= ' ' . $args['class'];
+                    }
+                }
+
+                $extra_attr = isset($args['extra_attr']) ? $args['extra_attr'] : '';
+
+                // スタイルの構築（引数で指定されていればそれを使用、なければデフォルト）
+                $style = '';
+                if (isset($args['style'])) {
+                    $style = "style='" . esc_attr($args['style']) . "'";
+                } else {
+                    $style = "style='object-fit:cover; border-radius:50%;'";
+                }
+
+                // キャッシュを無視して、自前で組み立てた最新のHTMLを強制的に返す
+                return "<img alt='" . esc_attr($alt) . "' src='" . esc_url($img_url) . "' class='" . esc_attr($class) . "' height='{$size}' width='{$size}' {$style} {$extra_attr}>";
+            }
+        }
+
+        // カスタム画像がない場合は本来の処理（Gravatar等）に任せる
+        return $avatar;
     }
 
     private function get_user_id_from_mixed($id_or_email)
