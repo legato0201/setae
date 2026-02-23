@@ -47,7 +47,7 @@ if ($bonus_slots >= 51) {
                 <?php echo get_avatar(get_current_user_id(), 32, '', 'Profile', array('class' => 'header-user-icon', 'style' => 'object-fit:cover; border-radius:50%;')); ?>
 
                 <?php if ($is_premium): ?>
-                    <span class="supporter-badge" title="Setae Supporter">✦</span>
+                    <!--                    <span class="supporter-badge" title="Setae Supporter">✦</span>-->
                 <?php endif; ?>
 
                 <?php if ($bonus_slots > 0): ?>

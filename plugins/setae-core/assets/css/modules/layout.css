@@ -1006,3 +1006,59 @@
         filter: hue-rotate(360deg);
     }
 }
+
+/* =========================================
+   User Avatar (バッジ見切れ防止 & 小サイズ調整)
+   ========================================= */
+
+/* 1. コンテナの制限を解除し、バッジがはみ出せるようにする */
+.setae-user-avatar {
+    overflow: visible !important;
+    background-color: transparent !important;
+    /* コンテナの背景を透明に */
+    border: none !important;
+    /* コンテナの枠線を消す */
+}
+
+/* 2. 丸く切り取る役割を、中の「画像」や「イニシャル」に移動する */
+.setae-user-avatar .avatar-img {
+    border-radius: 50%;
+    background-color: #f2f2f7;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.setae-user-avatar .avatar-initial {
+    border-radius: 50%;
+    background-color: #f2f2f7;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 3. スモールサイズ (.avatar-sm) の時のバッジを縮小・位置調整 */
+.setae-user-avatar.avatar-sm .supporter-badge {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+    top: -2px;
+    right: -3px;
+    border-width: 1px;
+    /* 白フチも細くしてバランスを取る */
+}
+
+.setae-user-avatar.avatar-sm .bonus-badge {
+    width: 12px;
+    height: 12px;
+    font-size: 6px;
+    bottom: -2px;
+    left: -3px;
+    border-width: 1px;
+}

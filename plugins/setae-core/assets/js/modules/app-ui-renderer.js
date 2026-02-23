@@ -432,6 +432,28 @@ var SetaeUI = (function ($) {
     // ==========================================
     // トピック一覧 (Community)
     // ==========================================
+
+    // ▼ 追加: バッジHTML生成関数
+    function generateUserBadgesHtml(isPremium, bonusSlots) {
+        let html = '';
+        if (isPremium) {
+            html += '<span class="supporter-badge" title="Setae Supporter">✦</span>';
+        }
+        if (bonusSlots > 0) {
+            let bonusClass = '';
+            let bonusLabel = '';
+            if (bonusSlots >= 51) { bonusClass = 'tier-legend'; bonusLabel = '★'; }
+            else if (bonusSlots >= 41) { bonusClass = 'tier-epic'; bonusLabel = 'V'; }
+            else if (bonusSlots >= 31) { bonusClass = 'tier-rare'; bonusLabel = 'IV'; }
+            else if (bonusSlots >= 21) { bonusClass = 'tier-uncommon'; bonusLabel = 'III'; }
+            else if (bonusSlots >= 11) { bonusClass = 'tier-advanced'; bonusLabel = 'II'; }
+            else if (bonusSlots >= 1) { bonusClass = 'tier-basic'; bonusLabel = 'I'; }
+            html += `<span class="bonus-badge ${bonusClass}" title="ボーナス枠: ${bonusSlots}">${bonusLabel}</span>`;
+        }
+        return html;
+    }
+    // ▲ 追加ここまで
+
     let currentTopicListPage = 1;
     let currentTopicListType = 'all';
     let currentTopicSearch = '';
@@ -518,6 +540,9 @@ var SetaeUI = (function ($) {
                     momentumBadge = `<span class="thread-momentum">勢い: ${topic.momentum}</span>`;
                 }
 
+                // ▼ 追加：バッジHTMLの生成
+                const badgesHtml = generateUserBadgesHtml(topic.author_is_premium, topic.author_bonus_slots);
+
                 const html = `
                     <div class="setae-topic-row setae-card ${rowClass}" data-id="${topic.id}">
                         <div class="setae-topic-row-header">
@@ -543,8 +568,9 @@ var SetaeUI = (function ($) {
 
                         <div class="setae-topic-row-footer">
                             <div class="setae-topic-author" ${isArchived ? 'style="opacity: 0.7;"' : ''}>
-                                <div class="setae-user-avatar avatar-sm">
+                                <div class="setae-user-avatar avatar-sm" style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
                                     ${topicListAvatarHtml}
+                                    ${badgesHtml}
                                 </div>
                                 <span class="setae-author-name">${topic.author_name || 'Anonymous'}</span>
                             </div>
@@ -605,12 +631,16 @@ var SetaeUI = (function ($) {
                     `<img src="${data.author_avatar}" alt="${data.author_name}" class="avatar-img">` :
                     `<span class="avatar-initial">${data.author_initial}</span>`;
 
+                // ▼ 追加：バッジHTMLの生成
+                const topicBadgesHtml = generateUserBadgesHtml(data.author_is_premium, data.author_bonus_slots);
+
                 // 本文描画
                 $('#topic-detail-content').html(`
                     <div class="setae-card setae-topic-detail-card">
                         <div class="setae-topic-meta">
-                            <div class="setae-user-avatar">
+                            <div class="setae-user-avatar" style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
                                 ${topicAvatarHtml}
+                                ${topicBadgesHtml}
                             </div>
                             <span class="setae-author-name">${data.author_name}</span>
                             <span class="meta-divider">/</span> <img draggable="false" role="img" class="emoji" alt="📅" src="/wp-content/plugins/setae-core/assets/images/emoji/1f4c5.svg"> ${data.date}
@@ -651,11 +681,15 @@ var SetaeUI = (function ($) {
                         `<img src="${comment.author_avatar}" alt="${comment.author_name}" class="avatar-img">` :
                         `<span class="avatar-initial">${comment.author_initial}</span>`;
 
+                    // ▼ 追加：コメント投稿者のバッジHTML
+                    const cBadgesHtml = generateUserBadgesHtml(comment.author_is_premium, comment.author_bonus_slots);
+
                     commentsContainer.append(`
                         <div class="setae-comment-row">
                             <div class="setae-comment-meta">
-                                <div class="setae-user-avatar">
+                                <div class="setae-user-avatar" style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
                                     ${cAvatarHtml}
+                                    ${cBadgesHtml}
                                 </div>
                                 <span class="setae-author-name">${comment.author_name}</span>
                                 <span class="meta-divider">-</span> ${SetaeCore.formatRelativeDate(comment.date)}

@@ -137,6 +137,10 @@ class Setae_API_Topics
                 if ($author_avatar && strpos($author_avatar, 'mystery') !== false) {
                     $author_avatar = '';
                 }
+
+                // ▼ 追加：バッジ用データの取得
+                $author_is_premium = get_user_meta($author_id, '_setae_is_premium', true);
+                $author_bonus_slots = (int) get_user_meta($author_id, '_setae_bonus_spider_limit', true);
                 // ▲ 追加ここまで
 
                 $comment_count = get_comments_number();
@@ -178,6 +182,8 @@ class Setae_API_Topics
                     'author_name' => $author_name,
                     'author_avatar' => $author_avatar, // ▼ 追加
                     'author_initial' => mb_substr($author_name, 0, 1, 'UTF-8'), // ▼ 追加
+                    'author_is_premium' => $author_is_premium, // ★追加
+                    'author_bonus_slots' => $author_bonus_slots, // ★追加
                     'comment_count' => $comment_count,
                     'type' => $topic_type, // カテゴリ
                     'link' => get_permalink(),
@@ -268,6 +274,12 @@ class Setae_API_Topics
             $image_url = get_comment_meta($c->comment_ID, 'setae_comment_image_url', true);
 
             $c_author_id = $c->user_id;
+
+            // ▼ 追加：コメント投稿者のバッジ用データ取得
+            $c_is_premium = $c_author_id ? get_user_meta($c_author_id, '_setae_is_premium', true) : false;
+            $c_bonus_slots = $c_author_id ? (int) get_user_meta($c_author_id, '_setae_bonus_spider_limit', true) : 0;
+            // ▲ 追加ここまで
+
             $c_avatar = $c_author_id ? get_avatar_url($c_author_id) : get_avatar_url($c->comment_author_email);
             if ($c_avatar && strpos($c_avatar, 'mystery') !== false) {
                 $c_avatar = '';
@@ -282,6 +294,8 @@ class Setae_API_Topics
                 'author_name' => $c->comment_author,
                 'author_avatar' => $c_avatar,
                 'author_initial' => mb_substr($c->comment_author, 0, 1, 'UTF-8'),
+                'author_is_premium' => $c_is_premium, // ★追加
+                'author_bonus_slots' => $c_bonus_slots, // ★追加
                 'date' => $c->comment_date,
                 'content' => $comment_content, // ★変更
                 'image' => $image_url, // ★追加: レスポンスに含める
@@ -297,6 +311,11 @@ class Setae_API_Topics
             $author_avatar = '';
         }
 
+        // ▼ 追加：トピック投稿者のバッジ用データ取得
+        $author_is_premium = get_user_meta($author_id, '_setae_is_premium', true);
+        $author_bonus_slots = (int) get_user_meta($author_id, '_setae_bonus_spider_limit', true);
+        // ▲ 追加ここまで
+
         // ★追加: wpautop後に空の <p></p> を正規表現で削除
         $topic_content = wpautop(trim($post->post_content));
         $topic_content = preg_replace('/<p>[\s\r\n]*<\/p>/i', '', $topic_content);
@@ -309,6 +328,8 @@ class Setae_API_Topics
             'author_name' => $author_name,
             'author_avatar' => $author_avatar,
             'author_initial' => mb_substr($author_name, 0, 1, 'UTF-8'),
+            'author_is_premium' => $author_is_premium, // ★追加
+            'author_bonus_slots' => $author_bonus_slots, // ★追加
             'type' => $type,
             'comments' => $comments_data,
             'has_next' => $has_next, // ▼ 追加: 次ページフラグ
