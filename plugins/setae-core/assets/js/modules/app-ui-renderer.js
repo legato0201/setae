@@ -398,6 +398,43 @@ var SetaeUI = (function ($) {
                 gallery.hide();
                 emptyMsg.show();
             }
+
+            // -----------------------------------------------------
+            // ▼ 追加: 広告データの取得と描画の出し分け
+            // -----------------------------------------------------
+            const adContainer = document.getElementById('enc-detail-ad-container');
+            const speciesId = id; // openSpeciesDetail に渡される id 
+            if (adContainer && speciesId) {
+                fetch(`/wp-json/setae/v1/ads/species/${speciesId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.has_ad && data.html) {
+                            // 管理画面で設定した広告HTMLで上書きし、デフォルトの枠線を消す
+                            adContainer.innerHTML = data.html;
+                            adContainer.style.border = 'none';
+                            adContainer.style.padding = '0';
+                            adContainer.style.background = 'transparent';
+                        } else {
+                            // 広告がない場合は、デフォルトの「広告主募集中」HTMLにリセット
+                            // SPA対応: 一度広告付きのページを開いた後に、広告なしのページを開くと残ってしまうのを防ぐため
+                            adContainer.innerHTML = `
+                                <span style="display: inline-block; font-size: 10px; background: #eee; color: #888; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px;">スポンサー枠</span>
+                                <div style="font-weight: bold; font-size: 15px; color: #333; margin-bottom: 6px;">広告主募集中</div>
+                                <div style="font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 12px;">
+                                    ここにショップのHP情報や、販売個体の値段掲載などが可能です。<br>
+                                    詳細をご希望のショップ様は運営までご連絡ください。
+                                </div>
+                                <a href="https://nakano2835.com/contact/" target="_blank" rel="noopener noreferrer" style="display: inline-block; text-decoration: none; background: #fff; border: 1px solid #ccc; color: #555; padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold;">
+                                    お問い合わせ
+                                </a>
+                            `;
+                            adContainer.style.border = '2px dashed #ddd';
+                            adContainer.style.padding = '20px 15px';
+                            adContainer.style.background = '#fafafa';
+                        }
+                    })
+                    .catch(err => console.error('Ad fetch error:', err));
+            }
         });
     }
 

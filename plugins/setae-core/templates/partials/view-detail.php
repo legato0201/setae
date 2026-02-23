@@ -80,6 +80,30 @@
         </div>
     </div>
 
+    <!-- Sponsor and Search Area -->
+    <div class="setae-card" style="margin-bottom:15px;">
+        <a id="btn-search-yahoo" href="#" target="_blank"
+            onclick="this.href='https://auctions.yahoo.co.jp/search/search?p=' + encodeURIComponent(document.getElementById('enc-detail-name').innerText);"
+            style="display: flex; align-items: center; justify-content: center; background: #fdcb00; color: #333; font-weight: bold; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;">
+            <span style="margin-right: 8px; font-size: 16px;">🔍</span> ヤフオクでこの種を探す
+        </a>
+    </div>
+
+    <div id="enc-detail-ad-container" class="setae-card"
+        style="margin-bottom:15px; border: 2px dashed #ddd; background: #fafafa; text-align: center; padding: 20px 15px;">
+        <span
+            style="display: inline-block; font-size: 10px; background: #eee; color: #888; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px;">スポンサー枠</span>
+        <div style="font-weight: bold; font-size: 15px; color: #333; margin-bottom: 6px;">広告主募集中</div>
+        <div style="font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 12px;">
+            ここにショップのHP情報や、販売個体の値段掲載などが可能です。<br>
+            詳細をご希望のショップ様は運営までご連絡ください。
+        </div>
+        <a href="https://nakano2835.com/contact/" target="_blank" rel="noopener noreferrer"
+            style="display: inline-block; text-decoration: none; background: #fff; border: 1px solid #ccc; color: #555; padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold;">
+            お問い合わせ
+        </a>
+    </div>
+
     <!-- Community Gallery -->
     <div class="setae-card">
         <h4 style="margin-top:0;"><?php esc_html_e('Best Shots Gallery', 'setae-core'); ?></h4>
@@ -87,6 +111,7 @@
             <!-- JS Populated -->
         </div>
         <p id="enc-gallery-empty" style="text-align:center; color:#ccc; font-size:12px; display:none;">
-            <?php esc_html_e('No community photos yet.', 'setae-core'); ?></p>
+            <?php esc_html_e('No community photos yet.', 'setae-core'); ?>
+        </p>
     </div>
 </div>

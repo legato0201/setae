@@ -34,6 +34,8 @@ class Setae_Core
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-topic.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-log.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-suggestion.php';
+        // ▼ 追加: 広告管理CPTの読み込み
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-ad.php';
 
         /**
          * DB Classes
@@ -166,6 +168,8 @@ class Setae_Core
         // Register Suggestion CPT
         $suggestion = new Setae_CPT_Suggestion();
         $suggestion->init();
+
+        $plugin_admin_ad = new Setae_CPT_Ad();
 
         // Dashboard & Assets
         $plugin_public = new Setae_Dashboard($this->get_plugin_name(), $this->get_version());
@@ -453,7 +457,7 @@ function setae_block_unverified_login($user, $password)
 // ==========================================
 
 // 1. 新規追加画面にフィールドを追加
-add_action('setae_classification_add_form_fields', function() {
+add_action('setae_classification_add_form_fields', function () {
     ?>
     <div class="form-field">
         <label for="term_order">並び順</label>
@@ -464,9 +468,10 @@ add_action('setae_classification_add_form_fields', function() {
 });
 
 // 2. 編集画面にフィールドを追加
-add_action('setae_classification_edit_form_fields', function($term) {
+add_action('setae_classification_edit_form_fields', function ($term) {
     $term_order = get_term_meta($term->term_id, '_setae_term_order', true);
-    if ($term_order === '') $term_order = 0;
+    if ($term_order === '')
+        $term_order = 0;
     ?>
     <tr class="form-field">
         <th scope="row" valign="top"><label for="term_order">並び順</label></th>
@@ -479,7 +484,8 @@ add_action('setae_classification_edit_form_fields', function($term) {
 });
 
 // 3. 値を保存する処理
-function setae_save_classification_order($term_id) {
+function setae_save_classification_order($term_id)
+{
     if (isset($_POST['term_order'])) {
         update_term_meta($term_id, '_setae_term_order', intval($_POST['term_order']));
     }
@@ -488,11 +494,11 @@ add_action('created_setae_classification', 'setae_save_classification_order');
 add_action('edited_setae_classification', 'setae_save_classification_order');
 
 // 4. 管理画面の一覧に「並び順」カラムを表示（オプション）
-add_filter('manage_edit-setae_classification_columns', function($columns) {
+add_filter('manage_edit-setae_classification_columns', function ($columns) {
     $columns['term_order'] = '並び順';
     return $columns;
 });
-add_action('manage_setae_classification_custom_column', function($content, $column_name, $term_id) {
+add_action('manage_setae_classification_custom_column', function ($content, $column_name, $term_id) {
     if ('term_order' === $column_name) {
         $term_order = get_term_meta($term_id, '_setae_term_order', true);
         $content = ($term_order !== '') ? esc_html($term_order) : '0';
