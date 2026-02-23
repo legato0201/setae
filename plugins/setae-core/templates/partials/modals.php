@@ -333,10 +333,17 @@ $temperaments = get_terms(array(
                     // setae_classification タクソノミーを取得
                     $classifications = get_terms(array(
                         'taxonomy' => 'setae_classification',
-                        'hide_empty' => false, // 投稿がない空のタームも表示する
+                        'hide_empty' => false,
                     ));
 
-                    if (!empty($classifications) && !is_wp_error($classifications)):
+                    // タームメタの並び順(_setae_term_order)でソート
+                    if (!is_wp_error($classifications) && !empty($classifications)):
+                        usort($classifications, function ($a, $b) {
+                            $order_a = (int) get_term_meta($a->term_id, '_setae_term_order', true);
+                            $order_b = (int) get_term_meta($b->term_id, '_setae_term_order', true);
+                            return $order_a <=> $order_b;
+                        });
+
                         foreach ($classifications as $index => $term):
                             $is_checked = ($index === 0) ? 'checked' : '';
                             $is_active = ($index === 0) ? 'active' : '';
@@ -349,7 +356,7 @@ $temperaments = get_terms(array(
                                 <span style="font-size: 1.2em; margin-right: 4px;"><?php echo esc_html($icon); ?></span>
                                 <?php echo esc_html($term->name); ?>
                             </label>
-                        <?php
+                            <?php
                         endforeach;
                     else:
                         ?>

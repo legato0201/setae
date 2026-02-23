@@ -44,26 +44,32 @@
                 <?php esc_html_e('脱皮前', 'setae-core'); ?> <span class="count-badge">0</span>
             </button>
 
-            <button class="deck-pill" data-deck="cat_tarantula" style="display:none;">
-                <span class="pill-icon">🕷️</span>
-                <?php esc_html_e('Tarantula', 'setae-core'); ?> <span class="count-badge">0</span>
-            </button>
-            <button class="deck-pill" data-deck="cat_scorpion" style="display:none;">
-                <span class="pill-icon">🦂</span>
-                <?php esc_html_e('Scorpion', 'setae-core'); ?> <span class="count-badge">0</span>
-            </button>
-            <button class="deck-pill" data-deck="cat_reptile" style="display:none;">
-                <span class="pill-icon">🦎</span>
-                <?php esc_html_e('Reptile', 'setae-core'); ?> <span class="count-badge">0</span>
-            </button>
-            <button class="deck-pill" data-deck="cat_plant" style="display:none;">
-                <span class="pill-icon">🌿</span>
-                <?php esc_html_e('Plant', 'setae-core'); ?> <span class="count-badge">0</span>
-            </button>
-            <button class="deck-pill" data-deck="cat_other" style="display:none;">
-                <span class="pill-icon">📦</span>
-                <?php esc_html_e('Other', 'setae-core'); ?> <span class="count-badge">0</span>
-            </button>
+            <?php
+            // setae_classification タクソノミーを取得してボタンを動的生成
+            $classifications = get_terms(array(
+                'taxonomy' => 'setae_classification',
+                'hide_empty' => false,
+            ));
+
+            // タームメタの並び順(_setae_term_order)でソート
+            if (!is_wp_error($classifications) && !empty($classifications)) {
+                usort($classifications, function ($a, $b) {
+                    $order_a = (int) get_term_meta($a->term_id, '_setae_term_order', true);
+                    $order_b = (int) get_term_meta($b->term_id, '_setae_term_order', true);
+                    return $order_a <=> $order_b;
+                });
+
+                foreach ($classifications as $term) {
+                    $icon = !empty($term->description) ? strip_tags($term->description) : '📦';
+                    ?>
+                    <button class="deck-pill" data-deck="cat_<?php echo esc_attr($term->slug); ?>" style="display:none;">
+                        <span class="pill-icon"><?php echo esc_html($icon); ?></span>
+                        <?php echo esc_html($term->name); ?> <span class="count-badge">0</span>
+                    </button>
+                    <?php
+                }
+            }
+            ?>
         </div>
     </div>
 

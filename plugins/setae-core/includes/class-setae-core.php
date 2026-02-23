@@ -447,3 +447,56 @@ function setae_block_unverified_login($user, $password)
     return $user;
 }
 // ▲▲▲ 追加ここまで ▲▲▲
+
+// ==========================================
+// setae_classification タクソノミーに並び順機能を追加
+// ==========================================
+
+// 1. 新規追加画面にフィールドを追加
+add_action('setae_classification_add_form_fields', function() {
+    ?>
+    <div class="form-field">
+        <label for="term_order">並び順</label>
+        <input type="number" name="term_order" id="term_order" value="0">
+        <p class="description">数字が小さいほど先に表示されます（例: 0, 1, 2...）</p>
+    </div>
+    <?php
+});
+
+// 2. 編集画面にフィールドを追加
+add_action('setae_classification_edit_form_fields', function($term) {
+    $term_order = get_term_meta($term->term_id, '_setae_term_order', true);
+    if ($term_order === '') $term_order = 0;
+    ?>
+    <tr class="form-field">
+        <th scope="row" valign="top"><label for="term_order">並び順</label></th>
+        <td>
+            <input type="number" name="term_order" id="term_order" value="<?php echo esc_attr($term_order); ?>">
+            <p class="description">数字が小さいほど先に表示されます（例: 0, 1, 2...）</p>
+        </td>
+    </tr>
+    <?php
+});
+
+// 3. 値を保存する処理
+function setae_save_classification_order($term_id) {
+    if (isset($_POST['term_order'])) {
+        update_term_meta($term_id, '_setae_term_order', intval($_POST['term_order']));
+    }
+}
+add_action('created_setae_classification', 'setae_save_classification_order');
+add_action('edited_setae_classification', 'setae_save_classification_order');
+
+// 4. 管理画面の一覧に「並び順」カラムを表示（オプション）
+add_filter('manage_edit-setae_classification_columns', function($columns) {
+    $columns['term_order'] = '並び順';
+    return $columns;
+});
+add_action('manage_setae_classification_custom_column', function($content, $column_name, $term_id) {
+    if ('term_order' === $column_name) {
+        $term_order = get_term_meta($term_id, '_setae_term_order', true);
+        $content = ($term_order !== '') ? esc_html($term_order) : '0';
+    }
+    return $content;
+}, 10, 3);
+
