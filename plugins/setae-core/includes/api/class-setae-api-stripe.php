@@ -51,30 +51,38 @@ class Setae_API_Stripe
         }
         \Stripe\Stripe::setApiKey($this->stripe_secret_key);
 
-        // ▼▼▼ 新規追加: オプションから実際の料金IDを取得 ▼▼▼
         $price_id = get_option('setae_stripe_price_id');
         if (empty($price_id)) {
             return new WP_Error('stripe_error', '料金ID（Price ID）が設定されていません。管理画面から設定してください。', ['status' => 500]);
         }
-        // ▲▲▲ 新規追加ここまで ▲▲▲
+
+        // ▼ 追加: すでにStripeの顧客IDを持っているかチェック
+        $customer_id = get_user_meta($user_id, '_setae_stripe_customer_id', true);
+
+        // 基本のセッション設定
+        $session_args = [
+            'payment_method_types' => ['card'],
+            'line_items' => [
+                [
+                    'price' => $price_id,
+                    'quantity' => 1,
+                ]
+            ],
+            'mode' => 'subscription',
+            'client_reference_id' => $user_id, // Webhookでユーザーを特定するためのID
+            'success_url' => home_url('/dashboard?upgrade=success'),
+            'cancel_url' => home_url('/dashboard?upgrade=canceled'),
+        ];
+
+        // ▼ 修正: 顧客IDがあれば再利用、なければメールアドレスで新規作成
+        if (!empty($customer_id)) {
+            $session_args['customer'] = $customer_id;
+        } else {
+            $session_args['customer_email'] = $user->user_email;
+        }
 
         try {
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [
-                    [
-                        // ▼▼▼ 修正: ダミー値を消し、変数に置き換え ▼▼▼
-                        'price' => $price_id,
-                        'quantity' => 1,
-                    ]
-                ],
-                'mode' => 'subscription',
-                'customer_email' => $user->user_email,
-                'client_reference_id' => $user_id, // Webhookでユーザーを特定するためのID
-                'success_url' => home_url('/dashboard?upgrade=success'),
-                'cancel_url' => home_url('/dashboard?upgrade=canceled'),
-            ]);
-
+            $session = \Stripe\Checkout\Session::create($session_args);
             return new WP_REST_Response(['url' => $session->url], 200);
         } catch (Exception $e) {
             return new WP_Error('stripe_error', $e->getMessage(), ['status' => 500]);
@@ -131,25 +139,26 @@ class Setae_API_Stripe
         // イベントごとの処理
         switch ($event->type) {
             case 'checkout.session.completed':
-                // 初回決済完了時
                 $session = $event->data->object;
                 $user_id = $session->client_reference_id; // セッション作成時に渡したユーザーID
                 if ($user_id) {
                     update_user_meta($user_id, '_setae_is_premium', true);
-                    // カスタマーポータル連携用にStripeのCustomerIDを保存
                     update_user_meta($user_id, '_setae_stripe_customer_id', $session->customer);
+
+                    // ▼ 追加: 再登録・再開時に「解約予定」フラグ等を確実に初期化する
+                    delete_user_meta($user_id, '_setae_premium_cancel_at');
                 }
                 break;
 
             case 'customer.subscription.updated':
-                // サブスクリプションの内容やステータスが更新された時（解約予約を含む）
                 $subscription = $event->data->object;
                 $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $subscription->customer]);
 
                 if (!empty($users)) {
                     $user_id = $users[0]->ID;
 
-                    // ステータスが active（有効）または trialing（トライアル中）の場合は権限を付与・維持
+                    // ▼ 追加: 支払いステータスによる厳密な権限管理
+                    // 'active'(有効) または 'trialing'(無料期間中) の場合
                     if (in_array($subscription->status, ['active', 'trialing'])) {
                         update_user_meta($user_id, '_setae_is_premium', true);
 
@@ -162,9 +171,9 @@ class Setae_API_Stripe
                             // 解約予約がキャンセル（再開）された場合はメタデータを削除
                             delete_user_meta($user_id, '_setae_premium_cancel_at');
                         }
-
-                    } else {
-                        // past_due（支払い遅延）や unpaid（未払い）等になった場合は権限を剥奪
+                    }
+                    // 'past_due'(支払い遅延), 'unpaid'(未払い), 'canceled'(解約・無効) の場合は権限を剥奪
+                    elseif (in_array($subscription->status, ['past_due', 'unpaid', 'canceled'])) {
                         update_user_meta($user_id, '_setae_is_premium', false);
                         delete_user_meta($user_id, '_setae_premium_cancel_at');
                     }
@@ -172,13 +181,12 @@ class Setae_API_Stripe
                 break;
 
             case 'customer.subscription.deleted':
-                // サブスク解約（期間満了での解約を含む）や支払い失敗による完全キャンセル時
+                // サブスク完全削除時
                 $subscription = $event->data->object;
                 $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $subscription->customer]);
 
                 if (!empty($users)) {
                     $user_id = $users[0]->ID;
-                    // プレミアム権限を剥奪し、解約予定日データも削除
                     update_user_meta($user_id, '_setae_is_premium', false);
                     delete_user_meta($user_id, '_setae_premium_cancel_at');
                 }

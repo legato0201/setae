@@ -87,14 +87,13 @@ var SetaeUIProfile = (function ($) {
                         <label>${__('Premium Plan')}</label>
                         ${(function () {
                 if (currentUser.is_premium) {
-                    let dateHtml = '';
-                    if (currentUser.premium_cancel_at) {
-                        // 解約予定がある場合（UNIXタイムスタンプを日付に変換）
-                        const cancelDate = new Date(currentUser.premium_cancel_at * 1000);
-                        const dateString = cancelDate.toLocaleDateString('ja-JP');
-                        dateHtml = `<div style="font-size:12px; color:#e74c3c; margin-bottom:10px; font-weight:bold;">サービスは ${dateString} に終了します</div>`;
-                    } else {
-                        // 自動更新が有効な場合
+                    const cancelTimestamp = currentUser.cancel_timestamp || '';
+                    const isCanceled = (cancelTimestamp !== '' && cancelTimestamp > 0);
+
+                    let cancelDateText = '';
+                    if (isCanceled) {
+                        const dateObj = new Date(cancelTimestamp * 1000);
+                        cancelDateText = `${dateObj.getFullYear()}/${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
                     }
 
                     return `
@@ -102,7 +101,10 @@ var SetaeUIProfile = (function ($) {
                                     <div style="font-weight:bold;color:#b28900;margin-bottom:5px;">
                                         <img draggable="false" role="img" class="emoji" alt="🌟" src="/wp-content/plugins/setae-core/assets/images/emoji/1f31f.svg"> ${__('You are a Premium Member')}
                                     </div>
-                                    ${dateHtml}
+                                    ${isCanceled
+                            ? `<div style="font-size:12px; color:#e74c3c; margin-bottom:10px; font-weight:bold;">${__(`解約手続き済み（${cancelDateText} まで利用可）`)}</div>`
+                            : `<div style="font-size:12px; color:#27ae60; margin-bottom:10px; font-weight:bold;">${__('自動更新有効')}</div>`
+                        }
                                     <button type="button" id="btn-manage-subscription" class="setae-btn">
                                         ${__('プランの管理・解約手続き')}
                                     </button>

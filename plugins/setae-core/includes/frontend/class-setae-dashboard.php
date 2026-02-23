@@ -43,19 +43,19 @@ class Setae_Dashboard
         // ▼▼▼ 追加・修正: ユーザーの登録数と上限を取得するロジック ▼▼▼
         $user_id = get_current_user_id();
         $is_premium = get_user_meta($user_id, '_setae_is_premium', true);
-        $premium_cancel_at = get_user_meta($user_id, '_setae_premium_cancel_at', true);
+        $cancel_timestamp = get_user_meta($user_id, '_setae_premium_cancel_at', true);
 
         // ▼▼▼ 追加: 有効期限の期限切れチェック（二重チェック） ▼▼▼
-        if ($is_premium && !empty($premium_cancel_at)) {
+        if ($is_premium && !empty($cancel_timestamp)) {
             // 現在のUNIXタイムスタンプが、終了予定日時を過ぎているかチェック
-            if (time() > (int) $premium_cancel_at) {
+            if (time() > (int) $cancel_timestamp) {
                 // 期限を過ぎている場合は、強制的にプレミアム権限を剥奪
                 update_user_meta($user_id, '_setae_is_premium', false);
                 delete_user_meta($user_id, '_setae_premium_cancel_at');
 
                 // 現在の処理用変数も更新しておく
                 $is_premium = false;
-                $premium_cancel_at = '';
+                $cancel_timestamp = '';
             }
         }
         // ▲▲▲ 追加ここまで ▲▲▲
@@ -102,7 +102,7 @@ class Setae_Dashboard
                 'spider_limit' => $spider_limit, // 追加
                 'referral_code' => $referral_code,
                 'bonus_limit' => (int) get_user_meta($user_id, '_setae_bonus_spider_limit', true),
-                'premium_cancel_at' => $premium_cancel_at,
+                'cancel_timestamp' => $cancel_timestamp,
             )
         ));
         // ▲▲▲ 追加・修正ここまで ▲▲▲
