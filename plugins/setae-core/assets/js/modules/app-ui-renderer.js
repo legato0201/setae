@@ -437,7 +437,7 @@ var SetaeUI = (function ($) {
     function generateUserBadgesHtml(isPremium, bonusSlots) {
         let html = '';
         if (isPremium) {
-            html += '<span class="supporter-badge" title="Setae Supporter">✦</span>';
+            //   html += '<span class="supporter-badge" title="Setae Supporter">✦</span>';
         }
         if (bonusSlots > 0) {
             let bonusClass = '';

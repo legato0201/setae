@@ -161,8 +161,8 @@ var SetaeUIProfile = (function ($) {
             const isPremium = currentUser.is_premium;
             const badgeBonusLimit = currentUser.bonus_limit || 0;
 
-            if (typeof SetaeUIRenderer !== 'undefined' && typeof SetaeUIRenderer.generateUserBadgesHtml === 'function') {
-                badgeContainer.innerHTML = SetaeUIRenderer.generateUserBadgesHtml(isPremium, badgeBonusLimit);
+            if (typeof SetaeUI !== 'undefined' && typeof SetaeUI.generateUserBadgesHtml === 'function') {
+                badgeContainer.innerHTML = SetaeUI.generateUserBadgesHtml(isPremium, badgeBonusLimit);
             }
         }
 

@@ -44,7 +44,12 @@ if ($bonus_slots >= 51) {
             <span id="header-user-name"><?php echo esc_html(wp_get_current_user()->display_name); ?></span>
 
             <div class="header-avatar-wrapper">
-                <?php echo get_avatar(get_current_user_id(), 32, '', 'Profile', array('class' => 'header-user-icon', 'style' => 'object-fit:cover; border-radius:50%;')); ?>
+                <?php
+                // アバターのHTMLを取得
+                $avatar_html = get_avatar(get_current_user_id(), 32, '', 'Profile', array('class' => 'header-user-icon', 'style' => 'object-fit:cover; border-radius:50%;'));
+                // キャッシュバスター（現在時刻のタイムスタンプ）をURLパラメータとして付与し、古い画像のキャッシュ読み込みを防ぐ
+                echo preg_replace('/(src=[\'"])([^\'"]+)([\'"])/i', '${1}${2}?t=' . time() . '${3}', $avatar_html);
+                ?>
 
                 <?php if ($is_premium): ?>
                     <!--                    <span class="supporter-badge" title="Setae Supporter">✦</span>-->
