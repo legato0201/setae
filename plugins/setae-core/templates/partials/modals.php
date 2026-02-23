@@ -329,36 +329,36 @@ $temperaments = get_terms(array(
                     <?php esc_html_e('カテゴリー', 'setae-core'); ?>
                 </label>
                 <div class="setae-radio-group" style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <label class="radio-chip active">
-                        <input type="radio" name="classification" value="tarantula" checked="" hidden="">
-                        <img draggable="false" role="img" class="emoji" alt="🕷️"
-                            src="<?php echo plugins_url('assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
-                        <?php esc_html_e('Tarantula', 'setae-core'); ?>
-                    </label>
-                    <label class="radio-chip">
-                        <input type="radio" name="classification" value="scorpion" hidden="">
-                        <img draggable="false" role="img" class="emoji" alt="🦂"
-                            src="<?php echo plugins_url('assets/images/emoji/1f982.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
-                        <?php esc_html_e('Scorpion', 'setae-core'); ?>
-                    </label>
-                    <label class="radio-chip">
-                        <input type="radio" name="classification" value="reptile" hidden="">
-                        <img draggable="false" role="img" class="emoji" alt="🦎"
-                            src="<?php echo plugins_url('assets/images/emoji/1f98e.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
-                        <?php esc_html_e('Reptile', 'setae-core'); ?>
-                    </label>
-                    <label class="radio-chip">
-                        <input type="radio" name="classification" value="plant" hidden="">
-                        <img draggable="false" role="img" class="emoji" alt="🌿"
-                            src="<?php echo plugins_url('assets/images/emoji/1f33f.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
-                        <?php esc_html_e('Plant', 'setae-core'); ?>
-                    </label>
-                    <label class="radio-chip">
-                        <input type="radio" name="classification" value="other" hidden="">
-                        <img draggable="false" role="img" class="emoji" alt="📦"
-                            src="<?php echo plugins_url('assets/images/emoji/1f4e6.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
-                        <?php esc_html_e('Other', 'setae-core'); ?>
-                    </label>
+                    <?php
+                    // setae_classification タクソノミーを取得
+                    $classifications = get_terms(array(
+                        'taxonomy' => 'setae_classification',
+                        'hide_empty' => false, // 投稿がない空のタームも表示する
+                    ));
+
+                    if (!empty($classifications) && !is_wp_error($classifications)):
+                        foreach ($classifications as $index => $term):
+                            $is_checked = ($index === 0) ? 'checked' : '';
+                            $is_active = ($index === 0) ? 'active' : '';
+
+                            // 説明欄に絵文字があればそれをアイコンとして使用。なければデフォルトの📦
+                            $icon = !empty($term->description) ? strip_tags($term->description) : '📦';
+                            ?>
+                            <label class="radio-chip <?php echo esc_attr($is_active); ?>">
+                                <input type="radio" name="classification" value="<?php echo esc_attr($term->slug); ?>" <?php echo $is_checked; ?> hidden="">
+                                <span style="font-size: 1.2em; margin-right: 4px;"><?php echo esc_html($icon); ?></span>
+                                <?php echo esc_html($term->name); ?>
+                            </label>
+                        <?php
+                        endforeach;
+                    else:
+                        ?>
+                        <label class="radio-chip active">
+                            <input type="radio" name="classification" value="other" checked="" hidden="">
+                            <span style="font-size: 1.2em; margin-right: 4px;">📦</span>
+                            <?php esc_html_e('Other', 'setae-core'); ?>
+                        </label>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="setae-form-group">
