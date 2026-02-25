@@ -229,9 +229,20 @@ jQuery(document).ready(function ($) {
             reader.onload = function (e) {
                 $('#edit-image-preview').attr('src', e.target.result).show();
                 $('#edit-image-placeholder').hide();
+                $('#image-preview-container').show();
             }
             reader.readAsDataURL(file);
         }
+    });
+
+    // 4. 画像プレビュー削除
+    $('#btn-remove-suggested-image').on('click', function () {
+        $('#suggested-image-input').val('');
+        $('#edit-image-preview').attr('src', '');
+
+        // 【修正・追加】コンテナを隠し、プレースホルダーを再表示する
+        $('#image-preview-container').hide();
+        $('#edit-image-placeholder').show();
     });
 
     // 4. 性格選択ダイアログの制御
