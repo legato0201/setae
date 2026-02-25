@@ -230,6 +230,12 @@ var SetaeUIActions = (function ($) {
                 }
             }
 
+            // スワイプ操作完了後、カードを少しモノクロ・半透明にして「お世話済み」を表現
+            $content.css({
+                'filter': 'grayscale(80%) opacity(0.65)',
+                'transition': 'filter 0.4s ease-out'
+            });
+
             // 2. API送信
             let extraData = {};
             if (actionType === 'feed' || actionType === 'ate') {
