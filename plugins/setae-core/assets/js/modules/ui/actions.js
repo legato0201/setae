@@ -346,7 +346,9 @@ var SetaeUIActions = (function ($) {
             }
         }
 
-        content.style.transform = `translateX(${diffX}px)`;
+        const dampFactor = 0.5; // 値を小さくするほど重く感じます
+        const moveX = diffX * dampFactor;
+        content.style.transform = `translateX(${moveX}px)`;
     }
 
     function handleTouchEnd(e) {
@@ -370,7 +372,7 @@ var SetaeUIActions = (function ($) {
             isSwipeActionTaken = true;
         }
 
-        content.style.transition = 'transform 0.2s ease-out';
+        content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
         content.style.transform = 'translateX(0)';
 
         setTimeout(() => {
@@ -382,7 +384,7 @@ var SetaeUIActions = (function ($) {
 
             currentSwipeRow = null;
             setTimeout(() => isSwipeActionTaken = false, 300);
-        }, 200);
+        }, 400);
     }
 
     function initDesktopHoverLogic() {
