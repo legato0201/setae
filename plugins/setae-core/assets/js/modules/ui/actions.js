@@ -297,7 +297,7 @@ var SetaeUIActions = (function ($) {
             e.preventDefault();
         }
 
-        if (Math.abs(diffX) > 150) return;
+        if (Math.abs(diffX) > 180) return;
 
         const content = currentSwipeRow.querySelector('.setae-list-content');
         const bgLeft = currentSwipeRow.querySelector('.swipe-left');
@@ -361,8 +361,8 @@ var SetaeUIActions = (function ($) {
 
         let actionConf = null;
 
-        if (diffX > 80) actionConf = config.right_swipe;
-        else if (diffX < -80) actionConf = config.left_swipe;
+        if (diffX > 120) actionConf = config.right_swipe;
+        else if (diffX < -120) actionConf = config.left_swipe;
 
         if (actionConf && actionConf.action && actionConf.action !== 'locked' && actionConf.action !== 'wait') {
             // Using executeSwipeAction
