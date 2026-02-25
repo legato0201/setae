@@ -45,7 +45,12 @@ var SetaeUIActions = (function ($) {
     }
 
     function handleQuickAction(id, action, data = {}) {
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const today = `${year}-${month}-${day}`;
+
         const $row = $(`.setae-spider-list-row[data-id="${id}"]`);
 
         let nextStatus = $row.data('status');
@@ -232,8 +237,7 @@ var SetaeUIActions = (function ($) {
 
             // スワイプ操作完了後、カードを少しモノクロ・半透明にして「お世話済み」を表現
             $content.css({
-                'filter': 'grayscale(80%) opacity(0.65)',
-                'transition': 'filter 0.4s ease-out'
+                'filter': 'grayscale(80%) opacity(1)'
             });
 
             // 2. API送信
