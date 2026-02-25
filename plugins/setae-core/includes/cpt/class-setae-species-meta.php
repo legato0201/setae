@@ -119,6 +119,8 @@ class Setae_Species_Meta
 
                         $is_featured = in_array($img_url, $featured_images);
                         ?>
+                        <input type="hidden" name="setae_rendered_images[]" value="<?php echo esc_attr($img_url); ?>">
+
                         <div
                             style="width:120px; border:1px solid #ddd; padding:5px; background:<?php echo $is_featured ? '#e3f2fd' : '#fff'; ?>">
                             <img src="<?php echo esc_url($img_url); ?>" style="width:100%; height:80px; object-fit:cover;">
@@ -185,19 +187,26 @@ class Setae_Species_Meta
         }
 
         // Featured Images (Array)
-        if (isset($_POST['setae_featured_images'])) {
-            $imgs = array_map('esc_url_raw', $_POST['setae_featured_images']);
-            update_post_meta($post_id, '_setae_featured_images', $imgs);
-        } else {
-            // If strictly needed to clear when unchecked all?
-            // Yes, if checkbox is unchecked, it sends nothing.
-            // But usually hidden input is safer. For now simpler logic: 
-            // If we are in this save block, update it.
-            // CAUTION: If no checkboxes are checked, `setae_featured_images` key won't exist in $_POST.
-            // So we should handle "Reset" if we are sure we are submitting the form.
-            // But for safety (not overwriting with empty if not intended), verify context?
-            // Assuming this save function triggers on full edit screen save.
-            update_post_meta($post_id, '_setae_featured_images', array());
+        if (isset($_POST['setae_rendered_images'])) {
+            // 画面に表示された画像のリスト
+            $rendered_imgs = array_map('esc_url_raw', $_POST['setae_rendered_images']);
+            // チェックされて送信された画像のリスト
+            $submitted_imgs = isset($_POST['setae_featured_images']) ? array_map('esc_url_raw', $_POST['setae_featured_images']) : array();
+
+            // 現在保存されている画像のリストを取得
+            $current_imgs = get_post_meta($post_id, '_setae_featured_images', true);
+            if (!is_array($current_imgs)) {
+                $current_imgs = array();
+            }
+
+            // 画面に表示された画像のうち、チェックが外されたものを現在のリストから削除
+            $current_imgs = array_diff($current_imgs, array_diff($rendered_imgs, $submitted_imgs));
+
+            // 新たにチェックされたものを結合して重複を排除
+            $new_imgs = array_unique(array_merge($current_imgs, $submitted_imgs));
+
+            // インデックスを詰めて保存
+            update_post_meta($post_id, '_setae_featured_images', array_values($new_imgs));
         }
     }
 
