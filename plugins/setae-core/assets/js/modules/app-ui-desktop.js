@@ -59,11 +59,13 @@ var SetaeUIDesktop = (function ($) {
                 bgLeft.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">💧</span>';
             }
 
-            content.style.transform = 'translateX(60px)';
-            bgLeft.style.visibility = 'visible';
-            bgLeft.style.opacity = '1'; // ★追加: 不透明にする
-            bgRight.style.visibility = 'hidden';
-            bgRight.style.opacity = '0'; // ★追加: 透明に戻す
+            // ▼ 修正: インラインスタイルを削除し、クラス付与に変更
+            content.style.transform = 'translateX(60px)'; // ホバー時は少しだけ動かす
+            if (!bgLeft.classList.contains('is-visible')) {
+                bgLeft.classList.add('is-visible');
+                bgRight.classList.remove('is-visible');
+                bgLeft.style.width = '64px';
+            }
         }
         // 右端 (80%以上) -> 左スワイプアクション (Reveal Right BG)
         else if (percent > 0.8) {
@@ -75,19 +77,26 @@ var SetaeUIDesktop = (function ($) {
                 bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴</span>';
             }
 
-            content.style.transform = 'translateX(-60px)';
-            bgLeft.style.visibility = 'hidden';
-            bgLeft.style.opacity = '0'; // ★追加: 透明に戻す
-            bgRight.style.visibility = 'visible';
-            bgRight.style.opacity = '1'; // ★追加: 不透明にする
+            // ▼ 修正: インラインスタイルを削除し、クラス付与に変更
+            content.style.transform = 'translateX(-60px)'; // ホバー時は少しだけ動かす
+            if (!bgRight.classList.contains('is-visible')) {
+                bgRight.classList.add('is-visible');
+                bgLeft.classList.remove('is-visible');
+                bgRight.style.width = '64px';
+            }
         }
         // 中央
         else {
+            // ▼ 修正: インラインスタイルを削除し、クラスを外す処理に変更
             content.style.transform = 'translateX(0)';
-            bgLeft.style.visibility = 'hidden';
-            bgLeft.style.opacity = '0'; // ★追加: 透明に戻す
-            bgRight.style.visibility = 'hidden';
-            bgRight.style.opacity = '0'; // ★追加: 透明に戻す
+            if (bgLeft.classList.contains('is-visible')) {
+                bgLeft.classList.remove('is-visible');
+                bgLeft.style.width = '64px';
+            }
+            if (bgRight.classList.contains('is-visible')) {
+                bgRight.classList.remove('is-visible');
+                bgRight.style.width = '64px';
+            }
         }
     }
 
@@ -95,16 +104,16 @@ var SetaeUIDesktop = (function ($) {
         const content = this.querySelector('.setae-list-content');
         if (content) content.style.transform = 'translateX(0)';
 
-        // ★追加: マウスが離れた時も背景のopacityとvisibilityをリセットして完全に隠す
+        // ▼ 修正: インラインスタイルを削除し、クラスを外す処理に変更
         const bgLeft = this.querySelector('.swipe-left');
         const bgRight = this.querySelector('.swipe-right');
         if (bgLeft) {
-            bgLeft.style.visibility = 'hidden';
-            bgLeft.style.opacity = '0';
+            bgLeft.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
+            bgLeft.style.width = '64px';
         }
         if (bgRight) {
-            bgRight.style.visibility = 'hidden';
-            bgRight.style.opacity = '0';
+            bgRight.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
+            bgRight.style.width = '64px';
         }
     }
 
