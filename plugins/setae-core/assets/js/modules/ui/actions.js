@@ -454,19 +454,21 @@ var SetaeUIActions = (function ($) {
     }
 
     // ==========================================
-    // PC用: ホバー時の玉の出現（ボワッ）
+    // PC用: ホバー時の玉の出現（ボワッ）と伸縮（ニョーン）
     // ==========================================
     function initDesktopHoverLogic() {
         $(document).on('mousemove', '.setae-spider-list-row', function (e) {
             if (currentSwipeRow) return;
+            // ★ アクション実行中（弾けるアニメーション中）はマウスに追従させない
+            if (this.classList.contains('is-action-executing')) return;
+
             const width = $(this).outerWidth();
             const percent = (e.pageX - $(this).offset().left) / width;
             const content = this.querySelector('.setae-list-content');
-
             const bgLeft = this.querySelector('.swipe-left');
             const bgRight = this.querySelector('.swipe-right');
 
-            // ★ PC版：ホバー時に背景色やアイコンを生成する
+            // 背景色やアイコンのセットアップ
             if (bgLeft && !bgLeft.dataset.setup) {
                 const status = $(this).data('status') || 'normal';
                 const config = getSwipeConfig(status);
@@ -475,26 +477,33 @@ var SetaeUIActions = (function ($) {
                 bgLeft.dataset.setup = '1';
                 bgRight.dataset.setup = '1';
 
-                // インラインのvisibilityが残っている場合の対策
-                bgLeft.style.visibility = '';
-                bgRight.style.visibility = '';
+                bgLeft.style.visibility = ''; bgRight.style.visibility = '';
+                bgLeft.style.opacity = ''; bgRight.style.opacity = '';
             }
 
-            if (percent < 0.2) {
-                content.style.transform = 'translateX(20px)';
+            // ★ 端に近づくほど玉が「ニョーン」と伸びる処理
+            if (percent < 0.25) {
+                content.style.transform = 'translateX(80px)';
                 if (bgLeft && !bgLeft.classList.contains('is-visible')) {
-                    bgLeft.classList.add('is-visible'); // ここで透明化を解除して出現させる
+                    bgLeft.classList.add('is-visible');
                     if (bgRight) bgRight.classList.remove('is-visible');
-                    bgLeft.style.width = '64px'; // PC版は伸びずに玉のまま表示する
                 }
-            } else if (percent > 0.8) {
-                content.style.transform = 'translateX(-20px)';
+                // マウスが左端に近いほど幅を広げる（64px 〜 最大100px程度）
+                const stretch = (0.25 - percent) / 0.25; // 0 〜 1
+                if (bgLeft) bgLeft.style.width = (64 + stretch * 36) + 'px';
+
+            } else if (percent > 0.75) {
+                content.style.transform = 'translateX(-80px)';
                 if (bgRight && !bgRight.classList.contains('is-visible')) {
-                    bgRight.classList.add('is-visible'); // ここで透明化を解除して出現させる
+                    bgRight.classList.add('is-visible');
                     if (bgLeft) bgLeft.classList.remove('is-visible');
-                    bgRight.style.width = '64px';
                 }
+                // マウスが右端に近いほど幅を広げる
+                const stretch = (percent - 0.75) / 0.25; // 0 〜 1
+                if (bgRight) bgRight.style.width = (64 + stretch * 36) + 'px';
+
             } else {
+                // 中央付近はリセット
                 content.style.transform = 'translateX(0)';
                 if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
                 if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
@@ -502,11 +511,12 @@ var SetaeUIActions = (function ($) {
         });
 
         $(document).on('mouseleave', '.setae-spider-list-row', function () {
+            if (this.classList.contains('is-action-executing')) return;
+
             const content = this.querySelector('.setae-list-content');
             if (content) content.style.transform = 'translateX(0)';
             const bgLeft = this.querySelector('.swipe-left');
             const bgRight = this.querySelector('.swipe-right');
-            // マウスが離れたら玉を消す
             if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
             if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
         });
@@ -516,55 +526,67 @@ var SetaeUIActions = (function ($) {
     // PC用: クリック実行時の弾けるアクション（パチン）
     // ==========================================
     function animateDesktopAction($card, direction, actionConfig, $row) {
-        // 対象の玉を取得
-        const swipeBg = (direction === 'right') ? $row[0].querySelector('.swipe-left') : $row[0].querySelector('.swipe-right');
+        const rowEl = $row[0];
+        rowEl.classList.add('is-action-executing'); // ホバーによる伸縮を一時ロック
 
-        // 弾ける水しぶきアニメーションのクラスを付与
-        if (swipeBg) swipeBg.classList.add('swipe-triggered');
+        const swipeBg = (direction === 'right') ? rowEl.querySelector('.swipe-left') : rowEl.querySelector('.swipe-right');
 
-        // アニメーション（300ms）を見せてからアクションを実行
-        setTimeout(() => {
-            executeSwipeAction($row[0], actionConfig, direction);
+        if (swipeBg) {
+            // 1. ニョーンと伸びた状態から一瞬で丸い玉に戻る
+            swipeBg.style.width = '64px';
+            swipeBg.classList.add('is-resetting');
 
-            // カードを元の位置に戻し、状態をリセット
+            // 2. 玉に戻った直後(150ms後)に、パチンと弾ける
             setTimeout(() => {
-                $card.css('transform', 'translateX(0)');
-                if (swipeBg) swipeBg.classList.remove('is-visible', 'swipe-triggered');
-                $row.data('rendered-status', null);
-                $row.find('.swipe-left, .swipe-right').removeAttr('data-setup'); // 色とアイコンのリセット
-            }, 300);
-        }, 300);
+                swipeBg.classList.remove('is-resetting');
+
+                // ★ 必須：ブラウザの描画を強制リセット（これがないとアニメーションがスキップされる事がある）
+                void swipeBg.offsetWidth;
+
+                swipeBg.classList.add('swipe-triggered');
+
+                // 3. 弾けるアニメーション(300ms)を見せてからアクション実行
+                setTimeout(() => {
+                    executeSwipeAction(rowEl, actionConfig, direction);
+
+                    // 4. 実行後、カードを定位置に戻し、状態を完全リセット
+                    setTimeout(() => {
+                        $card.css('transform', 'translateX(0)');
+                        swipeBg.classList.remove('is-visible', 'swipe-triggered');
+                        $row.data('rendered-status', null);
+                        $row.find('.swipe-left, .swipe-right').removeAttr('data-setup');
+                        rowEl.classList.remove('is-action-executing'); // ロック解除
+                    }, 300);
+                }, 300);
+            }, 150);
+        } else {
+            // フェールセーフ（背景がない場合）
+            executeSwipeAction(rowEl, actionConfig, direction);
+            $card.css('transform', 'translateX(0)');
+            rowEl.classList.remove('is-action-executing');
+        }
     }
 
+    // ==========================================
+    // PC用: クリックの検知
+    // ==========================================
     function initDesktopClickLogic() {
-        // スマホやタブレットでも誤作動する環境があるため、以前の判定を削除
-        // if ('ontouchstart' in window) return;
-
         $(document).on('click', '.setae-spider-list-row', function (e) {
-            // ▼▼▼ 追加: 操作元が「タッチ（スマホ等）」の場合はこの処理をスキップし、詳細画面を開く処理へ任せる ▼▼▼
-            if (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen')) {
-                return;
-            }
-
-            // ▼▼▼ ここから追加: iOS Safariなど pointerType が判定できないタッチデバイス向けの対策 ▼▼▼
-            if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
-                return;
-            }
-            // ▲▲▲ 追加ここまで ▲▲▲
+            if (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen')) return;
+            if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
 
             const $row = $(this);
-            const $card = $row.find('.setae-list-content');
+            // アクション実行中は二重クリック防止
+            if ($row[0].classList.contains('is-action-executing')) return;
 
+            const $card = $row.find('.setae-list-content');
             const width = $row.outerWidth();
-            const x = e.pageX - $row.offset().left;
-            const percent = x / width;
+            const percent = (e.pageX - $row.offset().left) / width;
 
             let direction = null;
-            if (percent < 0.20) {
-                direction = 'right';
-            } else if (percent > 0.80) {
-                direction = 'left';
-            }
+            // ★ ホバー領域とクリック判定領域を一致させる（0.25）
+            if (percent < 0.25) direction = 'right';
+            else if (percent > 0.75) direction = 'left';
 
             if (direction) {
                 e.preventDefault();
@@ -572,7 +594,6 @@ var SetaeUIActions = (function ($) {
 
                 const status = $row.attr('data-status') || 'normal';
                 const config = getSwipeConfig(status);
-
                 const actionConfig = (direction === 'right') ? config.right_swipe : config.left_swipe;
 
                 if (actionConfig && actionConfig.action && actionConfig.action !== 'locked' && actionConfig.action !== 'wait') {
