@@ -47,6 +47,21 @@ class Setae_Admin_Users
                     </span>
                 </td>
             </tr>
+            // --- ここから追加 ---
+            <tr>
+                <th><label>最終ログイン</label></th>
+                <td>
+                    <?php
+                    $last_login = get_user_meta($user->ID, '_setae_last_login', true);
+                    if ($last_login) {
+                        echo wp_date('Y年m月d日 H:i:s', $last_login);
+                    } else {
+                        echo '<span style="color:#777;">記録なし</span>';
+                    }
+                    ?>
+                </td>
+            </tr>
+            // --- ここまで追加 ---
         </table>
         <?php
     }
@@ -68,4 +83,49 @@ class Setae_Admin_Users
             update_user_meta($user_id, '_setae_premium_cancel_at', sanitize_text_field($_POST['_setae_premium_cancel_at']));
         }
     }
+
+    // --- ここから追加 ---
+    /**
+     * ログイン時に最終ログイン日時を記録する
+     *
+     * @param string $user_login
+     * @param WP_User $user
+     */
+    public function record_last_login($user_login, $user)
+    {
+        update_user_meta($user->ID, '_setae_last_login', current_time('timestamp'));
+    }
+
+    /**
+     * ユーザー一覧画面に最終ログインカラムを追加する
+     *
+     * @param array $columns
+     * @return array
+     */
+    public function add_last_login_column($columns)
+    {
+        $columns['setae_last_login'] = '最終ログイン';
+        return $columns;
+    }
+
+    /**
+     * ユーザー一覧画面の最終ログインカラムに値を表示する
+     *
+     * @param string $value
+     * @param string $column_name
+     * @param int $user_id
+     * @return string
+     */
+    public function show_last_login_column($value, $column_name, $user_id)
+    {
+        if ('setae_last_login' === $column_name) {
+            $last_login = get_user_meta($user_id, '_setae_last_login', true);
+            if ($last_login) {
+                return wp_date('Y/m/d H:i:s', $last_login);
+            }
+            return '<span style="color:#777;">記録なし</span>';
+        }
+        return $value;
+    }
+    // --- ここまで追加 ---
 }

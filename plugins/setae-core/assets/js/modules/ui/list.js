@@ -93,7 +93,7 @@ var SetaeUIList = (function ($) {
         updateDeckCounts();
 
         if (spiders.length === 0) {
-            container.html('<div class="setae-card" style="text-align:center; padding:40px;"><p style="color:#999;">該当なし</p></div>');
+            container.html('<div class="setae-card" style="text-align:center; padding:40px; margin-top: 12px;"><p style="color:#999;">該当なし</p></div>');
             return;
         }
 

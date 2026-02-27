@@ -105,6 +105,16 @@ class Setae_Core
         $this->loader->add_action('personal_options_update', $admin_users, 'save_custom_user_profile_fields');
         $this->loader->add_action('edit_user_profile_update', $admin_users, 'save_custom_user_profile_fields');
 
+        // ログイン日時の記録
+        $this->loader->add_action('wp_login', $admin_users, 'record_last_login', 10, 2);
+
+        // ユーザー一覧へのカラム追加
+        $this->loader->add_filter('manage_users_columns', $admin_users, 'add_last_login_column');
+
+        // ユーザー一覧のカラム内容表示
+        $this->loader->add_filter('manage_users_custom_column', $admin_users, 'show_last_login_column', 10, 3);
+
+
         // ▼ 追加: 管理画面アクセス制限のフックを登録
         $this->loader->add_action('admin_init', $this, 'restrict_admin_access');
 

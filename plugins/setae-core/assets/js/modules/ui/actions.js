@@ -186,10 +186,21 @@ var SetaeUIActions = (function ($) {
                 if (window.SetaeUILogModal) SetaeUILogModal.openLogModal(id, 'molt');
             }
         } else {
+            // 個体データを取得（Refused判定などでも使い回すため外に出す）
+            const spider = SetaeCore.state.cachedSpiders ? SetaeCore.state.cachedSpiders.find(s => s.id == id) : null;
+
+            // ▼ 追加：給餌アクションで過去ログ（last_feed）がない場合はモーダルを開いて処理を中断
+            if ((actionType === 'feed' || actionType === 'ate') && spider && !spider.last_feed) {
+                if (window.SetaeUILogModal) SetaeUILogModal.openLogModal(id, 'feed');
+
+                // UIのスワイプ状態をリセット
+                $content.css('transform', 'translateX(0)');
+                $row.find('.swipe-left, .swipe-right').removeClass('is-visible swipe-triggered is-resetting').css('width', '64px');
+                return;
+            }
+
             // Validation for Refused action
             if (actionType === 'refused') {
-                const spider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
-
                 // 1. Log existence check
                 if (!spider || !spider.last_feed) {
                     SetaeCore.showToast('給餌記録がありません', 'error');
