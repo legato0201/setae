@@ -67,13 +67,10 @@
     border-radius: 40px !important;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: transparent;
-
-    /* ★必須：完全透明状態を追加（これがないとポワッと出ません） */
     opacity: 0;
     visibility: hidden;
-
-    /* ★必須：JSのマウス追従と競合するため、widthのtransitionを削除 */
-    transition: opacity 0.2s, visibility 0.2s, transform 0.2s ease-out;
+    /* 幅と透明度を滑らかに変化させる */
+    transition: width 0.1s ease-out, opacity 0.2s, visibility 0.2s;
 }
 
 /* クラス付与時のみ表示（1回のスワイプで1度だけアニメーション） */
