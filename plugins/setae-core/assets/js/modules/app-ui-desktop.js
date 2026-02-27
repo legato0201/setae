@@ -61,7 +61,9 @@ var SetaeUIDesktop = (function ($) {
 
             content.style.transform = 'translateX(60px)';
             bgLeft.style.visibility = 'visible';
+            bgLeft.style.opacity = '1'; // ★追加: 不透明にする
             bgRight.style.visibility = 'hidden';
+            bgRight.style.opacity = '0'; // ★追加: 透明に戻す
         }
         // 右端 (80%以上) -> 左スワイプアクション (Reveal Right BG)
         else if (percent > 0.8) {
@@ -75,19 +77,35 @@ var SetaeUIDesktop = (function ($) {
 
             content.style.transform = 'translateX(-60px)';
             bgLeft.style.visibility = 'hidden';
+            bgLeft.style.opacity = '0'; // ★追加: 透明に戻す
             bgRight.style.visibility = 'visible';
+            bgRight.style.opacity = '1'; // ★追加: 不透明にする
         }
         // 中央
         else {
             content.style.transform = 'translateX(0)';
             bgLeft.style.visibility = 'hidden';
+            bgLeft.style.opacity = '0'; // ★追加: 透明に戻す
             bgRight.style.visibility = 'hidden';
+            bgRight.style.opacity = '0'; // ★追加: 透明に戻す
         }
     }
 
     function handleMouseLeave() {
         const content = this.querySelector('.setae-list-content');
         if (content) content.style.transform = 'translateX(0)';
+
+        // ★追加: マウスが離れた時も背景のopacityとvisibilityをリセットして完全に隠す
+        const bgLeft = this.querySelector('.swipe-left');
+        const bgRight = this.querySelector('.swipe-right');
+        if (bgLeft) {
+            bgLeft.style.visibility = 'hidden';
+            bgLeft.style.opacity = '0';
+        }
+        if (bgRight) {
+            bgRight.style.visibility = 'hidden';
+            bgRight.style.opacity = '0';
+        }
     }
 
     function handleClick(e) {
