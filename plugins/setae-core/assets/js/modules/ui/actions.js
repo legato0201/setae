@@ -272,8 +272,11 @@ var SetaeUIActions = (function ($) {
         const bgRight = this.querySelector('.swipe-right');
         if (!bgLeft || !bgRight) return;
 
-        bgLeft.style.visibility = 'hidden';
-        bgRight.style.visibility = 'hidden';
+        // visibilityの直接操作をやめ、状態クラスを外して幅を初期化
+        bgLeft.classList.remove('is-visible', 'swipe-triggered');
+        bgRight.classList.remove('is-visible', 'swipe-triggered');
+        bgLeft.style.width = '64px';
+        bgRight.style.width = '64px';
 
         const status = $(this).data('status') || 'normal';
         const config = getSwipeConfig(status);
@@ -320,10 +323,17 @@ var SetaeUIActions = (function ($) {
 
         if (status === 'pre_molt' && diffX < 0) return;
 
+        const dampFactor = 0.5; // 値を小さくするほど重く感じます
+        const moveX = diffX * dampFactor;
+        content.style.transform = `translateX(${moveX}px)`;
+
+        // スワイプ移動量に応じて幅を動的に「ビヨーン」と広げる
         if (diffX > 0) {
-            // Left Swipe Visuals (Reveals Left BG)
-            bgLeft.style.visibility = 'visible';
-            bgRight.style.visibility = 'hidden';
+            if (!bgLeft.classList.contains('is-visible')) {
+                bgLeft.classList.add('is-visible');
+                bgRight.classList.remove('is-visible');
+            }
+            bgLeft.style.width = Math.max(64, Math.abs(moveX) + 20) + 'px';
 
             // Check classification dynamically
             let isPlant = false;
@@ -341,9 +351,11 @@ var SetaeUIActions = (function ($) {
             }
 
         } else if (diffX < 0) {
-            // Right Swipe Visuals (Reveals Right BG)
-            bgLeft.style.visibility = 'hidden';
-            bgRight.style.visibility = 'visible';
+            if (!bgRight.classList.contains('is-visible')) {
+                bgRight.classList.add('is-visible');
+                bgLeft.classList.remove('is-visible');
+            }
+            bgRight.style.width = Math.max(64, Math.abs(moveX) + 20) + 'px';
 
             let isPlant = false;
             const id = $(currentSwipeRow).data('id');
@@ -359,10 +371,6 @@ var SetaeUIActions = (function ($) {
                 bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴</span>';
             }
         }
-
-        const dampFactor = 0.5; // 値を小さくするほど重く感じます
-        const moveX = diffX * dampFactor;
-        content.style.transform = `translateX(${moveX}px)`;
     }
 
     function handleTouchEnd(e) {
@@ -399,8 +407,15 @@ var SetaeUIActions = (function ($) {
                     content.style.transition = '';
                     const bgLeft = row.querySelector('.swipe-left');
                     const bgRight = row.querySelector('.swipe-right');
-                    if (bgLeft) { bgLeft.style.visibility = 'hidden'; bgLeft.classList.remove('swipe-triggered'); }
-                    if (bgRight) { bgRight.style.visibility = 'hidden'; bgRight.classList.remove('swipe-triggered'); }
+                    // visibilityではなくクラスでリセットし、幅を戻す
+                    if (bgLeft) {
+                        bgLeft.classList.remove('is-visible', 'swipe-triggered');
+                        bgLeft.style.width = '64px';
+                    }
+                    if (bgRight) {
+                        bgRight.classList.remove('is-visible', 'swipe-triggered');
+                        bgRight.style.width = '64px';
+                    }
 
                     currentSwipeRow = null;
                     setTimeout(() => isSwipeActionTaken = false, 300);
@@ -415,8 +430,15 @@ var SetaeUIActions = (function ($) {
                 content.style.transition = '';
                 const bgLeft = row.querySelector('.swipe-left');
                 const bgRight = row.querySelector('.swipe-right');
-                if (bgLeft) bgLeft.style.visibility = 'hidden';
-                if (bgRight) bgRight.style.visibility = 'hidden';
+                // visibilityではなくクラスでリセットし、幅を戻す
+                if (bgLeft) {
+                    bgLeft.classList.remove('is-visible', 'swipe-triggered');
+                    bgLeft.style.width = '64px';
+                }
+                if (bgRight) {
+                    bgRight.classList.remove('is-visible', 'swipe-triggered');
+                    bgRight.style.width = '64px';
+                }
 
                 currentSwipeRow = null;
                 setTimeout(() => isSwipeActionTaken = false, 300);
@@ -431,9 +453,28 @@ var SetaeUIActions = (function ($) {
             const percent = (e.pageX - $(this).offset().left) / width;
             const content = this.querySelector('.setae-list-content');
 
-            if (percent < 0.2) content.style.transform = 'translateX(20px)';
-            else if (percent > 0.8) content.style.transform = 'translateX(-20px)';
-            else content.style.transform = 'translateX(0)';
+            const bgLeft = this.querySelector('.swipe-left');
+            const bgRight = this.querySelector('.swipe-right');
+
+            if (percent < 0.2) {
+                content.style.transform = 'translateX(20px)';
+                if (bgLeft && !bgLeft.classList.contains('is-visible')) {
+                    bgLeft.classList.add('is-visible');
+                    if (bgRight) bgRight.classList.remove('is-visible');
+                    bgLeft.style.width = '84px'; // PC版は固定の伸び量
+                }
+            } else if (percent > 0.8) {
+                content.style.transform = 'translateX(-20px)';
+                if (bgRight && !bgRight.classList.contains('is-visible')) {
+                    bgRight.classList.add('is-visible');
+                    if (bgLeft) bgLeft.classList.remove('is-visible');
+                    bgRight.style.width = '84px';
+                }
+            } else {
+                content.style.transform = 'translateX(0)';
+                if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
+                if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
+            }
         });
 
         $(document).on('mouseleave', '.setae-spider-list-row', function () {
