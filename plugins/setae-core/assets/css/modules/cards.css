@@ -49,36 +49,124 @@
     background-color: #f9f9f9;
 }
 
-/* 3. スワイプ背景 (裏側) */
+/* 3. スワイプ背景 (裏側) - ポワッ・ビヨーン・パチン エフェクト対応 */
 .setae-swipe-bg {
     position: absolute;
-    top: 0;
-    bottom: 0;
+    /* カードより少し小さく浮いた玉(カプセル)にする */
+    top: 8px !important;
+    bottom: 8px !important;
     width: 100%;
-    height: 100%;
+    height: auto !important;
     z-index: 1;
-    /* カードの下 */
     display: flex;
     align-items: center;
-    padding: 0 24px;
     font-size: 24px;
     color: white;
     box-sizing: border-box;
-    border-radius: 16px;
-    /* カードと同じ角丸 */
+    border-radius: 40px !important;
+    /* 丸いカプセル型 */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: transparent;
-    /* JSで色が乗るまで透明 */
     visibility: hidden;
+    /* スワイプに合わせて幅が広がる際の弾力（ビヨーン） */
+    transition: width 0.15s cubic-bezier(0.4, 0.0, 0.2, 1), transform 0.2s ease-out;
 }
 
 .setae-swipe-bg.swipe-left {
     justify-content: flex-start;
-    left: 0;
+    left: 10px !important;
+    padding-left: 20px;
 }
 
 .setae-swipe-bg.swipe-right {
     justify-content: flex-end;
-    right: 0;
+    right: 10px !important;
+    padding-right: 20px;
+}
+
+/* アイコンがポワッと出現するアニメーション */
+.setae-swipe-bg .swipe-icon {
+    display: inline-block;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    animation: popBubbleIcon 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popBubbleIcon {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* パチンと弾けて水が飛び散るスプラッシュエフェクト */
+.setae-swipe-bg.swipe-triggered {
+    animation: burstBubble 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+
+.setae-swipe-bg.swipe-triggered::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow:
+        20px -25px 0 -1px rgba(255, 255, 255, 0.9),
+        35px 0px 0 1px rgba(255, 255, 255, 0.6),
+        15px 25px 0 -2px rgba(255, 255, 255, 0.8),
+        -20px -20px 0 0px rgba(255, 255, 255, 0.9),
+        -35px 10px 0 -1px rgba(255, 255, 255, 0.6),
+        -10px 30px 0 -1px rgba(255, 255, 255, 0.8);
+    animation: splashWater 0.4s ease-out forwards;
+}
+
+.swipe-left.swipe-triggered::after {
+    left: 30px;
+}
+
+.swipe-right.swipe-triggered::after {
+    right: 30px;
+}
+
+@keyframes burstBubble {
+    0% {
+        transform: scaleX(1) scaleY(1);
+        opacity: 1;
+    }
+
+    40% {
+        transform: scaleX(1.3) scaleY(0.8);
+        opacity: 0.9;
+    }
+
+    /* 平たく伸びる */
+    100% {
+        transform: scaleX(0) scaleY(0);
+        opacity: 0;
+    }
+}
+
+@keyframes splashWater {
+    0% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-50%) scale(2.5);
+        opacity: 0;
+    }
 }
 
 /* 4. 各パーツのデザイン */

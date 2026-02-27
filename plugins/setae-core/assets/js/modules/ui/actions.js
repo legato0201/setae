@@ -214,7 +214,11 @@ var SetaeUIActions = (function ($) {
             $row.attr('data-status', newStatus);
             $row[0].dataset.status = newStatus;
             $content.attr('data-status', newStatus);
-            $row.find('.setae-swipe-bg').removeAttr('style').html('');
+
+            // アニメーションの残像を消すため、少し遅延させてからインナーHTMLをクリア
+            setTimeout(() => {
+                $row.find('.setae-swipe-bg').removeAttr('style').html('').removeClass('swipe-triggered');
+            }, 100);
 
             const $pipeline = $row.find('.setae-pipeline');
             if ($pipeline.length) {
@@ -374,27 +378,50 @@ var SetaeUIActions = (function ($) {
         if (diffX > 120) actionConf = config.right_swipe;
         else if (diffX < -120) actionConf = config.left_swipe;
 
-        if (actionConf && actionConf.action && actionConf.action !== 'locked' && actionConf.action !== 'wait') {
-            // Using executeSwipeAction
-            // Pass direction for potential plant logic
-            const dir = (diffX > 80) ? 'right' : 'left';
-            executeSwipeAction(row, actionConf, dir);
-            isSwipeActionTaken = true;
+        let swipeBg = null;
+        if (diffX > 120) swipeBg = row.querySelector('.swipe-left');
+        else if (diffX < -120) swipeBg = row.querySelector('.swipe-right');
+
+        if (actionConf && actionConf.action && actionConf.action !== 'locked' && actionConf.action !== 'wait' && swipeBg) {
+            // 弾けるアニメーションを発動
+            swipeBg.classList.add('swipe-triggered');
+
+            // パチンと弾けるアニメーション(約300ms)の直後にアクションを実行
+            setTimeout(() => {
+                const dir = (diffX > 80) ? 'right' : 'left';
+                executeSwipeAction(row, actionConf, dir);
+                isSwipeActionTaken = true;
+
+                content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+                content.style.transform = 'translateX(0)';
+
+                setTimeout(() => {
+                    content.style.transition = '';
+                    const bgLeft = row.querySelector('.swipe-left');
+                    const bgRight = row.querySelector('.swipe-right');
+                    if (bgLeft) { bgLeft.style.visibility = 'hidden'; bgLeft.classList.remove('swipe-triggered'); }
+                    if (bgRight) { bgRight.style.visibility = 'hidden'; bgRight.classList.remove('swipe-triggered'); }
+
+                    currentSwipeRow = null;
+                    setTimeout(() => isSwipeActionTaken = false, 300);
+                }, 400);
+            }, 300);
+        } else {
+            // アクション不発時：元に戻るだけ
+            content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            content.style.transform = 'translateX(0)';
+
+            setTimeout(() => {
+                content.style.transition = '';
+                const bgLeft = row.querySelector('.swipe-left');
+                const bgRight = row.querySelector('.swipe-right');
+                if (bgLeft) bgLeft.style.visibility = 'hidden';
+                if (bgRight) bgRight.style.visibility = 'hidden';
+
+                currentSwipeRow = null;
+                setTimeout(() => isSwipeActionTaken = false, 300);
+            }, 400);
         }
-
-        content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-        content.style.transform = 'translateX(0)';
-
-        setTimeout(() => {
-            content.style.transition = '';
-            const bgLeft = row.querySelector('.swipe-left');
-            const bgRight = row.querySelector('.swipe-right');
-            if (bgLeft) bgLeft.style.visibility = 'hidden';
-            if (bgRight) bgRight.style.visibility = 'hidden';
-
-            currentSwipeRow = null;
-            setTimeout(() => isSwipeActionTaken = false, 300);
-        }, 400);
     }
 
     function initDesktopHoverLogic() {
