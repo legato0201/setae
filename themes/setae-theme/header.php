@@ -15,6 +15,8 @@
 
     <link rel="apple-touch-icon" href="<?php echo get_template_directory_uri(); ?>/images/apple-touch-icon.png">
 
+    <link rel="apple-touch-startup-image" href="<?php echo get_template_directory_uri(); ?>/images/splash.png">
+    <link rel="manifest" href="<?php echo get_template_directory_uri(); ?>/manifest.json">
     <link rel="icon" href="<?php echo get_template_directory_uri(); ?>/images/favicon.ico">
     <title>
         <?php wp_title('|', true, 'right'); ?>
@@ -23,3 +25,22 @@
 </head>
 
 <body <?php body_class(); ?>>
+
+    <div id="setae-preloader">
+        <div class="setae-spinner"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // ページ内の画像等すべてのリソースが読み込まれた後に発火
+            window.addEventListener('load', function () {
+                const preloader = document.getElementById('setae-preloader');
+                if (preloader) {
+                    // フェードアウトのトランジションをより自然に見せるための微小ディレイ
+                    setTimeout(function () {
+                        preloader.classList.add('is-loaded');
+                    }, 300);
+                }
+            });
+        });
+    </script>

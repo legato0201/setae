@@ -262,3 +262,41 @@ Text Domain: setae-theme
     color: #004d40;
     font-weight: bold;
 }
+
+/* ==========================================================================
+   Preloader (PWA Splash Screen Fallback)
+   ========================================================================== */
+#setae-preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #f5f7fa;
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+#setae-preloader.is-loaded {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.setae-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #3b82f6;
+    /* アプリのメインカラーに合わせて調整 */
+    border-radius: 50%;
+    animation: setae-spin 1s linear infinite;
+}
+
+@keyframes setae-spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
