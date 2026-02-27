@@ -74,22 +74,27 @@
 }
 
 /* クラス付与時のみ表示し、背景の円形ごとボワッと出現させる */
+
 .setae-swipe-bg.is-visible {
-    opacity: 1;
+    /* opacity: 1; は削除（アニメーション側に任せる） */
     visibility: visible;
-    /* ▼ 追加: 背景全体をボワッとさせるアニメーション */
+    /* ▼ 追加: 元クラスの transition と競合しないよう無効化 */
+    transition: none;
+    /* 背景全体をボワッとさせるアニメーション */
     animation: popBubbleBg 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 /* ▼ 追加: 背景用のキーフレームアニメーション */
+/* ▼ 修正: 背景用のキーフレームアニメーション */
 @keyframes popBubbleBg {
     0% {
-        transform: scale(0.5);
-        opacity: 0;
+        /* 完全な0からスタートし、最初から不透明にするのがポイント */
+        transform: scale(0);
+        opacity: 1;
     }
 
     60% {
-        transform: scale(1.1);
+        transform: scale(1.2);
         opacity: 1;
     }
 
