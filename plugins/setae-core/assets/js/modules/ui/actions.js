@@ -241,7 +241,7 @@ var SetaeUIActions = (function ($) {
 
             // スワイプ操作完了後、カードを少しモノクロ・半透明にして「お世話済み」を表現
             $content.css({
-                'filter': 'grayscale(80%) opacity(1)'
+                'filter': 'grayscale(90%) opacity(1)'
             });
 
             // 2. API送信

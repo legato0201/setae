@@ -60,7 +60,7 @@ var SetaeUIDesktop = (function ($) {
             }
 
             // ▼ 修正: インラインスタイルを削除し、クラス付与に変更
-            content.style.transform = 'translateX(60px)'; // ホバー時は少しだけ動かす
+            content.style.transform = 'translateX(80px)'; // ホバー時は少しだけ動かす
             if (!bgLeft.classList.contains('is-visible')) {
                 bgLeft.classList.add('is-visible');
                 bgRight.classList.remove('is-visible');
@@ -78,7 +78,7 @@ var SetaeUIDesktop = (function ($) {
             }
 
             // ▼ 修正: インラインスタイルを削除し、クラス付与に変更
-            content.style.transform = 'translateX(-60px)'; // ホバー時は少しだけ動かす
+            content.style.transform = 'translateX(-80px)'; // ホバー時は少しだけ動かす
             if (!bgRight.classList.contains('is-visible')) {
                 bgRight.classList.add('is-visible');
                 bgLeft.classList.remove('is-visible');
@@ -121,11 +121,10 @@ var SetaeUIDesktop = (function ($) {
         // ボタン類をクリックした場合は発火させない
         if ($(e.target).closest('button, .setae-btn').length) return;
 
-        // ▼▼▼ 修正: タッチ操作（スマホ・タブレット等）をより強力にブロックする ▼▼▼
+        // タッチ操作（スマホ・タブレット等）を強力にブロック
         if (isTouch || ('ontouchstart' in window) || navigator.maxTouchPoints > 0) {
             return;
         }
-        // ▲▲▲ 修正ここまで ▲▲▲
 
         const $row = $(this);
         const width = $row.outerWidth();
@@ -139,11 +138,11 @@ var SetaeUIDesktop = (function ($) {
         const config = (window.SetaeUIActions) ? SetaeUIActions.getSwipeConfig(status) : getSwipeConfigFallback(status);
 
         if (percent < 0.2) {
-            // Clicked Left Area -> Simulates Swipe Right (Reveal Left BG)
+            // 左側クリック -> 右スワイプアクション
             actionConfig = config.right_swipe;
             direction = 'right';
         } else if (percent > 0.8) {
-            // Clicked Right Area -> Simulates Swipe Left (Reveal Right BG)
+            // 右側クリック -> 左スワイプアクション
             actionConfig = config.left_swipe;
             direction = 'left';
         }
@@ -152,29 +151,53 @@ var SetaeUIDesktop = (function ($) {
             e.preventDefault();
             e.stopImmediatePropagation();
 
-            // アニメーション演出
             const $content = $row.find('.setae-list-content');
-            const moveVal = (direction === 'right') ? '100px' : '-100px';
+            const moveVal = (direction === 'right') ? '140px' : '-140px';
+            const bgTarget = (direction === 'right') ? this.querySelector('.swipe-left') : this.querySelector('.swipe-right');
 
-            $content.css('transition', 'transform 0.2s ease-out').css('transform', `translateX(${moveVal})`);
+            // 1. カードを大きく動かし、背景の玉を横に「ビヨン」と伸ばす
+            $content.css({
+                'transition': 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
+                'transform': `translateX(${moveVal})`
+            });
 
+            if (bgTarget) {
+                bgTarget.style.transition = 'width 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+                bgTarget.style.width = '120px'; // 横に伸ばす
+            }
+
+            // 2. 伸びきった後、玉が元の丸にスッと戻る
             setTimeout(() => {
-                // グローバルの executeSwipeAction を呼ぶ
-                // ★修正点: direction を第三引数に渡す
-                if (window.SetaeUIActions && SetaeUIActions.executeSwipeAction) {
-                    SetaeUIActions.executeSwipeAction(this, actionConfig, direction);
-                } else if (window.executeSwipeAction) {
-                    executeSwipeAction(this, actionConfig, direction);
-                } else if (window.handleQuickAction) {
-                    // フォールバック (植物対応なし)
-                    window.handleQuickAction($row.data('id'), actionConfig.action, {});
+                if (bgTarget) {
+                    bgTarget.classList.add('is-resetting'); // 縮むための素早いtransitionクラス（CSSに定義済み）
+                    bgTarget.style.width = '64px';
                 }
 
-                // 戻す
+                // 3. 丸に戻った直後に「パチン」と弾けてアクション実行
                 setTimeout(() => {
-                    $content.css('transform', 'translateX(0)');
-                }, 200);
-            }, 100);
+                    if (bgTarget) {
+                        bgTarget.classList.remove('is-resetting');
+                        bgTarget.classList.add('swipe-triggered'); // 水しぶきエフェクト
+                    }
+
+                    // グローバルのアクションを実行
+                    if (window.SetaeUIActions && SetaeUIActions.executeSwipeAction) {
+                        SetaeUIActions.executeSwipeAction(this, actionConfig, direction);
+                    } else if (window.executeSwipeAction) {
+                        executeSwipeAction(this, actionConfig, direction);
+                    } else if (window.handleQuickAction) {
+                        window.handleQuickAction($row.data('id'), actionConfig.action, {});
+                    }
+
+                    // 4. アクション実行後、少し待ってから全体を元の位置にリセット
+                    setTimeout(() => {
+                        $content.css('transform', 'translateX(0)');
+                        if (bgTarget) {
+                            bgTarget.classList.remove('is-visible', 'swipe-triggered');
+                        }
+                    }, 300); // 弾けるエフェクトを見せるための待機時間
+                }, 150); // 玉が丸に戻るまでの時間
+            }, 200); // ビヨンと伸びるまでの時間
         }
     }
 

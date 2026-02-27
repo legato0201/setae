@@ -73,10 +73,30 @@
     transition: width 0.1s ease-out, opacity 0.2s, visibility 0.2s;
 }
 
-/* クラス付与時のみ表示（1回のスワイプで1度だけアニメーション） */
+/* クラス付与時のみ表示し、背景の円形ごとボワッと出現させる */
 .setae-swipe-bg.is-visible {
     opacity: 1;
     visibility: visible;
+    /* ▼ 追加: 背景全体をボワッとさせるアニメーション */
+    animation: popBubbleBg 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ▼ 追加: 背景用のキーフレームアニメーション */
+@keyframes popBubbleBg {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .setae-swipe-bg.swipe-left {
@@ -97,28 +117,11 @@
     transition: width 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
-/* アイコンがボワッと出現するアニメーション */
+/* ▼ 修正: アイコン側のアニメーションを削除し、影だけを残す */
 .setae-swipe-bg.is-visible .swipe-icon {
     display: inline-block;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
-    animation: popBubbleIcon 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes popBubbleIcon {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-
-    60% {
-        transform: scale(1.3);
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    /* animation: popBubbleIcon ... は削除 */
 }
 
 /* パチンと弾けて水が飛び散るスプラッシュエフェクト */
