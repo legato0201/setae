@@ -49,15 +49,16 @@
     background-color: #f9f9f9;
 }
 
-/* 3. スワイプ背景 (裏側) - ポワッ・ビヨーン・パチン エフェクト対応 */
+/* 3. スワイプ背景 (裏側) - ポワッ・ニョーン・パチン エフェクト対応 */
 .setae-swipe-bg {
     position: absolute;
     top: 8px !important;
     bottom: 8px !important;
     width: 64px;
-    /* 初期状態はきれいな丸い玉にする */
+    /* 初期状態はきれいな丸い玉 */
     height: auto !important;
     z-index: 1;
+    /* リスト本体より下（独立した玉） */
     display: flex;
     align-items: center;
     font-size: 24px;
@@ -68,11 +69,11 @@
     background-color: transparent;
     opacity: 0;
     visibility: hidden;
-    /* JSで幅を操作するため、widthのtransitionは外す */
-    transition: transform 0.2s ease-out, opacity 0.2s;
+    /* 幅と透明度を滑らかに変化させる */
+    transition: width 0.1s ease-out, opacity 0.2s, visibility 0.2s;
 }
 
-/* クラス付与時のみ表示（何度もアニメーションが走るのを防ぐ） */
+/* クラス付与時のみ表示（1回のスワイプで1度だけアニメーション） */
 .setae-swipe-bg.is-visible {
     opacity: 1;
     visibility: visible;
@@ -82,17 +83,21 @@
     justify-content: flex-start;
     left: 10px !important;
     padding-left: 20px;
-    transform-origin: left center;
 }
 
 .setae-swipe-bg.swipe-right {
     justify-content: flex-end;
     right: 10px !important;
     padding-right: 20px;
-    transform-origin: right center;
 }
 
-/* アイコンがポワッと出現するアニメーション */
+/* ★アクション確定時：一瞬で丸い玉に戻るためのクラス */
+.setae-swipe-bg.is-resetting {
+    width: 64px !important;
+    transition: width 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* アイコンがボワッと出現するアニメーション */
 .setae-swipe-bg.is-visible .swipe-icon {
     display: inline-block;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
@@ -118,10 +123,11 @@
 
 /* パチンと弾けて水が飛び散るスプラッシュエフェクト */
 .setae-swipe-bg.swipe-triggered {
+    transition: none !important;
+    /* 弾けるときは幅の動きを止める */
     animation: burstBubble 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
 }
 
-/* 弾ける水滴（より立体感を持たせて派手に） */
 .setae-swipe-bg.swipe-triggered::before,
 .setae-swipe-bg.swipe-triggered::after {
     content: '';
@@ -159,6 +165,47 @@
 .swipe-right.swipe-triggered::before,
 .swipe-right.swipe-triggered::after {
     right: 32px;
+}
+
+@keyframes burstBubble {
+    0% {
+        transform: scaleX(1) scaleY(1);
+        opacity: 1;
+    }
+
+    30% {
+        transform: scaleX(1.1) scaleY(0.9);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scaleX(1.5) scaleY(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes splashWater1 {
+    0% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-50%) scale(3);
+        opacity: 0;
+    }
+}
+
+@keyframes splashWater2 {
+    0% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-50%) scale(2.5);
+        opacity: 0;
+    }
 }
 
 /* 弾ける動き：一度膨らんでからパーンと消える */

@@ -323,17 +323,23 @@ var SetaeUIActions = (function ($) {
 
         if (status === 'pre_molt' && diffX < 0) return;
 
-        const dampFactor = 0.5; // 値を小さくするほど重く感じます
+        const dampFactor = 0.5; // カードの移動抵抗
         const moveX = diffX * dampFactor;
         content.style.transform = `translateX(${moveX}px)`;
 
-        // スワイプ移動量に応じて幅を動的に「ビヨーン」と広げる
+        const threshold = 10; // 玉が出現する閾値
+
         if (diffX > 0) {
-            if (!bgLeft.classList.contains('is-visible')) {
-                bgLeft.classList.add('is-visible');
-                bgRight.classList.remove('is-visible');
+            if (diffX > threshold) {
+                if (!bgLeft.classList.contains('is-visible')) {
+                    bgLeft.classList.add('is-visible');
+                    bgRight.classList.remove('is-visible');
+                    bgLeft.style.width = '64px';
+                }
+                // ★ 60pxまでは丸い玉のまま維持し、それ以上引くとニョーンと伸びる
+                const stretch = Math.max(0, diffX - 60);
+                bgLeft.style.width = (64 + stretch * 0.4) + 'px';
             }
-            bgLeft.style.width = Math.max(64, Math.abs(moveX) + 20) + 'px';
 
             // Check classification dynamically
             let isPlant = false;
@@ -351,11 +357,16 @@ var SetaeUIActions = (function ($) {
             }
 
         } else if (diffX < 0) {
-            if (!bgRight.classList.contains('is-visible')) {
-                bgRight.classList.add('is-visible');
-                bgLeft.classList.remove('is-visible');
+            if (Math.abs(diffX) > threshold) {
+                if (!bgRight.classList.contains('is-visible')) {
+                    bgRight.classList.add('is-visible');
+                    bgLeft.classList.remove('is-visible');
+                    bgRight.style.width = '64px';
+                }
+                // ★ 60pxまでは丸い玉のまま維持し、それ以上引くとニョーンと伸びる
+                const stretch = Math.max(0, Math.abs(diffX) - 60);
+                bgRight.style.width = (64 + stretch * 0.4) + 'px';
             }
-            bgRight.style.width = Math.max(64, Math.abs(moveX) + 20) + 'px';
 
             let isPlant = false;
             const id = $(currentSwipeRow).data('id');
@@ -391,54 +402,50 @@ var SetaeUIActions = (function ($) {
         else if (diffX < -120) swipeBg = row.querySelector('.swipe-right');
 
         if (actionConf && actionConf.action && actionConf.action !== 'locked' && actionConf.action !== 'wait' && swipeBg) {
-            // 弾けるアニメーションを発動
-            swipeBg.classList.add('swipe-triggered');
+            // ★ まず丸い玉に戻る (is-resetting で速いトランジションを適用)
+            swipeBg.style.width = '64px';
+            swipeBg.classList.add('is-resetting');
 
-            // パチンと弾けるアニメーション(約300ms)の直後にアクションを実行
+            // 150ms待って玉に戻った直後にパチンと弾ける
             setTimeout(() => {
-                const dir = (diffX > 80) ? 'right' : 'left';
-                executeSwipeAction(row, actionConf, dir);
-                isSwipeActionTaken = true;
+                swipeBg.classList.remove('is-resetting');
+                swipeBg.classList.add('swipe-triggered');
 
-                content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-                content.style.transform = 'translateX(0)';
-
+                // 弾けるアニメーション(300ms)の後にアクションを実行
                 setTimeout(() => {
-                    content.style.transition = '';
-                    const bgLeft = row.querySelector('.swipe-left');
-                    const bgRight = row.querySelector('.swipe-right');
-                    // visibilityではなくクラスでリセットし、幅を戻す
-                    if (bgLeft) {
-                        bgLeft.classList.remove('is-visible', 'swipe-triggered');
-                        bgLeft.style.width = '64px';
-                    }
-                    if (bgRight) {
-                        bgRight.classList.remove('is-visible', 'swipe-triggered');
-                        bgRight.style.width = '64px';
-                    }
+                    const dir = (diffX > 80) ? 'right' : 'left';
+                    executeSwipeAction(row, actionConf, dir);
+                    isSwipeActionTaken = true;
 
-                    currentSwipeRow = null;
-                    setTimeout(() => isSwipeActionTaken = false, 300);
-                }, 400);
-            }, 300);
+                    content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+                    content.style.transform = 'translateX(0)';
+
+                    setTimeout(() => {
+                        content.style.transition = '';
+                        if (swipeBg) {
+                            swipeBg.classList.remove('is-visible', 'swipe-triggered');
+                            swipeBg.style.width = '64px';
+                        }
+                        currentSwipeRow = null;
+                        setTimeout(() => isSwipeActionTaken = false, 300);
+                    }, 400);
+                }, 300);
+            }, 150);
         } else {
             // アクション不発時：元に戻るだけ
             content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
             content.style.transform = 'translateX(0)';
 
+            // 玉のサイズも元に戻す
+            const bgLeft = row.querySelector('.swipe-left');
+            const bgRight = row.querySelector('.swipe-right');
+            if (bgLeft) bgLeft.style.width = '64px';
+            if (bgRight) bgRight.style.width = '64px';
+
             setTimeout(() => {
                 content.style.transition = '';
-                const bgLeft = row.querySelector('.swipe-left');
-                const bgRight = row.querySelector('.swipe-right');
-                // visibilityではなくクラスでリセットし、幅を戻す
-                if (bgLeft) {
-                    bgLeft.classList.remove('is-visible', 'swipe-triggered');
-                    bgLeft.style.width = '64px';
-                }
-                if (bgRight) {
-                    bgRight.classList.remove('is-visible', 'swipe-triggered');
-                    bgRight.style.width = '64px';
-                }
+                if (bgLeft) bgLeft.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
+                if (bgRight) bgRight.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
 
                 currentSwipeRow = null;
                 setTimeout(() => isSwipeActionTaken = false, 300);
@@ -456,19 +463,29 @@ var SetaeUIActions = (function ($) {
             const bgLeft = this.querySelector('.swipe-left');
             const bgRight = this.querySelector('.swipe-right');
 
+            // ★ PC版：ホバー時に背景色やアイコンをセットアップする
+            if (bgLeft && !bgLeft.dataset.setup) {
+                const status = $(this).data('status') || 'normal';
+                const config = getSwipeConfig(status);
+                setupSwipeBg(bgLeft, config.right_swipe);
+                setupSwipeBg(bgRight, config.left_swipe);
+                bgLeft.dataset.setup = '1';
+                bgRight.dataset.setup = '1';
+            }
+
             if (percent < 0.2) {
                 content.style.transform = 'translateX(20px)';
                 if (bgLeft && !bgLeft.classList.contains('is-visible')) {
                     bgLeft.classList.add('is-visible');
                     if (bgRight) bgRight.classList.remove('is-visible');
-                    bgLeft.style.width = '84px'; // PC版は固定の伸び量
+                    bgLeft.style.width = '64px'; // PC版は伸びずに玉のまま表示する
                 }
             } else if (percent > 0.8) {
                 content.style.transform = 'translateX(-20px)';
                 if (bgRight && !bgRight.classList.contains('is-visible')) {
                     bgRight.classList.add('is-visible');
                     if (bgLeft) bgLeft.classList.remove('is-visible');
-                    bgRight.style.width = '84px';
+                    bgRight.style.width = '64px';
                 }
             } else {
                 content.style.transform = 'translateX(0)';
@@ -480,25 +497,29 @@ var SetaeUIActions = (function ($) {
         $(document).on('mouseleave', '.setae-spider-list-row', function () {
             const content = this.querySelector('.setae-list-content');
             if (content) content.style.transform = 'translateX(0)';
+            const bgLeft = this.querySelector('.swipe-left');
+            const bgRight = this.querySelector('.swipe-right');
+            if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
+            if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
         });
     }
 
     function animateDesktopAction($card, direction, actionConfig, $row) {
-        // Slide Out
-        const moveVal = (direction === 'right') ? '100px' : '-100px';
-        $card.css('transition', 'transform 0.2s ease-out').css('transform', `translateX(${moveVal})`);
+        // ★ PCクリック時も玉がパチンと弾けるようにする
+        const swipeBg = (direction === 'right') ? $row[0].querySelector('.swipe-left') : $row[0].querySelector('.swipe-right');
+        if (swipeBg) swipeBg.classList.add('swipe-triggered');
 
         setTimeout(() => {
-            // Execute Action
             executeSwipeAction($row[0], actionConfig, direction);
 
             // Snap Back
             setTimeout(() => {
                 $card.css('transform', 'translateX(0)');
-                // 実行後にキャッシュをクリアして、マウスが動いた瞬間に新しい背景が出るようにする
+                if (swipeBg) swipeBg.classList.remove('is-visible', 'swipe-triggered');
                 $row.data('rendered-status', null);
+                $row.find('.swipe-left, .swipe-right').removeAttr('data-setup'); // セットアップ解除
             }, 300);
-        }, 100);
+        }, 300); // アニメーション終了後に実行
     }
 
     function initDesktopClickLogic() {
