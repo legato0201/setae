@@ -261,20 +261,26 @@ var SetaeUIActions = (function ($) {
         touchStartY = e.changedTouches[0].screenY;
         currentSwipeRow = this;
         isSwipeActionTaken = false;
-
-        // ▼ 追加: フラグのリセット
         isSwiping = false;
         isScrolling = false;
 
-        $('.setae-list-content').css('transform', 'translateX(0)');
-
+        const content = this.querySelector('.setae-list-content');
         const bgLeft = this.querySelector('.swipe-left');
         const bgRight = this.querySelector('.swipe-right');
+
+        // ▼ 追加: スワイプ開始時にtransitionを無効化（ガタつき防止の最重要ポイント）
+        if (content) content.style.transition = 'none';
+
         if (!bgLeft || !bgRight) return;
 
-        // visibilityの直接操作をやめ、状態クラスを外して幅を初期化
-        bgLeft.classList.remove('is-visible', 'swipe-triggered');
-        bgRight.classList.remove('is-visible', 'swipe-triggered');
+        // ▼ 追加: 背景側のtransitionも無効化
+        bgLeft.style.transition = 'none';
+        bgRight.style.transition = 'none';
+
+        $('.setae-list-content').css('transform', 'translateX(0)');
+
+        bgLeft.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
+        bgRight.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
         bgLeft.style.width = '64px';
         bgRight.style.width = '64px';
 
@@ -285,12 +291,14 @@ var SetaeUIActions = (function ($) {
         setupSwipeBg(bgRight, config.left_swipe);
     }
 
+    // ▼▼▼ ここに追加：色とアイコンを注入する必須関数 ▼▼▼
     function setupSwipeBg(el, conf) {
         if (!el || !conf) return;
         el.style.backgroundColor = conf.color;
         el.dataset.action = conf.action;
-        el.innerHTML = `<span class="swipe-icon">${conf.icon}</span>`;
+        el.innerHTML = `<span class="swipe-icon" style="font-size:24px; line-height:1;">${conf.icon}</span>`;
     }
+    // ▲▲▲ 追加ここまで ▲▲▲
 
     function handleTouchMove(e) {
         // ▼ 修正: スクロール判定済みなら処理を中断
@@ -299,17 +307,15 @@ var SetaeUIActions = (function ($) {
         const diffX = e.changedTouches[0].screenX - touchStartX;
         const diffY = e.changedTouches[0].screenY - touchStartY;
 
-        // ▼ 修正: まだ判定していない場合、移動量で判定を行う
         if (!isSwiping) {
             if (Math.abs(diffX) > Math.abs(diffY)) {
-                isSwiping = true;   // 横移動が大きい＝スワイプ
+                isSwiping = true;
             } else {
-                isScrolling = true; // 縦移動が大きい＝スクロール
-                return;             // スワイプ処理はしない
+                isScrolling = true;
+                return;
             }
         }
 
-        // ▼ 修正: スワイプ中は確実にスクロールを阻止
         if (isSwiping) {
             e.preventDefault();
         }
@@ -323,25 +329,29 @@ var SetaeUIActions = (function ($) {
 
         if (status === 'pre_molt' && diffX < 0) return;
 
-        const dampFactor = 0.5; // カードの移動抵抗
+        // ▼ 修正: 指への追従性を少し上げて重みを調整（dampFactor）
+        const dampFactor = 0.6;
         const moveX = diffX * dampFactor;
         content.style.transform = `translateX(${moveX}px)`;
 
-        const threshold = 10; // 玉が出現する閾値
+        // ▼ 修正: 玉が出現する閾値を少し早めに設定
+        const threshold = 15;
 
         if (diffX > 0) {
             if (diffX > threshold) {
                 if (!bgLeft.classList.contains('is-visible')) {
-                    bgLeft.classList.add('is-visible');
+                    bgLeft.classList.add('is-visible'); // ここでボワッとアニメーション発火
                     bgRight.classList.remove('is-visible');
                     bgLeft.style.width = '64px';
                 }
-                // ★ 60pxまでは丸い玉のまま維持し、それ以上引くとニョーンと伸びる
+                // 60pxまでは丸い玉のまま維持し、それ以上引くとニョーンと伸びる
                 const stretch = Math.max(0, diffX - 60);
                 bgLeft.style.width = (64 + stretch * 0.4) + 'px';
+            } else {
+                // 閾値未満に戻したら消す
+                bgLeft.classList.remove('is-visible');
             }
 
-            // Check classification dynamically
             let isPlant = false;
             const id = $(currentSwipeRow).data('id');
             if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
@@ -351,21 +361,22 @@ var SetaeUIActions = (function ($) {
             if (!isPlant && $(currentSwipeRow).data('classification') === 'plant') isPlant = true;
 
             if (isPlant) {
-                // 植物: Water (Left Icon)
-                bgLeft.style.backgroundColor = '#3498db'; // 水色
+                bgLeft.style.backgroundColor = '#3498db';
                 bgLeft.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">💧</span>';
             }
 
         } else if (diffX < 0) {
             if (Math.abs(diffX) > threshold) {
                 if (!bgRight.classList.contains('is-visible')) {
-                    bgRight.classList.add('is-visible');
+                    bgRight.classList.add('is-visible'); // ここでボワッとアニメーション発火
                     bgLeft.classList.remove('is-visible');
                     bgRight.style.width = '64px';
                 }
-                // ★ 60pxまでは丸い玉のまま維持し、それ以上引くとニョーンと伸びる
                 const stretch = Math.max(0, Math.abs(diffX) - 60);
                 bgRight.style.width = (64 + stretch * 0.4) + 'px';
+            } else {
+                // 閾値未満に戻したら消す
+                bgRight.classList.remove('is-visible');
             }
 
             let isPlant = false;
@@ -377,8 +388,7 @@ var SetaeUIActions = (function ($) {
             if (!isPlant && $(currentSwipeRow).data('classification') === 'plant') isPlant = true;
 
             if (isPlant) {
-                // 植物: Repot (Right Icon) -> Always Modal
-                bgRight.style.backgroundColor = '#8e44ad'; // 紫
+                bgRight.style.backgroundColor = '#8e44ad';
                 bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴</span>';
             }
         }
@@ -394,30 +404,36 @@ var SetaeUIActions = (function ($) {
 
         let actionConf = null;
 
-        if (diffX > 120) actionConf = config.right_swipe;
-        else if (diffX < -120) actionConf = config.left_swipe;
+        // スマホでの操作性を考慮し、アクション発動の閾値を少し軽く(90px)設定
+        const actionThreshold = 90;
+
+        if (diffX > actionThreshold) actionConf = config.right_swipe;
+        else if (diffX < -actionThreshold) actionConf = config.left_swipe;
 
         let swipeBg = null;
-        if (diffX > 120) swipeBg = row.querySelector('.swipe-left');
-        else if (diffX < -120) swipeBg = row.querySelector('.swipe-right');
+        if (diffX > actionThreshold) swipeBg = row.querySelector('.swipe-left');
+        else if (diffX < -actionThreshold) swipeBg = row.querySelector('.swipe-right');
+
+        // ▼ 追加: 指が離れた瞬間にtransitionを復元して滑らかに元の位置へ戻す
+        content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+        const bgLeft = row.querySelector('.swipe-left');
+        const bgRight = row.querySelector('.swipe-right');
+        if (bgLeft) bgLeft.style.transition = '';
+        if (bgRight) bgRight.style.transition = '';
 
         if (actionConf && actionConf.action && actionConf.action !== 'locked' && actionConf.action !== 'wait' && swipeBg) {
-            // ★ まず丸い玉に戻る (is-resetting で速いトランジションを適用)
             swipeBg.style.width = '64px';
             swipeBg.classList.add('is-resetting');
 
-            // 150ms待って玉に戻った直後にパチンと弾ける
             setTimeout(() => {
                 swipeBg.classList.remove('is-resetting');
                 swipeBg.classList.add('swipe-triggered');
 
-                // 弾けるアニメーション(300ms)の後にアクションを実行
                 setTimeout(() => {
-                    const dir = (diffX > 80) ? 'right' : 'left';
+                    const dir = (diffX > 0) ? 'right' : 'left';
                     executeSwipeAction(row, actionConf, dir);
                     isSwipeActionTaken = true;
 
-                    content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
                     content.style.transform = 'translateX(0)';
 
                     setTimeout(() => {
@@ -432,13 +448,8 @@ var SetaeUIActions = (function ($) {
                 }, 300);
             }, 150);
         } else {
-            // アクション不発時：元に戻るだけ
-            content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
             content.style.transform = 'translateX(0)';
 
-            // 玉のサイズも元に戻す
-            const bgLeft = row.querySelector('.swipe-left');
-            const bgRight = row.querySelector('.swipe-right');
             if (bgLeft) bgLeft.style.width = '64px';
             if (bgRight) bgRight.style.width = '64px';
 

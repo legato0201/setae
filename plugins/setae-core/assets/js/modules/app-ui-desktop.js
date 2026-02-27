@@ -157,12 +157,12 @@ var SetaeUIDesktop = (function ($) {
 
             // 1. カードを大きく動かし、背景の玉を横に「ビヨン」と伸ばす
             $content.css({
-                'transition': 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
+                'transition': 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
                 'transform': `translateX(${moveVal})`
             });
 
             if (bgTarget) {
-                bgTarget.style.transition = 'width 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+                bgTarget.style.transition = 'width 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
                 bgTarget.style.width = '120px'; // 横に伸ばす
             }
 
