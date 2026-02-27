@@ -453,6 +453,9 @@ var SetaeUIActions = (function ($) {
         }
     }
 
+    // ==========================================
+    // PC用: ホバー時の玉の出現（ボワッ）
+    // ==========================================
     function initDesktopHoverLogic() {
         $(document).on('mousemove', '.setae-spider-list-row', function (e) {
             if (currentSwipeRow) return;
@@ -463,7 +466,7 @@ var SetaeUIActions = (function ($) {
             const bgLeft = this.querySelector('.swipe-left');
             const bgRight = this.querySelector('.swipe-right');
 
-            // ★ PC版：ホバー時に背景色やアイコンをセットアップする
+            // ★ PC版：ホバー時に背景色やアイコンを生成する
             if (bgLeft && !bgLeft.dataset.setup) {
                 const status = $(this).data('status') || 'normal';
                 const config = getSwipeConfig(status);
@@ -471,19 +474,23 @@ var SetaeUIActions = (function ($) {
                 setupSwipeBg(bgRight, config.left_swipe);
                 bgLeft.dataset.setup = '1';
                 bgRight.dataset.setup = '1';
+
+                // インラインのvisibilityが残っている場合の対策
+                bgLeft.style.visibility = '';
+                bgRight.style.visibility = '';
             }
 
             if (percent < 0.2) {
                 content.style.transform = 'translateX(20px)';
                 if (bgLeft && !bgLeft.classList.contains('is-visible')) {
-                    bgLeft.classList.add('is-visible');
+                    bgLeft.classList.add('is-visible'); // ここで透明化を解除して出現させる
                     if (bgRight) bgRight.classList.remove('is-visible');
                     bgLeft.style.width = '64px'; // PC版は伸びずに玉のまま表示する
                 }
             } else if (percent > 0.8) {
                 content.style.transform = 'translateX(-20px)';
                 if (bgRight && !bgRight.classList.contains('is-visible')) {
-                    bgRight.classList.add('is-visible');
+                    bgRight.classList.add('is-visible'); // ここで透明化を解除して出現させる
                     if (bgLeft) bgLeft.classList.remove('is-visible');
                     bgRight.style.width = '64px';
                 }
@@ -499,27 +506,34 @@ var SetaeUIActions = (function ($) {
             if (content) content.style.transform = 'translateX(0)';
             const bgLeft = this.querySelector('.swipe-left');
             const bgRight = this.querySelector('.swipe-right');
+            // マウスが離れたら玉を消す
             if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
             if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
         });
     }
 
+    // ==========================================
+    // PC用: クリック実行時の弾けるアクション（パチン）
+    // ==========================================
     function animateDesktopAction($card, direction, actionConfig, $row) {
-        // ★ PCクリック時も玉がパチンと弾けるようにする
+        // 対象の玉を取得
         const swipeBg = (direction === 'right') ? $row[0].querySelector('.swipe-left') : $row[0].querySelector('.swipe-right');
+
+        // 弾ける水しぶきアニメーションのクラスを付与
         if (swipeBg) swipeBg.classList.add('swipe-triggered');
 
+        // アニメーション（300ms）を見せてからアクションを実行
         setTimeout(() => {
             executeSwipeAction($row[0], actionConfig, direction);
 
-            // Snap Back
+            // カードを元の位置に戻し、状態をリセット
             setTimeout(() => {
                 $card.css('transform', 'translateX(0)');
                 if (swipeBg) swipeBg.classList.remove('is-visible', 'swipe-triggered');
                 $row.data('rendered-status', null);
-                $row.find('.swipe-left, .swipe-right').removeAttr('data-setup'); // セットアップ解除
+                $row.find('.swipe-left, .swipe-right').removeAttr('data-setup'); // 色とアイコンのリセット
             }, 300);
-        }, 300); // アニメーション終了後に実行
+        }, 300);
     }
 
     function initDesktopClickLogic() {
