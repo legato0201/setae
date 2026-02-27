@@ -81,11 +81,17 @@
     </div>
 
     <!-- Sponsor and Search Area -->
-    <div class="setae-card" style="margin-bottom:15px;">
+    <div class="setae-card" style="margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
         <a id="btn-search-yahoo" href="#" target="_blank"
             onclick="this.href='https://auctions.yahoo.co.jp/search/search?p=' + encodeURIComponent(document.getElementById('enc-detail-name').innerText);"
             style="display: flex; align-items: center; justify-content: center; background: #fdcb00; color: #333; font-weight: bold; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;">
             <span style="margin-right: 8px; font-size: 16px;">🔍</span> ヤフオクでこの種を探す
+        </a>
+
+        <a id="btn-search-inaturalist" href="#" target="_blank" rel="noopener noreferrer"
+            onclick="this.href='https://www.inaturalist.org/search?q=' + encodeURIComponent(document.getElementById('enc-detail-name').innerText);"
+            style="display: flex; align-items: center; justify-content: center; background: #74ac00; color: #fff; font-weight: bold; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;">
+            <span style="margin-right: 8px; font-size: 16px;">🌿</span> iNaturalistでこの種を調べる
         </a>
     </div>
 

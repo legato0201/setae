@@ -345,9 +345,15 @@ jQuery(document).ready(function ($) {
                 display: flex; align-items: center; justify-content: center;
                 color: #aaa; transition: color 0.3s, border-color 0.3s;
             ">
-                <svg id="setae-ptr-icon" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.1s;">
-                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
-                    <path d="M21 3v5h-5"></path>
+                <svg id="setae-ptr-icon" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none" style="transition: transform 0.1s;">
+                    <line x1="12" y1="3" x2="12" y2="6" opacity="1"></line>
+                    <line x1="18.36" y1="5.64" x2="16.24" y2="7.76" opacity="0.8"></line>
+                    <line x1="21" y1="12" x2="18" y2="12" opacity="0.6"></line>
+                    <line x1="18.36" y1="18.36" x2="16.24" y2="16.24" opacity="0.4"></line>
+                    <line x1="12" y1="21" x2="12" y2="18" opacity="0.3"></line>
+                    <line x1="5.64" y1="18.36" x2="7.76" y2="16.24" opacity="0.2"></line>
+                    <line x1="3" y1="12" x2="6" y2="12" opacity="0.2"></line>
+                    <line x1="5.64" y1="5.64" x2="7.76" y2="7.76" opacity="0.2"></line>
                 </svg>
             </div>
         `;
