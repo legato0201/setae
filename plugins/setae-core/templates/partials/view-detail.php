@@ -25,11 +25,25 @@
         </button>
     </div>
 
-    <div class="setae-card" style="padding:0; overflow:hidden; margin-bottom:15px; position:relative;">
-        <img id="enc-detail-image" src="" style="width:100%; height:200px; object-fit:cover; display:block;">
-        <div id="enc-detail-image-credit"
-            style="display:none; position:absolute; bottom:155px; right:10px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; z-index:10;">
-            © <span class="credit-text"></span>
+    <div class="setae-card" style="padding:0;overflow:hidden;margin-bottom:15px;margin-top: 15px;">
+        <div style="position:relative;">
+            <img id="enc-detail-image" src="" style="width:100%; height:200px; object-fit:cover; display:block;">
+
+            <div id="enc-detail-image-credit-overlay"
+                style="display: none; position: absolute; bottom: 15px; left: 15px; background: rgba(0,0,0,0.5); padding: 6px 12px 6px 6px; border-radius: 30px; backdrop-filter: blur(4px);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div id="enc-detail-credit-avatar"
+                        style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <span
+                            style="font-size: 9px; color: #ddd; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">Photo
+                            by</span>
+                        <span id="enc-detail-credit-name"
+                            style="font-weight: bold; font-size: 13px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1.2;"></span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div style="padding:15px;">
             <span id="enc-detail-genus"

@@ -376,12 +376,29 @@ var SetaeUI = (function ($) {
                 $('#enc-detail-image').hide();
             }
 
-            // Image Credit Display
-            const $creditContainer = $('#enc-detail-image-credit');
-            if (data.image_credit && data.image_credit.trim() !== '') {
-                $creditContainer.show().find('.credit-text').text(data.image_credit);
+            // 画像クレジット情報の反映
+            if (data.image_credit && data.image_credit.text) {
+                $('#enc-detail-credit-name').text(data.image_credit.text);
+
+                const $avatarContainer = $('#enc-detail-credit-avatar');
+
+                if (data.image_credit.type === 'user') {
+                    if (data.image_credit.avatar) {
+                        // アバター画像がある場合
+                        $avatarContainer.html(`<img src="${data.image_credit.avatar}" style="width:100%; height:100%; object-fit:cover;">`);
+                    } else {
+                        // アバターがない場合はイニシャルを表示（緑のグラデーション背景）
+                        const initial = data.image_credit.text.charAt(0).toUpperCase();
+                        $avatarContainer.html(`<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #2ecc71, #27ae60); color:#fff; font-size:14px; font-weight:bold;">${initial}</div>`);
+                    }
+                } else {
+                    // Wikipediaなど直接入力の場合は、汎用の地球アイコン等を表示
+                    $avatarContainer.html(`<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #7f8c8d, #34495e); color:#fff; font-size:12px;">🌐</div>`);
+                }
+
+                $('#enc-detail-image-credit-overlay').fadeIn();
             } else {
-                $creditContainer.hide();
+                $('#enc-detail-image-credit-overlay').hide();
             }
 
             // Gallery

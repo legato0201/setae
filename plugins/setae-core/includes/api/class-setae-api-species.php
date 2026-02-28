@@ -188,6 +188,26 @@ class Setae_API_Species extends WP_REST_Controller
         // Keeping Count
         $keeping_count = $this->count_active_keepers($id);
 
+        // 追加: 画像クレジット情報の構築
+        $credit_type = get_post_meta($id, '_setae_image_credit_type', true) ?: 'user';
+        $credit_user = get_post_meta($id, '_setae_image_credit_user', true);
+        $credit_text = get_post_meta($id, '_setae_image_credit_text', true);
+
+        $image_credit = array('type' => $credit_type, 'text' => '', 'avatar' => '');
+
+        if ($credit_type === 'user' && $credit_user) {
+            $user_info = get_userdata($credit_user);
+            if ($user_info) {
+                $image_credit['text'] = $user_info->display_name;
+                $avatar_id = get_user_meta($user_info->ID, 'setae_user_avatar', true);
+                if ($avatar_id) {
+                    $image_credit['avatar'] = wp_get_attachment_url($avatar_id);
+                }
+            }
+        } else if ($credit_type === 'text') {
+            $image_credit['text'] = $credit_text;
+        }
+
         $data = array(
             'id' => $post->ID,
             'title' => $post->post_title,
@@ -200,7 +220,7 @@ class Setae_API_Species extends WP_REST_Controller
             'size' => $size,
             'temperature' => get_post_meta($id, '_setae_temperature', true),
             'humidity' => get_post_meta($id, '_setae_humidity', true),
-            'image_credit' => get_post_meta($id, '_setae_image_credit', true), // 追加: 画像クレジット
+            'image_credit' => $image_credit, // 追加
             'featured_images' => $featured,
             'featured_gallery' => $featured_gallery, // ★追加: ユーザー情報付きの配列をレスポンスに含める
             'keeping_count' => $keeping_count,

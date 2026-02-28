@@ -29,7 +29,11 @@ class Setae_Species_Meta
         $difficulty = get_post_meta($post->ID, '_setae_difficulty', true);
         $temp = get_post_meta($post->ID, '_setae_temperature', true);
         $humidity = get_post_meta($post->ID, '_setae_humidity', true);
-        $image_credit = get_post_meta($post->ID, '_setae_image_credit', true); // 追加: 画像クレジット
+
+        // 追加: 画像クレジット用データ
+        $credit_type = get_post_meta($post->ID, '_setae_image_credit_type', true) ?: 'user';
+        $credit_user = get_post_meta($post->ID, '_setae_image_credit_user', true);
+        $credit_text = get_post_meta($post->ID, '_setae_image_credit_text', true);
 
         $featured_images = get_post_meta($post->ID, '_setae_featured_images', true) ?: array();
         ?>
@@ -74,12 +78,43 @@ class Setae_Species_Meta
                 </td>
             </tr>
             <tr>
-                <th><label for="setae_image_credit">Image Credit (画像提供元)</label></th>
+                <th><label>Image Credit (画像提供元)</label></th>
                 <td>
-                    <input type="text" name="setae_image_credit" id="setae_image_credit"
-                        value="<?php echo esc_attr($image_credit); ?>" class="regular-text"
-                        placeholder="例: @username または Wikipedia">
-                    <p class="description">アイキャッチ画像の著作権者・提供元を入力します。</p>
+                    <div style="margin-bottom:8px;">
+                        <label><input type="radio" name="setae_image_credit_type" value="user" <?php checked($credit_type, 'user'); ?>> ユーザーから選択</label>
+                        &nbsp;&nbsp;
+                        <label><input type="radio" name="setae_image_credit_type" value="text" <?php checked($credit_type, 'text'); ?>> 直接入力 (Wikipedia等)</label>
+                    </div>
+
+                    <div id="credit_type_user"
+                        style="display: <?php echo $credit_type === 'user' ? 'block' : 'none'; ?>; margin-bottom:8px;">
+                        <?php
+                        wp_dropdown_users(array(
+                            'name' => 'setae_image_credit_user',
+                            'selected' => $credit_user,
+                            'show_option_none' => 'ユーザーを選択してください'
+                        ));
+                        ?>
+                    </div>
+
+                    <div id="credit_type_text" style="display: <?php echo $credit_type === 'text' ? 'block' : 'none'; ?>;">
+                        <input type="text" name="setae_image_credit_text" value="<?php echo esc_attr($credit_text); ?>"
+                            class="regular-text" placeholder="例: Wikipedia">
+                    </div>
+
+                    <script>
+                        jQuery(document).ready(function ($) {
+                            $('input[name="setae_image_credit_type"]').on('change', function () {
+                                if ($(this).val() === 'user') {
+                                    $('#credit_type_user').show();
+                                    $('#credit_type_text').hide();
+                                } else {
+                                    $('#credit_type_user').hide();
+                                    $('#credit_type_text').show();
+                                }
+                            });
+                        });
+                    </script>
                 </td>
             </tr>
         </table>
@@ -169,8 +204,7 @@ class Setae_Species_Meta
             'setae_size',
             'setae_difficulty',
             'setae_temperature',
-            'setae_humidity',
-            'setae_image_credit' // 追加: 画像クレジットを保存対象に含める
+            'setae_humidity'
         ];
 
         foreach ($fields_to_save as $field) {
@@ -195,6 +229,17 @@ class Setae_Species_Meta
         // Save description field (if it were present in the form, using textarea sanitization)
         if (isset($_POST['setae_description'])) {
             update_post_meta($post_id, '_setae_description', sanitize_textarea_field($_POST['setae_description']));
+        }
+
+        // 追加: 画像クレジットの保存
+        if (isset($_POST['setae_image_credit_type'])) {
+            update_post_meta($post_id, '_setae_image_credit_type', sanitize_text_field($_POST['setae_image_credit_type']));
+        }
+        if (isset($_POST['setae_image_credit_user'])) {
+            update_post_meta($post_id, '_setae_image_credit_user', intval($_POST['setae_image_credit_user']));
+        }
+        if (isset($_POST['setae_image_credit_text'])) {
+            update_post_meta($post_id, '_setae_image_credit_text', sanitize_text_field($_POST['setae_image_credit_text']));
         }
 
         // Featured Images (Array)
@@ -231,7 +276,6 @@ class Setae_Species_Meta
                     'difficulty' => get_post_meta($object['id'], '_setae_difficulty', true),
                     'temperature' => get_post_meta($object['id'], '_setae_temperature', true),
                     'humidity' => get_post_meta($object['id'], '_setae_humidity', true),
-                    'image_credit' => get_post_meta($object['id'], '_setae_image_credit', true), // 追加: APIにクレジット情報を含める
                     'featured_images' => get_post_meta($object['id'], '_setae_featured_images', true) ?: [],
                 );
             },
