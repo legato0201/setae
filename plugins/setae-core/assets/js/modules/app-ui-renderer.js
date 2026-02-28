@@ -376,6 +376,14 @@ var SetaeUI = (function ($) {
                 $('#enc-detail-image').hide();
             }
 
+            // Image Credit Display
+            const $creditContainer = $('#enc-detail-image-credit');
+            if (data.image_credit && data.image_credit.trim() !== '') {
+                $creditContainer.show().find('.credit-text').text(data.image_credit);
+            } else {
+                $creditContainer.hide();
+            }
+
             // Gallery
             const gallery = $('#enc-gallery-grid');
             const emptyMsg = $('#enc-gallery-empty');

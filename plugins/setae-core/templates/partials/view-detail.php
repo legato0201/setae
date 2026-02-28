@@ -25,8 +25,12 @@
         </button>
     </div>
 
-    <div class="setae-card" style="padding:0; overflow:hidden; margin-bottom:15px;">
+    <div class="setae-card" style="padding:0; overflow:hidden; margin-bottom:15px; position:relative;">
         <img id="enc-detail-image" src="" style="width:100%; height:200px; object-fit:cover; display:block;">
+        <div id="enc-detail-image-credit"
+            style="display:none; position:absolute; bottom:155px; right:10px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; z-index:10;">
+            © <span class="credit-text"></span>
+        </div>
         <div style="padding:15px;">
             <span id="enc-detail-genus"
                 style="display:block; font-style:italic; color:#888; font-size:12px; margin-bottom:4px;"><?php esc_html_e('Genus', 'setae-core'); ?></span>

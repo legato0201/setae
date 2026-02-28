@@ -29,6 +29,7 @@ class Setae_Species_Meta
         $difficulty = get_post_meta($post->ID, '_setae_difficulty', true);
         $temp = get_post_meta($post->ID, '_setae_temperature', true);
         $humidity = get_post_meta($post->ID, '_setae_humidity', true);
+        $image_credit = get_post_meta($post->ID, '_setae_image_credit', true); // 追加: 画像クレジット
 
         $featured_images = get_post_meta($post->ID, '_setae_featured_images', true) ?: array();
         ?>
@@ -70,6 +71,15 @@ class Setae_Species_Meta
                         size="15">
                     <input type="text" name="setae_humidity" placeholder="60-70%" value="<?php echo esc_attr($humidity); ?>"
                         size="15">
+                </td>
+            </tr>
+            <tr>
+                <th><label for="setae_image_credit">Image Credit (画像提供元)</label></th>
+                <td>
+                    <input type="text" name="setae_image_credit" id="setae_image_credit"
+                        value="<?php echo esc_attr($image_credit); ?>" class="regular-text"
+                        placeholder="例: @username または Wikipedia">
+                    <p class="description">アイキャッチ画像の著作権者・提供元を入力します。</p>
                 </td>
             </tr>
         </table>
@@ -159,7 +169,8 @@ class Setae_Species_Meta
             'setae_size',
             'setae_difficulty',
             'setae_temperature',
-            'setae_humidity'
+            'setae_humidity',
+            'setae_image_credit' // 追加: 画像クレジットを保存対象に含める
         ];
 
         foreach ($fields_to_save as $field) {
@@ -220,6 +231,7 @@ class Setae_Species_Meta
                     'difficulty' => get_post_meta($object['id'], '_setae_difficulty', true),
                     'temperature' => get_post_meta($object['id'], '_setae_temperature', true),
                     'humidity' => get_post_meta($object['id'], '_setae_humidity', true),
+                    'image_credit' => get_post_meta($object['id'], '_setae_image_credit', true), // 追加: APIにクレジット情報を含める
                     'featured_images' => get_post_meta($object['id'], '_setae_featured_images', true) ?: [],
                 );
             },

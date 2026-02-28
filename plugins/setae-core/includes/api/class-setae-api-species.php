@@ -200,6 +200,7 @@ class Setae_API_Species extends WP_REST_Controller
             'size' => $size,
             'temperature' => get_post_meta($id, '_setae_temperature', true),
             'humidity' => get_post_meta($id, '_setae_humidity', true),
+            'image_credit' => get_post_meta($id, '_setae_image_credit', true), // 追加: 画像クレジット
             'featured_images' => $featured,
             'featured_gallery' => $featured_gallery, // ★追加: ユーザー情報付きの配列をレスポンスに含める
             'keeping_count' => $keeping_count,
