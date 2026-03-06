@@ -234,6 +234,9 @@ class Setae_Dashboard
 
         wp_enqueue_script('setae-ui-encyclopedia', SETAE_PLUGIN_URL . 'assets/js/modules/ui/encyclopedia.js', $ui_deps, $this->version, true); // Encyclopedia Module
 
+        // ▼ 追加: コミュニティ用モジュールを読み込む
+        wp_enqueue_script('setae-ui-community', SETAE_PLUGIN_URL . 'assets/js/modules/ui/community.js', $ui_deps, $this->version, true);
+
         // 1.5 Desktop Specific Logic
         wp_enqueue_script('setae-ui-desktop', SETAE_PLUGIN_URL . 'assets/js/modules/app-ui-desktop.js', array('setae-ui-actions', 'jquery'), $this->version, true);
 

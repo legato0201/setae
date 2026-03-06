@@ -91,7 +91,11 @@ if ($bonus_slots >= 51) {
             <span class="setae-nav-label">BL Match</span>
         </div>
         <div class="setae-nav-item" data-target="section-com">
-            <span class="setae-nav-icon">💬</span> <span class="setae-nav-label">Community</span>
+            <span class="setae-nav-icon" style="position: relative;">
+                💬
+                <span class="setae-badge-count" id="com-unread-badge" style="display: none;">0</span>
+            </span>
+            <span class="setae-nav-label">Community</span>
         </div>
     </div>
 

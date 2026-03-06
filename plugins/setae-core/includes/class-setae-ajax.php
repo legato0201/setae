@@ -19,6 +19,10 @@ class Setae_Ajax
 
         // ▼▼▼ 追加: Best Shot の承認・拒否 AJAXハンドラ ▼▼▼
         add_action('wp_ajax_setae_handle_best_shot', array($this, 'handle_best_shot'));
+
+        // コミュニティの未読管理
+        add_action('wp_ajax_setae_get_unread_community_count', array($this, 'get_unread_community_count'));
+        add_action('wp_ajax_setae_update_com_last_checked', array($this, 'update_com_last_checked'));
     }
 
     /**
@@ -607,6 +611,51 @@ class Setae_Ajax
         } else {
             // 上記以外のアクションはエラーにする
             wp_send_json_error(__('Invalid operation.', 'setae'));
+        }
+    }
+
+    /**
+     * コミュニティの未読コメント数を取得
+     */
+    public function get_unread_community_count()
+    {
+        $current_user_id = get_current_user_id();
+        if (!$current_user_id)
+            wp_send_json_error();
+
+        $last_checked = get_user_meta($current_user_id, '_setae_com_last_checked', true);
+        if (!$last_checked)
+            $last_checked = '1970-01-01 00:00:00';
+
+        global $wpdb;
+
+        // 自分が関わるスレッドの、最終確認日時以降の「他人のコメント」をカウント
+        $query = $wpdb->prepare("
+            SELECT COUNT(DISTINCT c.comment_ID)
+            FROM {$wpdb->comments} c
+            INNER JOIN {$wpdb->posts} p ON c.comment_post_ID = p.ID
+            WHERE p.post_type = 'setae_thread'
+            AND c.comment_date > %s
+            AND c.user_id != %d
+            AND (
+                p.post_author = %d
+                OR p.ID IN (SELECT comment_post_ID FROM {$wpdb->comments} WHERE user_id = %d)
+            )
+        ", $last_checked, $current_user_id, $current_user_id, $current_user_id);
+
+        $unread_count = (int) $wpdb->get_var($query);
+        wp_send_json_success(array('count' => $unread_count));
+    }
+
+    /**
+     * コミュニティタブ閲覧時に最終確認日時を更新（既読化）
+     */
+    public function update_com_last_checked()
+    {
+        $current_user_id = get_current_user_id();
+        if ($current_user_id) {
+            update_user_meta($current_user_id, '_setae_com_last_checked', current_time('mysql'));
+            wp_send_json_success();
         }
     }
 }
