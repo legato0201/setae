@@ -31,7 +31,7 @@
 
         <button type="button" id="btn-trigger-comment-image" title="画像を添付">
             <img draggable="false" role="img" class="emoji" alt="📸"
-                src="<?php echo plugins_url( 'assets/images/emoji/1f4f8.svg', dirname(__DIR__, 2) . '/setae-core.php' ); ?>">
+                src="<?php echo plugins_url('assets/images/emoji/1f4f8.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
         </button>
 
         <div id="comment-image-preview" style="display:none;">
@@ -40,7 +40,7 @@
                 style="position:absolute; top:-6px; right:-6px; background:#e74c3c; color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2);">×</button>
         </div>
 
-        <input type="text" id="comment-content" placeholder="コメントを入力..." autocomplete="off">
+        <textarea id="comment-content" placeholder="コメントを入力..." autocomplete="off" rows="2"></textarea>
 
         <button type="submit" class="btn-send-comment" title="送信">
             <svg class="send-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"

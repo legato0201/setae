@@ -1038,18 +1038,15 @@
     position: relative;
     margin-top: 20px;
     display: flex;
-    align-items: center;
-    /* 垂直方向中央揃え */
+    align-items: flex-end;
+    /* ★複数行入力時にボタンが下に揃うように変更 */
     gap: 10px;
-    /* 要素間のスペース */
     background: #fff;
-    padding: 8px 12px;
-    /* コンパクトな内側余白 */
-    border-radius: 30px;
-    /* カプセル型の丸み */
+    padding: 12px 14px;
+    /* ★複数行に合うよう上下の余白を広げる */
+    border-radius: 20px;
+    /* ★カプセル型から、より長文に適した角丸四角形に変更 */
     border: 1px solid #eee;
-
-    /* 浮き上がるような影 */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     width: 100%;
@@ -1067,17 +1064,35 @@
 /* テキスト入力エリア */
 #comment-content {
     flex-grow: 1;
-    /* 横幅いっぱいに広げる */
     border: none;
     background: transparent;
     box-shadow: none;
-    padding: 10px 5px;
+    padding: 8px 5px;
     font-size: 15px;
     line-height: 1.5;
-    color: #333;
-    min-height: 24px;
+    color: var(--setae-text, #1c1c1e);
+    min-height: 48px;
+    /* ★最初から2行分程度の高さを確保 */
+    max-height: 200px;
+    /* ★高くなりすぎないよう制限 */
+    resize: vertical;
+    /* ★PCユーザーが手動で広げられるようにする */
     outline: none;
-    /* デフォルトの枠線を消す */
+    font-family: inherit;
+}
+
+/* ★スクロールバーのカスタマイズ (長文時の見栄えを綺麗に) */
+#comment-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+#comment-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#comment-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
 }
 
 #comment-content::placeholder {
@@ -1088,6 +1103,8 @@
 /* 画像添付ボタン */
 #btn-trigger-comment-image {
     flex-shrink: 0;
+    margin-bottom: 2px;
+    /* ★下揃え時の微調整 */
     /* 縮まないように固定 */
     background: #f7f9fa;
     border: none;
@@ -1118,6 +1135,8 @@
 /* 送信ボタン */
 .btn-send-comment {
     flex-shrink: 0;
+    margin-bottom: 2px;
+    /* ★下揃え時の微調整 */
     background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: #fff;
     border: none;
