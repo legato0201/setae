@@ -898,10 +898,95 @@ class Setae_API_Spiders
             return new WP_Error('forbidden', 'Permission denied', array('status' => 403));
         }
 
+        // ▼ 追加: 削除前に親スパイダーIDとログタイプを取得
+        $spider_id = get_post_meta($log_id, '_setae_log_spider_id', true);
+        $log_type = get_post_meta($log_id, '_setae_log_type', true);
+
         $result = wp_delete_post($log_id, true);
 
         if (!$result) {
             return new WP_Error('delete_failed', 'Could not delete log', array('status' => 500));
+        }
+
+        // ▼ 追加: 削除後にスパイダーのメタデータを再計算して更新
+        if ($spider_id) {
+            if ($log_type === 'feed') {
+                // 給餌ログの再計算
+                $feed_logs = get_posts(array(
+                    'post_type' => 'setae_log',
+                    'posts_per_page' => 10,
+                    'meta_query' => array(
+                        'relation' => 'AND',
+                        array('key' => '_setae_log_spider_id', 'value' => $spider_id),
+                        array('key' => '_setae_log_type', 'value' => 'feed')
+                    ),
+                    'orderby' => 'meta_value',
+                    'meta_key' => '_setae_log_date',
+                    'order' => 'DESC'
+                ));
+
+                $latest_feed_date = '';
+                $latest_prey = '';
+                $is_fasting = false;
+
+
+
+                // 食べた最新の日付を探す
+                if (!empty($feed_logs)) {
+                    $latest_log = $feed_logs[0];
+                    $latest_log_data = json_decode(get_post_meta($latest_log->ID, '_setae_log_data', true), true);
+
+                    // 最新のログが拒食かどうか判定
+                    if (!empty($latest_log_data['refused'])) {
+                        $is_fasting = true;
+                    }
+
+                    // ▼ 修正: 拒食であっても最新のログを最終給餌日として扱う
+                    $latest_feed_date = get_post_meta($latest_log->ID, '_setae_log_date', true);
+                    if (!empty($latest_log_data['prey_type'])) {
+                        $latest_prey = sanitize_text_field($latest_log_data['prey_type']);
+                    }
+                }
+
+
+                if ($latest_feed_date) {
+                    update_post_meta($spider_id, '_setae_last_feed_date', $latest_feed_date);
+                    update_post_meta($spider_id, '_setae_last_prey', $latest_prey);
+                } else {
+                    delete_post_meta($spider_id, '_setae_last_feed_date');
+                    delete_post_meta($spider_id, '_setae_last_prey');
+                }
+
+                // 現在のステータス更新
+                $current_status = get_post_meta($spider_id, '_setae_status', true);
+                if ($is_fasting) {
+                    update_post_meta($spider_id, '_setae_status', 'fasting');
+                } elseif ($current_status === 'fasting') {
+                    update_post_meta($spider_id, '_setae_status', 'normal');
+                }
+
+            } elseif ($log_type === 'molt') {
+                // 脱皮ログの再計算
+                $molt_logs = get_posts(array(
+                    'post_type' => 'setae_log',
+                    'posts_per_page' => 1,
+                    'meta_query' => array(
+                        'relation' => 'AND',
+                        array('key' => '_setae_log_spider_id', 'value' => $spider_id),
+                        array('key' => '_setae_log_type', 'value' => 'molt')
+                    ),
+                    'orderby' => 'meta_value',
+                    'meta_key' => '_setae_log_date',
+                    'order' => 'DESC'
+                ));
+
+                if (!empty($molt_logs)) {
+                    $latest_molt_date = get_post_meta($molt_logs[0]->ID, '_setae_log_date', true);
+                    update_post_meta($spider_id, '_setae_last_molt_date', $latest_molt_date);
+                } else {
+                    delete_post_meta($spider_id, '_setae_last_molt_date');
+                }
+            }
         }
 
         return new WP_REST_Response(array('success' => true), 200);
