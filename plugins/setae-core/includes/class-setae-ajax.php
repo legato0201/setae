@@ -634,7 +634,7 @@ class Setae_Ajax
             SELECT COUNT(DISTINCT c.comment_ID)
             FROM {$wpdb->comments} c
             INNER JOIN {$wpdb->posts} p ON c.comment_post_ID = p.ID
-            WHERE p.post_type = 'setae_thread'
+            WHERE p.post_type = 'setae_topic'
             AND c.comment_date > %s
             AND c.user_id != %d
             AND (
