@@ -335,17 +335,33 @@ var SetaeUI = (function ($) {
     // Species Logic
     // ==========================================
     function openSpeciesDetail(id) {
-        // ▼ 追加: 現在の一覧画面のスクロール位置を保存しておく
         encScrollPosition = $(window).scrollTop();
 
-        $('#section-enc').hide();
-        $('#section-enc-detail').show();
+        const $encSection = $('#section-enc');
+        const $detailSection = $('#section-enc-detail');
 
-        // ▼ 追加: 詳細画面を開く際、ウィンドウのスクロールを一番上(0)にリセットする
+        // 一覧を隠して詳細を表示し、一番上へ
+        $encSection.hide();
+        $detailSection.show();
         $(window).scrollTop(0);
 
-        $('#enc-detail-title').text(setaeI18n.loading);
-        $('#enc-gallery-grid').html(`<p style="text-align:center;">${setaeI18n.loading}</p>`);
+        // ★プロ仕様の改善: ヘッダー以外のコンテンツ(カード類)を一旦隠す
+        $detailSection.children('.setae-card').hide();
+
+        // ローダーが存在しなければ追加
+        if ($('#enc-detail-loading-spinner').length === 0) {
+            $detailSection.append(`
+                <div id="enc-detail-loading-spinner" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding: 100px 0; color: #999;">
+                    <div class="spinner-icon" style="width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top-color: #2ecc71; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <span style="font-size: 12px; margin-top: 15px; font-weight: bold; letter-spacing: 1px; color: #aaa;">LOADING...</span>
+                </div>
+            `);
+        } else {
+            $('#enc-detail-loading-spinner').show();
+        }
+
+        // タイトルバーは「読み込み中」としておく
+        $('#enc-detail-title').text((typeof setaeI18n !== 'undefined' && setaeI18n.loading) ? setaeI18n.loading : 'Loading...');
 
         SetaeAPI.getSpeciesDetail(id, function (data) {
             const displayName = data.ja_name ? data.ja_name : data.title;
@@ -484,6 +500,12 @@ var SetaeUI = (function ($) {
                     })
                     .catch(err => console.error('Ad fetch error:', err));
             }
+
+            // ▼▼▼ ここから追加 ▼▼▼
+            // データセット完了後、ローダーを消してコンテンツをフェードインさせる
+            $('#enc-detail-loading-spinner').hide();
+            $('#section-enc-detail').children('.setae-card').fadeIn(300);
+            // ▲▲▲ ここまで追加 ▲▲▲
         });
     }
 
