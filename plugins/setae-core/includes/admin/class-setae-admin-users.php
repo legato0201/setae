@@ -105,6 +105,11 @@ class Setae_Admin_Users
     public function add_last_login_column($columns)
     {
         $columns['setae_last_login'] = '最終ログイン';
+
+        // ↓↓↓ 変更: メモ登録数カラムの定義 ↓↓↓
+        $columns['setae_log_count'] = 'メモ登録数';
+        // ↑↑↑ ここまで ↑↑↑
+
         return $columns;
     }
 
@@ -125,6 +130,14 @@ class Setae_Admin_Users
             }
             return '<span style="color:#777;">記録なし</span>';
         }
+
+        // ↓↓↓ 変更: メモ(ログ)登録数の取得と表示 ↓↓↓
+        if ('setae_log_count' === $column_name) {
+            $log_count = count_user_posts($user_id, 'setae_log');
+            return intval($log_count);
+        }
+        // ↑↑↑ ここまで ↑↑↑
+
         return $value;
     }
     // --- ここまで追加 ---

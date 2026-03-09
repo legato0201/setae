@@ -436,6 +436,17 @@ var SetaeUI = (function ($) {
                         if (data.has_ad && data.html) {
                             // 管理画面で設定した広告HTMLで上書きし、デフォルトの枠線を消す
                             adContainer.innerHTML = data.html;
+
+                            // ↓↓↓ ここから追加: innerHTMLで挿入されたscriptタグを再構築して実行させる ↓↓↓
+                            const scripts = adContainer.querySelectorAll('script');
+                            scripts.forEach(oldScript => {
+                                const newScript = document.createElement('script');
+                                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                                oldScript.parentNode.replaceChild(newScript, oldScript);
+                            });
+                            // ↑↑↑ ここまで追加 ↑↑↑
+
                             adContainer.style.border = 'none';
                             adContainer.style.padding = '0';
                             adContainer.style.background = 'transparent';

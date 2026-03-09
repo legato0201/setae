@@ -262,6 +262,10 @@
 
 /* 5. ナビゲーションバー (Mobile: Floating Style) */
 @media (max-width: 767px) {
+    .setae-content {
+        padding-bottom: 130px !important;
+    }
+
     .setae-nav {
         display: flex;
         justify-content: space-around;
