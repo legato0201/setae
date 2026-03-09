@@ -1,6 +1,9 @@
 var SetaeUI = (function ($) {
     'use strict';
 
+    // ▼ 追加: 図鑑一覧のスクロール位置を記憶する変数
+    let encScrollPosition = 0;
+
     // ==========================================
     // Initialization & Event Listeners
     // ==========================================
@@ -275,7 +278,10 @@ var SetaeUI = (function ($) {
         // Species Detail Back Button
         $(document).on('click', '#btn-back-to-enc', function () {
             $('#section-enc-detail').hide();
-            $('#section-enc').fadeIn(200);
+            $('#section-enc').fadeIn(200, function () {
+                // ▼ 追加: 一覧に戻った際、記憶しておいたスクロール位置へ復元する
+                $(window).scrollTop(encScrollPosition);
+            });
         });
 
         // Species Card Click - Updated selector for PHP rendered items
@@ -329,8 +335,15 @@ var SetaeUI = (function ($) {
     // Species Logic
     // ==========================================
     function openSpeciesDetail(id) {
+        // ▼ 追加: 現在の一覧画面のスクロール位置を保存しておく
+        encScrollPosition = $(window).scrollTop();
+
         $('#section-enc').hide();
-        $('#section-enc-detail').show().scrollTop(0);
+        $('#section-enc-detail').show();
+
+        // ▼ 追加: 詳細画面を開く際、ウィンドウのスクロールを一番上(0)にリセットする
+        $(window).scrollTop(0);
+
         $('#enc-detail-title').text(setaeI18n.loading);
         $('#enc-gallery-grid').html(`<p style="text-align:center;">${setaeI18n.loading}</p>`);
 
