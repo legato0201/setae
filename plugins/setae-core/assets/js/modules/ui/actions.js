@@ -527,9 +527,9 @@ var SetaeUIActions = (function ($) {
                 const status = $(this).data('status') || 'normal';
                 const config = getSwipeConfig(status);
 
-                // ▼▼▼ ここから変更 ▼▼▼
-                const preyType = $(this).data('prey') || '';
-                const spiderId = $(this).data('id');
+                // ▼▼▼ 修正箇所: jQueryのキャッシュを回避し、最新の属性値を優先取得 ▼▼▼
+                const preyType = $(this).attr('data-prey') || $(this).data('prey') || '';
+                const spiderId = $(this).attr('data-id') || $(this).data('id');
                 let hasLastFeed = false;
 
                 // 1. キャッシュから給餌履歴を確認
@@ -593,9 +593,18 @@ var SetaeUIActions = (function ($) {
             if (content) content.style.transform = 'translateX(0)';
             const bgLeft = this.querySelector('.swipe-left');
             const bgRight = this.querySelector('.swipe-right');
-            // マウスが離れたら玉を消す
-            if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
-            if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
+
+            // ▼▼▼ 修正箇所: マウスが離れたら状態フラグをリセットし、次回ホバー時に再生成させる ▼▼▼
+            if (bgLeft) {
+                bgLeft.classList.remove('is-visible');
+                bgLeft.style.width = '64px';
+                delete bgLeft.dataset.setup;
+            }
+            if (bgRight) {
+                bgRight.classList.remove('is-visible');
+                bgRight.style.width = '64px';
+                delete bgRight.dataset.setup;
+            }
         });
     }
 
