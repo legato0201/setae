@@ -523,8 +523,8 @@ var SetaeUIActions = (function ($) {
             const bgRight = this.querySelector('.swipe-right');
 
             // ★ PC版：ホバー時に背景色やアイコンを生成する
-            if (bgLeft && !bgLeft.dataset.setup) {
-                const status = $(this).data('status') || 'normal';
+            if (bgLeft && !bgLeft.hasAttribute('data-setup')) {
+                const status = $(this).attr('data-status') || $(this).data('status') || 'normal';
                 const config = getSwipeConfig(status);
 
                 // ▼▼▼ 修正箇所: jQueryのキャッシュを回避し、最新の属性値を優先取得 ▼▼▼
@@ -559,8 +559,8 @@ var SetaeUIActions = (function ($) {
                 setupSwipeBg(bgRight, config.left_swipe);
                 // ▲▲▲ 変更ここまで ▲▲▲
 
-                bgLeft.dataset.setup = '1';
-                bgRight.dataset.setup = '1';
+                bgLeft.setAttribute('data-setup', '1');
+                bgRight.setAttribute('data-setup', '1');
 
                 // インラインのvisibilityが残っている場合の対策
                 bgLeft.style.visibility = '';
@@ -598,12 +598,12 @@ var SetaeUIActions = (function ($) {
             if (bgLeft) {
                 bgLeft.classList.remove('is-visible');
                 bgLeft.style.width = '64px';
-                delete bgLeft.dataset.setup;
+                bgLeft.removeAttribute('data-setup');
             }
             if (bgRight) {
                 bgRight.classList.remove('is-visible');
                 bgRight.style.width = '64px';
-                delete bgRight.dataset.setup;
+                bgRight.removeAttribute('data-setup');
             }
         });
     }
