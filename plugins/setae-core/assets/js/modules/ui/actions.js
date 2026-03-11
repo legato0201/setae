@@ -527,24 +527,37 @@ var SetaeUIActions = (function ($) {
                 const status = $(this).data('status') || 'normal';
                 const config = getSwipeConfig(status);
 
-                // ▼ 変更箇所
+                // ▼▼▼ ここから変更 ▼▼▼
                 const preyType = $(this).data('prey') || '';
                 const spiderId = $(this).data('id');
                 let hasLastFeed = false;
 
+                // 1. キャッシュから給餌履歴を確認
                 if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
                     const spider = SetaeCore.state.cachedSpiders.find(s => s.id == spiderId);
                     if (spider && spider.last_feed) hasLastFeed = true;
                 }
 
+                // 2. キャッシュが無い場合のフォールバック（画面上のテキストから判定）
+                if (!hasLastFeed) {
+                    const feedText = $(this).find('.meta-label').filter(function () {
+                        return $(this).text().trim().match(/^(Feed|給餌)$/);
+                    }).next('.meta-value').text().trim();
+
+                    if (feedText && feedText !== '-' && feedText !== '未記録') {
+                        hasLastFeed = true;
+                    }
+                }
+
                 let rightCaption = '';
+                // 右スワイプが給餌系アクションで、かつ過去の履歴がある場合のみキャプションを渡す
                 if ((config.right_swipe.action === 'feed' || config.right_swipe.action === 'ate') && hasLastFeed) {
                     rightCaption = preyType;
                 }
 
                 setupSwipeBg(bgLeft, config.right_swipe, rightCaption);
                 setupSwipeBg(bgRight, config.left_swipe);
-                // ▲ 変更箇所ここまで
+                // ▲▲▲ 変更ここまで ▲▲▲
 
                 bgLeft.dataset.setup = '1';
                 bgRight.dataset.setup = '1';
