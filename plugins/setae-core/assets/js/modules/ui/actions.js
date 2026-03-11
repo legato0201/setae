@@ -298,16 +298,50 @@ var SetaeUIActions = (function ($) {
         const status = $(this).data('status') || 'normal';
         const config = getSwipeConfig(status);
 
-        setupSwipeBg(bgLeft, config.right_swipe);
+        // ▼ 変更箇所
+        const preyType = $(this).data('prey') || '';
+        const spiderId = $(this).data('id');
+        let hasLastFeed = false;
+
+        // キャッシュから過去の給餌履歴があるか確認
+        if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
+            const spider = SetaeCore.state.cachedSpiders.find(s => s.id == spiderId);
+            if (spider && spider.last_feed) hasLastFeed = true;
+        }
+
+        // 右スワイプが給餌（feedまたはate）で、かつ過去の履歴がある（即時実行される）場合のみキャプションを渡す
+        let rightCaption = '';
+        if ((config.right_swipe.action === 'feed' || config.right_swipe.action === 'ate') && hasLastFeed) {
+            rightCaption = preyType;
+        }
+
+        setupSwipeBg(bgLeft, config.right_swipe, rightCaption);
         setupSwipeBg(bgRight, config.left_swipe);
+        // ▲ 変更箇所ここまで
     }
 
     // ▼▼▼ ここに追加：色とアイコンを注入する必須関数 ▼▼▼
-    function setupSwipeBg(el, conf) {
+    function setupSwipeBg(el, conf, caption = '') {
         if (!el || !conf) return;
         el.style.backgroundColor = conf.color;
         el.dataset.action = conf.action;
-        el.innerHTML = `<span class="swipe-icon" style="font-size:24px; line-height:1;">${conf.icon}</span>`;
+
+        if (caption) {
+            // キャプションがある場合（プロ仕様のレイアウト）
+            // 括弧内の日本語だけを抽出する（例: "Dubia (デュビア)" -> "デュビア"）
+            const match = caption.match(/\((.*?)\)/);
+            const shortCaption = match ? match[1] : caption;
+
+            el.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%;">
+                    <span class="swipe-icon" style="font-size:20px; line-height:1; margin-bottom:2px;">${conf.icon}</span>
+                    <span style="font-size:9px; color:#fff; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90%; text-shadow:0 1px 2px rgba(0,0,0,0.3); letter-spacing:0.5px;">${shortCaption}</span>
+                </div>
+            `;
+        } else {
+            // 通常時
+            el.innerHTML = `<span class="swipe-icon" style="font-size:24px; line-height:1;">${conf.icon}</span>`;
+        }
     }
     // ▲▲▲ 追加ここまで ▲▲▲
 
@@ -492,8 +526,26 @@ var SetaeUIActions = (function ($) {
             if (bgLeft && !bgLeft.dataset.setup) {
                 const status = $(this).data('status') || 'normal';
                 const config = getSwipeConfig(status);
-                setupSwipeBg(bgLeft, config.right_swipe);
+
+                // ▼ 変更箇所
+                const preyType = $(this).data('prey') || '';
+                const spiderId = $(this).data('id');
+                let hasLastFeed = false;
+
+                if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
+                    const spider = SetaeCore.state.cachedSpiders.find(s => s.id == spiderId);
+                    if (spider && spider.last_feed) hasLastFeed = true;
+                }
+
+                let rightCaption = '';
+                if ((config.right_swipe.action === 'feed' || config.right_swipe.action === 'ate') && hasLastFeed) {
+                    rightCaption = preyType;
+                }
+
+                setupSwipeBg(bgLeft, config.right_swipe, rightCaption);
                 setupSwipeBg(bgRight, config.left_swipe);
+                // ▲ 変更箇所ここまで
+
                 bgLeft.dataset.setup = '1';
                 bgRight.dataset.setup = '1';
 
