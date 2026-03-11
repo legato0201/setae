@@ -277,10 +277,19 @@ var SetaeUI = (function ($) {
 
         // Species Detail Back Button
         $(document).on('click', '#btn-back-to-enc', function () {
+            // 1. 詳細画面を即座に隠す
             $('#section-enc-detail').hide();
-            $('#section-enc').fadeIn(200, function () {
-                // ▼ 追加: 一覧に戻った際、記憶しておいたスクロール位置へ復元する
-                $(window).scrollTop(encScrollPosition);
+
+            // 2. 一覧画面を「透明な状態(opacity: 0)」で即座に表示(show)し、DOMの高さを確保する
+            $('#section-enc').css('opacity', 0).show();
+
+            // 3. ブラウザが画面を描画する前に、スクロール位置を元の場所へ復元する（カクつきを完全防止）
+            $(window).scrollTop(encScrollPosition);
+
+            // 4. その後、200ミリ秒かけてフワッとフェードインさせる
+            $('#section-enc').animate({ opacity: 1 }, 200, function () {
+                // アニメーション完了後、念のためインラインのopacityスタイルをクリーンアップ
+                $(this).css('opacity', '');
             });
         });
 
@@ -828,9 +837,19 @@ var SetaeUI = (function ($) {
     // Removed: loadSpeciesBook() - Now handled by PHP in section-encyclopedia.php
 
 
+    // 修正後
     function handleToolbarShadow(scrollTop) {
-        if (scrollTop > 10) $('.setae-toolbar-container').addClass('sticky-shadow');
-        else $('.setae-toolbar-container').removeClass('sticky-shadow');
+        if (scrollTop > 10) {
+            $('.setae-toolbar-container').addClass('sticky-shadow').each(function () {
+                // ネイティブAPIで確実に !important を付与する
+                this.style.setProperty('z-index', '2002', 'important');
+            });
+        } else {
+            $('.setae-toolbar-container').removeClass('sticky-shadow').each(function () {
+                // スクロールが上に戻ったら z-index 自体を削除して元に戻す
+                this.style.removeProperty('z-index');
+            });
+        }
     }
 
     // ==========================================

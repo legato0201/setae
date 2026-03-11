@@ -37,7 +37,8 @@ const SetaeUI_Community = (function ($) {
             <button id="btn-jump-latest" type="button" aria-label="最新のコメントへ" style="
                 display: none;
                 position: fixed;
-                bottom: 80px; /* 入力フォームのすぐ上に配置 */
+                /* ▼ スマホのボトムメニュー高(約60〜80px)＋余白＋iOSセーフエリアを考慮 */
+                bottom: calc(110px + env(safe-area-inset-bottom, 0px)); 
                 right: 20px;
                 width: 44px;
                 height: 44px;

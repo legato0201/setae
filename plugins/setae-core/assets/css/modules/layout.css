@@ -36,7 +36,7 @@
     position: sticky !important;
     top: 90px;
     /* PCでのヘッダーオフセット */
-    z-index: 900;
+    /* z-index: 900;*/
 
     /* Floating Box Model: 画面端から浮かせる */
     width: auto;
@@ -56,12 +56,15 @@
 
 }
 
+.sticky-shadow {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
 /* モバイル用（メディアクエリ内）の調整 */
 @media (max-width: 767px) {
     .setae-toolbar-container {
         /* モバイルでは安全領域（ノッチなど）を考慮しつつ上部に浮かせる */
         top: calc(8px + env(safe-area-inset-top)) !important;
-        z-index: 2000 !important;
         padding: 10px 14px;
         /* Depth: 浮遊感を出すシャドウ */
         box-shadow:
