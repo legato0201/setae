@@ -30,8 +30,21 @@ temporary ZIP/source/declaration files. Git/GitHub command responses in the CI
 tests are explicit stubs with no external fallback. Admission must say `ADMITTED`
 and retain the raw check statuses; it does not mean runtime tests were executed.
 Workflow-template checks are static: they verify the absence of a staging job,
-the first manual confirmation, automatic-release opt-in and mandatory executable
-gates. They do not verify GitHub's actual environment reviewer settings.
+the standing-authorization flow, pipeline enable switch and mandatory executable
+gates. They do not verify GitHub's actual environment reviewer settings or change
+existing protection settings.
+
+Bootstrap tests exercise actual setup flow and temporary files while explicitly
+stubbing Linux ownership, accounts, SSH configuration, sudo and WordPress reads.
+They cover refusal of unknown existing state, pinned payloads, restricted keys,
+disabled-before-verification ordering and disabling after a failed enable check.
+They do not install accounts or sudo rules on the test host.
+
+Local-client tests use actual synthetic ZIP/source/declaration data and explicit
+GitHub, Windows ACL and SSH boundary stubs. They exercise commit/tree equality,
+unchanged test gates, exact stdin bytes, receipt validation and uncertain-outcome
+stops. Separate evidence is required for actual Windows ACL or public API checks;
+none of these tests claims a production deployment or backup restore.
 
 CI should require the complete discovered deployment test suite and the selected
 release gates. A missing interpreter, a skipped required check, an incomplete

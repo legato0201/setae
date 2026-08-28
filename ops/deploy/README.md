@@ -4,6 +4,12 @@
 WordPress installation is required. Adding these files does not install a server
 helper, configure SSH, approve a release or enable a workflow.**
 
+The operator has granted standing authorization for automatic plugin updates,
+including the first deployment. Repeated human approval and a mandatory first
+manual run are not required by this template. That operational authorization is
+separate from working SSH/sudo access, server readiness, release evidence and
+quality gates; it does not make any unexecuted or failed check pass.
+
 This directory belongs to the existing `wp-content` Git repository, whose remote
 is `legato0201/setae`. It is not included in the WordPress plugin ZIP.
 
@@ -14,11 +20,39 @@ is `legato0201/setae`. It is not included in the WordPress plugin ZIP.
 | `release/release.py` | Inspect an existing ZIP, compare every first-party file with the tagged source, create an unapproved declaration, enforce release review, send a bounded stdin frame over pinned SSH |
 | `release/check_plugin.py` | Run packaged first-party PHP/JS syntax and unit suites; missing runtimes, missing suites and reported skips are not PASS |
 | `release/ci_release.py` | Read GitHub policy/release metadata, download the exact reviewed release asset, verify the commit and bytes, prepare the actual adjacent theme for unit tests |
+| `release/local_release.py` | Windows operator/agent client: validate local key ACLs, compare ZIP source with an exact public GitHub commit, send through the same fixed SSH helper |
+| `server/bootstrap_ubuntu.py` | Explicit one-time Ubuntu 24.04 setup of the root-managed helper, restricted account/key and sudo rule; never installs a plugin during setup |
+| `server/bootstrap-ubuntu.md` | Initial setup checks, fixed paths and remaining real-host verification |
 | `server/setae-deploy` | Fixed no-argument launcher, root owned, executed as `www-data` |
 | `server/setae_deploy.py` | Fixed `setae-core` updater, private backup/journal, version/hash checks and failure stop |
 | `server/config.example.json` | Root-managed configuration template; both enable flags are false |
-| `workflows/release.yml.example` | Inert GitHub Actions template: verify → production environment approval; first run requires manual confirmation |
+| `workflows/release.yml.example` | Inert GitHub Actions template: verify → production under standing authorization, retaining existing environment protections |
 | `tests/` | Offline tests of the actual Python code with synthetic data and explicit runtime stubs |
+
+## Deployment from the operator's Windows PC
+
+The local client can complete an agent/operator-driven update under standing
+authorization without configuring GitHub Actions. It has `preflight` and `send`
+commands and accepts a local schema-1 connection JSON containing only
+`schema_version`, `host`, integer `port`, `key_file` and `known_hosts_file`.
+The SSH username and remote command are fixed; the identity is passed by filename
+and its contents are never printed or loaded into a Python environment variable.
+Keep connection files and host pins in the same protected local directory as the
+dedicated key, outside this repository. Reports must use new filenames.
+
+`send` retains schema-2 review, ZIP/source equality, version and exact-receipt
+checks. Before contacting SSH it reads only this public repository's immutable
+commit/tree objects and matches every non-vendor ZIP file to its Git blob hash.
+This route does not verify main-branch ancestry, GitHub tag protection or a
+published Release; its receipt states that distinction. Its release identifier
+is not proof that a GitHub tag or Release exists. The separate CI route below
+keeps all of those GitHub policy gates. Do not use the local route to bypass an
+existing organizational deployment restriction.
+
+Neither client installs a background timer or deploys every push. Initial setup
+must still be run by the server administrator, and external SSH authentication
+must be verified before the first actual update. A passing local ACL or `ssh -G`
+test is not a successful SSH connection. See `server/bootstrap-ubuntu.md`.
 
 ## Release admission
 
@@ -45,16 +79,22 @@ schema-2 declaration deliberately sets every review check to `NOT_RUN`, no revie
 `code_only: false`, production-only acceptance to `false`, and no risk approvals.
 It cannot deploy. Evidence references must describe the
 same ZIP SHA-256 and the stated installed baseline. The tool verifies the recorded
-values but cannot prove that a human's linked evidence is truthful.
+values but cannot independently establish that linked evidence is truthful.
 
-The review has two separate decisions, neither inferred from a request to omit
-staging:
+The review still records the following decisions for the exact artifact. An
+identified automated reviewer may supply `approved_by` and make these decisions
+from actual evidence under the standing authorization. Do not generate PASS
+results, blanket NOT_RUN exemptions or placeholder evidence merely to admit a
+candidate:
 
 - `production_only_acknowledgment` requires `accepted: true`, a `reason`, an
   `approved_by` identity, and `initial_manual_verification_evidence`. The evidence
   references actual initial server/readiness checks: fixed paths and active
   baseline, service-user permissions, PHP 8.3 CLI, authorization, backup readiness
-  and web-cache/OPcache handling. It is not a claim that WordPress acceptance or
+  and web-cache/OPcache handling. `initial_manual_verification_evidence` retains
+  its schema-2 field name for compatibility; those checks may be automated and
+  do not require a human-run first deployment. The evidence must still exist.
+  It is not a claim that WordPress acceptance or
   a restore drill ran. This approval is tied to the declaration's artifact hash.
 - `risk_acknowledgments` can name only `wordpress_mysql_acceptance` or
   `backup_restore_drill`, and only when the original check is `NOT_RUN`. Each entry
@@ -73,9 +113,9 @@ permission or contract changes. The reviewed code-only requirement remains.
 The `verify` command reports `ADMITTED` with the original review statuses, not a
 test PASS. Schema-1 declarations are refused instead of silently converted.
 Preparation never approves a candidate, and these policy changes do not approve
-the currently installed version or any existing ZIP.
+the quality of the currently installed version or any existing ZIP.
 
-After the actual reviews/tests and any permitted explicit risk decisions, put the completed declaration at
+For the GitHub Actions route, after the actual reviews/tests and any permitted explicit risk decisions, put the completed declaration at
 `ops/deploy/releases/setae-vVERSION.json` in the reviewed commit. Use that commit's
 protected `setae-vVERSION` tag and attach the exact named ZIP to its stable GitHub
 release. Synchronizing source to the existing public repository is separate from
@@ -100,11 +140,11 @@ the delivered version, or treat source synchronization as release approval.
 ## CI and credentials
 
 Do not move the template into `.github/workflows` or set
-`SETAE_PIPELINE_ENABLED` to `true` until the protected-source sync, initial manual
-server/readiness review and authorization setup are complete. A separate staging
-job/environment is not used. Keep `SETAE_AUTOMATIC_RELEASES_ENABLED` unset or
-`false` until the first manually confirmed production run and its follow-up
-checks are complete. Neither flag is set automatically by this template.
+`SETAE_PIPELINE_ENABLED` to `true` until the protected-source sync, measured initial
+server readiness and authorization setup are complete. A separate staging
+job/environment is not used. This template does not enable itself. Once enabled,
+a published stable release can start the first or a later deployment without a
+separate manual-run flag; all release and executable gates still apply.
 
 The workflow requires protected `main` and an active tag ruleset matching
 `refs/tags/setae-v*` (or all tags), with creation/update/deletion restrictions and
@@ -125,16 +165,17 @@ The host key must be independently verified by the administrator. The transport
 does not use `StrictHostKeyChecking=no`, ssh-agent, forwarded agents or inherited
 SSH config. Passwords/private keys must not be pasted into a chat or committed.
 
-Every production run requires a `setae-production` environment reviewer.
-Restrict the environment to release tags and disable administrator bypass. For a
-manual `workflow_dispatch`, select the **same tag** in “Use workflow from” and
-the `release_tag` input, and explicitly check `confirm_production_only`; running
-from `main` or leaving confirmation false is refused. Use this path for the first
-run. A release publication stops until an administrator explicitly enables
-`SETAE_AUTOMATIC_RELEASES_ENABLED` after that manual run. Later publication events
-can start the same pipeline, with the production reviewer and release declaration
-gates still required. This flag and the manual checkbox do not approve an artifact
-whose declaration or executable checks fail.
+The template does not impose a human reviewer on each `setae-production` run.
+It retains the environment and its secrets. If the actual GitHub environment
+already requires reviewers or another protection, the job must wait for that
+protection; standing authorization is not a mechanism to bypass it. This local
+change does not modify existing GitHub protection settings. Keep release-tag
+restrictions and do not bypass protection to deploy.
+
+Optional `workflow_dispatch` still requires the **same tag** in “Use workflow
+from” and the `release_tag` input; running from `main` is refused. Neither a
+publication event nor the standing authorization can admit an artifact whose
+schema-2 declaration or executable checks fail.
 
 ## Failure and boundaries
 
@@ -173,7 +214,8 @@ The result reports distinguish offline assertions and the PHP 8.4 local plugin
 run from any unexecuted PHP 8.3 GitHub/Ubuntu or production checks. Linux and real
 WordPress behavior must not be described as verified by runtime stubs. A permitted
 NOT_RUN acknowledgment records a missing check; it is not a passing test. No
-offline PASS is an authorization to enable production.
+offline PASS by itself proves that production is ready or overrides a quality
+gate. Standing operational authorization does not change these results.
 
 ## Official references
 

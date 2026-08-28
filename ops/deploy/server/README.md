@@ -5,6 +5,11 @@ server configuration, SSH key, sudo permission or GitHub workflow is installed
 by adding them to the repository. The example configuration has both `enabled`
 and `auth_ready` set to `false` and has no smoke URL.
 
+Standing operational authorization allows automatic plugin updates, including
+the first deployment, without repeated human approval. It does not establish
+SSH/sudo access, make server-readiness checks pass or override release quality
+gates. Existing access controls and GitHub environment protections still apply.
+
 ## Execution boundary
 
 An administrator must separately install the wrapper, Python module and JSON
@@ -29,19 +34,23 @@ stored below this directory. File staging here means a temporary archive working
 area, not a separate staging WordPress installation; no root-only working
 directory is required.
 
-The Python runtime must be version 3.10 or newer. This template's reviewed CI
+The Python runtime must be version 3.10 or newer. The wrapper uses the absolute
+`/usr/bin/python3` with isolated mode, not an interactive user's pyenv Python.
+Verify that exact system runtime; an interactive Python 3.8 does not satisfy or
+identify the helper's runtime. This template's reviewed CI
 environment uses **CLI PHP 8.3**. Preflight reports another minor but sets
 `php_cli_compatible` and `deployment_ready` to `false`; deployment refuses it
 before backup or installation. Changing this fixed minor requires a coordinated
 review of both CI and the server helper. PHP-FPM/web PHP is a separate runtime
-and must be checked during the initial manual production-readiness review.
+and must be checked during the initial production-readiness review, which may
+be automated and must record actual evidence.
 
 The SSH key must be restricted to the exact no-argument command, and sudoers must
 permit only `(www-data)` execution of that helper with no arguments. The helper
 rejects CLI arguments. If preserved by sudo, `SSH_ORIGINAL_COMMAND` is checked,
 but that optional environment value is not an authentication mechanism.
-`auth_ready` only records an administrator's explicit confirmation of the
-external SSH/sudo configuration; it cannot install or prove it.
+`auth_ready` records completion of the authorized external SSH/sudo setup; the
+flag alone cannot install or prove that configuration.
 
 PHP code supplied by an approved release executes with the application's normal
 filesystem, database and secret access. Compromised PHP already running as
@@ -141,21 +150,27 @@ demonstrate real Linux ownership, flock or resource-limit enforcement, SSH/sudo
 authorization, WP-CLI updates, MySQL backup/restore or production HTTP health.
 Those real-host deployment checks remain unverified by this local evidence;
 they must not be described as PASS. Run the deployment suite described in
-`../tests/README.md` and record the initial manual production-readiness review.
+`../tests/README.md` and record measured initial production readiness.
 A separate staging WordPress installation is not required by this deployment
 plan.
 
 Client-side release admission uses declaration schema 2; the server's stdin wire
 protocol above remains version 1. Schema 2 requires explicit production-only
-acknowledgment, initial manual verification evidence and approval of the exact
-artifact. Only `wordpress_mysql_acceptance: NOT_RUN` and
+acknowledgment, initial server-readiness evidence and review of the exact
+artifact. An identified automated reviewer may provide `approved_by` under the
+standing authorization. The existing `initial_manual_verification_evidence`
+field name is retained for schema compatibility; it may refer to actual automated
+readiness checks and does not require a human-run first deployment. Evidence
+cannot be invented or replaced with the operational permission itself.
+Only `wordpress_mysql_acceptance: NOT_RUN` and
 `backup_restore_drill: NOT_RUN` may have individual risk acknowledgments with a
 reason and approver. Their original results stay NOT_RUN. This is not evidence
 that a backup was validated or restored successfully, and it does not waive the
 server's mandatory backup creation/hash checks. All FAIL results still block
 release admission; performance, GUI and compatibility checks have no exception.
-See `../README.md` for the admission fields and first-run confirmation. Omitting
-staging does not approve any particular release or authorize server changes.
+See `../README.md` for the admission fields and operational authorization. Neither
+omitting staging nor standing approval turns an unverified release into a passing
+one, and neither bypasses the server's connection or integrity checks.
 
 An active-plugin CLI check with `--skip-plugins` does not bootstrap ordinary
 plugins. The REST smoke exercises the web path, but is not full application QA

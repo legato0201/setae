@@ -1,6 +1,6 @@
 # INERT TEMPLATE: this is not in .github/workflows and is not installed remotely.
-# Production only: enable after manual server checks, current-source sync,
-# tag/branch protections and production reviewers have been configured.
+# Production only: standing authorization permits the first and later automatic runs.
+# Enable only after measured server readiness, source sync and protection checks.
 # Unexecuted WP/restore checks retain NOT_RUN and need per-release risk approval.
 name: SETAE reviewed release
 
@@ -11,11 +11,6 @@ on:
         description: 'Published stable release tag (setae-vX.Y.Z or setae-vX.Y.Z.N)'
         required: true
         type: string
-      confirm_production_only:
-        description: 'I reviewed this exact candidate for production-only deployment; no staging run is available'
-        required: true
-        default: false
-        type: boolean
   release:
     types: [published]
 
@@ -46,18 +41,10 @@ jobs:
         shell: bash
         env:
           WORKFLOW_REF: ${{ github.ref }}
-          EVENT_NAME: ${{ github.event_name }}
-          MANUAL_CONFIRMATION: ${{ inputs.confirm_production_only }}
-          AUTOMATIC_RELEASES_ENABLED: ${{ vars.SETAE_AUTOMATIC_RELEASES_ENABLED }}
         run: |
           set -euo pipefail
           [[ "$RELEASE_TAG" =~ ^setae-v(0|[1-9][0-9]{0,5})(\.(0|[1-9][0-9]{0,5})){2,3}$ ]]
           [[ "$WORKFLOW_REF" == "refs/tags/$RELEASE_TAG" ]]
-          if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
-            [[ "$MANUAL_CONFIRMATION" == 'true' ]] || { echo 'STOP: production-only confirmation is required'; exit 1; }
-          else
-            [[ "$AUTOMATIC_RELEASES_ENABLED" == 'true' ]] || { echo 'STOP: complete the first manually confirmed production run before enabling release-event deployment'; exit 1; }
-          fi
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2; verified upstream tag
         with:
           ref: refs/tags/${{ inputs.release_tag || github.event.release.tag_name }}
@@ -92,9 +79,9 @@ jobs:
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 40
-    # Every run, including the first manual run, requires a production reviewer.
-    # This environment must require an administrator's approval, restrict release
-    # tags, and prohibit bypass. The YAML name alone does not configure protection.
+    # Existing environment protections remain in force. This template neither
+    # adds a per-run human approval requirement nor bypasses configured reviewers.
+    # Keep environment secrets and release-tag restrictions in this environment.
     environment: setae-production
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

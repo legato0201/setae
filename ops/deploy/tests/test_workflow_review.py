@@ -28,18 +28,19 @@ class WorkflowReviewTests(unittest.TestCase):
         self.assertRegex(self.jobs["production"], r"(?m)^    environment: setae-production\s*$")
         self.assertNotRegex(self.source, r"(?m)^\s*(?:environment|needs):[^\n]*staging")
 
-    def test_first_manual_run_and_automatic_runs_have_explicit_separate_guards(self):
-        inputs = self.source.split("      confirm_production_only:\n", 1)[1].split("\n  release:", 1)[0]
-        for expected in ("required: true", "default: false", "type: boolean"):
-            self.assertIn(expected, inputs)
+    def test_standing_authorization_removes_manual_gates_but_retains_release_guards(self):
+        self.assertIn("\n  workflow_dispatch:\n", self.source)
+        self.assertIn("\n  release:\n    types: [published]\n", self.source)
+        for removed in ("confirm_production_only", "MANUAL_CONFIRMATION", "SETAE_AUTOMATIC_RELEASES_ENABLED"):
+            self.assertNotIn(removed, self.source)
         before_checkout = self.jobs["verify"].split("      - uses: actions/checkout@", 1)[0]
         self.assertIn("vars.SETAE_PIPELINE_ENABLED == 'true'", before_checkout)
-        self.assertIn("MANUAL_CONFIRMATION: ${{ inputs.confirm_production_only }}", before_checkout)
-        self.assertIn("AUTOMATIC_RELEASES_ENABLED: ${{ vars.SETAE_AUTOMATIC_RELEASES_ENABLED }}", before_checkout)
-        self.assertIn('if [[ "$EVENT_NAME" == \'workflow_dispatch\' ]]; then', before_checkout)
-        self.assertRegex(before_checkout, r'''\[\[ "\$MANUAL_CONFIRMATION" == 'true' \]\] \|\| \{[^\n]*exit 1; \}''')
-        self.assertRegex(before_checkout, r'''else\s+\[\[ "\$AUTOMATIC_RELEASES_ENABLED" == 'true' \]\] \|\| \{[^\n]*exit 1; \}''')
+        self.assertIn("github.repository == 'legato0201/setae'", before_checkout)
+        self.assertIn("github.event.release.draft == false", before_checkout)
+        self.assertIn("github.event.release.prerelease == false", before_checkout)
         self.assertIn('[[ "$WORKFLOW_REF" == "refs/tags/$RELEASE_TAG" ]]', before_checkout)
+        self.assertIn('[[ "$RELEASE_TAG" =~ ^setae-v', before_checkout)
+        self.assertIn("\npermissions:\n  contents: read\n", self.source)
 
     def test_required_executable_gates_run_before_production_without_ignore_failure(self):
         verify = self.jobs["verify"]
@@ -56,4 +57,3 @@ class WorkflowReviewTests(unittest.TestCase):
         self.assertIn("needs.verify.outputs.commit", production)
         self.assertIn("release.py send --archive", production)
         self.assertNotIn("continue-on-error:", production)
-

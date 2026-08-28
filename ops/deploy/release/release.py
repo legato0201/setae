@@ -1,6 +1,6 @@
 """Release admission and SSH transport. Never builds/replaces a delivered ZIP.
 
-Only Python's standard library is used. Review evidence is a human attestation,
+Only Python's standard library is used. Review evidence is a recorded attestation,
 not a substitute for the executable checks or a signature of the release.
 """
 from __future__ import annotations
