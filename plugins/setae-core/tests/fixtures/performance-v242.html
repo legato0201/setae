@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SETAE Performance Baseline</title>
+  <script>
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/quick-record.css">
+  <style>
+    html, body { margin: 0; min-height: 100%; }
+    #benchmark-root { width: 1280px; min-height: 900px; }
+  </style>
+</head>
+<body>
+  <main id="benchmark-root"></main>
+  <script type="module">
+    import { renderCollection } from '../../assets/app/pages/collection.js';
+    import { renderCollectionSearchResults } from '../../assets/app/features/collection/view.js';
+    import { renderSpecimenWorkspace } from '../../assets/app/features/specimen/view.js';
+    import { renderQuickRecordLauncher } from '../../assets/app/features/records/quick-record-view.js';
+    import { renderNurseryWorkspace } from '../../assets/app/features/nursery/view.js';
+    import { renderRecords } from '../../assets/app/pages/records.js';
+
+    const root = document.querySelector('#benchmark-root');
+    const day = (offset = 0) => new Date(Date.UTC(2026, 7, 27 - offset, 9, 0, 0)).toISOString();
+    const animals = Array.from({ length: 500 }, (_, index) => ({
+      id: index + 1,
+      individual_code: `C${String(index + 1).padStart(4, '0')}`,
+      species_name: index % 3 === 0 ? 'Typhochlaena seladonia' : index % 3 === 1 ? 'Caribena versicolor' : 'Latouchia typica',
+      gender: index % 2 ? 'male' : 'female',
+      instar: 4 + (index % 8),
+      status: index % 11 === 0 ? 'pre_molt' : 'normal',
+      last_feed: day(index % 24),
+      last_molt: day(index % 120),
+      last_observation: day(index % 18),
+      has_own_image: false
+    }));
+    const animalViews = [{ id: 'all', title: 'すべて', query: {} }];
+    const collectionOptions = {
+      tab: 'animals',
+      animals,
+      animalMode: 'table',
+      animalSearch: '',
+      animalViews,
+      activeAnimalView: animalViews[0],
+      careTasks: [],
+      collectionSelection: { selectedId: null, selectedIds: [], selectionMode: false },
+      animalCardConfig: {}
+    };
+    const specimenEvents = Array.from({ length: 80 }, (_, index) => ({
+      id: index + 1,
+      type: ['feed', 'observation', 'molt', 'growth'][index % 4],
+      date: day(index),
+      data: { prey_type: 'レッドローチ', quantity: 1, note: `観察記録 ${index + 1}`, instar: 4 + (index % 8), size: 2 + index / 10 }
+    }));
+    const careTasks = animals.slice(0, 80).map((animal, index) => ({
+      id: `feed:${animal.id}`,
+      animalId: animal.id,
+      type: index % 4 === 0 ? 'observation' : 'feed',
+      priority: index % 3 === 0 ? 'overdue' : 'today',
+      reason: `最終給餌から${8 + (index % 12)}日`
+    }));
+    const recent = animals.slice(0, 5).map((animal, index) => ({
+      animalId: animal.id,
+      type: index % 2 ? 'observation' : 'feed',
+      lastUsedAt: Date.now() - index * 1000,
+      count: 10 - index
+    }));
+    const nursery = {
+      id: 3,
+      name: 'N003',
+      code_start: 'A001',
+      code_end: 'A500',
+      species_name: 'Typhochlaena seladonia',
+      birth_date: '2026-07-18',
+      items: Array.from({ length: 500 }, (_, index) => ({
+        id: index + 1,
+        code: `A${String(index + 1).padStart(3, '0')}`,
+        status: index % 29 === 0 ? 'dead' : 'alive',
+        last_molt: day(index % 60),
+        note: index % 7 === 0 ? '状態確認済み' : ''
+      })),
+      events: Array.from({ length: 20 }, (_, index) => ({
+        id: index + 1,
+        type: index % 2 ? 'observation' : 'feed',
+        date: day(index),
+        scope: 'nursery',
+        data: { note: `群全体の記録 ${index + 1}` }
+      })),
+      development: [{ instar: 1, count: 120 }, { instar: 2, count: 280 }, { instar: 3, count: 100 }]
+    };
+    const records = Array.from({ length: 1000 }, (_, index) => {
+      const animal = animals[index % animals.length];
+      return {
+        targetType: 'animal',
+        targetId: animal.id,
+        animal,
+        event: {
+          id: index + 1,
+          type: ['feed', 'observation', 'molt', 'growth'][index % 4],
+          date: day(index % 365),
+          data: { prey_type: 'レッドローチ', quantity: 1, note: `台帳記録 ${index + 1}`, instar: 4 + (index % 8) }
+        }
+      };
+    });
+
+    const scenarios = {
+      collection500() {
+        root.innerHTML = renderCollection(collectionOptions);
+      },
+      collectionSearch() {
+        root.innerHTML = renderCollectionSearchResults({
+          animals,
+          mode: 'table',
+          search: 'seladonia',
+          activeView: animalViews[0],
+          careTasks: [],
+          selection: { selectedId: null, selectedIds: [], selectionMode: false },
+          cardConfig: {}
+        });
+      },
+      specimenOpen() {
+        root.innerHTML = renderSpecimenWorkspace({
+          animal: animals[0],
+          events: specimenEvents,
+          babyGroups: [],
+          tab: 'overview'
+        });
+      },
+      quickRecordOpen() {
+        root.innerHTML = renderQuickRecordLauncher({ animals, recent, careTasks });
+      },
+      nursery500() {
+        root.innerHTML = renderNurseryWorkspace(nursery, { careProfile: {} });
+      },
+      records1000() {
+        root.innerHTML = renderRecords({ records, animals, filter: 'all', view: 'history' });
+      }
+    };
+
+    window.runSetaeBenchmark = async (name) => {
+      const scenario = scenarios[name];
+      if (!scenario) throw new Error(`Unknown benchmark scenario: ${name}`);
+      const startedAt = performance.now();
+      scenario();
+      const height = root.offsetHeight;
+      const scriptDuration = performance.now() - startedAt;
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      return {
+        duration: performance.now() - startedAt,
+        scriptDuration,
+        height,
+        nodes: root.querySelectorAll('*').length
+      };
+    };
+    window.setaeBenchmarkReady = true;
+  </script>
+</body>
+</html>

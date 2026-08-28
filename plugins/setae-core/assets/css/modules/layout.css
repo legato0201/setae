@@ -254,12 +254,166 @@
     color: #fff;
 }
 
+/* =========================================
+   Empty / Next Step States
+   ========================================= */
+.setae-empty-state {
+    margin-top: 14px;
+    padding: 28px 18px;
+    border: 1px solid #dbe5ef;
+    border-radius: 8px;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+}
+
+.setae-empty-state .empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 12px;
+    border-radius: 999px;
+    background: #e8f4f1;
+    color: #0f766e;
+    font-size: 24px;
+}
+
+.setae-empty-state h3 {
+    margin: 0 0 8px;
+    color: #172033;
+    font-size: 19px;
+    line-height: 1.35;
+}
+
+.setae-empty-state p {
+    max-width: 420px;
+    margin: 0 auto;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.setae-empty-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.setae-empty-actions .setae-btn,
+.setae-empty-actions .setae-btn-secondary {
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: none;
+    font-size: 13px;
+}
+
+.setae-first-start-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.setae-first-start-option {
+    appearance: none;
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    min-height: 112px;
+    padding: 14px 10px;
+    border: 1px solid #dbe5ef;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.setae-first-start-option:hover {
+    border-color: rgba(0, 122, 255, 0.28);
+    background: #f4f9ff;
+    transform: translateY(-1px);
+}
+
+.setae-first-start-option span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 18px;
+}
+
+.setae-first-start-option strong {
+    color: #172033;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.setae-first-start-option em {
+    color: #64748b;
+    font-size: 11px;
+    font-style: normal;
+    line-height: 1.45;
+}
+
+.setae-btn-secondary {
+    border: 1px solid #dbe5ef;
+    background: #fff;
+    color: #334155;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.setae-next-step-modal {
+    max-width: 420px;
+}
+
+.setae-next-step-modal h3 {
+    margin-bottom: 8px;
+}
+
+.setae-next-step-modal p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.setae-next-step-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
 /* Mobile Tweaks */
 @media (max-width: 767px) {
     .setae-toolbar-container {
         /* PWA: Respect Top Safe Area */
         top: env(safe-area-inset-top);
         padding-top: 16px;
+    }
+
+    .setae-first-start-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .setae-first-start-option {
+        grid-template-columns: 36px minmax(0, 1fr);
+        min-height: 0;
+        align-items: center;
+    }
+
+    .setae-first-start-option span {
+        grid-row: span 2;
     }
 }
 
@@ -317,6 +471,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     height: 100%;
     color: #999;
     cursor: pointer;
@@ -360,15 +515,42 @@
 }
 
 .setae-nav-item .setae-nav-icon {
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    min-width: 26px;
+    height: 24px;
     font-size: 22px;
-    margin-bottom: 4px;
-    display: block;
+    line-height: 1;
+    margin-bottom: 0;
+    display: inline-flex;
+}
+
+.setae-nav-item .setae-nav-icon img.emoji {
+    width: 22px !important;
+    height: 22px !important;
+    margin: 0 !important;
+    vertical-align: middle;
+}
+
+.setae-nav-item[data-target="section-baby"] .setae-nav-icon {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.setae-nav-icon .setae-badge-count {
+    top: -6px;
+    right: -10px;
 }
 
 .setae-nav-item .setae-nav-label {
+    display: block;
     font-size: 10px;
     font-weight: 500;
-    line-height: 1;
+    line-height: 1.1;
+    min-height: 11px;
 }
 
 .setae-nav-item.active {
@@ -568,10 +750,12 @@
     /* Sidebar Items: Sophisticated Pills */
     .setae-nav-item {
         flex: 0 0 auto !important;
+        flex-direction: row !important;
         width: 100%;
         margin-bottom: 4px;
         border-radius: 8px;
         padding: 10px 14px;
+        gap: 12px;
         justify-content: flex-start !important;
         /* Left align */
         height: auto !important;
@@ -579,7 +763,7 @@
 
         color: #555;
         font-weight: 500;
-        letter-spacing: -0.01em;
+        letter-spacing: 0;
     }
 
     .setae-nav-item:hover {
@@ -589,6 +773,9 @@
     }
 
     .setae-nav-icon {
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
         margin-bottom: 0 !important;
         opacity: 0.8;
     }

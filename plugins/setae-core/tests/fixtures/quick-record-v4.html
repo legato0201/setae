@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Quick Record v4</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/quick-record.css">
+  <style>
+    .fixture-workbench {
+      min-height: 100dvh;
+      padding: var(--space-6);
+      background: var(--bg-app);
+    }
+
+    .fixture-workbench h1,
+    .fixture-workbench p {
+      max-width: var(--content-reading-width);
+      margin: 0 0 var(--space-3);
+    }
+
+    .fixture-geometry-report {
+      position: fixed;
+      z-index: 100;
+      right: var(--space-3);
+      bottom: var(--space-3);
+      max-width: calc(100% - (var(--space-3) * 2));
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-control);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: var(--type-micro);
+    }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host">
+    <main class="fixture-workbench" aria-hidden="true">
+      <p class="eyebrow">LIVING COLLECTION WORKBENCH</p>
+      <h1>コレクション</h1>
+      <p>Quick Record Transactional Workflow visual fixture</p>
+    </main>
+    <div id="app"></div>
+  </div>
+  <script type="module">
+    import { renderQuickRecordLauncher } from '../../assets/app/features/records/quick-record-view.js';
+    import { renderRecordForm } from '../../assets/app/features/records/record-form-view.js';
+    import { syncDateFieldDisplay } from '../../assets/app/components/date-field.js';
+
+    const animals = Array.from({ length: 12 }, (_, index) => ({
+      id: index + 1,
+      code: `C${String(index + 1).padStart(3, '0')}`,
+      species_name: index === 0
+        ? 'Typhochlaena seladonia living collection reference specimen with extended identification text'
+        : index % 2
+          ? 'Caribena versicolor'
+          : 'Poecilotheria metallica',
+      instar: 7 + (index % 3)
+    }));
+    const recent = [
+      { animalId: '1', type: 'feed', lastUsedAt: Date.now(), count: 12, preyType: 'レッドローチ M / 長い餌名称の表示確認' },
+      { animalId: '2', type: 'observation', lastUsedAt: Date.now() - 3600000, count: 7, preyType: 'イエコ S' },
+      { animalId: '3', type: 'molt', lastUsedAt: Date.now() - 7200000, count: 3, preyType: '' }
+    ];
+    const careTasks = [
+      { animal: animals[3], animalId: animals[3].id, recommendedAction: 'feed', reason: '給餌予定を2日超過', score: 100, dueAt: '2026-08-22' },
+      { animal: animals[4], animalId: animals[4].id, recommendedAction: 'observation', reason: '脱皮後の状態確認', score: 90, dueAt: '2026-08-24' },
+      { animal: animals[5], animalId: animals[5].id, recommendedAction: 'molt', reason: '脱皮記録を確認', score: 80, dueAt: '2026-08-24' }
+    ];
+
+    const view = fixtureParams.get('view') || 'launcher';
+    const context = fixtureParams.get('context') === '1';
+    const batch = fixtureParams.get('batch') === '1';
+    const type = fixtureParams.get('type') || 'feed';
+    const busy = fixtureParams.get('busy') === '1';
+    const error = fixtureParams.get('error') === '1' ? '保存できませんでした。入力内容を確認して、もう一度お試しください。' : '';
+    const recommendations = fixtureParams.get('recommendations') === 'none' ? [] : careTasks;
+    const recentItems = fixtureParams.get('recent') === 'none' ? [] : recent;
+    const app = document.querySelector('#app');
+
+    app.innerHTML = view === 'form'
+      ? renderRecordForm({
+        quickRecord: {
+          type,
+          animalId: context && !batch ? animals[0].id : '',
+          animalIds: batch ? animals.map((animal) => animal.id) : [],
+          submitting: busy,
+          error
+        },
+        animals,
+        selectedAnimalId: '',
+        recent: recentItems,
+        today: '2026-08-24'
+      })
+      : renderQuickRecordLauncher({
+        animals,
+        recent: recentItems,
+        animalId: context ? animals[0].id : null,
+        careTasks: recommendations
+      });
+
+    if (fixtureParams.get('image') === 'selected') {
+      const fileName = app.querySelector('[data-file-name]');
+      if (fileName) fileName.textContent = 'C001-molt-reference-photograph-with-long-name.webp';
+    }
+
+    ['input', 'change'].forEach((eventName) => app.addEventListener(eventName, (event) => {
+      if (event.target.matches('.date-field-control')) syncDateFieldDisplay(event.target);
+    }));
+
+    function reportDateGeometry() {
+      const frame = app.querySelector('.date-field-frame');
+      const input = frame?.querySelector('.date-field-control');
+      if (!frame || !input) return;
+      const shell = app.querySelector('.quick-record-form, .quick-record-launcher, .sheet');
+      const frameRect = frame.getBoundingClientRect();
+      const inputRect = input.getBoundingClientRect();
+      const documentPass = document.documentElement.scrollWidth <= window.innerWidth + 1;
+      const shellPass = !shell || shell.scrollWidth <= shell.clientWidth + 1;
+      const framePass = frame.scrollWidth <= frame.clientWidth + 1;
+      const inputPass = inputRect.left >= frameRect.left - 0.5 && inputRect.right <= frameRect.right + 0.5;
+      const pass = documentPass && shellPass && framePass && inputPass;
+      const form = input.closest('form');
+      const submittedValue = form ? new FormData(form).get(input.name) : '';
+      document.body.dataset.dateGeometry = pass ? 'pass' : 'fail';
+      document.body.dataset.viewportWidth = String(window.innerWidth);
+      document.body.dataset.documentScrollWidth = String(document.documentElement.scrollWidth);
+      document.body.dataset.quickRecordClientWidth = String(shell?.clientWidth || 0);
+      document.body.dataset.quickRecordScrollWidth = String(shell?.scrollWidth || 0);
+      document.body.dataset.dateFrameClientWidth = String(frame.clientWidth);
+      document.body.dataset.dateFrameScrollWidth = String(frame.scrollWidth);
+      document.body.dataset.dateFrameWidth = frameRect.width.toFixed(2);
+      document.body.dataset.dateInputWidth = inputRect.width.toFixed(2);
+      document.body.dataset.dateInputLeft = inputRect.left.toFixed(2);
+      document.body.dataset.dateInputRight = inputRect.right.toFixed(2);
+      document.body.dataset.dateFormValue = String(submittedValue || '');
+      document.body.dataset.dateDisplayValue = frame.querySelector('[data-date-field-display]')?.textContent || '';
+      if (fixtureParams.get('geometry') !== '1') return;
+      document.querySelector('.fixture-geometry-report')?.remove();
+      const report = document.createElement('output');
+      report.className = 'fixture-geometry-report';
+      report.textContent = `Date geometry: ${pass ? 'PASS' : 'FAIL'} / viewport ${window.innerWidth}px / document ${document.documentElement.scrollWidth}px / shell ${shell?.scrollWidth || 0}:${shell?.clientWidth || 0}px / frame ${frame.scrollWidth}:${frame.clientWidth}px / input ${inputRect.width.toFixed(2)}px`;
+      document.body.append(report);
+    }
+
+    requestAnimationFrame(reportDateGeometry);
+    addEventListener('resize', reportDateGeometry);
+  </script>
+</body>
+</html>

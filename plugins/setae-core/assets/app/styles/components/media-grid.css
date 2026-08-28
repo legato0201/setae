@@ -1,0 +1,102 @@
+@layer components {
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--specimen-media-min-width), 1fr));
+    gap: var(--space-5) var(--space-4);
+  }
+
+  .media-grid-item {
+    min-width: 0;
+  }
+
+  .media-grid-visual {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--bg-subtle);
+  }
+
+  .media-grid-visual > a,
+  .media-grid-visual .setae-media-frame,
+  .media-grid-visual .setae-media-visual {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .media-grid-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .media-grid-actions {
+    position: absolute;
+    right: var(--space-2);
+    bottom: var(--space-2);
+    display: flex;
+    gap: var(--space-1);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .media-grid-visual:hover .media-grid-actions,
+  .media-grid-visual:focus-within .media-grid-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .media-grid-actions .button {
+    min-height: var(--touch-target);
+    background: var(--bg-elevated);
+  }
+
+  .media-grid-caption {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: var(--space-2);
+  }
+
+  .media-grid-caption time,
+  .media-grid-caption span {
+    color: var(--text-secondary);
+    font-size: var(--type-workbench-meta);
+  }
+
+  .media-grid-caption time {
+    font-family: var(--font-mono);
+  }
+
+  .media-grid-caption strong {
+    font-size: var(--type-workbench-body);
+  }
+
+  .media-grid-empty {
+    min-height: calc(var(--touch-target) * 2);
+    display: grid;
+    color: var(--text-muted);
+    place-items: center;
+  }
+
+  @media (hover: none) {
+    .media-grid-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .media-grid-actions {
+      transition: opacity var(--motion-fast) var(--ease-standard);
+    }
+  }
+
+  @supports (content-visibility: auto) {
+    .media-grid-item { content-visibility: auto; contain-intrinsic-size: auto 320px; }
+    .media-grid-item:focus-within { content-visibility: visible; contain: none; }
+  }
+
+  @media print {
+    .media-grid-item { content-visibility: visible; contain: none; }
+  }
+}

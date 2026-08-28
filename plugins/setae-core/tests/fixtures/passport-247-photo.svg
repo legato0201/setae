@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <title>Synthetic specimen image for layout tests</title>
+  <rect width="800" height="600" fill="#e5e4d9"/>
+  <path d="M0 495Q150 400 330 460T800 400V600H0Z" fill="#c2c6b5"/>
+  <g stroke="#505b49" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M369 280 300 235 220 260M363 300 280 290 195 350M365 325 285 370 255 445M375 345 325 420 330 475M431 280 500 235 580 260M437 300 520 290 605 350M435 325 515 370 545 445M425 345 475 420 470 475"/>
+  </g>
+  <ellipse cx="400" cy="250" rx="37" ry="58" fill="#58634f"/>
+  <ellipse cx="400" cy="322" rx="40" ry="46" fill="#414d3d"/>
+  <path d="M383 358 380 384M417 358 420 384" stroke="#414d3d" stroke-width="9" stroke-linecap="round"/>
+</svg>

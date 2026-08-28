@@ -1,0 +1,8 @@
+#!/bin/sh
+# Install this file root:root 0755; sudoers must allow only (www-data), no arguments.
+set -eu
+if [ "$#" -ne 0 ]; then
+    printf '%s\n' '{"status":"error","code":"arguments_forbidden","message":"This helper takes no arguments."}'
+    exit 64
+fi
+exec /usr/bin/python3 -I /usr/local/lib/setae-deploy/setae_deploy.py

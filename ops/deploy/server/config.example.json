@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "auth_ready": false,
+  "run_user": "www-data",
+  "wp_root": "/var/www/html/setae",
+  "php_path": "/usr/bin/php",
+  "wp_cli_path": "/usr/local/bin/wp",
+  "state_dir": "/var/lib/setae-deploy",
+  "smoke_url": ""
+}

@@ -1,0 +1,101 @@
+@layer components {
+  .action-menu {
+    position: relative;
+    min-width: 0;
+  }
+
+  .action-menu > summary {
+    list-style: none;
+  }
+
+  .action-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .action-menu-trigger {
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    cursor: pointer;
+  }
+
+  .action-menu-trigger.is-icon-only {
+    width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+
+  .action-menu-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .action-menu-trigger .ui-icon {
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+  }
+
+  .action-menu-popover {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + var(--space-1));
+    width: min(var(--action-menu-width), calc(100vw - var(--space-6)));
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-popover);
+  }
+
+  .action-menu.is-end .action-menu-popover {
+    right: 0;
+  }
+
+  .action-menu.is-start .action-menu-popover {
+    left: 0;
+  }
+
+  .action-menu:not([open]) .action-menu-popover {
+    display: none;
+  }
+
+  .action-menu .menu-item {
+    min-height: var(--touch-target);
+  }
+
+  .action-menu-separator {
+    height: 1px;
+    margin: var(--space-1) var(--space-2);
+    background: var(--border-default);
+  }
+
+  .action-menu .menu-item.danger {
+    color: var(--danger);
+  }
+
+  .action-menu .menu-item.danger:hover {
+    background: var(--bg-hover);
+    color: var(--danger);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .action-menu[open] .action-menu-popover {
+      animation: setae-action-menu-enter var(--motion-enter) var(--ease-emphasized) both;
+    }
+
+    @keyframes setae-action-menu-enter {
+      from { opacity: 0; transform: translateY(var(--space-1)); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .action-menu-popover {
+      animation: none;
+      transform: none;
+    }
+  }
+}

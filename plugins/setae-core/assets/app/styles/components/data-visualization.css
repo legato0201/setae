@@ -1,0 +1,84 @@
+@layer components {
+  .metric-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    border-block: 1px solid var(--border-strong);
+  }
+
+  .metric-summary > div {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-3);
+    border-left: 1px solid var(--border-default);
+  }
+
+  .metric-summary > div:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .metric-summary > div:nth-child(n + 3) {
+    border-top: 1px solid var(--border-default);
+  }
+
+  .metric-summary > div:only-child {
+    grid-column: 1 / -1;
+  }
+
+  .metric-summary dt {
+    color: var(--text-muted);
+    font-size: var(--type-workbench-caption);
+  }
+
+  .metric-summary dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-section);
+  }
+
+  .chart-frame {
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .chart-frame-canvas svg {
+    width: 100%;
+    display: block;
+    aspect-ratio: 640 / 220;
+    color: var(--text-muted);
+  }
+
+  .chart-frame-canvas text {
+    fill: currentColor;
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-meta);
+  }
+
+  .chart-axis {
+    stroke: var(--border-strong);
+    stroke-width: 1;
+  }
+
+  .chart-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .chart-point {
+    fill: var(--bg-surface);
+    stroke: var(--accent);
+    stroke-width: 3;
+  }
+
+  .chart-frame figcaption {
+    padding-top: var(--space-2);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-meta);
+  }
+}

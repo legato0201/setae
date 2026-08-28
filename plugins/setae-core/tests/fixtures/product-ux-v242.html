@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE v1.0.242 Product UX Harness</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/form-safety.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/feedback.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/onboarding.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/settings.css">
+  <style>
+    .ux-fixture-page { width: min(100%, 960px); min-height: 100dvh; margin-inline: auto; padding: var(--space-6); }
+    .ux-fixture-page > header { margin-block-end: var(--space-5); }
+    .ux-fixture-stack { display: grid; gap: var(--space-4); }
+    .ux-fixture-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+    .ux-fixture-overlay { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-4); background: var(--overlay-scrim); }
+    .ux-fixture-panel { width: min(100%, 540px); max-height: calc(100dvh - var(--space-6)); overflow: auto; padding: var(--space-5); border: 1px solid var(--border-default); background: var(--bg-surface); }
+    .ux-fixture-list { display: grid; border-top: 1px solid var(--border-default); }
+    .ux-fixture-list > div { display: flex; align-items: center; justify-content: space-between; min-height: var(--touch-target); gap: var(--space-3); border-bottom: 1px solid var(--border-default); }
+    @media (max-width: 767px) { .ux-fixture-page { padding: var(--space-4); padding-block-end: calc(var(--bottom-nav-height) + var(--space-5)); } }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
+  <script type="module">
+    import { renderAppFrame } from '../../assets/app/components/app-frame.js';
+    import { createFeedbackController } from '../../assets/app/components/feedback-controller.js';
+    import {
+      applyServerFieldErrors,
+      createFormSafetyController,
+      validateForm
+    } from '../../assets/app/components/form-safety-controller.js';
+    import { renderModal } from '../../assets/app/components/modals.js';
+    import {
+      button,
+      emptyState,
+      searchControl,
+      selectField,
+      textField,
+      toast
+    } from '../../assets/app/components/primitives.js';
+    import { renderGettingStarted } from '../../assets/app/features/onboarding/view.js';
+    import { deriveOnboardingProgress } from '../../assets/app/features/onboarding/model.js';
+    import { renderSetaeSetup } from '../../assets/app/features/personalization/preset-view.js';
+    import { createOfflineQueue } from '../../assets/app/offline/queue.js';
+
+    const app = document.querySelector('#app');
+    const mode = fixtureParams.get('mode') || 'onboarding';
+    const page = (title, body, eyebrow = 'APPLICATION INFORMATION') => `<main class="ux-fixture-page"><header><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></header>${body}</main>`;
+
+    let safety = null;
+    let feedback = null;
+    let toastState = null;
+    let setupOpen = true;
+    let setupStep = 'preset';
+    let setupIntent = 'animal';
+    let activeForm = '';
+    let animals = [];
+    let records = [];
+    let savedViews = ['給餌対象', '脱皮前', 'お気に入り'];
+    let widgets = ['今日のお世話', '最近の記録'];
+    let query = '';
+    let recordFilter = 'all';
+    let confirmValue = '';
+    let syncStatus = 'offline';
+    let syncMessage = '';
+    const offlineQueue = createOfflineQueue({ storage: localStorage });
+    offlineQueue.setOwner(242);
+
+    function overlayForm(type) {
+      if (type === 'animal') return `<div class="ux-fixture-overlay"><section class="ux-fixture-panel"><h2>個体を登録</h2><form data-role="animal-form" data-draft-policy="persist" data-draft-type="animal" data-draft-entity="new">${textField({ label: '管理番号', name: 'title', required: true })}${textField({ label: '学名', name: 'species_name', required: true })}<div class="ux-fixture-row">${button('閉じる', { action: 'close-fixture-form' })}${button('個体を登録', { type: 'submit', primary: true })}</div></form></section></div>`;
+      if (type === 'record') return `<div class="ux-fixture-overlay"><section class="ux-fixture-panel"><h2>給餌を記録</h2><form data-role="record-form" data-draft-policy="guard">${selectField({ label: '個体', name: 'animal_id', required: true, options: animals.map((animal) => ({ value: animal.id, label: animal.title })) })}${textField({ label: '餌', name: 'prey_type', value: 'レッドローチ' })}<div class="ux-fixture-row">${button('閉じる', { action: 'close-fixture-form' })}${button('記録する', { type: 'submit', primary: true })}</div></form></section></div>`;
+      return '';
+    }
+
+    function renderOnboarding() {
+      const progress = deriveOnboardingProgress({ animals, records });
+      const checklist = !setupOpen && !progress.complete ? renderGettingStarted(progress) : '';
+      const completeToast = progress.complete ? toast('SETAEの基本設定が完了しました。', { type: 'success' }) : '';
+      app.innerHTML = `${page('今日', `${checklist}<section class="surface"><h2>今日の作業</h2><p>登録内容に応じて作業が表示されます。</p></section>`)}${setupOpen ? renderSetaeSetup({ selectedPresetId: 'simple', step: setupStep, intent: setupIntent, hasExistingData: animals.length > 0 }) : ''}${overlayForm(activeForm)}${completeToast}`;
+      document.body.dataset.setupStep = setupStep;
+      document.body.dataset.setupCompleted = String(!setupOpen);
+      document.body.dataset.collectionCount = String(animals.length);
+      document.body.dataset.recordCount = String(records.length);
+    }
+
+    function renderDraft() {
+      app.innerHTML = page('入力保護', `<div class="ux-fixture-row">${button('別画面へ移動', { action: 'guard-navigation' })}${button('戻る操作', { action: 'guard-back' })}${button('スワイプで戻る', { action: 'guard-edge' })}${button('更新する', { action: 'guard-update' })}</div><section class="surface"><form data-role="animal-form" data-draft-policy="persist" data-draft-type="animal" data-draft-entity="new">${textField({ label: '管理番号', name: 'title', required: true })}${textField({ label: '秘密情報', name: 'api_token' })}${textField({ label: 'パスワード', name: 'password', type: 'password' })}<div class="ux-fixture-row">${button('閉じる', { action: 'close-draft-form' })}${button('保存', { type: 'submit', primary: true })}</div></form></section>`);
+      safety?.destroy();
+      safety = createFormSafetyController(app, { ownerId: () => 242 });
+      safety.sync();
+      window.__setaeFixtureSafety = safety;
+    }
+
+    function renderValidation() {
+      app.innerHTML = page('入力確認', `<section class="surface"><form data-role="validation-form" data-draft-policy="guard">${textField({ label: '個体名', name: 'title', required: true })}${textField({ label: '日付', name: 'date', type: 'date', required: true, hint: '記録日を選択してください。' })}<div class="ux-fixture-row">${button('サーバーエラーを再現', { action: 'server-field-error' })}${button('保存する', { type: 'submit', primary: true })}</div></form></section>`);
+      safety?.destroy();
+      safety = createFormSafetyController(app, { ownerId: () => 242 });
+      safety.sync();
+    }
+
+    function renderUndo() {
+      const savedViewRows = savedViews.map((label, index) => `<div><span>${label}</span>${button('削除', { action: 'delete-saved-view', data: { index } })}</div>`).join('');
+      const widgetRows = widgets.map((label, index) => `<div><span>${label}</span>${button('削除', { action: 'delete-widget', data: { index } })}</div>`).join('');
+      app.innerHTML = `${page('元に戻す', `<section><h2>保存した絞り込み</h2><div class="ux-fixture-list" data-saved-views>${savedViewRows}</div></section><section><h2>今日の画面</h2><div class="ux-fixture-list" data-widgets>${widgetRows}</div></section>`)}${toastState ? toast(toastState.message, toastState) : ''}`;
+    }
+
+    function renderFilter() {
+      const source = ['C001', 'C002'];
+      const filtered = source.filter((item) => item.toLowerCase().includes(query.toLowerCase()));
+      const recordSource = [{ id: 1, type: 'feed' }];
+      const filteredRecords = recordFilter === 'all' ? recordSource : recordSource.filter((item) => item.type === recordFilter);
+      app.innerHTML = page('検索と絞り込み', `<section><h2>コレクション</h2>${searchControl({ value: query, role: 'fixture-collection-search', placeholder: '個体を検索', clearAction: query ? 'clear-fixture-collection' : '' })}<output aria-live="polite" data-collection-count>${filtered.length}件</output>${filtered.length ? `<div class="ux-fixture-list">${filtered.map((item) => `<div>${item}</div>`).join('')}</div>` : emptyState('', { title: '条件に一致する個体はありません', description: '検索語を変更してください。', reason: 'filtered', action: 'clear-fixture-collection', actionLabel: '条件をクリア' })}</section><section><h2>記録</h2><div class="ux-fixture-row">${button('すべて', { action: 'fixture-record-filter', data: { filter: 'all' } })}${button('脱皮', { action: 'fixture-record-filter', data: { filter: 'molt' } })}</div><output aria-live="polite" data-record-count>${filteredRecords.length}件</output>${filteredRecords.length ? '<div class="ux-fixture-list"><div>給餌</div></div>' : emptyState('', { title: 'この種類の記録はありません', reason: 'filtered', action: 'clear-fixture-records', actionLabel: 'すべての記録を表示' })}</section>`);
+    }
+
+    function renderDelete() {
+      app.innerHTML = `${page('削除確認', '<section class="surface"><h2>C014</h2><p>完全削除の確認を検証します。</p></section>')}${renderModal({ type: 'confirm', title: '個体を完全に削除', message: 'この個体と関連データを完全に削除します。', confirmLabel: '個体を削除', confirmPhrase: 'C014', confirmHint: '削除するには「C014」と入力してください。', confirmValue, danger: true })}`;
+    }
+
+    function renderOffline() {
+      const count = offlineQueue.list().length;
+      const content = page('今日', `<section class="surface"><h2>オフライン記録</h2><p>${syncMessage || '通信状態に応じた保存と同期を確認します。'}</p><div class="ux-fixture-row">${button('給餌を記録', { action: 'fixture-offline-record', primary: true, disabled: syncStatus === 'syncing' })}${button('オンラインへ戻す', { action: 'fixture-go-online', disabled: syncStatus === 'syncing' })}${button('一部失敗を再現', { action: 'fixture-partial-failure', disabled: syncStatus === 'syncing' })}</div></section>`, 'FIELD NOTEBOOK');
+      app.innerHTML = renderAppFrame({ content, page: 'today', pageTitle: '今日', authenticated: true, online: syncStatus !== 'offline', pendingSyncCount: count, syncStatus, syncMessage, syncFailedCount: syncStatus === 'error' ? count : 0, userName: 'QA User', toastMessage: toastState });
+      document.body.dataset.queueCount = String(count);
+      document.body.dataset.syncStatus = syncStatus;
+    }
+
+    function render() {
+      if (mode === 'draft') renderDraft();
+      else if (mode === 'validation') renderValidation();
+      else if (mode === 'undo') renderUndo();
+      else if (mode === 'filter') renderFilter();
+      else if (mode === 'delete') renderDelete();
+      else if (mode === 'offline') renderOffline();
+      else renderOnboarding();
+    }
+
+    feedback = createFeedbackController({
+      onChange(value) {
+        toastState = value;
+        if (mode === 'undo') renderUndo();
+        if (mode === 'offline') renderOffline();
+      }
+    });
+
+    app.addEventListener('input', (event) => {
+      if (event.target.matches('[data-role="fixture-collection-search"]')) {
+        query = event.target.value;
+        renderFilter();
+      }
+      if (event.target.matches('[data-role="confirm-phrase"]')) {
+        confirmValue = event.target.value;
+        const confirm = app.querySelector('[data-action="confirm-modal"]');
+        if (confirm) {
+          confirm.disabled = confirmValue.trim() !== 'C014';
+          confirm.setAttribute('aria-disabled', confirm.disabled ? 'true' : 'false');
+        }
+      }
+    });
+
+    app.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const form = event.target;
+      if (!validateForm(form)) return;
+      if (mode === 'validation') {
+        form.dataset.submitted = 'true';
+        return;
+      }
+      if (mode === 'draft') {
+        safety.markSubmitted(form);
+        form.dataset.submitted = 'true';
+        return;
+      }
+      if (form.dataset.role === 'animal-form') {
+        animals.push({ id: 1, title: new FormData(form).get('title') || 'C001' });
+        activeForm = '';
+        renderOnboarding();
+      } else if (form.dataset.role === 'record-form') {
+        records.push({ id: 1, type: 'feed', targetType: 'animal', recorded_by_current_user: true });
+        activeForm = '';
+        renderOnboarding();
+      }
+    });
+
+    app.addEventListener('click', async (event) => {
+      const control = event.target.closest('[data-action]');
+      if (!control) return;
+      const action = control.dataset.action;
+      if (action === 'setae-setup-next') { setupStep = 'start'; renderOnboarding(); }
+      if (action === 'setae-setup-back') { setupStep = 'preset'; renderOnboarding(); }
+      if (action === 'setae-setup-intent') { setupIntent = control.dataset.intent; renderOnboarding(); }
+      if (action === 'finish-setae-setup' || action === 'dismiss-setae-setup') { setupOpen = false; activeForm = action === 'finish-setae-setup' && setupIntent === 'animal' ? 'animal' : ''; renderOnboarding(); }
+      if (action === 'add-animal') { activeForm = 'animal'; renderOnboarding(); }
+      if (action === 'open-record-sheet') { activeForm = 'record'; renderOnboarding(); }
+      if (action === 'close-fixture-form') { activeForm = ''; renderOnboarding(); }
+
+      if (['close-draft-form', 'guard-navigation', 'guard-back', 'guard-edge', 'guard-update'].includes(action)) {
+        safety.guard(() => { document.body.dataset.guardContinuation = action; app.innerHTML = page('移動完了', '<p>入力を破棄して移動しました。</p>'); });
+      }
+      if (action === 'server-field-error') applyServerFieldErrors(control.closest('form'), { field_errors: { title: 'この個体名は既に使われています。' } });
+
+      if (action === 'delete-saved-view') {
+        const index = Number(control.dataset.index);
+        const removed = savedViews.splice(index, 1)[0];
+        feedback.show('保存した絞り込みを削除しました。', { actionLabel: '元に戻す', action: 'undo-local-change', onAction: () => { savedViews.splice(index, 0, removed); } });
+      }
+      if (action === 'delete-widget') {
+        const index = Number(control.dataset.index);
+        const removed = widgets.splice(index, 1)[0];
+        feedback.show('今日の画面から項目を削除しました。', { actionLabel: '元に戻す', action: 'undo-local-change', onAction: () => { widgets.splice(index, 0, removed); } });
+      }
+      if (action === 'run-toast-action') { await feedback.runAction(); renderUndo(); }
+      if (action === 'dismiss-toast') feedback.dismiss();
+
+      if (action === 'clear-fixture-collection') { query = ''; renderFilter(); }
+      if (action === 'fixture-record-filter') { recordFilter = control.dataset.filter; renderFilter(); }
+      if (action === 'clear-fixture-records') { recordFilter = 'all'; renderFilter(); }
+
+      if (action === 'fixture-offline-record') {
+        offlineQueue.enqueue('create_log', 14, { type: 'feed' });
+        syncStatus = 'offline';
+        syncMessage = '操作をオフラインで保存しました。再接続後に同期します。';
+        toastState = { message: syncMessage, type: 'success', actionLabel: '同期待ちを見る', action: 'open-offline-ledger' };
+        renderOffline();
+      }
+      if (action === 'fixture-go-online') {
+        syncStatus = 'syncing';
+        syncMessage = `${offlineQueue.list().length}件を同期しています…`;
+        renderOffline();
+        setTimeout(() => {
+          offlineQueue.clear();
+          syncStatus = 'idle';
+          syncMessage = '';
+          toastState = { message: '1件を同期しました。', type: 'success' };
+          renderOffline();
+        }, 120);
+      }
+      if (action === 'fixture-partial-failure') {
+        if (!offlineQueue.list().length) offlineQueue.enqueue('create_log', 14, { type: 'feed' });
+        syncStatus = 'error';
+        syncMessage = '2件を同期しました。1件は再送が必要です。';
+        toastState = null;
+        renderOffline();
+      }
+    });
+
+    render();
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

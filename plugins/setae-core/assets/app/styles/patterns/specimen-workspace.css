@@ -1,0 +1,59 @@
+@layer patterns {
+  .specimen-workspace-v4 {
+    max-width: var(--content-workspace-width);
+  }
+
+  .specimen-workspace-body {
+    min-width: 0;
+    display: grid;
+  }
+
+  .specimen-workspace-navigation {
+    min-width: 0;
+    grid-area: navigation;
+  }
+
+  .specimen-workspace-content {
+    min-width: 0;
+    grid-area: content;
+  }
+
+  .specimen-identity-panel {
+    grid-area: identity;
+  }
+
+  @media (min-width: 1200px) {
+    .specimen-workspace-body {
+      grid-template-areas:
+        "navigation navigation"
+        "content identity";
+      grid-template-columns: minmax(0, 1fr) var(--specimen-identity-width);
+      align-items: start;
+      column-gap: var(--space-7);
+    }
+
+    .specimen-identity-panel {
+      position: sticky;
+      top: calc(var(--safe-top) + var(--space-5));
+      padding-top: var(--space-5);
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .specimen-workspace-body {
+      grid-template-areas:
+        "identity"
+        "navigation"
+        "content";
+    }
+  }
+
+  @media (max-width: 767px) {
+    .specimen-workspace-body {
+      grid-template-areas:
+        "identity"
+        "navigation"
+        "content";
+    }
+  }
+}

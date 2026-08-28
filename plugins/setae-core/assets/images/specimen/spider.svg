@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Spider silhouette</title>
+  <g fill="none" stroke="#555b53" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M62 51 38 31 20 27M58 58 31 51 12 57M59 67 31 74 14 91M65 73 46 94 42 112M98 51l24-20 18-4M102 58l27-7 19 6M101 67l28 7 17 17M95 73l19 21 4 18"/><ellipse cx="80" cy="70" rx="24" ry="30" fill="#555b53" stroke-width="4"/><circle cx="80" cy="42" r="16" fill="#555b53" stroke-width="4"/>
+  </g>
+</svg>

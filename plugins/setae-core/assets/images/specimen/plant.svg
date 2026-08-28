@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Plant silhouette</title>
+  <g fill="none" stroke="#555b53" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M80 108V42M80 72C58 72 40 58 38 36c23-1 39 11 42 30M80 55c17-1 31-12 35-31-20-3-34 7-35 25M80 92c18 0 31-9 37-25-18-5-31 2-37 18M62 108h36"/><path d="M80 66 52 43M80 49l25-17M80 85l25-10"/>
+  </g>
+</svg>

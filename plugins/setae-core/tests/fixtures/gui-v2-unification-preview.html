@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE GUI v2 Unification Preview</title>
+  <script>
+    if (new URLSearchParams(location.search).get('theme') === 'dark') {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/task-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/auth.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection-editor.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/today.css">
+</head>
+<body>
+  <div id="preview" class="app-shell">
+    <aside class="desktop-sidebar"><div class="desktop-sidebar-inner"><div class="brand"><strong>SETAE</strong><small>Living Collection</small></div><nav class="sidebar-nav"><button class="nav-item is-active"><span>今日</span></button><button class="nav-item"><span>コレクション</span></button><button class="nav-item"><span>交流</span></button></nav></div></aside>
+    <header class="topbar"><div class="topbar-title"><span class="topbar-mobile-brand">SETAE</span><span class="topbar-page-title">画面検証</span></div><div class="topbar-actions"><button class="button" data-preview="today">今日</button><button class="button" data-preview="collection">コレクション</button><button class="button" data-preview="species">図鑑</button><button class="account-button" data-preview="specimen"><span class="account-avatar">S</span><span>個体詳細</span></button></div></header>
+    <main class="main"><div id="fixture-root"></div></main>
+  </div>
+  <script type="module">
+    import { renderToday } from '../../assets/app/pages/today.js';
+    import { renderCommunity } from '../../assets/app/pages/community.js';
+    import { renderCollectionAnimals } from '../../assets/app/features/collection/view.js';
+    import { renderSpecimenWorkspace } from '../../assets/app/features/specimen/view.js';
+    import { nextTabIndex } from '../../assets/app/components/primitives.js';
+    import { registerMediaFallbacks } from '../../assets/app/components/media.js';
+
+    const root = document.querySelector('#fixture-root');
+    const specimenTabs = ['overview', 'timeline', 'growth', 'photos', 'breeding'];
+    let specimenTab = 'overview';
+    const animal = { id: 1, individual_code: 'C001', species_name: 'Typhochlaena seladonia', family_name: 'Theraphosidae', classification: 'tarantula', image_url: '../../assets/images/specimen/spider.svg', gender: 'female', instar: 8, status: 'pre_molt', last_feed: '2026-08-05', last_molt: '2026-07-20', last_observation: '2026-08-13', is_favorite: true };
+    const animals = Array.from({ length: 8 }, (_, index) => ({
+      ...animal,
+      id: index + 1,
+      individual_code: `C${String(index + 1).padStart(3, '0')}`,
+      species_name: index % 3 === 1 ? 'Caribena versicolor' : index % 3 === 2 ? 'Psalmopoeus irminia' : 'Typhochlaena seladonia',
+      family_name: 'Theraphosidae',
+      gender: index % 2 ? 'male' : 'female',
+      status: index % 4 === 0 ? 'pre_molt' : 'normal'
+    }));
+    const task = (id, title, priority = 'today') => ({ id, targetType: 'animal', targetId: id, type: 'feed', priority, title, subtitle: 'Typhochlaena seladonia', reason: priority === 'overdue' ? '給餌予定を2日超過' : '最終給餌から9日', action: { recordType: 'feed' } });
+    const careModel = { progress: { completed: 8, required: 37, percent: 22 }, overdue: [task(1, 'C001', 'overdue'), task(2, 'C002', 'overdue')], today: Array.from({ length: 12 }, (_, index) => task(index + 3, `C${String(index + 3).padStart(3, '0')}`)), upcoming: [task(20, 'C020')], handled: [] };
+    const species = { id: 9, title: 'Typhochlaena seladonia', scientific_name: 'Typhochlaena seladonia', ja_name: 'セラドニア', temperature: '24–27', lifestyles: [{ name: '樹上性' }], representative_image: { url: '/missing-species-image.jpg', alt: 'Typhochlaena seladonia', credit: { type: 'text', text: 'Jane Field' }, source_url: 'https://example.org/source', license: { code: 'cc-by-4.0', label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' }, changes: 'cropped' } };
+
+    function show(name) {
+      if (name === 'species') root.innerHTML = renderCommunity({ tab: 'species', data: { species: { items: [species] }, speciesSearch: '' } });
+      else if (name === 'specimen') root.innerHTML = renderSpecimenWorkspace({ animal, events: [], babyGroups: [], tab: specimenTab });
+      else if (name === 'collection') root.innerHTML = renderCollectionAnimals({ animals, mode: 'gallery', views: [], selection: { selectedId: 1 }, cardConfig: { mode: 'photo', density: 'standard' } });
+      else root.innerHTML = renderToday({ careModel, dashboard: { sections: [] }, taskQueueVisible: true, taskPreferences: { collapsed: false, compactThreshold: 8, showAll: false, sections: { overdue: true, today: true, upcoming: false } } });
+    }
+
+    document.querySelector('.topbar-actions').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-preview]');
+      if (button) show(button.dataset.preview);
+    });
+    root.addEventListener('click', (event) => {
+      const tab = event.target.closest('[data-action="specimen-tab"]');
+      if (!tab || !root.querySelector('[data-specimen-tab-content]')) return;
+      specimenTab = specimenTabs.includes(tab.dataset.tab) ? tab.dataset.tab : 'overview';
+      show('specimen');
+    });
+    root.addEventListener('keydown', (event) => {
+      const tab = event.target.closest?.('.specimen-workspace-tabs [role="tab"]');
+      if (!tab || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      const index = specimenTabs.indexOf(tab.dataset.tab);
+      specimenTab = specimenTabs[nextTabIndex(index, specimenTabs.length, event.key)];
+      show('specimen');
+      requestAnimationFrame(() => root.querySelector('.specimen-workspace-tabs [aria-selected="true"]')?.focus());
+    });
+    registerMediaFallbacks(document.querySelector('#preview'), { timeoutMs: 1000 });
+    show('today');
+  </script>
+</body>
+</html>

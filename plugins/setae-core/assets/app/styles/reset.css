@@ -1,0 +1,40 @@
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    letter-spacing: 0;
+  }
+
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    appearance: none;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  #setae-gui-root img.emoji {
+    inline-size: 1em !important;
+    block-size: 1em !important;
+    display: inline-block !important;
+    margin: 0 0.05em !important;
+    vertical-align: -0.1em !important;
+    box-shadow: none !important;
+  }
+}

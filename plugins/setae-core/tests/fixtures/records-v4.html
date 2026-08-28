@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Records Ledger v4</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/ledger.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
+  <style>
+    body {
+      min-height: 100dvh;
+      background: var(--bg-app);
+    }
+
+    #app {
+      width: 100%;
+      min-inline-size: 0;
+      padding: var(--space-6);
+    }
+
+    @media (max-width: 767px) {
+      #app {
+        padding: var(--space-4);
+      }
+    }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
+  <script type="module">
+    import { renderRecords } from '../../assets/app/pages/records.js';
+
+    const animals = [
+      { id: 14, code: 'C014', species_name: 'Typhochlaena seladonia' },
+      { id: 21, code: 'C021', species_name: 'Caribena versicolor' },
+      { id: 31, code: 'C031', species_name: 'Poecilotheria metallica living collection reference specimen with exceptionally long scientific identification text' }
+    ];
+    const enclosure = { id: 4, code: 'E004', name: 'Rack A / Upper' };
+    const nursery = {
+      id: 8,
+      name: 'Seladonia 2026-A',
+      species_name: 'Typhochlaena seladonia',
+      items: Array.from({ length: 84 }, (_, index) => ({ code: `B${String(index + 1).padStart(3, '0')}` }))
+    };
+    const prototypes = [
+      { targetType: 'animal', targetId: 14, animal: animals[0], event: { id: 1001, type: 'feed', date: '2026-08-25', data: { prey_type: 'レッドローチ M', quantity: 1 } } },
+      { targetType: 'animal', targetId: 21, animal: animals[1], event: { id: 1002, type: 'molt', date: '2026-08-24', data: { instar: 8 } } },
+      { targetType: 'animal', targetId: 31, animal: animals[2], event: { id: 1003, type: 'observation', date: '2026-08-23', data: { label: '巣穴入口の糸量が増え、活動位置が変化したため経過を観察。' } } },
+      { targetType: 'enclosure', targetId: 4, enclosure, event: { id: 1004, type: 'environment_check', date: '2026-08-22', data: { temperature: 26.2, humidity: 73 } } },
+      { targetType: 'nursery', targetId: 8, nursery, event: { id: 1005, type: 'count_check', date: '2026-08-21', data: { current_count: 84, difference: -1 } } },
+      { targetType: 'animal', targetId: 14, animal: animals[0], event: { id: 1006, type: 'feed', date: '2026-08-20', data: { prey_type: 'レッドローチ M', refused: true } } }
+    ];
+    const requestedCount = Math.max(0, Number(fixtureParams.get('count') ?? 12));
+    const records = Array.from({ length: requestedCount }, (_, index) => {
+      const source = prototypes[index % prototypes.length];
+      return {
+        ...source,
+        event: { ...source.event, id: Number(source.event.id) + index * 10 }
+      };
+    });
+    const app = document.querySelector('#app');
+    app.innerHTML = renderRecords({
+      records,
+      animals,
+      filter: fixtureParams.get('filter') || 'all',
+      view: fixtureParams.get('view') || 'history',
+      qr: {},
+      loading: fixtureParams.get('loading') === '1'
+    });
+
+    if (fixtureParams.get('menu') === 'open') {
+      const menu = app.querySelector('.records-action-menu');
+      if (menu) menu.open = true;
+    }
+
+    requestAnimationFrame(() => {
+      const firstRow = app.querySelector('.workbench-ledger-row');
+      const style = firstRow ? getComputedStyle(firstRow) : null;
+      document.body.dataset.overflow = document.documentElement.scrollWidth <= window.innerWidth + 1 ? 'pass' : 'fail';
+      document.body.dataset.recordCount = String(app.querySelectorAll('.workbench-ledger-row').length);
+      document.body.dataset.actionMenuCount = String(app.querySelectorAll('.records-action-menu').length);
+      document.body.dataset.rowRadius = style?.borderRadius || '';
+      document.body.dataset.rowShadow = style?.boxShadow || '';
+    });
+  </script>
+</body>
+</html>

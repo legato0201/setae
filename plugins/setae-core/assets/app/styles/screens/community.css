@@ -1,0 +1,694 @@
+@layer screens {
+  .community-page {
+    max-width: var(--content-workspace-width);
+  }
+
+  .detail-back-row {
+    margin-bottom: var(--space-3);
+  }
+
+  .community-page .detail-scientific {
+    color: var(--text-secondary);
+    font-size: var(--type-heading);
+  }
+
+  .detail-metrics {
+    margin: var(--space-4) 0 0;
+  }
+
+  .detail-metric-row {
+    min-height: var(--touch-target);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    border-top: 1px solid var(--border-default);
+  }
+
+  .detail-metric-row:first-child {
+    border-top: 0;
+  }
+
+  .detail-metric-row dt {
+    color: var(--text-muted);
+  }
+
+  .detail-metric-row dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    text-align: right;
+  }
+
+  .preserve-lines {
+    white-space: pre-line;
+  }
+
+  .community-header-actions,
+  .community-filter-row {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .community-tabs {
+    margin-top: var(--space-2);
+  }
+
+  .community-content {
+    min-width: 0;
+  }
+
+  .community-filter-row {
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .community-filter-row .search-control {
+    min-width: min(100%, 18rem);
+    flex: 1 1 18rem;
+  }
+
+  .community-filter-row .select-control {
+    flex: 0 1 auto;
+  }
+
+  .community-page .public-notice {
+    margin-bottom: var(--space-4);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .feed-stream,
+  .topic-registry {
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .feed-entry {
+    min-width: 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .feed-entry-main {
+    padding: var(--space-4) var(--row-inset) var(--space-3);
+  }
+
+  .feed-entry-main:hover {
+    background: var(--bg-hover);
+  }
+
+  .feed-entry-subject {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0 calc(var(--space-7) + var(--space-3));
+  }
+
+  .feed-entry-subject strong,
+  .feed-entry-subject em {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .feed-entry-subject em {
+    color: var(--text-secondary);
+    font-family: var(--font-taxon);
+    font-style: italic;
+  }
+
+  .feed-entry-main > p {
+    margin: var(--space-2) 0 0 calc(var(--space-7) + var(--space-3));
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  .feed-image {
+    width: calc(100% - var(--space-7) - var(--space-3));
+    max-height: 32rem;
+    display: block;
+    margin: var(--space-3) 0 0 calc(var(--space-7) + var(--space-3));
+    object-fit: contain;
+    background: var(--bg-subtle);
+  }
+
+  .feed-entry > .discussion-actions {
+    margin-left: calc(var(--space-7) + var(--space-3));
+    margin-right: var(--row-inset);
+  }
+
+  .feed-article,
+  .topic-article {
+    min-width: 0;
+    padding-block: var(--space-4);
+    border-block: 1px solid var(--border-strong);
+  }
+
+  .feed-article .feed-image {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .feed-article .feed-entry-subject {
+    margin-left: 0;
+  }
+
+  .detail-image {
+    max-height: 44rem;
+  }
+
+  .detail-copy {
+    color: var(--text-secondary);
+    line-height: var(--leading-body);
+    overflow-wrap: anywhere;
+  }
+
+  .topic-registry-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--row-inset);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .topic-registry-main {
+    min-width: 0;
+  }
+
+  .topic-registry-row h2 {
+    margin: var(--space-2) 0;
+    font-size: var(--type-heading);
+    overflow-wrap: anywhere;
+  }
+
+  .topic-registry-row p {
+    margin: 0;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  .topic-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+  }
+
+  .topic-response-count {
+    min-width: var(--space-7);
+    display: grid;
+    align-content: center;
+    justify-items: end;
+  }
+
+  .topic-response-count strong {
+    font-family: var(--font-mono);
+    font-size: var(--type-section);
+  }
+
+  .topic-response-count span {
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+  }
+
+  .topic-article h1 {
+    margin: var(--space-2) 0;
+    overflow-wrap: anywhere;
+  }
+
+  .topic-image {
+    width: 100%;
+    max-height: 40rem;
+    margin-top: var(--space-4);
+    object-fit: contain;
+    background: var(--bg-subtle);
+  }
+
+  .breeding-listing-editor {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-1) 0;
+    padding: var(--space-4);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-surface);
+    background: var(--bg-subtle);
+  }
+
+  .breeding-listing-editor legend {
+    padding-inline: var(--space-2);
+    font-family: var(--font-taxon);
+    font-size: var(--type-heading);
+  }
+
+  .breeding-listing-editor > p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--type-micro);
+    line-height: var(--leading-body);
+  }
+
+  .breeding-board-intro {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-4);
+    border-block: 1px solid var(--border-strong);
+  }
+
+  .breeding-board-intro strong {
+    font-family: var(--font-taxon);
+    font-size: var(--type-section);
+    font-weight: var(--weight-regular);
+  }
+
+  .breeding-board-intro p {
+    max-width: var(--content-reading-width);
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+    line-height: var(--leading-body);
+  }
+
+  .breeding-listing-list {
+    border-top: 1px solid var(--border-default);
+  }
+
+  .breeding-listing-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(14rem, .72fr) minmax(0, 1.28fr);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .breeding-listing-media {
+    min-height: 14rem;
+    background: var(--bg-subtle);
+  }
+
+  .breeding-listing-media .setae-media-frame,
+  .breeding-listing-media .setae-media-visual {
+    height: 100%;
+  }
+
+  .breeding-listing-body {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding: var(--space-4) 0 var(--space-4) var(--space-5);
+  }
+
+  .breeding-listing-heading {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .breeding-listing-heading > div {
+    min-width: 0;
+  }
+
+  .breeding-listing-heading strong,
+  .breeding-listing-heading em {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+
+  .breeding-listing-heading strong {
+    margin-top: var(--space-1);
+    font-family: var(--font-mono);
+  }
+
+  .breeding-listing-heading em {
+    margin-top: var(--space-1);
+    color: var(--text-secondary);
+    font-family: var(--font-taxon);
+  }
+
+  .breeding-listing-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    border-block: 1px solid var(--border-default);
+  }
+
+  .breeding-listing-facts > div {
+    min-width: 0;
+    padding-block: var(--space-2);
+  }
+
+  .breeding-listing-facts dt {
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+  }
+
+  .breeding-listing-facts dd {
+    margin: var(--space-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--type-caption);
+    overflow-wrap: anywhere;
+  }
+
+  .breeding-listing-terms {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: var(--leading-body);
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  .breeding-listing-owner {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .breeding-listing-owner strong {
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  .breeding-contact-action {
+    justify-self: start;
+  }
+
+  .species-photo-index {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-4);
+  }
+
+  .species-index-item,
+  .species-index-open,
+  .species-index-caption {
+    min-width: 0;
+  }
+
+  .species-index-open:hover {
+    background: transparent;
+  }
+
+  .species-index-photo {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+  }
+
+  .species-index-photo .setae-media-frame,
+  .species-index-photo .setae-media-visual {
+    height: 100%;
+  }
+
+  .species-index-caption {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: var(--space-3);
+  }
+
+  .species-index-caption strong,
+  .species-index-caption em {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .species-index-caption em {
+    color: var(--text-secondary);
+    font-family: var(--font-taxon);
+    font-style: italic;
+  }
+
+  .species-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+  }
+
+  .species-tags span {
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-control);
+    color: var(--text-secondary);
+    font-size: var(--type-micro);
+  }
+
+  .species-image-credit {
+    min-height: var(--space-6);
+    padding-block: var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+    line-height: var(--leading-tight);
+    overflow-wrap: anywhere;
+  }
+
+  .species-image-credit:empty {
+    display: none;
+  }
+
+  .species-image-credit a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: var(--space-1);
+  }
+
+  .species-detail-layout {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .species-detail-layout > *,
+  .species-detail-content {
+    min-width: 0;
+  }
+
+  .species-detail-image {
+    overflow: hidden;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+  }
+
+  .species-detail-image [data-media-image] {
+    object-fit: contain;
+  }
+
+  .species-detail-image .media-attribution {
+    min-height: var(--space-6);
+    padding: var(--space-2);
+    border-top: 1px solid var(--border-default);
+    background: var(--bg-surface);
+    overflow-wrap: anywhere;
+  }
+
+  .species-community-stat {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding-block: var(--space-2);
+    border-block: 1px solid var(--border-default);
+  }
+
+  .species-community-stat strong {
+    font-family: var(--font-mono);
+    font-size: var(--type-section);
+  }
+
+  .species-community-stat span {
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .related-topic-list,
+  .source-list {
+    border-top: 1px solid var(--border-default);
+  }
+
+  .source-list a {
+    min-width: 0;
+    display: block;
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--border-default);
+    overflow-wrap: anywhere;
+  }
+
+  .source-list a:hover {
+    background: var(--bg-hover);
+  }
+
+  .source-list span {
+    display: block;
+    margin-top: var(--space-1);
+    color: var(--text-secondary);
+    font-size: var(--type-micro);
+  }
+
+  .shop-list {
+    display: grid;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .shop-item {
+    min-width: 0;
+    min-height: var(--touch-target);
+    display: grid;
+    grid-template-columns: var(--space-7) minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--border-default);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .shop-item:not(:has(img)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shop-item img {
+    width: var(--space-7);
+    height: var(--space-7);
+    object-fit: cover;
+    border-radius: var(--radius-surface);
+  }
+
+  .shop-item span {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .shop-item strong,
+  .shop-item small,
+  .shop-item em {
+    overflow-wrap: anywhere;
+  }
+
+  .shop-item small {
+    color: var(--text-secondary);
+  }
+
+  .shop-item em {
+    color: var(--accent);
+    font-size: var(--type-caption);
+    font-style: normal;
+  }
+
+  .species-suggestion-form {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--border-default);
+  }
+
+  @media (max-width: 767px) {
+    .community-header-actions,
+    .community-header-actions .button,
+    .community-filter-row,
+    .community-filter-row .search-control,
+    .community-filter-row .select-control,
+    .community-filter-row > .button {
+      width: 100%;
+    }
+
+    .community-tabs {
+      flex-wrap: wrap;
+      gap: 0 var(--space-4);
+    }
+
+    .feed-entry-subject,
+    .feed-entry-main > p,
+    .feed-entry > .discussion-actions {
+      margin-left: calc(var(--space-6) + var(--space-3));
+    }
+
+    .feed-image {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .topic-registry-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2);
+    }
+
+    .topic-response-count {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-start;
+      gap: var(--space-1);
+    }
+
+    .topic-response-count strong {
+      font-size: var(--type-caption);
+    }
+
+    .breeding-listing-row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .breeding-listing-body {
+      padding: var(--space-4) 0;
+    }
+
+    .breeding-contact-action {
+      width: 100%;
+    }
+
+    .species-photo-index {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .species-detail-layout {
+      grid-template-columns: minmax(15rem, .7fr) minmax(0, 1.3fr);
+      align-items: start;
+    }
+
+    .species-detail-layout > aside {
+      position: sticky;
+      top: calc(var(--topbar-height) + var(--safe-top) + var(--space-4));
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .species-photo-index {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .species-detail-layout {
+      grid-template-columns: minmax(18rem, .62fr) minmax(0, 1.38fr);
+      align-items: start;
+    }
+
+    .species-detail-layout > aside {
+      position: sticky;
+      top: calc(var(--topbar-height) + var(--safe-top) + var(--space-4));
+    }
+  }
+
+  @supports (content-visibility: auto) {
+    .feed-entry { content-visibility: auto; contain-intrinsic-size: auto 420px; }
+    .topic-registry-row { content-visibility: auto; contain-intrinsic-size: auto 76px; }
+    .feed-entry:focus-within,
+    .topic-registry-row:focus-within { content-visibility: visible; contain: none; }
+  }
+
+  @media print {
+    .feed-entry,
+    .topic-registry-row { content-visibility: visible; contain: none; }
+  }
+}

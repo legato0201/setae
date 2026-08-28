@@ -6,28 +6,26 @@ const SetaeUI_Community = (function ($) {
 
     // 未読件数を取得してバッジに反映
     function updateUnreadBadge() {
-        if (typeof SetaeSettings === 'undefined' || !SetaeSettings.ajax_url) return;
-        $.ajax({
-            url: SetaeSettings.ajax_url,
-            type: 'GET',
-            data: { action: 'setae_get_unread_community_count' },
-            success: function (response) {
-                if (response.success && response.data.count > 0) {
-                    $('#com-unread-badge').text(response.data.count).show();
-                }
+        if (typeof SetaeUI !== 'undefined' && SetaeUI.refreshCommunityUnread) {
+            SetaeUI.refreshCommunityUnread();
+            return;
+        }
+
+        if (typeof SetaeAPI === 'undefined' || !SetaeAPI.fetchCommunityUnread) return;
+
+        SetaeAPI.fetchCommunityUnread(function (response) {
+            const count = response && response.count ? response.count : 0;
+            if (count > 0) {
+                $('#com-unread-badge').text(count > 99 ? '99+' : count).css('display', 'flex');
+            } else {
+                $('#com-unread-badge').hide().text('0');
             }
         });
     }
 
-    // タブクリック時に既読処理を行う
+    // 既読化はスレッド詳細を開いたタイミングで app-ui-renderer.js が行う。
     function markAsRead() {
-        $('#com-unread-badge').hide().text('0');
-        if (typeof SetaeSettings === 'undefined' || !SetaeSettings.ajax_url) return;
-        $.ajax({
-            url: SetaeSettings.ajax_url,
-            type: 'POST',
-            data: { action: 'setae_update_com_last_checked' }
-        });
+        updateUnreadBadge();
     }
 
     // ★追加: 最新コメントへのジャンプボタン制御
@@ -115,11 +113,6 @@ const SetaeUI_Community = (function ($) {
     function init() {
         // ページ読み込み時にバッジを取得
         updateUnreadBadge();
-
-        // コミュニティタブがクリックされたら既読にする
-        $(document).on('click', '.setae-nav-item[data-target="section-com"]', function () {
-            markAsRead();
-        });
 
         // ★追加: ジャンプボタンの初期化
         initJumpToBottom();

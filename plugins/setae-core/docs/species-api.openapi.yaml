@@ -1,0 +1,345 @@
+openapi: 3.0.3
+info:
+  title: Setae Species API
+  version: 1.1.0
+  description: Public encyclopedia, live community context, and audited Codex-ready species updates.
+servers:
+  - url: https://example.com/wp-json/setae/v1
+paths:
+  /species:
+    get:
+      summary: List and search species
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: orderby, in: query, schema: { type: string, enum: [title, modified, id], default: title } }
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+        - { name: genus, in: query, schema: { type: string } }
+        - { name: modified_after, in: query, schema: { type: string, format: date-time } }
+        - { name: context, in: query, schema: { type: string, enum: [view, edit], default: view } }
+        - { name: status, in: query, schema: { type: string, enum: [any, publish, draft, pending, private], default: any } }
+        - { name: review_status, in: query, schema: { type: string, enum: [unreviewed, draft, reviewed, verified] } }
+      responses:
+        '200':
+          description: Species list
+          headers:
+            X-WP-Total: { schema: { type: integer } }
+            X-WP-TotalPages: { schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SpeciesSummary' }
+  /species/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }
+    get:
+      summary: Get species details
+      parameters:
+        - { name: context, in: query, schema: { type: string, enum: [view, edit], default: view } }
+        - { name: include_related, in: query, schema: { type: boolean, default: true } }
+      responses:
+        '200':
+          description: Species details
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Species' }
+        '404': { description: Species not found }
+    patch:
+      summary: Update one species
+      security: [{ applicationPassword: [] }]
+      parameters:
+        - { name: If-Match, in: header, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SpeciesUpdate' }
+      responses:
+        '200':
+          description: Updated species, or a validation result when validate_only is true
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: '#/components/schemas/Species' }
+                  - { $ref: '#/components/schemas/ValidationResult' }
+        '400': { description: Invalid input }
+        '401': { description: Authentication required }
+        '403': { description: Permission denied }
+        '409': { description: Revision conflict }
+  /species/{id}/image:
+    post:
+      summary: Upload a species image
+      security: [{ applicationPassword: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: If-Match, in: header, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                role: { type: string, enum: [thumbnail, gallery, both], default: thumbnail }
+                alt_text: { type: string }
+                caption: { type: string }
+                credit_type: { type: string, enum: [user, text], default: user }
+                credit_text: { type: string }
+                credit_user: { type: integer }
+                source_url: { type: string, format: uri }
+                license: { type: string }
+      responses:
+        '201':
+          description: Uploaded attachment and updated species
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attachment: { $ref: '#/components/schemas/SpeciesImage' }
+                  species: { $ref: '#/components/schemas/Species' }
+        '409': { description: Revision conflict }
+        '413': { description: File too large }
+        '415': { description: Unsupported image }
+components:
+  securitySchemes:
+    applicationPassword:
+      type: http
+      scheme: basic
+      description: WordPress username and Application Password over HTTPS.
+  schemas:
+    SpeciesSummary:
+      type: object
+      required: [id, title, scientific_name, revision]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        scientific_name: { type: string }
+        ja_name: { type: string }
+        genus: { type: string }
+        thumb: { type: string }
+        excerpt: { type: string }
+        difficulty: { type: string }
+        temperature: { type: string }
+        humidity: { type: string }
+        lifestyles: { type: array, items: { $ref: '#/components/schemas/Term' } }
+        habitats: { type: array, items: { $ref: '#/components/schemas/Term' } }
+        research_status: { type: string, enum: [unreviewed, draft, reviewed, verified] }
+        source_count: { type: integer }
+        last_researched_at: { type: string, format: date-time }
+        data_quality: { $ref: '#/components/schemas/DataQuality' }
+        modified_gmt: { type: string, format: date-time }
+        revision: { type: string }
+        status: { type: string }
+        review_status: { type: string }
+    Species:
+      allOf:
+        - { $ref: '#/components/schemas/SpeciesSummary' }
+        - type: object
+          properties:
+            description: { type: string }
+            excerpt: { type: string }
+            lifespan: { type: string }
+            size: { oneOf: [{ type: string }, { type: number }] }
+            difficulty: { type: string, enum: ['', beginner, intermediate, expert] }
+            temperature: { type: string }
+            humidity: { type: string }
+            habitats: { type: array, items: { $ref: '#/components/schemas/Term' } }
+            lifestyles: { type: array, items: { $ref: '#/components/schemas/Term' } }
+            temperaments: { type: array, items: { $ref: '#/components/schemas/Term' } }
+            featured_images: { type: array, items: { type: string, format: uri } }
+            featured_media: { type: integer }
+            image_records: { type: array, items: { $ref: '#/components/schemas/SpeciesImage' } }
+            content_sections: { $ref: '#/components/schemas/ContentSections' }
+            care_profile: { $ref: '#/components/schemas/CareProfile' }
+            external_links: { type: array, items: { $ref: '#/components/schemas/ExternalLink' } }
+            research: { $ref: '#/components/schemas/Research' }
+            related_summary: { $ref: '#/components/schemas/RelatedSummary' }
+            related_care_logs: { type: array, items: { type: object } }
+            related_topics: { type: array, items: { type: object } }
+            breeding_candidates: { type: array, items: { $ref: '#/components/schemas/BreedingCandidate' } }
+            shop_links: { type: array, items: { $ref: '#/components/schemas/ShopLink' } }
+            data_quality: { $ref: '#/components/schemas/DataQuality' }
+            last_api_update: { $ref: '#/components/schemas/ApiUpdate' }
+            api_update_history: { type: array, items: { $ref: '#/components/schemas/ApiUpdate' } }
+    SpeciesUpdate:
+      type: object
+      properties:
+        expected_revision: { type: string }
+        update_source: { type: string }
+        change_note: { type: string }
+        research_run_id: { type: string }
+        codex_model: { type: string }
+        validate_only: { type: boolean, default: false }
+        scientific_name: { type: string }
+        ja_name: { type: string }
+        description: { type: string }
+        excerpt: { type: string }
+        slug: { type: string }
+        status: { type: string, enum: [publish, draft, pending, private] }
+        lifespan: { type: string }
+        size: { type: number, minimum: 0, maximum: 100 }
+        difficulty: { type: string, enum: ['', beginner, intermediate, expert] }
+        temperature: { type: string }
+        humidity: { type: string }
+        genus: { type: string }
+        habitats: { type: array, items: { type: string } }
+        lifestyles: { type: array, items: { type: string } }
+        temperaments: { type: array, items: { type: string } }
+        featured_images: { type: array, items: { type: string, format: uri } }
+        featured_media: { type: integer, description: Image attachment ID. Use 0 to clear. }
+        image_credit: { $ref: '#/components/schemas/ImageCredit' }
+        content_sections: { $ref: '#/components/schemas/ContentSections' }
+        care_profile: { $ref: '#/components/schemas/CareProfile' }
+        external_links: { type: array, maxItems: 30, items: { $ref: '#/components/schemas/ExternalLink' } }
+        research_sources: { type: array, items: { $ref: '#/components/schemas/ResearchSource' } }
+        research_notes: { type: string }
+        review_status: { type: string, enum: [unreviewed, draft, reviewed, verified] }
+        last_researched_at: { type: string, format: date-time }
+    Research:
+      type: object
+      properties:
+        sources: { type: array, items: { $ref: '#/components/schemas/ResearchSource' } }
+        status: { type: string, enum: [unreviewed, draft, reviewed, verified] }
+        last_researched_at: { type: string, format: date-time }
+        notes: { type: string }
+        last_researched_by: { type: integer }
+    ResearchSource:
+      type: object
+      properties:
+        title: { type: string }
+        url: { type: string, format: uri }
+        doi: { type: string }
+        authors: { type: array, items: { type: string } }
+        year: { type: integer }
+        accessed_at: { type: string, format: date-time }
+        note: { type: string }
+    ContentSections:
+      type: object
+      additionalProperties: false
+      properties:
+        identification: { type: string }
+        distribution: { type: string }
+        natural_history: { type: string }
+        husbandry: { type: string }
+        feeding: { type: string }
+        breeding: { type: string }
+        conservation: { type: string }
+        cautions: { type: string }
+    CareProfile:
+      type: object
+      additionalProperties: false
+      properties:
+        enclosure: { type: string }
+        substrate: { type: string }
+        ventilation: { type: string }
+        water: { type: string }
+        feeding: { type: string }
+        growth: { type: string }
+        breeding: { type: string }
+        handling: { type: string }
+    ExternalLink:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string }
+        url: { type: string, format: uri }
+        type: { type: string }
+        note: { type: string }
+    RelatedSummary:
+      type: object
+      readOnly: true
+      properties:
+        keepers: { type: integer }
+        care_logs: { type: integer }
+        topics: { type: integer }
+        open_topics: { type: integer }
+        breeding_candidates: { type: integer }
+        shops: { type: integer }
+        research_sources: { type: integer }
+    BreedingCandidate:
+      type: object
+      readOnly: true
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        image: { type: string, format: uri }
+        gender: { type: string }
+        owner_id: { type: integer }
+        owner_name: { type: string }
+        last_molt: { type: string }
+        terms: { type: string }
+    ShopLink:
+      type: object
+      readOnly: true
+      properties:
+        id: { type: integer }
+        shop_name: { type: string }
+        url: { type: string, format: uri }
+        image: { type: string, format: uri }
+        price_label: { type: string }
+        stock_label: { type: string }
+        description: { type: string }
+        cta_label: { type: string }
+        approved: { type: boolean }
+    DataQuality:
+      type: object
+      readOnly: true
+      properties:
+        score: { type: integer, minimum: 0, maximum: 100 }
+        completed: { type: integer }
+        total: { type: integer }
+        missing_fields: { type: array, items: { type: string } }
+    ApiUpdate:
+      type: object
+      readOnly: true
+      properties:
+        request_id: { type: string, format: uuid }
+        updated_at: { type: string, format: date-time }
+        updated_by: { type: integer }
+        source: { type: string }
+        fields: { type: array, items: { type: string } }
+        change_note: { type: string }
+        research_run_id: { type: string }
+        codex_model: { type: string }
+        revision_before: { type: string }
+        revision_after: { type: string }
+    ValidationResult:
+      type: object
+      required: [valid, species_id, revision, fields]
+      properties:
+        valid: { type: boolean, enum: [true] }
+        species_id: { type: integer }
+        revision: { type: string }
+        fields: { type: array, items: { type: string } }
+        message: { type: string }
+    ImageCredit:
+      type: object
+      properties:
+        type: { type: string, enum: [user, text] }
+        user_id: { type: integer }
+        text: { type: string }
+    SpeciesImage:
+      type: object
+      properties:
+        id: { type: integer }
+        attachment_id: { type: integer }
+        url: { type: string, format: uri }
+        role: { type: string, enum: [thumbnail, gallery, both] }
+        alt_text: { type: string }
+        source_url: { type: string, format: uri }
+        license: { type: string }
+        credit: { $ref: '#/components/schemas/ImageCredit' }
+    Term:
+      type: object
+      properties:
+        term_id: { type: integer }
+        name: { type: string }
+        slug: { type: string }

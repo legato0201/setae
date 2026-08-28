@@ -1,0 +1,761 @@
+/* Public Surface foundation: tokens and shared primitives, never page layouts. */
+:root {
+    --setae-public-canvas: #f3f2ed;
+    --setae-public-surface: #faf9f6;
+    --setae-public-surface-muted: #ebe9e1;
+    --setae-public-ink: #20231f;
+    --setae-public-muted: #686d66;
+    --setae-public-rule: #d7d6cf;
+    --setae-public-rule-strong: #aeada6;
+    --setae-public-accent: #48604d;
+    --setae-public-accent-contrast: #f7f7f3;
+    --setae-public-danger: #9b5149;
+    --setae-public-warning: #826125;
+    --setae-public-success: #48604d;
+    --setae-public-focus: #2f7650;
+    --setae-public-overlay: rgba(32, 35, 31, .56);
+    --setae-public-shadow-popover: 0 12px 30px rgba(32, 35, 31, .14);
+    --setae-public-shadow-overlay: 0 24px 70px rgba(32, 35, 31, .24);
+    --setae-public-font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --setae-public-font-taxon: Georgia, "Times New Roman", serif;
+    --setae-public-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --setae-public-weight-regular: 400;
+    --setae-public-weight-medium: 500;
+    --setae-public-weight-semibold: 600;
+    --setae-public-weight-bold: 700;
+    --setae-public-space-1: 4px;
+    --setae-public-space-2: 8px;
+    --setae-public-space-3: 12px;
+    --setae-public-space-4: 16px;
+    --setae-public-space-5: 24px;
+    --setae-public-space-6: 32px;
+    --setae-public-radius-control: 6px;
+    --setae-public-radius-surface: 6px;
+    --setae-public-radius-overlay: 10px;
+    --setae-public-touch-target: 44px;
+
+    /* Compatibility tokens for public pages not being redesigned. */
+    --setae-public-bg: var(--setae-public-canvas);
+    --setae-public-label: var(--setae-public-surface-muted);
+    --setae-public-botanical: var(--setae-public-accent);
+    --setae-font-ui: var(--setae-public-font-ui);
+    --setae-font-main: var(--setae-public-font-ui);
+    --setae-font-taxon: var(--setae-public-font-taxon);
+    --setae-font-mono: var(--setae-public-font-mono);
+    --setae-public-radius-sm: 4px;
+    --setae-public-radius: var(--setae-public-radius-control);
+    --setae-public-radius-lg: var(--setae-public-radius-overlay);
+}
+
+/* Reset and typography are scoped to Public Surface documents. */
+html.setae-public-surface-document {
+    font-size: 100%;
+}
+
+:where(body.setae-public-document, body.setae-public-home-page,
+body.setae-care-share-document, body.setae-public-partner-document,
+body.setae-public-profile-document) {
+    min-width: 320px;
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--setae-public-canvas);
+    color: var(--setae-public-ink);
+    font-family: var(--setae-public-font-ui);
+    font-size: 16px;
+    font-weight: var(--setae-public-weight-regular);
+    line-height: 1.6;
+    letter-spacing: 0;
+}
+
+/* Own only the new document bodies; allow space for a classic scrollbar. */
+body.setae-care-share-document,
+body.setae-public-partner-document {
+    min-width: 0;
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--setae-public-canvas);
+    color: var(--setae-public-ink);
+    font-family: var(--setae-public-font-ui);
+    font-size: 1rem;
+    font-weight: var(--setae-public-weight-regular);
+    line-height: 1.6;
+    letter-spacing: 0;
+}
+
+:where(body.setae-public-document, body.setae-public-home-page,
+.setae-care-share-page, .setae-public-partner-page, .setae-public-profile-page,
+.setae-public-dialog) *,
+:where(body.setae-public-document, .setae-public-dialog) *::before,
+:where(body.setae-public-document, .setae-public-dialog) *::after {
+    box-sizing: border-box;
+}
+
+:where(body.setae-public-document, body.setae-public-home-page,
+.setae-care-share-page, .setae-public-partner-page, .setae-public-profile-page,
+.setae-public-dialog) :where(button, input, select, textarea) {
+    font: inherit;
+}
+
+:where(body.setae-public-document, body.setae-public-home-page,
+.setae-care-share-page, .setae-public-partner-page, .setae-public-profile-page) a {
+    color: inherit;
+    text-decoration: none;
+}
+
+:where(body.setae-public-document, .setae-public-dialog)
+:where(h1, h2, h3, p, dl, dd, figure) {
+    margin: 0;
+}
+
+:where(body.setae-public-document, .setae-public-profile-page, .setae-public-dialog) [hidden] {
+    display: none !important;
+}
+
+.setae-public-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.setae-public-copy-helper {
+    position: fixed;
+    inset-inline-start: -10000px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.setae-public-skip-link {
+    position: fixed;
+    z-index: 2000;
+    top: var(--setae-public-space-2);
+    left: var(--setae-public-space-4);
+    display: inline-flex;
+    min-height: var(--setae-public-touch-target);
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid var(--setae-public-rule-strong);
+    border-radius: var(--setae-public-radius-control);
+    background: var(--setae-public-surface);
+    color: var(--setae-public-accent);
+    transform: translateY(calc(-100% - 16px));
+}
+
+.setae-public-skip-link:focus {
+    transform: translateY(0);
+}
+
+/* Brand */
+.setae-brand-lockup {
+    --setae-brand-icon-size: 28px;
+    display: inline-flex;
+    min-height: var(--setae-public-touch-target);
+    max-width: 100%;
+    align-items: center;
+    gap: 9px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.setae-brand-lockup .setae-brand-icon {
+    display: block;
+    width: var(--setae-brand-icon-size);
+    height: var(--setae-brand-icon-size);
+    flex: 0 0 var(--setae-brand-icon-size);
+    background: currentColor;
+    -webkit-mask: url('../app/icons/setae-brand-mark.png') center / contain no-repeat;
+    mask: url('../app/icons/setae-brand-mark.png') center / contain no-repeat;
+}
+
+.setae-brand-lockup .setae-brand-copy {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.setae-brand-lockup .setae-brand-title {
+    font-family: var(--setae-public-font-ui);
+    font-size: 17px;
+    font-weight: var(--setae-public-weight-bold);
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.setae-brand-lockup .setae-brand-subtitle {
+    font-family: var(--setae-public-font-taxon);
+    font-size: 10px;
+    font-style: italic;
+    line-height: 1.1;
+    opacity: .66;
+}
+
+.setae-public-section-label {
+    color: var(--setae-public-muted);
+    font-family: var(--setae-public-font-mono);
+    font-size: .75rem;
+    font-weight: var(--setae-public-weight-semibold);
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+/* Reusable document frame for the remaining dedicated public surfaces. */
+.setae-public-surface-shell {
+    width: min(calc(100% - var(--setae-public-space-6) * 2), 1200px);
+    min-width: 0;
+    margin-inline: auto;
+}
+
+.setae-public-surface-header {
+    border-bottom: 1px solid var(--setae-public-rule);
+}
+
+.setae-public-surface-header-inner {
+    display: grid;
+    min-height: 76px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--setae-public-space-5);
+    padding-block: var(--setae-public-space-2);
+}
+
+.setae-public-surface-label {
+    margin: 0;
+    color: var(--setae-public-muted);
+    font-size: .875rem;
+    font-weight: var(--setae-public-weight-medium);
+    line-height: 1.5;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-surface-header-actions {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--setae-public-space-2);
+}
+
+.setae-public-surface-footer-links {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--setae-public-space-2);
+}
+
+.setae-public-surface-footer {
+    margin-top: var(--setae-public-space-6);
+    border-top: 1px solid var(--setae-public-rule);
+}
+
+.setae-public-surface-footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--setae-public-space-4);
+    padding-block: var(--setae-public-space-5);
+}
+
+/* Native details keeps sharing reachable without a JavaScript menu widget. */
+.setae-public-share-menu {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.setae-public-share-menu > summary {
+    list-style: none;
+}
+
+.setae-public-share-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.setae-public-share-options {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+    gap: var(--setae-public-space-1);
+    margin-block-start: var(--setae-public-space-2);
+    padding: var(--setae-public-space-2);
+    border: 1px solid var(--setae-public-rule-strong);
+    border-radius: var(--setae-public-radius-surface);
+    background: var(--setae-public-surface);
+    box-shadow: var(--setae-public-shadow-popover);
+}
+
+.setae-public-share-options .setae-public-button {
+    justify-content: flex-start;
+}
+
+.setae-public-share-status {
+    min-height: 1.6em;
+    margin: 0;
+    color: var(--setae-public-success);
+    font-size: .875rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-share-status[data-state="error"] {
+    color: var(--setae-public-danger);
+}
+
+/* Buttons. Legacy public names are aliases, with no second visual definition. */
+.setae-public-button,
+.setae-public-primary-btn,
+.setae-public-secondary-btn,
+.setae-public-text-btn,
+.setae-public-login-link {
+    appearance: none;
+    display: inline-flex;
+    min-width: 0;
+    min-height: var(--setae-public-touch-target);
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: var(--setae-public-space-2);
+    padding: 10px 14px;
+    border: 1px solid var(--setae-public-rule-strong);
+    border-radius: var(--setae-public-radius-control);
+    background: transparent;
+    color: var(--setae-public-ink);
+    font: inherit;
+    font-weight: var(--setae-public-weight-bold);
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.setae-public-button:hover,
+.setae-public-primary-btn:hover,
+.setae-public-secondary-btn:hover,
+.setae-public-text-btn:hover,
+.setae-public-login-link:hover {
+    border-color: var(--setae-public-accent);
+    color: var(--setae-public-accent);
+}
+
+.setae-public-button.is-primary,
+.setae-public-primary-btn {
+    border-color: var(--setae-public-accent);
+    background: var(--setae-public-accent);
+    color: var(--setae-public-accent-contrast);
+}
+
+.setae-public-button.is-primary:hover,
+.setae-public-primary-btn:hover {
+    border-color: var(--setae-public-ink);
+    background: var(--setae-public-ink);
+    color: var(--setae-public-canvas);
+}
+
+.setae-public-button.is-default {
+    background: var(--setae-public-surface);
+}
+
+.setae-public-button.is-quiet,
+.setae-public-text-btn {
+    border-color: transparent;
+}
+
+.setae-public-button.is-danger {
+    border-color: var(--setae-public-danger);
+    color: var(--setae-public-danger);
+}
+
+.setae-public-button.is-icon {
+    min-width: var(--setae-public-touch-target);
+    flex: 0 0 auto;
+    padding: 10px;
+}
+
+.setae-public-button :where(svg, .setae-icon) {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+}
+
+.setae-public-button:disabled,
+.setae-public-button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+/* Forms */
+.setae-public-field {
+    display: grid;
+    min-width: 0;
+    gap: 7px;
+    color: var(--setae-public-ink);
+    font-size: .875rem;
+    font-weight: var(--setae-public-weight-bold);
+}
+
+.setae-public-field small {
+    color: var(--setae-public-muted);
+    font-size: .75rem;
+    font-weight: var(--setae-public-weight-regular);
+}
+
+.setae-public-input {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid var(--setae-public-rule-strong);
+    border-radius: var(--setae-public-radius-control);
+    background: var(--setae-public-canvas);
+    color: var(--setae-public-ink);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: var(--setae-public-weight-regular);
+    line-height: 1.5;
+}
+
+.setae-public-input:focus {
+    border-color: var(--setae-public-accent);
+}
+
+.setae-public-input[aria-invalid="true"] {
+    border-color: var(--setae-public-danger);
+}
+
+.setae-public-checkbox {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    margin: 0;
+    accent-color: var(--setae-public-accent);
+}
+
+.setae-public-form-error {
+    padding: 10px 12px;
+    border-inline-start: 3px solid var(--setae-public-danger);
+    background: var(--setae-public-surface-muted);
+    color: var(--setae-public-danger);
+    font-size: .875rem;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-form-status {
+    min-height: 1.5em;
+    color: var(--setae-public-success);
+    font-size: .875rem;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--setae-public-space-2);
+}
+
+.setae-public-status {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--setae-public-rule);
+    border-radius: var(--setae-public-radius-control);
+    background: transparent;
+    color: var(--setae-public-muted);
+    font-size: .75rem;
+    font-weight: var(--setae-public-weight-medium);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-status.is-success {
+    border-color: var(--setae-public-success);
+    color: var(--setae-public-success);
+}
+
+.setae-public-status.is-warning {
+    border-color: var(--setae-public-warning);
+    color: var(--setae-public-warning);
+}
+
+.setae-public-status.is-danger {
+    border-color: var(--setae-public-danger);
+    color: var(--setae-public-danger);
+}
+
+/* Dialog base. A component chooses its own width and internal layout. */
+.setae-public-dialog {
+    box-sizing: border-box;
+    max-width: calc(100% - 32px);
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--setae-public-rule-strong);
+    border-radius: var(--setae-public-radius-overlay);
+    background: var(--setae-public-surface);
+    color: var(--setae-public-ink);
+    box-shadow: var(--setae-public-shadow-overlay);
+    font-family: var(--setae-public-font-ui);
+    font-size: 1rem;
+    font-weight: var(--setae-public-weight-regular);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-dialog:not([open]) {
+    display: none;
+}
+
+.setae-public-dialog::backdrop {
+    background: var(--setae-public-overlay);
+}
+
+:where(body.setae-public-document, body.setae-public-home-page,
+.setae-care-share-page, .setae-public-partner-page, .setae-public-profile-page,
+.setae-public-dialog) :where(a, button, input, textarea, select, summary):focus-visible,
+.setae-public-button:focus-visible {
+    outline: 2px solid var(--setae-public-focus);
+    outline-offset: 3px;
+}
+
+/* Shared media placeholder. The containing media frame owns aspect ratio. */
+.setae-specimen-placeholder {
+    position: relative;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 150px;
+    align-content: center;
+    justify-items: center;
+    gap: 10px;
+    padding: 20px;
+    overflow: hidden;
+    background: var(--setae-public-surface-muted);
+    color: var(--setae-public-muted);
+    text-align: center;
+}
+
+.setae-specimen-placeholder .setae-specimen-placeholder-icon {
+    display: block;
+    width: clamp(58px, 18%, 86px);
+    height: auto;
+    opacity: .42;
+}
+
+.setae-specimen-placeholder-taxon {
+    display: grid;
+    max-width: 100%;
+    justify-items: center;
+    gap: 3px;
+}
+
+.setae-specimen-placeholder-taxon em {
+    max-width: 100%;
+    color: var(--setae-public-muted);
+    font-family: var(--setae-public-font-taxon);
+    font-size: clamp(.875rem, 2.5vw, 1.1875rem);
+    overflow-wrap: anywhere;
+}
+
+.setae-specimen-placeholder-taxon strong {
+    color: var(--setae-public-muted);
+    font-family: var(--setae-public-font-mono);
+    font-size: .75rem;
+    font-weight: var(--setae-public-weight-semibold);
+    overflow-wrap: anywhere;
+}
+
+.setae-specimen-placeholder > small {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    left: 10px;
+    color: var(--setae-public-muted);
+    font-family: var(--setae-public-font-mono);
+    font-size: .625rem;
+    line-height: 1.2;
+}
+
+.setae-specimen-placeholder.is-thumbnail {
+    min-height: 0;
+    padding: 12px;
+}
+
+.setae-specimen-placeholder.is-thumbnail .setae-specimen-placeholder-icon {
+    width: min(48px, 38%);
+}
+
+.setae-specimen-placeholder:is(.is-thumbnail, .is-compact) > small {
+    display: none;
+}
+
+.setae-specimen-placeholder.is-compact {
+    min-height: 80px;
+    gap: 5px;
+    padding: 10px;
+}
+
+.setae-specimen-placeholder.is-compact .setae-specimen-placeholder-icon {
+    width: 42px;
+}
+
+/* Existing marketing primitives retained without internal app dependencies. */
+.setae-card {
+    border: 1px solid var(--setae-public-rule);
+    border-radius: var(--setae-public-radius-surface);
+    background: var(--setae-public-surface);
+    box-shadow: none;
+}
+
+#setae-preloader {
+    position: fixed;
+    z-index: 99999;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: var(--setae-public-canvas);
+    transition: opacity .25s ease, visibility .25s ease;
+}
+
+#setae-preloader.is-loaded {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.setae-spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--setae-public-rule);
+    border-top-color: var(--setae-public-accent);
+    border-radius: 50%;
+    animation: setaePublicSpin .8s linear infinite;
+}
+
+@keyframes setaePublicSpin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1199px) {
+    .setae-public-surface-shell {
+        width: calc(100% - var(--setae-public-space-5) * 2);
+    }
+}
+
+@media (max-width: 767px) {
+    .setae-brand-lockup {
+        --setae-brand-icon-size: 24px;
+        gap: 7px;
+    }
+
+    .setae-public-surface-shell {
+        width: calc(100% - var(--setae-public-space-4) * 2);
+    }
+
+    .setae-public-surface-header-inner {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--setae-public-space-2) var(--setae-public-space-3);
+        padding-block: var(--setae-public-space-3);
+    }
+
+    .setae-public-surface-label {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        text-align: start;
+    }
+
+    .setae-public-surface-header-actions {
+        grid-column: 2;
+        grid-row: 1;
+    }
+}
+
+/* The legacy Home layout still contains light-only surfaces. Keep
+ * its page palette unchanged while dedicated documents and shared dialogs
+ * opt into the public dark palette. Forced Colors owns its own token map. */
+@media (prefers-color-scheme: dark) and (forced-colors: none) {
+    :where(body.setae-public-document, body.setae-public-profile-document, .setae-public-dialog) {
+        --setae-public-canvas: #171916;
+        --setae-public-surface: #20231f;
+        --setae-public-surface-muted: #292c28;
+        --setae-public-ink: #f1f3f0;
+        --setae-public-muted: #afb5ad;
+        --setae-public-rule: #3d413c;
+        --setae-public-rule-strong: #666c64;
+        --setae-public-accent: #9db8a1;
+        --setae-public-accent-contrast: #151714;
+        --setae-public-danger: #e18b82;
+        --setae-public-warning: #dfc185;
+        --setae-public-success: #9db8a1;
+        --setae-public-focus: #b6d7bc;
+        --setae-public-overlay: rgba(0, 0, 0, .7);
+        --setae-public-shadow-popover: 0 12px 30px rgba(0, 0, 0, .34);
+        --setae-public-shadow-overlay: 0 24px 70px rgba(0, 0, 0, .4);
+        color-scheme: dark;
+    }
+}
+
+@media (forced-colors: active) {
+    :root {
+        --setae-public-canvas: Canvas;
+        --setae-public-surface: Canvas;
+        --setae-public-surface-muted: Canvas;
+        --setae-public-ink: CanvasText;
+        --setae-public-muted: CanvasText;
+        --setae-public-rule: CanvasText;
+        --setae-public-rule-strong: ButtonText;
+        --setae-public-accent: LinkText;
+        --setae-public-accent-contrast: Canvas;
+        --setae-public-danger: CanvasText;
+        --setae-public-warning: CanvasText;
+        --setae-public-success: CanvasText;
+        --setae-public-focus: Highlight;
+        --setae-public-overlay: Canvas;
+        --setae-public-shadow-popover: none;
+        --setae-public-shadow-overlay: none;
+    }
+
+    .setae-public-button,
+    .setae-public-primary-btn,
+    .setae-public-secondary-btn,
+    .setae-public-text-btn,
+    .setae-public-login-link {
+        border: 1px solid var(--setae-public-rule-strong);
+    }
+
+    .setae-public-button.is-primary,
+    .setae-public-button.is-primary:is(:hover, :focus, :active),
+    .setae-public-primary-btn,
+    .setae-public-primary-btn:is(:hover, :focus, :active) {
+        background: var(--setae-public-surface);
+        color: var(--setae-public-ink);
+    }
+
+    :where(body.setae-public-document, .setae-public-profile-page, .setae-public-dialog) a {
+        text-decoration: underline;
+        text-underline-offset: .2em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(body.setae-public-document, body.setae-public-home-page,
+    .setae-care-share-page, .setae-public-partner-page, .setae-public-profile-page,
+    .setae-public-dialog) *,
+    #setae-preloader,
+    .setae-spinner {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

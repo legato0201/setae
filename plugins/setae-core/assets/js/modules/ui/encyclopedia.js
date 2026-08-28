@@ -1,116 +1,282 @@
 var SetaeUIEncyclopedia = (function ($) {
     'use strict';
 
-    // 状態管理
     const state = {
         page: 1,
         maxPage: 1,
         search: '',
-        filterType: 'all',
-        filterValue: '',
-        sort: 'name_asc', // PHP側のデフォルトと合わせる
+        lifestyle: '',
+        habitat: '',
+        contentFilter: 'all',
+        sort: 'name_asc',
         isLoading: false
     };
 
-    let observer;
-    let searchTimer;
+    let observer = null;
+    let searchTimer = null;
+    let emptyTrackedKey = '';
 
-    // 初期化関数
     function init() {
         if (!$('#section-enc').length) return;
 
-        // 初期ページ数を取得
-        const $maxPageInput = $('#setae-max-pages');
-        if ($maxPageInput.length) {
-            state.maxPage = parseInt($maxPageInput.val()) || 1;
-        }
-
-        // イベントリスナーの登録
+        state.maxPage = parseInt($('#setae-max-pages').val(), 10) || 1;
         bindEvents();
-
-        // 監視の開始
+        syncControls();
         checkLoaderVisibility();
         setupObserver();
     }
 
-    // イベントバインド
     function bindEvents() {
-        // 1. 検索 (デバウンス処理)
-        $(document).off('input', '#setae-enc-search').on('input', '#setae-enc-search', function () {
-            clearTimeout(searchTimer);
-            state.search = $(this).val().trim();
-            searchTimer = setTimeout(function () {
+        $(document)
+            .off('input.setaeEncyclopedia', '#setae-enc-search')
+            .on('input.setaeEncyclopedia', '#setae-enc-search', function () {
+                clearTimeout(searchTimer);
+                state.search = $(this).val().trim();
+                updateSearchClear();
+                searchTimer = setTimeout(function () {
+                    fetchData(true);
+                }, 350);
+            });
+
+        $(document)
+            .off('click.setaeEncyclopedia', '.js-enc-search-clear')
+            .on('click.setaeEncyclopedia', '.js-enc-search-clear', function () {
+                state.search = '';
+                $('#setae-enc-search').val('').trigger('focus');
+                updateSearchClear();
                 fetchData(true);
-            }, 500);
-        });
+            });
 
-        // 2. フィルタボタン
-        $(document).off('click', '#setae-enc-filters .deck-pill').on('click', '#setae-enc-filters .deck-pill', function () {
-            // 見た目の更新
-            $('#setae-enc-filters .deck-pill').removeClass('active');
-            $(this).addClass('active');
+        $(document)
+            .off('change.setaeEncyclopedia', '#setae-enc-lifestyle')
+            .on('change.setaeEncyclopedia', '#setae-enc-lifestyle', function () {
+                state.lifestyle = $(this).val() || '';
+                $('.js-enc-mobile-lifestyle').val(state.lifestyle);
+                filterChanged();
+            });
 
-            // データ属性の解析 (例: "lifestyle_arboreal" -> type="lifestyle", value="arboreal")
-            const rawFilter = $(this).data('filter') || 'all';
-            parseFilter(rawFilter);
+        $(document)
+            .off('change.setaeEncyclopedia', '#setae-enc-habitat')
+            .on('change.setaeEncyclopedia', '#setae-enc-habitat', function () {
+                state.habitat = $(this).val() || '';
+                $('.js-enc-mobile-habitat').val(state.habitat);
+                filterChanged();
+            });
 
-            fetchData(true); // リセットして検索
-        });
+        $(document)
+            .off('change.setaeEncyclopedia', '#setae-enc-sort')
+            .on('change.setaeEncyclopedia', '#setae-enc-sort', function () {
+                state.sort = $(this).val() || 'name_asc';
+                $('.js-enc-mobile-sort').val(state.sort);
+                fetchData(true);
+            });
 
-        // 3. ソートメニュー開閉
-        $(document).off('click', '#btn-enc-sort-menu').on('click', '#btn-enc-sort-menu', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleSortMenu($(this));
-        });
+        $(document)
+            .off('change.setaeEncyclopedia', '.js-enc-mobile-lifestyle')
+            .on('change.setaeEncyclopedia', '.js-enc-mobile-lifestyle', function () {
+                state.lifestyle = $(this).val() || '';
+                $('#setae-enc-lifestyle').val(state.lifestyle);
+                filterChanged();
+            });
 
-        // 4. ソート実行
-        $(document).off('click', '.enc-sort-option').on('click', '.enc-sort-option', function () {
-            state.sort = $(this).data('sort');
-            $('#setae-enc-sort-menu').remove(); // メニューを閉じる
-            fetchData(true);
-        });
+        $(document)
+            .off('change.setaeEncyclopedia', '.js-enc-mobile-habitat')
+            .on('change.setaeEncyclopedia', '.js-enc-mobile-habitat', function () {
+                state.habitat = $(this).val() || '';
+                $('#setae-enc-habitat').val(state.habitat);
+                filterChanged();
+            });
 
-        // メニュー外クリックで閉じる
-        $(document).on('click', function (e) {
-            if (!$(e.target).closest('#btn-enc-sort-menu').length &&
-                !$(e.target).closest('#setae-enc-sort-menu').length) {
-                $('#setae-enc-sort-menu').remove();
-            }
+        $(document)
+            .off('change.setaeEncyclopedia', '.js-enc-mobile-sort')
+            .on('change.setaeEncyclopedia', '.js-enc-mobile-sort', function () {
+                state.sort = $(this).val() || 'name_asc';
+                $('#setae-enc-sort').val(state.sort);
+                fetchData(true);
+            });
+
+        $(document)
+            .off('click.setaeEncyclopedia', '#setae-enc-content-filters button')
+            .on('click.setaeEncyclopedia', '#setae-enc-content-filters button', function () {
+                state.contentFilter = $(this).data('content-filter') || 'all';
+                $('#setae-enc-content-filters button')
+                    .removeClass('active')
+                    .attr('aria-selected', 'false');
+                $(this).addClass('active').attr('aria-selected', 'true');
+                filterChanged();
+            });
+
+        $(document)
+            .off('click.setaeEncyclopedia', '.js-enc-mobile-filter-toggle')
+            .on('click.setaeEncyclopedia', '.js-enc-mobile-filter-toggle', function () {
+                const $panel = $('#enc-mobile-filters');
+                const willOpen = $panel.prop('hidden');
+                $panel.prop('hidden', !willOpen);
+                $(this).attr('aria-expanded', willOpen ? 'true' : 'false');
+            });
+
+        $(document)
+            .off('click.setaeEncyclopedia', '.js-enc-clear-filters')
+            .on('click.setaeEncyclopedia', '.js-enc-clear-filters', handleClearFilters);
+
+        $(document)
+            .off('click.setaeEncyclopedia', '.js-enc-topic-cta')
+            .on('click.setaeEncyclopedia', '.js-enc-topic-cta', handleTopicCta);
+    }
+
+    function filterChanged() {
+        syncControls();
+        fetchData(true);
+    }
+
+    function syncControls() {
+        $('#setae-enc-lifestyle, .js-enc-mobile-lifestyle').val(state.lifestyle);
+        $('#setae-enc-habitat, .js-enc-mobile-habitat').val(state.habitat);
+        $('#setae-enc-sort, .js-enc-mobile-sort').val(state.sort);
+        $('#setae-enc-search').val(state.search);
+        updateSearchClear();
+        updateFilterCount();
+        updateSummary();
+    }
+
+    function updateSearchClear() {
+        $('.js-enc-search-clear').prop('hidden', !state.search);
+    }
+
+    function updateFilterCount() {
+        let count = 0;
+        if (state.lifestyle) count++;
+        if (state.habitat) count++;
+        if (state.contentFilter !== 'all') count++;
+
+        const $badge = $('.enc-mobile-filter-count');
+        $badge.text(count).prop('hidden', count === 0);
+    }
+
+    function selectedText(selector) {
+        const $selected = $(selector).find('option:selected');
+        if (!$selected.length || !$selected.val()) return '';
+        return $selected.text().trim();
+    }
+
+    function updateSummary() {
+        const parts = [];
+        const lifestyle = selectedText('#setae-enc-lifestyle');
+        const habitat = selectedText('#setae-enc-habitat');
+        const contentLabels = {
+            researched: '出典あり',
+            community: '飼育・相談あり',
+            breeding: '繁殖募集中'
+        };
+
+        if (lifestyle) parts.push(lifestyle);
+        if (habitat) parts.push(habitat);
+        if (contentLabels[state.contentFilter]) parts.push(contentLabels[state.contentFilter]);
+        if (state.search) parts.push(`「${state.search}」`);
+
+        $('#setae-enc-active-summary').text(parts.length ? parts.join(' / ') : 'すべての図鑑情報');
+    }
+
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char];
         });
     }
 
-    // フィルタ文字列の解析
-    function parseFilter(rawFilter) {
-        if (!rawFilter || rawFilter === 'all') {
-            state.filterType = 'all';
-            state.filterValue = '';
-        } else {
-            // 最初のアンダースコアで分割
-            const separator = rawFilter.indexOf('_');
-            if (separator !== -1) {
-                state.filterType = rawFilter.substring(0, separator);
+    function trackEmptySeen() {
+        if (typeof SetaeCore === 'undefined' || typeof SetaeCore.track !== 'function') return;
 
-                // ★修正: 値部分をデコードする (例: %e3%... -> ブラジル)
-                // これによりPHP側での不整合を防ぐ
-                const rawValue = rawFilter.substring(separator + 1);
-                try {
-                    state.filterValue = decodeURIComponent(rawValue);
-                } catch (e) {
-                    state.filterValue = rawValue;
-                }
-            } else {
-                state.filterType = 'all';
-                state.filterValue = '';
-            }
+        const key = [state.search, state.lifestyle, state.habitat, state.contentFilter, state.sort].join('|');
+        if (emptyTrackedKey === key) return;
+
+        emptyTrackedKey = key;
+        SetaeCore.track('encyclopedia_empty_seen', {
+            has_search: !!state.search,
+            lifestyle: state.lifestyle,
+            habitat: state.habitat,
+            content_filter: state.contentFilter,
+            sort: state.sort
+        });
+    }
+
+    function renderEmptyState() {
+        trackEmptySeen();
+        const summary = $('#setae-enc-active-summary').text() || '現在の条件';
+
+        return `
+            <div class="setae-empty-state enc-empty-state">
+                <h3>条件に合う種が見つかりません</h3>
+                <p>${escapeHtml(summary)}では見つかりませんでした。</p>
+                <div class="setae-empty-actions">
+                    <button type="button" class="setae-btn js-enc-clear-filters">条件をリセット</button>
+                    <button type="button" class="setae-btn-secondary js-enc-topic-cta">相談広場で聞く</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function handleClearFilters(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }
 
-        // デバッグ用（コンソールで確認できます）
-        console.log('Filter set to:', state.filterType, state.filterValue);
+        clearTimeout(searchTimer);
+        state.search = '';
+        state.lifestyle = '';
+        state.habitat = '';
+        state.contentFilter = 'all';
+        state.sort = 'name_asc';
+
+        $('#setae-enc-content-filters button')
+            .removeClass('active')
+            .attr('aria-selected', 'false');
+        $('#setae-enc-content-filters button[data-content-filter="all"]')
+            .addClass('active')
+            .attr('aria-selected', 'true');
+        syncControls();
+        fetchData(true);
+
+        if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.track === 'function') {
+            SetaeCore.track('encyclopedia_filters_reset');
+        }
     }
 
-    // データの取得 (AJAX)
-    function fetchData(reset = false) {
+    function handleTopicCta(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        $('.setae-nav-item[data-target="section-care-feed"]').trigger('click');
+        window.setTimeout(function () {
+            $('.js-social-hub-tab[data-social-view="community"]').first().trigger('click');
+        }, 120);
+        window.setTimeout(function () {
+            $('.js-open-topic-modal').first().trigger('click');
+        }, 280);
+    }
+
+    function getAjaxSettings() {
+        let nonce = '';
+        let ajaxUrl = '/wp-admin/admin-ajax.php';
+
+        if (typeof SetaeSettings !== 'undefined') {
+            nonce = SetaeSettings.setae_nonce || SetaeSettings.nonce || '';
+            ajaxUrl = SetaeSettings.ajax_url || ajaxUrl;
+        } else if (typeof setaecore_vars !== 'undefined') {
+            nonce = setaecore_vars.nonce || '';
+            ajaxUrl = setaecore_vars.ajax_url || ajaxUrl;
+        }
+
+        return { nonce: nonce, ajaxUrl: ajaxUrl };
+    }
+
+    function fetchData(reset) {
         if (state.isLoading) return;
 
         const $container = $('#setae-species-list-container');
@@ -118,163 +284,107 @@ var SetaeUIEncyclopedia = (function ($) {
 
         if (reset) {
             state.page = 1;
-            $container.css('opacity', '0.5'); // 読み込み中の演出
-            // ※ここで全スクロールさせると使いにくい場合があるため削除、必要なら追加
+            $container.css('opacity', '0.45').attr('aria-busy', 'true');
         } else {
             if (state.page >= state.maxPage) return;
             state.page++;
         }
 
         state.isLoading = true;
-        $loader.css('visibility', 'visible').show();
-
-        // ★修正: 確実に取得できる変数名を使用する
-        // setaecore_vars か SetaeSettings のどちらか存在する方を使う
-        let nonce = '';
-        if (typeof SetaeSettings !== 'undefined') {
-            // Encyclopedia uses 'setae_nonce' if available, fallback to 'nonce' (though likely wrong action)
-            if (SetaeSettings.setae_nonce) {
-                nonce = SetaeSettings.setae_nonce;
-            } else if (SetaeSettings.nonce) {
-                nonce = SetaeSettings.nonce;
-            }
-        } else if (typeof setaecore_vars !== 'undefined' && setaecore_vars.nonce) {
-            nonce = setaecore_vars.nonce;
-        } else {
-            console.error('Setae Nonce not found!');
-        }
-
-        const ajaxUrl = (typeof SetaeSettings !== 'undefined' && SetaeSettings.ajax_url)
-            ? SetaeSettings.ajax_url
-            : ((typeof setaecore_vars !== 'undefined' && setaecore_vars.ajax_url) ? setaecore_vars.ajax_url : '/wp-admin/admin-ajax.php');
+        $loader.prop('hidden', false).css('visibility', 'visible');
+        const settings = getAjaxSettings();
 
         $.ajax({
-            url: ajaxUrl,
+            url: settings.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'setae_search_species',
-                nonce: nonce,
+                nonce: settings.nonce,
                 paged: state.page,
                 search: state.search,
-                filter_type: state.filterType,
-                filter_value: state.filterValue,
+                lifestyle: state.lifestyle,
+                habitat: state.habitat,
+                content_filter: state.contentFilter,
                 sort: state.sort
             },
-            success: function (res) {
-                if (res.success) {
-                    if (reset) {
-                        $container.html(res.data.html);
-                        $container.css('opacity', '1');
-                        state.maxPage = parseInt(res.data.max_page);
+            success: function (response) {
+                if (!response.success) {
+                    if (reset) $container.html(renderEmptyState());
+                    return;
+                }
 
-                        // ページ数リセットに伴い監視状態を再設定
-                        if (state.maxPage <= 1) {
-                            if (observer) observer.disconnect();
-                            $loader.hide();
-                        } else {
-                            checkLoaderVisibility();
-                            setupObserver();
-                        }
+                const payload = response.data || {};
+                const html = payload.html || '';
+                const total = parseInt(payload.total, 10) || 0;
+                state.maxPage = parseInt(payload.max_page, 10) || 0;
 
-                        // ▼▼▼ ここに追加: 初回データ読み込み完了時にチュートリアルを起動 ▼▼▼
-                        if (typeof SetaeTutorial !== 'undefined' && typeof SetaeTutorial.initEncyclopedia === 'function') {
-                            SetaeTutorial.initEncyclopedia();
-                        }
-                        // ▲▲▲ 追加終了 ▲▲▲
+                if (reset) {
+                    $container.html(total > 0 ? html : renderEmptyState());
+                } else if (html) {
+                    $container.append(html);
+                }
 
-                    } else {
-                        $container.append(res.data.html);
-                    }
-                } else {
-                    if (reset) $container.html('<p class="no-results" style="padding:20px; text-align:center; color:#999;">データが見つかりません</p>');
-                    $container.css('opacity', '1');
+                $('#setae-enc-result-count').text(`${total.toLocaleString('ja-JP')}種`);
+                $('#setae-max-pages').val(state.maxPage);
+
+                if (reset && typeof SetaeTutorial !== 'undefined' && typeof SetaeTutorial.initEncyclopedia === 'function') {
+                    SetaeTutorial.initEncyclopedia();
                 }
             },
             error: function () {
-                $container.css('opacity', '1');
                 if (!reset) state.page--;
+                if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
+                    SetaeCore.showToast('図鑑を読み込めませんでした', 'error');
+                }
             },
             complete: function () {
                 state.isLoading = false;
+                $container.css('opacity', '').removeAttr('aria-busy');
+                updateFilterCount();
+                updateSummary();
                 checkLoaderVisibility();
+                setupObserver();
             }
         });
     }
 
-    // ローダー表示制御（無限スクロール用）
     function checkLoaderVisibility() {
         const $loader = $('#setae-enc-loader');
         if (state.page < state.maxPage) {
-            // 次のページがあるなら、見えない状態で配置して監視させる
-            $loader.css({
-                'display': 'flex',
-                'visibility': 'hidden'
-            });
+            $loader.prop('hidden', false).css('visibility', state.isLoading ? 'visible' : 'hidden');
         } else {
-            $loader.hide();
+            $loader.prop('hidden', true);
         }
     }
 
-    // IntersectionObserverの設定
     function setupObserver() {
-        const $loader = $('#setae-enc-loader');
-        if (!$loader.length) return;
+        const loader = document.getElementById('setae-enc-loader');
+        if (!loader || typeof IntersectionObserver === 'undefined') return;
 
         if (observer) observer.disconnect();
+        if (state.page >= state.maxPage) return;
 
-        const options = {
-            root: null,
-            rootMargin: '200px', // 早めに読み込む
-            threshold: 0
-        };
-
-        observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
+        observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
                 if (entry.isIntersecting && !state.isLoading && state.page < state.maxPage) {
-                    fetchData(false); // 追加読み込み
+                    fetchData(false);
                 }
             });
-        }, options);
-
-        observer.observe($loader[0]);
-    }
-
-    // ソートメニューの表示
-    function toggleSortMenu($btn) {
-        const $existing = $('#setae-enc-sort-menu');
-        if ($existing.length) {
-            $existing.remove();
-            return;
-        }
-
-        const menuHtml = `
-            <div id="setae-enc-sort-menu" style="position:absolute; background:#fff; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.15); width:180px; z-index:99999; overflow:hidden; padding:8px 0;">
-                <div class="enc-sort-option ${state.sort === 'name_asc' ? 'active' : ''}" data-sort="name_asc" style="padding:10px 15px; cursor:pointer; font-size:14px;">🔤 名前順 (A-Z)</div>
-                <div class="enc-sort-option ${state.sort === 'count_desc' ? 'active' : ''}" data-sort="count_desc" style="padding:10px 15px; cursor:pointer; font-size:14px;">🔥 人気順</div>
-                <div class="enc-sort-option ${state.sort === 'diff_asc' ? 'active' : ''}" data-sort="diff_asc" style="padding:10px 15px; cursor:pointer; font-size:14px;">🔰 難易度順</div>
-            </div>
-        `;
-
-        $('body').append(menuHtml);
-
-        const rect = $btn[0].getBoundingClientRect();
-        const $menu = $('#setae-enc-sort-menu');
-        $menu.css({
-            top: (rect.bottom + window.scrollY + 5) + 'px',
-            left: Math.max(10, (rect.right + window.scrollX) - 180) + 'px'
+        }, {
+            root: null,
+            rootMargin: '240px',
+            threshold: 0
         });
 
-        $('.enc-sort-option.active').css({ fontWeight: 'bold', color: '#2ecc71', background: '#f9f9f9' });
+        observer.observe(loader);
     }
 
-    // 公開メソッド
     return {
-        init: init
+        init: init,
+        refresh: function () { fetchData(true); }
     };
-
 })(jQuery);
 
-// ドキュメント読み込み完了時に初期化
 jQuery(document).ready(function () {
     SetaeUIEncyclopedia.init();
 });

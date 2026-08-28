@@ -1,0 +1,192 @@
+{
+    "generatedAt": "2026-08-28T21:50:12+09:00",
+    "sourceKind": "Actual production Care/Partner controller and template output; synthetic WordPress users/posts/comments, test artwork and mocked browser APIs. No live WordPress or physical-device verification.",
+    "baseUrl": "http://127.0.0.1:8872",
+    "sources": {
+        "includes/frontend/class-setae-public-care-share.php": "9f2bbf7785f3bdf74c9f3f58d181f89ba48d5996b96535bb148d4b029034600f",
+        "includes/frontend/class-setae-public-partner.php": "ff78b475ff33e070a4710c53a8a8d1268b414acac5c750744788bd1a4e7c6ce5",
+        "includes/frontend/class-setae-public-home.php": "8dae4b4b8eef46aa24da8172d9b2c964f352c3f1e80976e235df45de117a7b2c",
+        "includes/frontend/class-setae-public-registration.php": "94da9cab96cbdbf325d408b7d21e28d888c69168f5cf890390411e119e6f6208",
+        "includes/frontend/class-setae-public-visual.php": "fbbd7ef01fe9cd94526b82c2223c9f6b95753ca7adbfe03afcadcf9345c1b4f3",
+        "includes/class-setae-public-identity.php": "6e8589492a3b11599fed88394659bc2d8f359305aa3ee413a5322f4c2e3202ea",
+        "tests/helpers/public-passport-fixture.php": "9e4d23bc153c7c823782d1ee9eeef32e67d62da217c40b87b804f0279ab8cc30",
+        "tests/helpers/public-surfaces-fixture.php": "21c9d076b07570a7d0d3015508bdfd28de8678da319de6ee5fe4f4d75ef53864",
+        "tests/fixtures/public-passport-harness.js": "418f4051f90705ff2c03e1d6b1674aebb3ffda1fb2b3f05038732f13abca4ce8",
+        "tests/fixtures/public-surfaces-harness.js": "0e483f5d13e754bd54b03c9bf8467782f57b97fec40cb51720d2a422bbd865bc",
+        "tests/fixtures/public-theme-hostile-v248.css": "3dd5808a8e0b8794b2bd4dc84a819ba196d35df662ed8721bc0771dba449709c",
+        "templates/public/care-share-content.php": "99db5598ecb77eb1321cb475439c70294d60ebb558f5f4fa73c0917cfe60aad9",
+        "templates/public/care-share-document.php": "38bb6e74e7ab02f4862c3ea2a69babde40981b020b1b6fa9f40dbb9cbd354641",
+        "templates/public/care-share-not-found.php": "00aff45e57eb2e7d377836e25e18d9d50b0445ac4f04182cfb54ab023ebdada3",
+        "templates/public/partner-content.php": "2303dd66cd28def7e81a3f2f07dfa3ed84172b1bec1a0abefbced76476c316e1",
+        "templates/public/partner-document.php": "8768b66214e1324f63a468986a73e3c2d26443754468ef7b506f70882e296bef",
+        "templates/public/passport-content.php": "62383ef0362754718963a6ee7e93c6b07e48063152b3d5e57ffb13157dfc3893",
+        "templates/public/passport-document.php": "b5c88ffe6231fcac3f195028053af8c4f09304de6d9b95a3409cb64d1d13fa93",
+        "templates/public/passport-history.php": "16baa2b3fc6dde27b347f9dc0d0878003db4a7a6273845da023a8c9d7ee7c329",
+        "templates/public/passport-photo-dialog.php": "ac156af350ec45046182d8ae0f9513e46460fde25d2b4fadf564edad10c972d7",
+        "templates/public/passport-transfer-state.php": "13d578ee1e8e23a251d3d04965f7347f34fb44ee858f05d1998b2c0b4ebf4ce1",
+        "templates/public/profile-content.php": "bbc9ce90f44fa4877e7132fc318825af547df289ba42736c6bc624c373c3e415",
+        "templates/public/profile-document.php": "4f26f41165654de2f7a382b611e926e5637de300eab622525dff4b03760d3ebb",
+        "templates/public/profile-not-found.php": "24a9fe9994d688cb5ca79f3b3728bec2dc93dd5ed24c926927140932eecc6aaa",
+        "templates/public/registration-dialog.php": "68012db6a1b22a0d7e32b5262bcda2e99f840cbe36762dd4f25ad0c9720d57f6",
+        "templates/public/surface-footer.php": "8c5c018da22c064a772dc1749209e016f6521a42d4cb868874e4c9e69aafeb4a",
+        "templates/public/surface-header.php": "347cf3c845403d36d5eecbde1e55ef4f47781e94915186a7fe47490919299c0e",
+        "assets/css/public-foundation.css": "4b3a80b1be2711442710ce21e239707f7a69534b9c76a64068c2cdce25979db6",
+        "assets/css/public-registration.css": "1b352392855db2b2f628fef54f8e8484983e90a02bed4a99928457253cd27a3f",
+        "assets/css/public-care-share.css": "69d6c5811a918a6fe001668161dd80bf77ba9563fb612fc1bb4d91941a407a46",
+        "assets/css/public-partner.css": "3632f288ed6a6ba9e24f17f5717dd542f91723d7a459d85fb662d842e040777d",
+        "assets/js/public-registration.js": "8aca0f3a0b51f134b3040e5f7c3d422f13b51a60b223d913c7ab479c12397c1e",
+        "assets/js/public-share.js": "d676d519b15d4aa33877380a3a1131e8f033edad98ff7ab1b200888aff22ea50",
+        "assets/js/public-care-share.js": "56061fa41d92d38d9276b82fe0413e0d040ad81baa971cab502263ef54a2555f",
+        "assets/js/public-partner.js": "fdbff34f6da97c294c30e7f142a654f9250707f8b4dad188f0b9a9241432e917"
+    },
+    "fixtures": {
+        "care-photo": {
+            "file": "care-photo.html",
+            "surface": "care",
+            "options": [],
+            "sha256": "fc5f3369a1078ab0b5980fd32849453dca564b971f88f305c922187d4b7f001e"
+        },
+        "care-no-photo": {
+            "file": "care-no-photo.html",
+            "surface": "care",
+            "options": {
+                "photo": false
+            },
+            "sha256": "f551a2563291e4671d61b331cc8fe84ac7a3aa6b1afdd4e147f3bd2c191fed04"
+        },
+        "care-no-note": {
+            "file": "care-no-note.html",
+            "surface": "care",
+            "options": {
+                "note": false
+            },
+            "sha256": "78889195771d6608e6f552e207bf1487113b7722a344b94e7b8b77d97213f143"
+        },
+        "care-no-reactions": {
+            "file": "care-no-reactions.html",
+            "surface": "care",
+            "options": {
+                "reactions": false
+            },
+            "sha256": "cff53927b9bdab8f91265ef994ebe8e9ab4aaac15afea10edf8bc12663b25394"
+        },
+        "care-no-comments": {
+            "file": "care-no-comments.html",
+            "surface": "care",
+            "options": {
+                "comments": 0
+            },
+            "sha256": "00038c40647d0ddc9e38488f69f51209b3da97936cee6df8e506c9eed1d64436"
+        },
+        "care-long": {
+            "file": "care-long.html",
+            "surface": "care",
+            "options": {
+                "long": true
+            },
+            "sha256": "6d83e07b95bf5c8057c1081623259c933abd1ca6031d985cf5a5e57be52c43a8"
+        },
+        "care-logged-in": {
+            "file": "care-logged-in.html",
+            "surface": "care",
+            "options": {
+                "viewer": 22
+            },
+            "sha256": "e99ad542f4f9346307fb951825027559542e7aae83dd9d7767cd29007c2118fd"
+        },
+        "care-disabled": {
+            "file": "care-disabled.html",
+            "surface": "care",
+            "options": {
+                "registration": false
+            },
+            "sha256": "e58e1c8d4112d91fb5ebfe41c25a015098b8af8b49444215736646954f311861"
+        },
+        "care-not-found": {
+            "file": "care-not-found.html",
+            "surface": "care",
+            "options": {
+                "not_found": true
+            },
+            "sha256": "4a54d811475d70633eede89b708e1c0edcae1388f25445b089b4b076b0e3fa0d"
+        },
+        "care-plant": {
+            "file": "care-plant.html",
+            "surface": "care",
+            "options": {
+                "classification": "plant"
+            },
+            "sha256": "1492a314f3f46f18abd158e93dc8de4141f8f1184e7310614a5e81ea8f20ced4"
+        },
+        "care-avatar-setae": {
+            "file": "care-avatar-setae.html",
+            "surface": "care",
+            "options": {
+                "avatar": "setae"
+            },
+            "sha256": "0195f39886b47c547e92bf8b27952c0754242f57c1e028a716abdbcfad52e30d"
+        },
+        "care-avatar-wordpress": {
+            "file": "care-avatar-wordpress.html",
+            "surface": "care",
+            "options": {
+                "avatar": "wordpress"
+            },
+            "sha256": "dca5ee03b58494e4c0e4783d21778ef165f16ff26fbe896f41a616c710251f34"
+        },
+        "care-avatar-mystery": {
+            "file": "care-avatar-mystery.html",
+            "surface": "care",
+            "options": {
+                "avatar": "mystery"
+            },
+            "sha256": "fc5f3369a1078ab0b5980fd32849453dca564b971f88f305c922187d4b7f001e"
+        },
+        "care-theme-reset": {
+            "file": "care-theme-reset.html",
+            "surface": "care",
+            "options": {
+                "theme": true
+            },
+            "sha256": "06122d62d0d82baccb845f6c1f20b3338f0999fbdb1ea834930baed9b37456f5"
+        },
+        "partner-guest": {
+            "file": "partner-guest.html",
+            "surface": "partner",
+            "options": [],
+            "sha256": "40b55cea1a7ba0f630d99cd152daf786a1827d9dfde5aff819e5a405406b0145"
+        },
+        "partner-logged-in": {
+            "file": "partner-logged-in.html",
+            "surface": "partner",
+            "options": {
+                "viewer": 22
+            },
+            "sha256": "6ad053d4f9d696161479bf47e249cc42d1d2d8e2a30077a7cbfac1cb0b9dec62"
+        },
+        "partner-disabled": {
+            "file": "partner-disabled.html",
+            "surface": "partner",
+            "options": {
+                "registration": false
+            },
+            "sha256": "fdb98b9e5b21aa970fd37b9aa953b3c32ff1790cd12e891f608fbbafbb8628f9"
+        },
+        "partner-long": {
+            "file": "partner-long.html",
+            "surface": "partner",
+            "options": {
+                "long": true
+            },
+            "sha256": "de950211ebe48f00130d429e13ec016f78fa75396aba53068dffd4d95948dbc3"
+        },
+        "partner-theme-reset": {
+            "file": "partner-theme-reset.html",
+            "surface": "partner",
+            "options": {
+                "theme": true
+            },
+            "sha256": "6817e13efced14f1503b249903bcd52933ff8cae8e38d828299e38988baeaea5"
+        }
+    }
+}

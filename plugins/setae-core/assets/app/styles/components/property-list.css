@@ -1,0 +1,108 @@
+@layer components {
+  .property-list {
+    min-width: 0;
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .property-list-header {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .property-list-header > div {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .property-list-header span {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-meta);
+  }
+
+  .property-list-header h2 {
+    margin: 0;
+    font-size: var(--type-workbench-section);
+    font-weight: var(--weight-semibold);
+  }
+
+  .property-list dl {
+    margin: 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .property-row {
+    min-height: var(--touch-target);
+    display: grid;
+    grid-template-columns: minmax(var(--specimen-activity-date-width), .75fr) minmax(0, 1.25fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline: var(--row-inset);
+    border-top: 1px solid var(--border-default);
+  }
+
+  .property-row dt {
+    color: var(--text-muted);
+    font-size: var(--type-workbench-caption);
+  }
+
+  .property-row dd {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .property-row dd small {
+    color: var(--text-muted);
+  }
+
+  .property-row.is-mono dd > span {
+    font-family: var(--font-mono);
+  }
+
+  .property-row-action .button {
+    min-height: var(--touch-target);
+  }
+
+  .property-row-action {
+    justify-self: end;
+  }
+
+  .property-history {
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .property-history > summary {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: var(--row-inset);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  .property-history > summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .property-history > summary span {
+    font-family: var(--font-mono);
+  }
+
+  @supports (content-visibility: auto) {
+    .property-list { content-visibility: auto; contain-intrinsic-size: auto 240px; }
+    .property-list:focus-within { content-visibility: visible; contain: none; }
+  }
+
+  @media print {
+    .property-list { content-visibility: visible; contain: none; }
+  }
+}

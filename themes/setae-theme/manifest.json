@@ -1,15 +1,32 @@
 {
-    "name": "SETAE",
-    "short_name": "SETAE",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#f5f7fa",
-    "theme_color": "#f5f7fa",
-    "icons": [
-        {
-            "src": "images/apple-touch-icon.png",
-            "sizes": "180x180",
-            "type": "image/png"
-        }
-    ]
+  "id": "/",
+  "name": "SETAE 飼育管理",
+  "short_name": "SETAE",
+  "description": "生体ごとの給餌、脱皮、写真、飼育リズムを管理します。",
+  "start_url": "/app/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#f5f7fa",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "images/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/pwa-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

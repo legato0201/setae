@@ -1,0 +1,559 @@
+@layer screens {
+  .nursery-screen-v4,
+  .nursery-screen-v4 .collection-secondary-content,
+  .nursery-workspace,
+  .nursery-data-section {
+    min-width: 0;
+    min-inline-size: 0;
+  }
+
+  .nursery-screen-v4 {
+    width: min(100%, var(--content-workspace-width));
+    max-width: var(--content-workspace-width);
+    margin-inline: auto;
+  }
+
+  .nursery-operational-summary {
+    min-height: var(--touch-target);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding-block: var(--space-2);
+    border-block: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .nursery-operational-summary strong {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: var(--weight-semibold);
+  }
+
+  .nursery-operational-summary i {
+    color: var(--text-muted);
+    font-style: normal;
+  }
+
+  .nursery-registry-section,
+  .nursery-registry {
+    min-width: 0;
+  }
+
+  .nursery-registry {
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .nursery-registry-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: var(--space-4) var(--row-inset);
+  }
+
+  .nursery-registry-row .action-row-copy > strong {
+    font-family: var(--font-mono);
+    font-size: var(--type-body);
+  }
+
+  .nursery-registry-row .action-row-description {
+    color: var(--text-primary);
+    font-family: var(--font-taxon);
+    font-size: var(--type-body);
+    font-style: italic;
+  }
+
+  .nursery-registry-row .action-row-meta {
+    font-family: var(--font-ui);
+    line-height: var(--leading-body);
+  }
+
+  .nursery-registry-row .action-row-trailing > span {
+    font-family: var(--font-mono);
+  }
+
+  .nursery-archive {
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--border-default);
+  }
+
+  .nursery-archive > summary {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: var(--type-caption);
+  }
+
+  .nursery-archive > summary strong {
+    font-family: var(--font-mono);
+  }
+
+  .nursery-archive .nursery-registry {
+    opacity: .78;
+  }
+
+  .nursery-screen-v4.is-detail .workspace-header-actions {
+    flex: 0 0 auto;
+  }
+
+  .nursery-workspace {
+    width: 100%;
+    max-width: var(--content-workspace-width);
+  }
+
+  .nursery-action-toolbar .workspace-toolbar-primary,
+  .nursery-register-actions {
+    flex-wrap: wrap;
+  }
+
+  .nursery-action-toolbar .workspace-toolbar-primary > .button {
+    min-height: var(--touch-target);
+  }
+
+  .nursery-back-action {
+    min-height: var(--touch-target);
+  }
+
+  .nursery-toolbar-divider {
+    width: 1px;
+    height: var(--control-height);
+    background: var(--border-default);
+  }
+
+  .nursery-group-meta {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-default);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-micro);
+  }
+
+  .nursery-group-meta .scientific-name {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    flex: 1 1 100%;
+    color: var(--text-primary);
+    font-family: var(--font-taxon);
+    font-size: var(--type-heading);
+    font-style: italic;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .nursery-workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, .65fr);
+    gap: var(--space-6);
+  }
+
+  .nursery-data-section {
+    padding-top: var(--space-6);
+  }
+
+  .nursery-section-header {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  .nursery-section-header h2,
+  .nursery-care-plan-heading h2,
+  .nursery-care-form-heading h3 {
+    margin: var(--space-1) 0 0;
+    font-family: var(--font-ui);
+    font-size: var(--type-workbench-section);
+  }
+
+  .nursery-care-status,
+  .nursery-development {
+    min-width: 0;
+  }
+
+  .nursery-care-heading,
+  .nursery-care-row {
+    min-height: var(--touch-target);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .8fr) minmax(0, .8fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline: var(--row-inset-compact);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .nursery-care-heading {
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+  }
+
+  .nursery-care-row > strong {
+    font-size: var(--type-caption);
+  }
+
+  .nursery-care-row > span {
+    min-width: 0;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--type-micro);
+    overflow-wrap: anywhere;
+  }
+
+  .nursery-development {
+    margin: 0;
+  }
+
+  .nursery-development > div {
+    min-height: var(--touch-target);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline: var(--row-inset-compact);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .nursery-development dt,
+  .nursery-development dd {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nursery-development dd {
+    margin: 0;
+    font-size: var(--type-body);
+  }
+
+  .nursery-ledger-row {
+    grid-template-columns: var(--ledger-date-width) var(--space-5) minmax(0, 1fr);
+  }
+
+  .nursery-ledger-event {
+    color: var(--text-primary);
+    font-size: var(--type-caption);
+  }
+
+  .nursery-ledger-row .workbench-ledger-target-code {
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+  }
+
+  .nursery-register-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
+  .nursery-specimen-registry .registry-table th:nth-child(1) { width: 18%; }
+  .nursery-specimen-registry .registry-table th:nth-child(2) { width: 20%; }
+  .nursery-specimen-registry .registry-table th:nth-child(3) { width: 22%; }
+  .nursery-specimen-registry .registry-table th:nth-child(4) { width: 40%; }
+
+  .nursery-specimen-registry .registry-table tbody tr {
+    cursor: default;
+  }
+
+  .nursery-specimen-code,
+  .nursery-specimen-registry time {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nursery-specimen-status {
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .nursery-specimen-status.is-dead {
+    color: var(--danger);
+  }
+
+  .nursery-specimen-status.is-rehomed,
+  .nursery-specimen-status.is-transferred {
+    color: var(--text-muted);
+  }
+
+  .nursery-specimen-note {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nursery-care-profile {
+    min-width: 0;
+    margin-top: var(--space-7);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .nursery-care-plan-heading,
+  .nursery-care-form-heading {
+    min-width: 0;
+  }
+
+  .nursery-care-plan-heading p,
+  .nursery-care-form-heading p {
+    margin: var(--space-1) 0 0;
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .nursery-care-form,
+  .nursery-care-overrides,
+  .nursery-care-override-form {
+    min-width: 0;
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .nursery-care-overrides {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .nursery-care-rule-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .nursery-care-form > .button,
+  .nursery-care-override-form > .button {
+    justify-self: end;
+  }
+
+  .nursery-care-override-heading {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .nursery-count-check {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--border-default);
+  }
+
+  .nursery-count-check > div {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .nursery-count-check span {
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+    text-transform: uppercase;
+  }
+
+  .nursery-count-check strong {
+    font-family: var(--font-mono);
+    font-size: var(--type-section);
+    font-weight: var(--weight-medium);
+  }
+
+  .nursery-count-warning {
+    margin: 0;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--warning);
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .nursery-care-rule-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .nursery-screen-v4 .workspace-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .nursery-screen-v4 .workspace-header-actions {
+      align-self: start;
+    }
+
+    .nursery-screen-v4 .workspace-header-actions .button {
+      padding-inline: var(--space-2);
+    }
+
+    .nursery-screen-v4 .collection-secondary-content {
+      padding: var(--space-4);
+    }
+
+    .nursery-registry-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2);
+    }
+
+    .nursery-registry-row .action-row-trailing {
+      justify-content: start;
+    }
+
+    .nursery-registry-row .action-row-trailing .ui-icon {
+      margin-left: auto;
+    }
+
+    .nursery-action-toolbar .workspace-toolbar-primary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .nursery-action-toolbar .nursery-back-action {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+
+    .nursery-toolbar-divider {
+      display: none;
+    }
+
+    .nursery-action-toolbar .workspace-toolbar-primary > .button {
+      width: 100%;
+      padding-inline: var(--space-2);
+    }
+
+    .nursery-action-toolbar .workspace-toolbar-secondary,
+    .nursery-action-toolbar .action-menu,
+    .nursery-action-toolbar .action-menu-trigger {
+      width: 100%;
+    }
+
+    .nursery-workspace-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .nursery-care-heading {
+      display: none;
+    }
+
+    .nursery-care-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2) var(--space-3);
+      padding-block: var(--space-3);
+    }
+
+    .nursery-care-row > strong {
+      grid-column: 1 / -1;
+    }
+
+    .nursery-care-row > span {
+      display: grid;
+      gap: var(--space-1);
+    }
+
+    .nursery-care-row > span::before {
+      content: attr(data-label);
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: var(--type-micro);
+      text-transform: uppercase;
+    }
+
+    .nursery-ledger-row {
+      grid-template-columns: var(--space-5) minmax(0, 1fr) var(--touch-target);
+    }
+
+    .nursery-register-section .nursery-section-header {
+      align-items: flex-start;
+      flex-direction: column;
+      padding-bottom: var(--space-2);
+    }
+
+    .nursery-register-actions {
+      width: 100%;
+    }
+
+    .nursery-register-actions > .button {
+      flex: 1;
+    }
+
+    .nursery-specimen-registry {
+      display: block;
+      overflow: visible;
+    }
+
+    .nursery-specimen-registry .registry-table,
+    .nursery-specimen-registry tbody {
+      display: block;
+    }
+
+    .nursery-specimen-registry thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    .nursery-specimen-registry tbody {
+      border-top: 1px solid var(--border-default);
+    }
+
+    .nursery-specimen-registry .registry-table tbody tr {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+      padding: var(--space-3) var(--row-inset);
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .nursery-specimen-registry .registry-table td {
+      min-width: 0;
+      display: grid;
+      gap: var(--space-1);
+      padding: 0;
+      border: 0;
+    }
+
+    .nursery-specimen-registry .registry-table td::before {
+      color: var(--text-muted);
+      content: attr(data-label);
+      font-size: var(--type-micro);
+      font-weight: var(--weight-semibold);
+      text-transform: uppercase;
+    }
+
+    .nursery-specimen-registry .nursery-specimen-note {
+      grid-column: 1 / -1;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .nursery-care-rule-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nursery-care-form > .button,
+    .nursery-care-override-form > .button {
+      width: 100%;
+      justify-self: stretch;
+    }
+
+    .nursery-count-check {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+    }
+  }
+}

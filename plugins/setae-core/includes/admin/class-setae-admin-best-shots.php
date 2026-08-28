@@ -14,8 +14,8 @@ class Setae_Admin_Best_Shots
         // 設定メニューのサブメニューとして追加
         add_submenu_page(
             'options-general.php',
-            __('Best Shots Approval', 'setae'),
-            __('Best Shots Approval', 'setae'),
+            __('図鑑候補写真の承認', 'setae'),
+            __('図鑑候補写真の承認', 'setae'),
             'manage_options',
             'setae_best_shots',
             array($this, 'render_page')
@@ -25,14 +25,14 @@ class Setae_Admin_Best_Shots
     public function render_page()
     {
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Best Shots Management', 'setae') . '</h1>';
+        echo '<h1>' . esc_html__('図鑑候補写真の管理', 'setae') . '</h1>';
         
         // --- 1. 承認待ちリスト ---
-        echo '<h2>' . esc_html__('Pending Best Shots Approval', 'setae') . '</h2>';
+        echo '<h2>' . esc_html__('承認待ちの図鑑候補写真', 'setae') . '</h2>';
         $this->render_table('pending');
         
         // --- 2. 承認済み（ギャラリー掲載中）リスト ---
-        echo '<h2 style="margin-top: 40px;">' . esc_html__('Approved Best Shots (In Gallery)', 'setae') . '</h2>';
+        echo '<h2 style="margin-top: 40px;">' . esc_html__('承認済みの図鑑候補写真（ギャラリー掲載中）', 'setae') . '</h2>';
         $this->render_table('approved');
 
         echo '</div>';
@@ -59,7 +59,7 @@ class Setae_Admin_Best_Shots
         $logs = new WP_Query($args);
 
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th style="width:100px;">' . esc_html__('Image', 'setae') . '</th><th>' . esc_html__('User', 'setae') . '</th><th>' . esc_html__('Spider', 'setae') . '</th><th>' . esc_html__('Species', 'setae') . '</th><th>' . esc_html__('Actions', 'setae') . '</th></tr></thead>';
+        echo '<thead><tr><th style="width:100px;">' . esc_html__('画像', 'setae') . '</th><th>' . esc_html__('ユーザー', 'setae') . '</th><th>' . esc_html__('個体', 'setae') . '</th><th>' . esc_html__('種類', 'setae') . '</th><th>' . esc_html__('操作', 'setae') . '</th></tr></thead>';
         echo '<tbody>';
 
         if ($logs->have_posts()) {
@@ -73,14 +73,14 @@ class Setae_Admin_Best_Shots
                 $image_id = $image_url ? attachment_url_to_postid($image_url) : 0;
 
                 $user_info = get_userdata(get_post_field('post_author', $log_id));
-                $username = $user_info ? $user_info->display_name : 'Unknown';
+                $username = $user_info ? $user_info->display_name : 'ユーザー不明';
 
                 echo '<tr id="best-shot-row-' . esc_attr($log_id) . '">';
                 echo '<td>';
                 if ($image_url) {
                     echo '<a href="' . esc_url($image_url) . '" target="_blank"><img src="' . esc_url($image_url) . '" width="80" style="object-fit:cover; border-radius:4px;"></a>';
                 } else {
-                    echo 'No Image';
+                    echo esc_html__('画像なし', 'setae');
                 }
                 echo '</td>';
                 echo '<td>' . esc_html($username) . '</td>';
@@ -90,12 +90,12 @@ class Setae_Admin_Best_Shots
 
                 if ($status === 'pending') {
                     if ($image_url && $species_id) {
-                        echo '<button class="button button-primary btn-best-shot-action" data-action="approve" data-log-id="' . esc_attr($log_id) . '" data-species-id="' . esc_attr($species_id) . '" data-image-id="' . esc_attr($image_id) . '">' . esc_html__('Approve', 'setae') . '</button> ';
+                        echo '<button class="button button-primary btn-best-shot-action" data-action="approve" data-log-id="' . esc_attr($log_id) . '" data-species-id="' . esc_attr($species_id) . '" data-image-id="' . esc_attr($image_id) . '">' . esc_html__('承認', 'setae') . '</button> ';
                     }
-                    echo '<button class="button btn-best-shot-action" style="color:red; border-color:red;" data-action="reject" data-log-id="' . esc_attr($log_id) . '">' . esc_html__('Reject', 'setae') . '</button>';
+                    echo '<button class="button btn-best-shot-action" style="color:red; border-color:red;" data-action="reject" data-log-id="' . esc_attr($log_id) . '">' . esc_html__('却下', 'setae') . '</button>';
                 } else {
                     // 承認済みの場合は「取り消し（Revoke）」ボタンのみ表示
-                    echo '<button class="button btn-best-shot-action" data-action="revoke" data-log-id="' . esc_attr($log_id) . '" data-species-id="' . esc_attr($species_id) . '" data-image-id="' . esc_attr($image_id) . '">' . esc_html__('Revoke (Remove from Gallery)', 'setae') . '</button>';
+                    echo '<button class="button btn-best-shot-action" data-action="revoke" data-log-id="' . esc_attr($log_id) . '" data-species-id="' . esc_attr($species_id) . '" data-image-id="' . esc_attr($image_id) . '">' . esc_html__('承認を取り消す（ギャラリーから削除）', 'setae') . '</button>';
                 }
                 
                 echo '</td>';
@@ -103,7 +103,7 @@ class Setae_Admin_Best_Shots
             }
             wp_reset_postdata();
         } else {
-            echo '<tr><td colspan="5">' . esc_html__('No records found.', 'setae') . '</td></tr>';
+            echo '<tr><td colspan="5">' . esc_html__('対象の記録はありません。', 'setae') . '</td></tr>';
         }
 
         echo '</tbody></table>';
@@ -125,9 +125,9 @@ class Setae_Admin_Best_Shots
                     var speciesId = btn.data('species-id') || 0;
                     var imageId = btn.data('image-id') || 0;
 
-                    var confirmMsgApprove = '<?php echo esc_js(__("Are you sure you want to add this image to the species gallery?", "setae")); ?>';
-                    var confirmMsgReject = '<?php echo esc_js(__("Are you sure you want to reject this request?", "setae")); ?>';
-                    var confirmMsgRevoke = '<?php echo esc_js(__("Are you sure you want to remove this image from the gallery?", "setae")); ?>';
+                    var confirmMsgApprove = '<?php echo esc_js(__("この画像を種のギャラリーに追加しますか？", "setae")); ?>';
+                    var confirmMsgReject = '<?php echo esc_js(__("この申請を却下しますか？", "setae")); ?>';
+                    var confirmMsgRevoke = '<?php echo esc_js(__("この画像をギャラリーから削除しますか？", "setae")); ?>';
 
                     var msg = confirmMsgApprove;
                     if (actionType === 'reject') msg = confirmMsgReject;
@@ -135,7 +135,7 @@ class Setae_Admin_Best_Shots
 
                     if (!confirm(msg)) return;
 
-                    btn.prop('disabled', true).text('<?php echo esc_js(__("Processing...", "setae")); ?>');
+                    btn.prop('disabled', true).text('<?php echo esc_js(__("処理中...", "setae")); ?>');
 
                     $.ajax({
                         url: ajaxurl,
@@ -153,12 +153,12 @@ class Setae_Admin_Best_Shots
                                 // テーブルの行を消してリロードを促す（またはそのままリロードする）
                                 location.reload();
                             } else {
-                                alert('<?php echo esc_js(__("Error: ", "setae")); ?>' + response.data);
+                                alert('<?php echo esc_js(__("エラー: ", "setae")); ?>' + response.data);
                                 location.reload();
                             }
                         },
                         error: function () {
-                            alert('<?php echo esc_js(__("A communication error occurred.", "setae")); ?>');
+                            alert('<?php echo esc_js(__("通信エラーが発生しました。", "setae")); ?>');
                             btn.prop('disabled', false);
                         }
                     });

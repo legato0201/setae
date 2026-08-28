@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Specimen silhouette</title>
+  <g fill="none" stroke="#555b53" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="80" cy="56" r="32"/><path d="M80 24v70M57 43c18 7 28 24 23 51M103 43C85 50 75 67 80 94M65 101h30"/><circle cx="80" cy="56" r="6" fill="#555b53"/>
+  </g>
+</svg>

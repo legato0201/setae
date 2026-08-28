@@ -1,27 +1,145 @@
 var SetaeUIAddSpider = (function ($) {
     'use strict';
 
+    function isGuestMode() {
+        return !!(window.SetaeSettings && SetaeSettings.guest_mode);
+    }
+
+    function escapeHtml(value) {
+        return $('<div>').text(value == null ? '' : String(value)).html();
+    }
+
+    function getPreviewClassification() {
+        const $checked = $('input[name="classification"]:checked');
+        const $chip = $checked.closest('.radio-chip');
+        const value = String($checked.val() || 'other');
+        const label = String($chip.data('label') || $chip.find('span').last().text() || '新しい個体').trim();
+        let mark = String($chip.data('mark') || '').trim();
+
+        if (!mark || mark.length > 6) {
+            mark = label.slice(0, 1) || '生';
+        }
+
+        return {
+            value: value,
+            label: label,
+            mark: mark
+        };
+    }
+
+    function updateAddSpiderCardPreview() {
+        const meta = getPreviewClassification();
+        const species = $.trim(meta.value === 'tarantula'
+            ? $('#spider-species-search').val()
+            : $('#spider-custom-species').val());
+        const nickname = $.trim($('#spider-name').val());
+        const isPlant = meta.value === 'plant';
+
+        $('#add-spider-card-preview').attr('data-classification', meta.value);
+        $('#add-spider-preview-mark').text(meta.mark);
+        $('#add-spider-preview-classification').text(meta.label);
+        $('#add-spider-preview-species').text(species || '種類を選択');
+        $('#add-spider-preview-name').text(nickname || '名前・管理番号');
+        $('#add-spider-preview-primary-label').text(isPlant ? '水やり' : '給餌');
+        $('#add-spider-preview-secondary-label').text(isPlant ? '植え替え' : '脱皮');
+
+        const imageAlt = `${nickname || species || meta.label}のカードプレビュー`;
+        $('#add-spider-preview-image').attr('alt', imageAlt);
+    }
+
+    function setAddSpiderCardPreviewImage(source) {
+        const $card = $('#add-spider-card-preview');
+        const $image = $('#add-spider-preview-image');
+
+        if (source) {
+            $image.attr('src', source);
+            $card.addClass('has-photo');
+            return;
+        }
+
+        $image.attr('src', '');
+        $card.removeClass('has-photo');
+    }
+
+    function getRegistrationLimitState() {
+        const currentUser = window.SetaeSettings && SetaeSettings.current_user
+            ? SetaeSettings.current_user
+            : {};
+        const parsedLimit = parseInt(currentUser.spider_limit, 10);
+        const parsedCount = parseInt(currentUser.spider_count, 10);
+        const limit = Number.isFinite(parsedLimit) ? parsedLimit : 8;
+        const count = Number.isFinite(parsedCount) ? parsedCount : 0;
+
+        return {
+            limit: limit,
+            count: count,
+            reached: limit !== -1 && count >= limit
+        };
+    }
+
+    function promptGuestLimitRegistration(limit) {
+        const safeLimit = Number.isFinite(parseInt(limit, 10)) ? parseInt(limit, 10) : 8;
+        const options = {
+            title: 'まず無料登録して、体験データを引き継ぐ',
+            message: `登録なしで使える${safeLimit}匹の上限に達しました。この端末の個体と飼育記録は、無料登録後にそのまま同期できます。`,
+            details: [
+                `${safeLimit}匹とこれまでの記録をアカウントへ引き継げます`,
+                '登録後に、プレミアムプランやボーナス枠を選べます'
+            ],
+            confirmLabel: '無料登録へ',
+            cancelLabel: 'あとで'
+        };
+
+        $('#modal-add-spider').stop(true, true).hide();
+        $('#form-add-spider').show();
+        $('#add-spider-limit-message').hide();
+
+        if (window.SetaePWA && typeof SetaePWA.promptGuestRegistration === 'function') {
+            return SetaePWA.promptGuestRegistration(options);
+        }
+
+        if (window.SetaeCore && typeof SetaeCore.confirmAction === 'function') {
+            return SetaeCore.confirmAction(options).then(function (confirmed) {
+                if (confirmed) {
+                    window.location.assign(SetaeSettings.registration_url || '/?register=1&from=trial');
+                }
+                return confirmed;
+            });
+        }
+
+        window.location.assign(SetaeSettings.registration_url || '/?register=1&from=trial');
+        return Promise.resolve(true);
+    }
+
     function init() {
         // モーダルを開く
-        $(document).on('click', '#btn-add-spider', function () {
+        $(document).on('click', '#btn-add-spider, .js-open-add-spider', function (event) {
+            const $trigger = $(this);
+            const startMode = $trigger.data('start-mode') || 'tarantula';
+            const source = $trigger.data('source') || ($trigger.attr('id') || 'add_button');
+            const limitState = getRegistrationLimitState();
+
+            $('#form-add-spider').show();
+            $('#add-spider-limit-message').hide();
 
             // ▼▼▼ 新規追加: 登録上限チェックと表示の切り替え ▼▼▼
-            if (typeof SetaeSettings !== 'undefined' && SetaeSettings.current_user) {
-                const limit = SetaeSettings.current_user.spider_limit;
-                const count = SetaeSettings.current_user.spider_count;
+            if (limitState.reached) {
+                if (isGuestMode()) {
+                    event.preventDefault();
+                    promptGuestLimitRegistration(limitState.limit);
+                    return;
+                }
 
-                // limit が -1 の場合は無制限 (プレミアム)
-                if (limit !== -1 && count >= limit) {
+                // 登録済み無料ユーザーには、登録枠を増やす選択肢を表示する。
+                if (limitState.limit !== -1) {
                     $('#form-add-spider').hide();
                     $('#add-spider-limit-message').show();
-                    $('#limit-msg-count').text(limit);
-                } else {
-                    $('#form-add-spider').show();
-                    $('#add-spider-limit-message').hide();
+                    $('#limit-msg-count').text(limitState.limit);
                 }
             }
             // ▲▲▲ 新規追加ここまで ▲▲▲
 
+            $('#modal-add-spider').attr('aria-hidden', 'false');
             $('#modal-add-spider').fadeIn(200);
             // 本日の日付をデフォルトセット
             const today = new Date().toISOString().split('T')[0];
@@ -34,6 +152,19 @@ var SetaeUIAddSpider = (function ($) {
             $('#spider-image-preview').hide();
             $('#btn-trigger-upload-add').show();
             $('#spider-species-suggestions').hide();
+            setAddSpiderCardPreviewImage('');
+            selectInitialClassification(startMode);
+            updateAddSpiderCardPreview();
+
+            const existingCount = (SetaeCore.state && Array.isArray(SetaeCore.state.cachedSpiders))
+                ? SetaeCore.state.cachedSpiders.length
+                : (SetaeSettings && SetaeSettings.current_user ? SetaeSettings.current_user.spider_count : 0);
+            if (existingCount === 0 && typeof SetaeCore.track === 'function') {
+                SetaeCore.track('first_spider_start', {
+                    source: source,
+                    classification: $('input[name="classification"]:checked').val() || ''
+                });
+            }
 
             if (typeof SetaeTutorial !== 'undefined') {
                 SetaeTutorial.initAddSpider();
@@ -42,7 +173,9 @@ var SetaeUIAddSpider = (function ($) {
 
         // モーダルを閉じる (共通クラスで処理される場合もあるが、念のため)
         $(document).on('click', '#modal-add-spider .setae-close', function () {
-            $('#modal-add-spider').fadeOut(200);
+            $('#modal-add-spider').fadeOut(200, function () {
+                $(this).attr('aria-hidden', 'true');
+            });
         });
 
         // ▼ 追加: カテゴリー切り替えロジック
@@ -66,7 +199,15 @@ var SetaeUIAddSpider = (function ($) {
                 $('#spider-species-search').prop('required', false);
                 $('#spider-custom-species').prop('required', true);
             }
+
+            updateAddSpiderCardPreview();
         });
+
+        $(document).on(
+            'input',
+            '#spider-species-search, #spider-custom-species, #spider-name',
+            updateAddSpiderCardPreview
+        );
 
         // 写真選択のトリガー
         $(document).on('click', '#btn-trigger-upload-add', function () {
@@ -108,6 +249,8 @@ var SetaeUIAddSpider = (function ($) {
                     $('#preview-img-tag-add').attr('src', re.target.result);
                     $('#spider-image-preview').show();
                     $('#btn-trigger-upload-add').hide();
+                    setAddSpiderCardPreviewImage(re.target.result);
+                    updateAddSpiderCardPreview();
                 };
                 reader.readAsDataURL(file);
             }
@@ -118,6 +261,7 @@ var SetaeUIAddSpider = (function ($) {
             $('#spider-image').val('');
             $('#spider-image-preview').hide();
             $('#btn-trigger-upload-add').show();
+            setAddSpiderCardPreviewImage('');
         });
 
         // 種類のオートコンプリート
@@ -146,16 +290,19 @@ var SetaeUIAddSpider = (function ($) {
 
                     let html = '';
                     results.forEach(s => {
-                        // ★追加: 和名がある場合の表示用HTMLを作成
-                        const jaDisplay = s.ja_name ? `<span style="font-size:12px; color:#666; font-weight:normal; margin-left:8px;">(${s.ja_name})</span>` : '';
+                        const id = escapeHtml(s.id);
+                        const title = escapeHtml(s.title);
+                        const genus = escapeHtml(s.genus || '');
+                        const jaDisplay = s.ja_name
+                            ? `<span class="setae-species-suggestion-ja">(${escapeHtml(s.ja_name)})</span>`
+                            : '';
 
-                        // ★修正: data-nameには学名のみ、表示には jaDisplay を追加
-                        html += `<div class="suggestion-item" data-id="${s.id}" data-name="${s.title}" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f0f0f0;">
-                            <div style="font-weight:bold; font-size:14px;">
-                                ${s.title}${jaDisplay}
-                            </div>
-                            <div style="font-size:12px; color:#888;">${s.genus || ''}</div>
-                        </div>`;
+                        html += `<button type="button" class="suggestion-item setae-species-suggestion" role="option" data-id="${id}" data-name="${title}">
+                            <span class="setae-species-suggestion-title">
+                                ${title}${jaDisplay}
+                            </span>
+                            <span class="setae-species-suggestion-genus">${genus}</span>
+                        </button>`;
                     });
                     $('#spider-species-suggestions').html(html).show();
                 });
@@ -169,6 +316,7 @@ var SetaeUIAddSpider = (function ($) {
             $('#spider-species-search').val(name);
             $('#spider-species-select').val($(this).data('id'));
             $('#spider-species-suggestions').hide();
+            updateAddSpiderCardPreview();
         });
 
         // 候補外クリックで閉じる
@@ -192,7 +340,7 @@ var SetaeUIAddSpider = (function ($) {
                 return;
             }
 
-            const originalText = $btn.text();
+            const originalContent = $btn.html();
 
             // ▼ 追加: 種類がリストから選択されているかチェック (タランチュラの場合のみ)
             const classificationCheck = $('input[name="classification"]:checked').val();
@@ -206,7 +354,8 @@ var SetaeUIAddSpider = (function ($) {
             // ▲ 追加ここまで
 
             // ★追加: ボタンを無効化してローディング状態にする
-            $btn.prop('disabled', true).text('登録中...');
+            $btn.prop('disabled', true).addClass('is-loading');
+            $btn.find('span').first().text('登録中...');
 
             // フォームデータの構築
             const formData = new FormData(this);
@@ -227,18 +376,18 @@ var SetaeUIAddSpider = (function ($) {
                 const speciesId = $('#spider-species-select').val();
                 if (!speciesId) {
                     SetaeCore.showToast('種類をリストから選択してください', 'warning');
-                    $btn.prop('disabled', false).text(originalText);
+                    $btn.prop('disabled', false).removeClass('is-loading').html(originalContent);
                     return;
                 }
                 formData.set('species_id', speciesId);
             } else {
                 // 新規ロジック: 自由入力テキストを取得
                 const customName = $('#spider-custom-species').val();
-                if (!customName) {
-                    SetaeCore.showToast('種類名を入力してください', 'warning');
-                    $btn.prop('disabled', false).text(originalText);
-                    return;
-                }
+                    if (!customName) {
+                        SetaeCore.showToast('種類名を入力してください', 'warning');
+                        $btn.prop('disabled', false).removeClass('is-loading').html(originalContent);
+                        return;
+                    }
                 formData.append('custom_species', customName);
             }
 
@@ -253,6 +402,21 @@ var SetaeUIAddSpider = (function ($) {
                 // 成功時
                 function (response) {
                     SetaeCore.showToast('新しい個体を登録しました', 'success');
+                    const newSpiderId = response && response.id ? response.id : null;
+
+                    if (typeof SetaeCore.track === 'function') {
+                        SetaeCore.track('spider_create_success', {
+                            classification: classification,
+                            has_image: !!imageFile
+                        });
+
+                        if (imageFile) {
+                            SetaeCore.track('spider_first_photo_add', {
+                                source: 'create_form',
+                                classification: classification
+                            });
+                        }
+                    }
 
                     // ▼▼▼ 追加: 成功したらローカルの登録数を+1しておく ▼▼▼
                     if (typeof SetaeSettings !== 'undefined' && SetaeSettings.current_user) {
@@ -263,37 +427,77 @@ var SetaeUIAddSpider = (function ($) {
                     // フォームとプレビューのリセット
                     $form[0].reset();
                     $('#spider-species-search').val('');
-                    $form[0].reset();
-                    $('#spider-species-search').val('');
                     $('#spider-species-select').val('');
                     $('#spider-custom-species').val(''); // Clear custom input
+                    $('#spider-name').val('');
 
                     // Reset to Tarantula default
                     $('input[name="classification"][value="tarantula"]').prop('checked', true).trigger('change');
                     $('#preview-img-tag-add').attr('src', '');
                     $('#spider-image-preview').hide();
+                    setAddSpiderCardPreviewImage('');
+                    updateAddSpiderCardPreview();
 
                     // モーダルを閉じる
-                    $('#modal-add-spider').fadeOut();
+                    $('#modal-add-spider').fadeOut(function () {
+                        $(this).attr('aria-hidden', 'true');
+                    });
 
-                    // リストを更新 (マイリスト画面にいる場合)
-                    if (window.SetaeUI && SetaeUI.renderMySpiders) {
+                    // リストを更新し、作成した個体の詳細へ移動
+                    if (newSpiderId && typeof SetaeUIDetail !== 'undefined') {
+                        SetaeAPI.fetchMySpiders(function () {
+                            if (window.SetaeUI && SetaeUI.renderMySpiders) {
+                                SetaeUI.renderMySpiders();
+                            }
+                            SetaeUIDetail.loadSpiderDetail(newSpiderId);
+                            showFirstRecordPrompt(newSpiderId, !!imageFile);
+                        });
+                    } else if (window.SetaeUI && SetaeUI.renderMySpiders) {
                         SetaeAPI.fetchMySpiders(SetaeUI.renderMySpiders);
                     }
 
                     // ★追加: ボタンを元の状態に戻す
-                    $btn.prop('disabled', false).text(originalText);
+                    $btn.prop('disabled', false).removeClass('is-loading').html(originalContent);
                 },
                 // エラー時 (SetaeAPIが第2引数でエラーを受け取る想定)
                 function (error) {
                     console.error('Add Spider Error:', error);
-                    SetaeCore.showToast('登録に失敗しました', 'error');
+                    const errorMessage = typeof SetaeCore.getErrorMessage === 'function'
+                        ? SetaeCore.getErrorMessage(error, '登録に失敗しました')
+                        : '登録に失敗しました';
 
                     // ★追加: エラー発生時もボタンを元の状態に戻して再試行可能にする
-                    $btn.prop('disabled', false).text(originalText);
-                }
-            );
-        });
+                    $btn.prop('disabled', false).removeClass('is-loading').html(originalContent);
+                    if (isGuestMode() && /登録上限|上限.*達/.test(errorMessage)) {
+                        promptGuestLimitRegistration(getRegistrationLimitState().limit);
+                        return;
+                    }
+                    SetaeCore.showToast(errorMessage, 'error');
+            }
+        );
+    });
+
+    function selectInitialClassification(startMode) {
+        const preferred = startMode || 'tarantula';
+        let $target = $(`input[name="classification"][value="${preferred}"]`);
+
+        if (!$target.length && preferred === 'other') {
+            $target = $('input[name="classification"]').filter(function () {
+                const value = $(this).val();
+                return value && value !== 'tarantula';
+            }).first();
+        }
+
+        if (!$target.length) {
+            $target = $('input[name="classification"]').first();
+        }
+
+        if ($target.length) {
+            $target.prop('checked', true).trigger('change');
+        } else {
+            $('input[name="classification"]:checked').trigger('change');
+        }
+    }
 
         // ▼▼▼ 新規追加: プレミアムアップグレード処理 (上限メッセージ内) ▼▼▼
         $(document).on('click', '#limit-upgrade-premium-btn', async function () {
@@ -311,19 +515,101 @@ var SetaeUIAddSpider = (function ($) {
                     // Stripeの安全な決済画面（Checkout）へリダイレクト
                     window.location.href = data.url;
                 } else {
-                    alert('決済セッションの作成に失敗しました。');
+                    SetaeCore.showToast(data.message || '決済画面を準備できませんでした。', 'error');
                     $(this).text(originalText).prop('disabled', false);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('エラーが発生しました。');
+                SetaeCore.showToast('通信状態を確認して、もう一度お試しください。', 'error');
                 $(this).text(originalText).prop('disabled', false);
             }
         });
         // ▲▲▲ 新規追加ここまで ▲▲▲
+
+        $(document).on('click', '.js-first-record-log, .js-first-record-feed', function () {
+            const spiderId = $(this).data('id');
+            const type = $(this).data('type') || 'note';
+            $('#setae-first-record-prompt').fadeOut(160, function () {
+                $(this).remove();
+            });
+
+            if (typeof SetaeCore.track === 'function') {
+                SetaeCore.track('first_record_prompt_click', {
+                    action: 'record',
+                    type: type
+                });
+            }
+
+            if (typeof SetaeUILogModal !== 'undefined') {
+                SetaeUILogModal.openLogModal(spiderId, type);
+            }
+        });
+
+        $(document).on('click', '.js-first-record-later', function () {
+            if (typeof SetaeCore.track === 'function') {
+                SetaeCore.track('first_record_prompt_click', {
+                    action: 'later'
+                });
+            }
+
+            $('#setae-first-record-prompt').fadeOut(160, function () {
+                $(this).remove();
+            });
+        });
+
+        $(document).on('click', '.js-first-photo-edit', function () {
+            const spiderId = $(this).data('id');
+            $('#setae-first-record-prompt').fadeOut(160, function () {
+                $(this).remove();
+            });
+
+            if (typeof SetaeUIDetail !== 'undefined' && SetaeUIDetail.openEditModal) {
+                SetaeUIDetail.openEditModal(spiderId);
+            }
+        });
     }
 
-    return { init: init };
+    function showFirstRecordPrompt(spiderId, hasImage) {
+        $('#setae-first-record-prompt').remove();
+
+        const title = '登録できました';
+        const message = hasImage
+            ? '最初のメモを1件だけ残すと、次回の確認が続けやすくなります。'
+            : '写真はあとからで大丈夫です。まずはメモや給餌など、最初の記録を1件だけ残せます。';
+        const primaryAction = `<button type="button" class="setae-btn setae-btn-primary js-first-record-log" data-id="${spiderId}" data-type="note">
+                最初の記録をつける
+            </button>`;
+        const secondaryAction = `<button type="button" class="setae-btn-secondary js-first-record-later">
+                あとで記録する
+            </button>`;
+
+        if (typeof SetaeCore.track === 'function') {
+            SetaeCore.track('first_record_prompt_seen', {
+                source: 'after_create',
+                has_image: !!hasImage
+            });
+        }
+
+        $('body').append(`
+            <div id="setae-first-record-prompt" class="setae-modal" style="display:none;">
+                <div class="setae-modal-content setae-next-step-modal">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="setae-next-step-actions">
+                        ${primaryAction}
+                        ${secondaryAction}
+                    </div>
+                </div>
+            </div>
+        `);
+
+        $('#setae-first-record-prompt').fadeIn(180).css('display', 'flex');
+    }
+
+    return {
+        init: init,
+        _getRegistrationLimitState: getRegistrationLimitState
+    };
 })(jQuery);
 
 // 初期化実行 (app-ui-renderer 等から呼ばれる想定だが、単体でも動くように)

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SETAE Stable Specimen Intake</title>
+  <script>document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'light'; window.SETAE_CONFIG = { siteOrigin: location.origin };</script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/combobox.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen-intake.css">
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
+  <script type="module">
+    import { createSpeciesComboboxController } from '../../assets/app/features/specimen-intake/species-combobox.js';
+    import { createSpecimenIntakeController } from '../../assets/app/features/specimen-intake/controller.js';
+    import { renderSpecimenIntake, renderSpecimenSpeciesRegion, renderSpeciesComboboxResults } from '../../assets/app/features/specimen-intake/view.js';
+
+    const app = document.querySelector('#app');
+    const suggestions = [
+      { id: 501, ja_name: 'セラドニア', scientific_name: 'Typhochlaena seladonia', genus: 'Typhochlaena' },
+      { id: 502, ja_name: 'アンティルピンクトゥー', scientific_name: 'Caribena versicolor', genus: 'Caribena' }
+    ];
+    const enclosures = { items: [
+      { id: 4, code: 'E004', name: 'Rack A / Upper' },
+      { id: 8, code: 'E008', name: 'Display enclosure' }
+    ] };
+    let modalState = { type: 'animal', classification: 'tarantula', speciesMode: 'catalog', speciesId: '', selectedSpecies: null, data: {} };
+    let intakeController;
+    let submitMode = 'api-error';
+    let submitCount = 0;
+
+    function updateCombobox(snapshot) {
+      const input = app.querySelector('[data-role="species-combobox-input"]');
+      const listbox = app.querySelector('[data-role="species-combobox-listbox"]');
+      if (!input || !listbox) return;
+      input.setAttribute('aria-expanded', snapshot.open ? 'true' : 'false');
+      listbox.hidden = !snapshot.open;
+      listbox.innerHTML = renderSpeciesComboboxResults(snapshot);
+    }
+
+    const speciesController = createSpeciesComboboxController({
+      debounceMs: 0,
+      search(query) {
+        const value = query.toLocaleLowerCase('ja');
+        return Promise.resolve(suggestions.filter((item) => `${item.ja_name} ${item.scientific_name}`.toLocaleLowerCase('ja').includes(value)));
+      },
+      update: updateCombobox,
+      onSelect(item) { intakeController.selectSpecies(item); }
+    });
+
+    app.innerHTML = renderSpecimenIntake(modalState, { enclosures });
+    intakeController = createSpecimenIntakeController({
+      appRoot: app,
+      getModalState: () => modalState,
+      updateModalState: (next) => { modalState = next; },
+      renderSpeciesRegion: (state) => renderSpecimenSpeciesRegion(state),
+      speciesCombobox: speciesController,
+      formSafety: { sync() {} }
+    });
+    intakeController.mount(app);
+
+    app.addEventListener('compositionstart', (event) => {
+      if (event.target.matches('[data-role="species-combobox-input"]')) speciesController.compositionStart();
+    });
+    app.addEventListener('compositionend', (event) => {
+      if (event.target.matches('[data-role="species-combobox-input"]')) speciesController.compositionEnd(event.target.value);
+    });
+    app.addEventListener('input', (event) => {
+      if (event.target.matches('[data-role="species-combobox-input"]')) speciesController.input(event.target.value, { isComposing: event.isComposing });
+    });
+    app.addEventListener('keydown', (event) => {
+      if (event.target.matches('[data-role="species-combobox-input"]') && speciesController.keydown(event.key)) event.preventDefault();
+    });
+    app.addEventListener('click', (event) => {
+      const action = event.target.closest('[data-action]');
+      if (!action) return;
+      if (action.dataset.action === 'select-species-suggestion') speciesController.select(Number(action.dataset.speciesIndex));
+      if (action.dataset.action === 'change-specimen-species') intakeController.clearSpecies();
+      if (action.dataset.action === 'specimen-species-manual') intakeController.showManual();
+      if (action.dataset.action === 'specimen-species-catalog') intakeController.showCatalog();
+    });
+    app.addEventListener('change', (event) => {
+      if (event.target.matches('[data-role="specimen-classification"]')) intakeController.setClassification(event.target.value);
+      if (event.target.matches('input[type="file"]')) intakeController.setFileStatus(event.target.files?.[0] || null);
+    });
+    app.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!intakeController.validate()) return;
+      submitCount += 1;
+      intakeController.setPending(true, '個体を登録しています…');
+      if (submitMode === 'pending') return;
+      setTimeout(() => {
+        if (submitMode === 'success') {
+          intakeController.destroy();
+          modalState = null;
+          app.innerHTML = '<p id="success-state">登録しました。</p>';
+          return;
+        }
+        intakeController.setPending(false);
+        intakeController.setError('保存できませんでした。もう一度お試しください。');
+      }, 60);
+    });
+
+    window.__setaeSpecimenIntake246 = {
+      controller: intakeController,
+      get state() { return modalState; },
+      form() { return app.querySelector('[data-specimen-intake-root]'); },
+      nodes() {
+        const form = this.form();
+        return {
+          form,
+          name: form?.elements?.name,
+          date: form?.elements?.acquired_date,
+          photo: form?.elements?.image,
+          note: form?.elements?.notes,
+          classification: form?.elements?.classification,
+          species: form?.querySelector('[data-specimen-intake-region="species"]')
+        };
+      },
+      setSubmitMode(mode) { submitMode = mode; },
+      submitCount() { return submitCount; }
+    };
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

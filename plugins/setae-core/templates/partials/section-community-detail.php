@@ -11,44 +11,57 @@
             </svg>
         </button>
 
-        <h4 id="detail-header-title">Topic</h4>
+        <h4 id="detail-header-title">相談</h4>
 
         <div class="header-action-spacer"></div>
     </div>
 
-    <div id="topic-detail-content">
-        <!-- Loaded via JS -->
+    <div class="community-detail-workspace">
+        <main class="community-detail-main">
+            <div id="topic-detail-content">
+                <!-- Loaded via JS -->
+            </div>
+
+            <div id="topic-comments-list" class="setae-post-container">
+                <!-- Comments loaded here -->
+            </div>
+        </main>
+
+        <aside class="community-detail-compose">
+            <form id="setae-comment-form" class="care-feed-comment-form community-comment-form">
+                <input type="hidden" id="comment-post-id">
+
+                <input type="file" id="comment-image-input" accept="image/*" style="display:none;">
+
+                <div class="care-feed-comment-templates community-comment-templates" aria-label="定型コメント">
+                    <button type="button" class="js-topic-comment-template" data-label="参考になります"
+                        data-comment="参考になります。うちの飼育でも試してみたいです。">参考になります</button>
+                    <button type="button" class="js-topic-comment-template" data-label="その後が気になります"
+                        data-comment="その後の様子も気になります。進展があれば教えてください。">その後が気になります</button>
+                    <button type="button" class="js-topic-comment-template" data-label="詳しく知りたい"
+                        data-comment="よければ環境や前後の様子も教えてください。">詳しく知りたい</button>
+                </div>
+
+                <div class="community-comment-tools">
+                    <button type="button" id="btn-trigger-comment-image" title="画像を添付">
+                        <span aria-hidden="true">📷</span>
+                        <span>画像</span>
+                    </button>
+
+                    <div id="comment-image-preview" style="display:none;">
+                        <img src="">
+                        <button type="button" id="btn-clear-comment-image" aria-label="画像を削除">×</button>
+                    </div>
+                </div>
+
+                <textarea id="comment-content" class="setae-input" placeholder="コメントを書く..." autocomplete="off" rows="2"
+                    maxlength="1000"></textarea>
+
+                <div class="care-feed-comment-actions">
+                    <span id="comment-char-count">0 / 1000</span>
+                    <button type="submit" class="setae-btn setae-btn-primary btn-send-comment">投稿する</button>
+                </div>
+            </form>
+        </aside>
     </div>
-
-    <div id="topic-comments-list" class="setae-post-container">
-        <!-- Comments loaded here -->
-    </div>
-
-    <form id="setae-comment-form">
-        <input type="hidden" id="comment-post-id">
-
-        <input type="file" id="comment-image-input" accept="image/*" style="display:none;">
-
-        <button type="button" id="btn-trigger-comment-image" title="画像を添付">
-            <img draggable="false" role="img" class="emoji" alt="📸"
-                src="<?php echo plugins_url('assets/images/emoji/1f4f8.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>">
-        </button>
-
-        <div id="comment-image-preview" style="display:none;">
-            <img src="" style="width:40px; height:40px; object-fit:cover; border-radius:6px; display:block;">
-            <button type="button" id="btn-clear-comment-image"
-                style="position:absolute; top:-6px; right:-6px; background:#e74c3c; color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2);">×</button>
-        </div>
-
-        <textarea id="comment-content" placeholder="コメントを入力..." autocomplete="off" rows="2"></textarea>
-
-        <button type="submit" class="btn-send-comment" title="送信">
-            <svg class="send-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                style="margin-left:-2px; margin-top:1px;">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-        </button>
-    </form>
 </div>

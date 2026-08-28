@@ -1,0 +1,117 @@
+@layer patterns {
+  .getting-started {
+    margin-block-end: var(--space-5);
+    border-block: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+  }
+
+  .getting-started-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--row-inset);
+  }
+
+  .getting-started-header h2 {
+    margin: var(--space-1) 0 0;
+    font-size: var(--type-section);
+  }
+
+  .getting-started-progress {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-1);
+    font-family: var(--font-mono);
+  }
+
+  .getting-started-progress span {
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: var(--type-caption);
+  }
+
+  .getting-started > .progress {
+    height: var(--active-indicator-width);
+    border-radius: 0;
+  }
+
+  .getting-started-steps {
+    display: grid;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .onboarding-step {
+    width: 100%;
+    min-height: var(--touch-target);
+    padding: var(--space-3) var(--row-inset);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .onboarding-step.is-static {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .onboarding-step.is-complete {
+    color: var(--text-secondary);
+  }
+
+  .onboarding-step.is-complete .action-row-icon {
+    color: var(--success);
+  }
+
+  .getting-started-optional {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--row-inset);
+  }
+
+  .setae-setup-intents {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .setae-setup-intent {
+    width: 100%;
+    min-height: calc(var(--touch-target) + var(--space-4));
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--row-inset);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-control);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    text-align: left;
+  }
+
+  .setae-setup-intent.is-selected {
+    border-color: var(--border-selected);
+    background: var(--bg-selected);
+  }
+
+  .setae-setup-intent > span:last-child {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .setae-setup-intent small {
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 767px) {
+    .getting-started-header {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .getting-started-dismiss {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+}

@@ -4,8 +4,9 @@
 
     <header class="encyclopedia-header">
         <div class="header-content">
-            <h1 class="page-title">Species Encyclopedia</h1>
-            <p class="page-subtitle">タランチュラ図鑑</p>
+            <p class="page-kicker">SPECIES LIBRARY</p>
+            <h1 class="page-title">タランチュラ図鑑</h1>
+            <p class="page-subtitle">写真と飼育情報から種類を探せます。</p>
         </div>
     </header>
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Insect silhouette</title>
+  <g fill="none" stroke="#555b53" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="80" cy="32" r="11" fill="#555b53"/><ellipse cx="80" cy="61" rx="16" ry="20" fill="#555b53"/><ellipse cx="80" cy="94" rx="20" ry="23" fill="#555b53"/><path d="M72 23 58 9M88 23l14-14M65 51 38 34M95 51l27-17M63 65H30M97 65h33M66 79l-29 25M94 79l29 25"/>
+  </g>
+</svg>

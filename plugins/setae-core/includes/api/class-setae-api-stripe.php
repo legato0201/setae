@@ -1,223 +1,252 @@
 <?php
+
 class Setae_API_Stripe
 {
     private $stripe_secret_key;
     private $webhook_secret;
+    private $stripe_client;
 
-    public function __construct()
+    public function __construct($stripe_client = null)
     {
-        // 管理画面の設定からStripe APIキーとWebhookシークレットを取得
-        $this->stripe_secret_key = get_option('setae_stripe_secret_key');
-        $this->webhook_secret = get_option('setae_stripe_webhook_secret');
-        // \Stripe\Stripe::setApiKey($this->stripe_secret_key); // Requires Stripe PHP SDK
+        $this->stripe_secret_key = trim((string) get_option('setae_stripe_secret_key', ''));
+        $this->webhook_secret = trim((string) get_option('setae_stripe_webhook_secret', ''));
+        $this->stripe_client = $stripe_client;
+        if (!$this->stripe_client && class_exists('\\Stripe\\StripeClient') && $this->stripe_secret_key !== '') {
+            $this->stripe_client = new \Stripe\StripeClient($this->stripe_secret_key);
+        }
     }
 
     public function register_routes()
     {
-        // 決済セッション作成用
-        register_rest_route('setae/v1', '/stripe/create-checkout-session', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'create_checkout_session'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
-
-        // ▼▼▼ 新規追加: カスタマーポータルセッション作成用エンドポイント ▼▼▼
-        register_rest_route('setae/v1', '/stripe/create-portal-session', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'create_portal_session'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
-
-        // Webhook受信用のエンドポイント（Stripeからの通信なので認証なし）
+        foreach (array('create-checkout-session' => 'create_checkout_session', 'create-portal-session' => 'create_portal_session') as $route => $callback) {
+            register_rest_route('setae/v1', '/stripe/' . $route, array(
+                'methods' => 'POST', 'callback' => array($this, $callback),
+                'permission_callback' => function () { return is_user_logged_in(); },
+            ));
+        }
         register_rest_route('setae/v1', '/stripe/webhook', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'handle_webhook'),
+            'methods' => 'POST', 'callback' => array($this, 'handle_webhook'),
             'permission_callback' => '__return_true',
         ));
     }
 
-    // 決済画面のURLを生成する
     public function create_checkout_session($request)
     {
+        // Keep old clients working, but never fall back to a legacy Price.
+        $plan = $request->get_param('plan');
+        if ($plan !== null && $plan !== 'breeder_starter') {
+            return new WP_Error('plan_not_available', 'このプランはお申し込みいただけません。', array('status' => 400));
+        }
         $user_id = get_current_user_id();
-        $user = get_userdata($user_id);
-
-        if (!class_exists('\Stripe\Stripe')) {
-            return new WP_Error('stripe_missing', 'Stripe SDK is not loaded.', ['status' => 500]);
+        if (!$user_id) {
+            return new WP_Error('rest_not_logged_in', 'ログインしてください。', array('status' => 401));
         }
-        \Stripe\Stripe::setApiKey($this->stripe_secret_key);
-
-        $price_id = get_option('setae_stripe_price_id');
-        if (empty($price_id)) {
-            return new WP_Error('stripe_error', '料金ID（Price ID）が設定されていません。管理画面から設定してください。', ['status' => 500]);
-        }
-
-        // ▼ 追加: すでにStripeの顧客IDを持っているかチェック
-        $customer_id = get_user_meta($user_id, '_setae_stripe_customer_id', true);
-
-        // 基本のセッション設定
-        $session_args = [
-            'payment_method_types' => ['card'],
-            'line_items' => [
-                [
-                    'price' => $price_id,
-                    'quantity' => 1,
-                ]
-            ],
-            'mode' => 'subscription',
-            'client_reference_id' => $user_id, // Webhookでユーザーを特定するためのID
-            'success_url' => home_url('/dashboard?upgrade=success'),
-            'cancel_url' => home_url('/dashboard?upgrade=canceled'),
-        ];
-
-        // ▼ 修正: 顧客IDがあれば再利用、なければメールアドレスで新規作成
-        if (!empty($customer_id)) {
-            $session_args['customer'] = $customer_id;
-        } else {
-            $session_args['customer_email'] = $user->user_email;
-        }
-
-        try {
-            $session = \Stripe\Checkout\Session::create($session_args);
-            return new WP_REST_Response(['url' => $session->url], 200);
-        } catch (Exception $e) {
-            return new WP_Error('stripe_error', $e->getMessage(), ['status' => 500]);
-        }
+        return Setae_Entitlements::with_user_lock($user_id, function () use ($user_id, $request) {
+            $current_plan = Setae_Entitlements::get_plan_id($user_id);
+            $status = (string) get_user_meta($user_id, '_setae_plan_status', true);
+            $customer = (string) get_user_meta($user_id, '_setae_stripe_customer_id', true);
+            $subscription = (string) get_user_meta($user_id, '_setae_stripe_subscription_id', true);
+            if (in_array($current_plan, array('breeder_starter', 'legacy_premium'), true)
+                || ($subscription !== '' && in_array($status, array('active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'), true))) {
+                return $customer !== '' ? $this->create_portal_session($request)
+                    : new WP_Error('plan_already_active', '現在のプランは有効です。重複して契約する必要はありません。', array('status' => 409, 'action' => 'settings'));
+            }
+            $error = $this->get_configuration_error();
+            if (is_wp_error($error)) {
+                return $error;
+            }
+            if (!Setae_Billing::starter_configuration()['available']) {
+                return new WP_Error('stripe_price_missing', 'Breeder Starterは現在準備中です。', array('status' => 503));
+            }
+            $user = get_userdata($user_id);
+            if (!$user || empty($user->user_email)) {
+                return new WP_Error('stripe_user_missing', 'アカウント情報を確認できませんでした。', array('status' => 400));
+            }
+            try {
+                if ($customer !== '') {
+                    // Missing webhook state must not create another subscription.
+                    $subscriptions = $this->stripe_client->subscriptions->all(array('customer' => $customer, 'status' => 'all', 'limit' => 100));
+                    foreach ($subscriptions->data as $existing) {
+                        if (in_array($existing->status, array('active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'), true)) {
+                            return $this->create_portal_session($request);
+                        }
+                    }
+                    if (!empty($subscriptions->has_more)) {
+                        return new WP_Error('billing_review_required', '契約情報の確認が必要です。契約管理からご確認ください。', array('status' => 409, 'action' => 'portal'));
+                    }
+                }
+                $attempt = get_user_meta($user_id, '_setae_checkout_attempt', true);
+                if ($attempt !== '' && (!is_array($attempt) || empty($attempt['request']) || empty($attempt['started_at'])
+                    || !preg_match('/^[a-f0-9]{32}$/', (string) ($attempt['id'] ?? '')))) {
+                    return new WP_Error('billing_review_required', 'お申し込み情報の確認が必要です。管理者へお問い合わせください。', array('status' => 409));
+                }
+                if (!empty($attempt['session_id'])) {
+                    $cached = $this->stripe_client->checkout->sessions->retrieve($attempt['session_id'], array());
+                    if ($cached->status === 'open' && !empty($cached->url) && (int) $cached->expires_at > time()) {
+                        return new WP_REST_Response(array('url' => $cached->url, 'reused' => true), 200);
+                    }
+                    if ($cached->status === 'complete') {
+                        $cached_subscription = Setae_Billing::object_id($cached->subscription ?? '');
+                        if ($subscription === '' || $subscription !== $cached_subscription || !in_array($status, array('canceled', 'incomplete_expired'), true)) {
+                            return new WP_Error('billing_sync_pending', 'お申し込みを確認しています。少し待って設定画面を開き直してください。', array('status' => 409, 'action' => 'settings'));
+                        }
+                    }
+                    if (!in_array($cached->status, array('expired', 'complete'), true)) {
+                        return new WP_Error('billing_sync_pending', 'お申し込みの状態を確認しています。少し待って再度お試しください。', array('status' => 409));
+                    }
+                    // Replace the whole attempt atomically, only after a definite end.
+                    $attempt = '';
+                } elseif ($attempt !== '' && (int) $attempt['started_at'] < time() - 23 * 3600) {
+                    // Stripe can prune idempotency keys after 24h. Never guess that an unknown attempt failed.
+                    return new WP_Error('billing_review_required', '前回のお申し込み情報の確認が必要です。管理者へお問い合わせください。', array('status' => 409));
+                }
+                if ($attempt === '') {
+                    $attempt_id = bin2hex(random_bytes(16));
+                    $metadata = array('setae_user_id' => (string) $user_id, 'setae_plan_id' => 'breeder_starter', 'setae_checkout_attempt_id' => $attempt_id);
+                    $args = array(
+                        'payment_method_types' => array('card'),
+                        'line_items' => array(array('price' => trim((string) get_option('setae_stripe_price_breeder_starter', '')), 'quantity' => 1)),
+                        'mode' => 'subscription', 'client_reference_id' => (string) $user_id,
+                        'metadata' => $metadata, 'subscription_data' => array('metadata' => $metadata), 'locale' => 'ja',
+                        'success_url' => add_query_arg(array('upgrade' => 'success'), Setae_App_Shell::app_url()),
+                        'cancel_url' => add_query_arg(array('upgrade' => 'canceled'), Setae_App_Shell::app_url()),
+                        'expires_at' => time() + 3600,
+                    );
+                    $args[$customer !== '' ? 'customer' : 'customer_email'] = $customer !== '' ? $customer : $user->user_email;
+                    $attempt = array('id' => $attempt_id, 'started_at' => time(), 'session_id' => '', 'request' => $args);
+                    if (!$this->save_checkout_attempt($user_id, $attempt)) {
+                        return new WP_Error('stripe_attempt_write_failed', 'お申し込み情報を保存できませんでした。時間をおいてお試しください。', array('status' => 503));
+                    }
+                }
+                $session = $this->stripe_client->checkout->sessions->create($attempt['request'], array('idempotency_key' => 'setae-starter-' . $user_id . '-' . $attempt['id']));
+                if (empty($session->id)) {
+                    throw new RuntimeException('Checkout response unavailable.');
+                }
+                $attempt['session_id'] = (string) $session->id;
+                if (!$this->save_checkout_attempt($user_id, $attempt)) {
+                    return new WP_Error('stripe_session_write_failed', 'お申し込みの準備を確認しています。少し待って再度お試しください。', array('status' => 503));
+                }
+                if ($session->status === 'complete') {
+                    return new WP_Error('billing_sync_pending', 'お申し込みを確認しています。少し待って設定画面を開き直してください。', array('status' => 409));
+                }
+                if ($session->status !== 'open' || empty($session->url) || (int) $session->expires_at <= time()) {
+                    return new WP_Error('stripe_checkout_expired', '決済画面の期限が終了しました。もう一度お申し込みください。', array('status' => 409));
+                }
+                if (class_exists('Setae_Product_Events')) {
+                    Setae_Product_Events::record('checkout_started', array(
+                        'idempotency_key' => 'checkout:' . hash('sha256', $session->id), 'user_id' => $user_id,
+                        'object_type' => 'subscription', 'properties' => array('plan' => 'breeder_starter'),
+                    ));
+                }
+                return new WP_REST_Response(array('url' => $session->url), 200);
+            } catch (Throwable $error) {
+                $this->log_error('checkout_session', $error);
+                return new WP_Error('stripe_checkout_failed', '決済画面を準備できませんでした。時間をおいてお試しください。', array('status' => 502));
+            }
+        });
     }
 
-    // ▼▼▼ 新規追加: ポータルURLの生成メソッド ▼▼▼
     public function create_portal_session($request)
     {
         $user_id = get_current_user_id();
-
-        // Checkout時に保存しておいたStripeの顧客IDを取得
-        $customer_id = get_user_meta($user_id, '_setae_stripe_customer_id', true);
-
-        if (!$customer_id) {
-            return new WP_Error('no_customer', 'Stripeの顧客情報が見つかりません。', ['status' => 400]);
+        if (!$user_id) {
+            return new WP_Error('rest_not_logged_in', 'ログインしてください。', array('status' => 401));
         }
-
-        if (!class_exists('\Stripe\Stripe')) {
-            return new WP_Error('stripe_missing', 'Stripe SDK is not loaded.', ['status' => 500]);
+        $customer = (string) get_user_meta($user_id, '_setae_stripe_customer_id', true);
+        if ($customer === '') {
+            return new WP_Error('no_customer', 'Stripeの契約情報が見つかりません。', array('status' => 400));
         }
-
-        \Stripe\Stripe::setApiKey($this->stripe_secret_key);
-
+        $error = $this->get_configuration_error();
+        if (is_wp_error($error)) {
+            return $error;
+        }
         try {
-            // カスタマーポータルのセッションを作成
-            $session = \Stripe\BillingPortal\Session::create([
-                'customer' => $customer_id,
-                'return_url' => home_url('/dashboard'), // ユーザーがポータルから戻ってくる先のURL
-            ]);
-
-            return new WP_REST_Response(['url' => $session->url], 200);
-        } catch (Exception $e) {
-            return new WP_Error('stripe_error', $e->getMessage(), ['status' => 500]);
+            $session = $this->stripe_client->billingPortal->sessions->create(array(
+                'customer' => $customer, 'return_url' => Setae_App_Shell::app_url(), 'locale' => 'ja',
+            ));
+            if (empty($session->url)) {
+                throw new RuntimeException('Portal response unavailable.');
+            }
+            return new WP_REST_Response(array('url' => $session->url, 'portal' => true), 200);
+        } catch (Throwable $error) {
+            $this->log_error('portal_session', $error);
+            return new WP_Error('stripe_portal_failed', '契約管理画面を準備できませんでした。時間をおいてお試しください。', array('status' => 502));
         }
     }
 
-    // Webhookを受信し、権限を付与・剥奪する
     public function handle_webhook($request)
     {
-        $payload = $request->get_body();
-        $sig_header = $request->get_header('stripe-signature');
-
-        if (!class_exists('\Stripe\Webhook')) {
-            return new WP_Error('stripe_missing', 'Stripe SDK is not loaded.', ['status' => 500]);
+        if (!class_exists('\\Stripe\\Webhook') || $this->webhook_secret === '') {
+            return new WP_Error('stripe_webhook_unavailable', 'Webhook is not configured.', array('status' => 503));
         }
-
         try {
-            $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $this->webhook_secret);
-        } catch (\UnexpectedValueException | \Stripe\Exception\SignatureVerificationException $e) {
-            return new WP_Error('webhook_error', 'Invalid payload or signature', ['status' => 400]);
+            $event = \Stripe\Webhook::constructEvent($request->get_body(), $request->get_header('stripe-signature'), $this->webhook_secret);
+        } catch (\UnexpectedValueException | \Stripe\Exception\SignatureVerificationException $error) {
+            $this->log_error('webhook_verification', $error);
+            return new WP_Error('webhook_error', 'Invalid payload or signature.', array('status' => 400));
         }
-
-        // イベントごとの処理
-        switch ($event->type) {
-            case 'checkout.session.completed':
-                $session = $event->data->object;
-                $user_id = $session->client_reference_id; // セッション作成時に渡したユーザーID
-                if ($user_id) {
-                    update_user_meta($user_id, '_setae_is_premium', true);
-                    update_user_meta($user_id, '_setae_stripe_customer_id', $session->customer);
-
-                    // ▼ 追加: 再登録・再開時に「解約予定」フラグ等を確実に初期化する
-                    delete_user_meta($user_id, '_setae_premium_cancel_at');
-                }
-                break;
-
-            case 'customer.subscription.updated':
-                $subscription = $event->data->object;
-                $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $subscription->customer]);
-
-                if (!empty($users)) {
-                    $user_id = $users[0]->ID;
-
-                    // ▼ 追加: 支払いステータスによる厳密な権限管理
-                    // 'active'(有効) または 'trialing'(無料期間中) の場合
-                    if (in_array($subscription->status, ['active', 'trialing'])) {
-                        update_user_meta($user_id, '_setae_is_premium', true);
-
-                        // 期間満了での解約が予約されているかチェック
-                        if ($subscription->cancel_at || $subscription->cancel_at_period_end) {
-                            // 終了予定のUNIXタイムスタンプを保存（cancel_at があればそれを使用、なければ current_period_end）
-                            $cancel_time = $subscription->cancel_at ? $subscription->cancel_at : $subscription->current_period_end;
-                            update_user_meta($user_id, '_setae_premium_cancel_at', $cancel_time);
-                        } else {
-                            // 解約予約がキャンセル（再開）された場合はメタデータを削除
-                            delete_user_meta($user_id, '_setae_premium_cancel_at');
-                        }
-                    }
-                    // 'past_due'(支払い遅延), 'unpaid'(未払い), 'canceled'(解約・無効) の場合は権限を剥奪
-                    elseif (in_array($subscription->status, ['past_due', 'unpaid', 'canceled'])) {
-                        update_user_meta($user_id, '_setae_is_premium', false);
-                        delete_user_meta($user_id, '_setae_premium_cancel_at');
-                    }
-                }
-                break;
-
-            case 'customer.subscription.deleted':
-                // サブスク完全削除時
-                $subscription = $event->data->object;
-                $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $subscription->customer]);
-
-                if (!empty($users)) {
-                    $user_id = $users[0]->ID;
-                    update_user_meta($user_id, '_setae_is_premium', false);
-                    delete_user_meta($user_id, '_setae_premium_cancel_at');
-                }
-                break;
-
-            case 'invoice.payment_succeeded':
-                // 定期支払いが成功した時（サブスク更新時）
-                $invoice = $event->data->object;
-                if ($invoice->subscription) {
-                    $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $invoice->customer]);
-                    if (!empty($users)) {
-                        update_user_meta($users[0]->ID, '_setae_is_premium', true);
-                    }
-                }
-                break;
-
-            case 'invoice.payment_failed':
-                // 定期支払いが失敗した時
-                $invoice = $event->data->object;
-                if ($invoice->subscription) {
-                    $users = get_users(['meta_key' => '_setae_stripe_customer_id', 'meta_value' => $invoice->customer]);
-                    if (!empty($users)) {
-                        // 支払い失敗時に権限を剥奪
-                        // （※Stripe側のリトライ設定で猶予を持たせる場合は、ここでは剥奪せず、
-                        // updatedイベントでステータスがpast_dueになった時に剥奪する設計でも可）
-                        update_user_meta($users[0]->ID, '_setae_is_premium', false);
-                    }
-                }
-                break;
+        $handled = array('checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated',
+            'customer.subscription.deleted', 'invoice.payment_succeeded', 'invoice.paid', 'invoice.payment_failed');
+        if (!in_array($event->type, $handled, true)) {
+            return new WP_REST_Response(array('status' => 'ignored'), 200);
         }
+        $error = $this->get_configuration_error();
+        if (is_wp_error($error)) {
+            return $error;
+        }
+        $claim = Setae_Billing_Events::claim($event->id);
+        if (is_wp_error($claim)) {
+            return $claim;
+        }
+        if ($claim['duplicate']) {
+            return new WP_REST_Response(array('status' => 'success', 'duplicate' => true), 200);
+        }
+        try {
+            $subscription_id = Setae_Billing::subscription_id($event->type, $event->data->object);
+            $result = array('ignored' => true);
+            if ($subscription_id !== '') {
+                $subscription = $this->stripe_client->subscriptions->retrieve($subscription_id, array());
+                $user_id = Setae_Billing::resolve_user($subscription);
+                $result = $user_id ? Setae_Entitlements::with_user_lock($user_id, function () use ($user_id, $subscription_id, $event) {
+                    // Re-read inside the user lock: distinct events may arrive out of order.
+                    $current = $this->stripe_client->subscriptions->retrieve($subscription_id, array());
+                    return Setae_Billing::sync_subscription($current, $user_id, $event->id, $event->type);
+                }) : new WP_Error('stripe_identity_unresolved', 'Subscription identity needs review.', array('status' => 409));
+            }
+            $finished = Setae_Billing_Events::finish($event->id, $claim['token'], !is_wp_error($result));
+            if (is_wp_error($result)) {
+                return $result;
+            }
+            if (!$finished) {
+                return new WP_Error('stripe_inbox_write_failed', 'Webhook completion could not be saved.', array('status' => 503));
+            }
+            return new WP_REST_Response(array('status' => 'success', 'review_required' => !empty($result['review_required'])), 200);
+        } catch (Throwable $error) {
+            Setae_Billing_Events::finish($event->id, $claim['token'], false);
+            $this->log_error('webhook_processing', $error);
+            return new WP_Error('stripe_webhook_retry', 'Subscription synchronization failed. Retry later.', array('status' => 503));
+        }
+    }
 
-        return new WP_REST_Response(['status' => 'success'], 200);
+    private function get_configuration_error()
+    {
+        if (!class_exists('\\Stripe\\StripeClient') || $this->stripe_secret_key === '' || !$this->stripe_client) {
+            return new WP_Error('stripe_unavailable', '決済機能は現在準備中です。', array('status' => 503));
+        }
+        return null;
+    }
+
+    private function save_checkout_attempt($user_id, array $attempt)
+    {
+        // One private meta value keeps the retry key, exact parameters and session consistent.
+        // This is billing state only: it is never returned by profile APIs or product events.
+        update_user_meta($user_id, '_setae_checkout_attempt', $attempt);
+        return get_user_meta($user_id, '_setae_checkout_attempt', true) === $attempt;
+    }
+
+    private function log_error($context, Throwable $error)
+    {
+        // Stripe exceptions can include customer data and credentials.
+        error_log('[Setae Stripe] ' . $context . ': ' . get_class($error));
     }
 }

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Utility Screens v4</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/property-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media-grid.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/discussion.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/community.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/settings.css">
+  <style>
+    body { min-height: 100dvh; background: var(--bg-app); }
+    #app { width: 100%; min-inline-size: 0; }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
+  <script type="module">
+    import { renderQrWorkspace } from '../../assets/app/features/qr/view.js';
+    import { renderSettings } from '../../assets/app/pages/settings.js';
+    import { renderCommunity } from '../../assets/app/pages/community.js';
+
+    const p = fixtureParams;
+    const screen = p.get('screen') || 'qr';
+    const view = p.get('view') || 'labels';
+    const count = Math.max(0, Number(p.get('count') ?? 12));
+    const longSpecies = 'Poecilotheria metallica living collection reference specimen with exceptionally long scientific identification text';
+    const imageUrl = new URL('../../assets/app/icons/setae-brand-mark.png', location.href).href;
+    const passportUrl = `${location.origin}/v24b/`;
+    const animals = Array.from({ length: Math.max(count, 12) }, (_, index) => ({
+      id: index + 1,
+      code: `C${String(index + 1).padStart(3, '0')}`,
+      manage_code: `C${String(index + 1).padStart(3, '0')}`,
+      species_name: index === 2 ? longSpecies : index % 2 ? 'Caribena versicolor' : 'Typhochlaena seladonia',
+      instar: 8,
+      gender: index % 2 ? 'male' : 'female',
+      url: `${location.origin}/k7mp${index + 1}/`
+    }));
+    const targetFor = (animal) => ({ ...animal, target_type: 'spider', object_id: animal.id, title: animal.code });
+
+    function resolvedQrTarget() {
+      const targetType = p.get('target') || 'spider';
+      const common = {
+        object_id: targetType === 'enclosure' ? 404 : targetType === 'baby' ? 3021 : 1,
+        target_type: targetType,
+        code: 'v24b',
+        url: passportUrl,
+        last_feed: '2026-08-20',
+        last_molt: '2026-07-18',
+        managed_by_viewer: true
+      };
+      if (targetType === 'baby') return { ...common, manage_code: 'N003-A021', title: 'N003-A021', species_name: 'Typhochlaena seladonia' };
+      if (targetType === 'enclosure') return { ...common, manage_code: 'E004', title: 'Rack A / Upper', species_name: 'Living enclosure' };
+      return { ...targetFor(animals[0]), ...common };
+    }
+
+    function qrState() {
+      if (view === 'labels') {
+        return {
+          section: 'labels',
+          targets: { items: animals.slice(0, Math.max(0, Math.min(count, 12))).map(targetFor) },
+          labelConfig: {
+            schemaVersion: 2,
+            output: p.get('output') || 'tape',
+            tapeLengthMm: Number(p.get('length') || 24),
+            a4Size: 'standard',
+            format: p.get('format') || 'micro-id',
+            handwriting: 'large',
+            showQr: true,
+            showSpecimenId: true,
+            showScientificName: true,
+            showStageSex: true,
+            cropMarks: true,
+            outerBorder: true,
+            guideLine: true
+          }
+        };
+      }
+      if (view === 'transfer') {
+        const items = Array.from({ length: count }, (_, index) => ({ id: index + 1, spider_name: `C${String(index + 1).padStart(3, '0')} ${index === 0 ? longSpecies : 'T. seladonia'}`, code: `TR-${index + 1}`, status: index % 2 ? 'pending' : 'accepted', can_respond: true }));
+        return { section: 'transfer', transfers: { incoming: items.slice(0, Math.ceil(items.length / 2)), outgoing: items.slice(Math.ceil(items.length / 2)) } };
+      }
+      const queue = animals.slice(0, Math.max(1, Math.min(count, 20))).map((animal, index) => ({ ...targetFor(animal), code: `k7mp${String(index + 1).padStart(2, '0')}` }));
+      const batchRows = Object.fromEntries(queue.map((item) => [item.code, { date: '2026-08-26', prey_type: 'Red runner M', note: '状態を確認し、長い観察メモを記録しました。' }]));
+      const historyRows = Array.from({ length: Math.max(1, Math.min(count, 20)) }, (_, index) => ({ id: `history-${index}`, type: ['molt', 'feed', 'observation'][index % 3], date: '2026-08-26', prey_type: 'D. hydei', note: '長い観察メモを記録しました。' }));
+      return {
+        section: 'scan',
+        scannerMode: view === 'batch' ? 'batch' : 'single',
+        batchMode: 'capture',
+        batchStep: 'edit',
+        batchEventType: 'feed',
+        scanQueue: queue,
+        batchRows,
+        sameDate: '2026-08-26',
+        resolved: view === 'empty' ? null : resolvedQrTarget(),
+        historyEditorOpen: view === 'history',
+        historyRows,
+        historyTargetCode: 'v24b',
+        scanStatus: 'ラベルを読み取りました。',
+        scanStatusTone: 'success'
+      };
+    }
+
+    function settingsData() {
+      return {
+        profile: {
+          display_name: '非常に長い表示名を設定した飼育コレクション管理者',
+          email: 'long-account-name-for-responsive-check@example.com',
+          theme_preference: p.get('theme') || 'system',
+          spider_count: 128,
+          spider_limit: p.get('premium') === '1' ? -1 : 150,
+          bonus_limit: 50,
+          is_premium: p.get('premium') === '1'
+        },
+        pwaConfig: { configured: p.get('push') !== 'off', subscribed_devices: 2 },
+        pwaPreferences: { enabled: true, care_reminders: true, community_messages: true, care_hour: 20, care_minute: 0 },
+        integrations: {
+          external: { enabled: true },
+          live: { enabled: false },
+          chatgpt: { connected: false },
+          result: p.get('secret') === '1' ? { token: 'setae_live_' + 'x'.repeat(180) } : null
+        },
+        relationships: {
+          following: Array.from({ length: count }, (_, index) => ({ id: index + 1, display_name: `飼育記録利用者 ${index + 1}`, handle: `@very_long_keeper_handle_${index + 1}` })),
+          blocked: []
+        }
+      };
+    }
+
+    function communityData() {
+      const careFeed = Array.from({ length: count }, (_, index) => ({
+        id: index + 1,
+        author: { id: index + 1, name: `非常に長い利用者名 ${index + 1}`, initial: 'S' },
+        created_at: '2026-08-26 18:42:00',
+        last_activity_at: '2026-08-26 18:42:00',
+        type: 'feed',
+        type_label: '給餌',
+        spider: { title: `C${String(index + 1).padStart(3, '0')}`, species_name: index === 0 ? longSpecies : 'Typhochlaena seladonia' },
+        note: index % 2 ? '' : '給餌後の反応と巣穴周辺の変化を観察しました。長い文章でも横にはみ出さないことを確認します。',
+        image: index % 3 === 0 ? imageUrl : '',
+        reactions: { useful: { label: '参考になります', count: 4, active: index === 0 } },
+        comment_count: 2
+      }));
+      const comments = Array.from({ length: count }, (_, index) => ({ id: index + 1, parent_id: index % 3 === 2 ? 1 : 0, author: { name: `返信者 ${index + 1}`, initial: 'R' }, date: '2026-08-26 19:00:00', content: '参考になります。飼育環境の詳細も確認したいです。' }));
+      const topics = Array.from({ length: count }, (_, index) => ({ id: index + 1, type: 'question', is_resolved: index % 3 === 0, title: index === 0 ? 'セラドニア幼体の給餌頻度について非常に長い質問タイトルで折り返しを確認する' : `相談 ${index + 1}`, excerpt: '幼体の給餌頻度と拒食時の判断について相談します。', updated_at: '2026-08-26 17:20:00', comment_count: 12, author_name: `相談者 ${index + 1}`, author_initial: 'Q' }));
+      const species = Array.from({ length: count }, (_, index) => ({ id: index + 1, ja_name: index ? `図鑑種 ${index + 1}` : 'セラドニア', scientific_name: index === 2 ? longSpecies : index % 2 ? 'Caribena versicolor' : 'Typhochlaena seladonia', thumb: index % 2 ? '' : imageUrl, lifestyles: [{ name: 'Arboreal' }], representative_image: index % 2 ? {} : { url: imageUrl, alt: 'SETAE specimen', credit: { text: 'SETAE Collection' }, source_url: 'https://setae.net/', license: { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } } }));
+      const speciesDetail = { ...species[0], title: 'Typhochlaena seladonia', temperature: '24-27', humidity: '70-80', size: '小型', lifespan: '長期', lifestyle: '樹上性', habitat: 'Brazil', description: '自然史情報と飼育上の注意点を、読みやすい文章構造で表示します。', _stats: { keeping_count: 24 }, related_topics: { items: topics.slice(0, 3) }, research: { sources: [{ title: 'Natural history reference with a very long title', authors: ['Researcher'], year: 2026, url: 'https://example.com/reference/' }] }, _ads: { shops: [] } };
+      const topicDetail = { ...topics[0], content: '相談本文です。長い内容でも読みやすい幅と行間を維持します。', reactions: { useful: { label: '参考になります', count: 8, active: true } }, comments: comments.map((comment) => ({ ...comment, author_name: comment.author.name, author_initial: 'R', reactions: {} })) };
+      const careDetail = { item: careFeed[0], comments: { total: comments.length, items: comments } };
+      return {
+        careFeed: { items: careFeed },
+        careFilters: { scope: 'all', sort: 'active' },
+        careDetail: p.get('detail') === '1' && view === 'care' ? careDetail : null,
+        topics: { items: topics },
+        topicFilters: { search: '', type: '', sort: 'updated' },
+        topicDetail: p.get('detail') === '1' && view === 'topics' ? topicDetail : null,
+        breedingListings: { items: Array.from({ length: count }, (_, index) => ({ id: index + 1, spider_name: `C${String(index + 1).padStart(3, '0')}`, species_name: index === 0 ? longSpecies : 'Typhochlaena seladonia', image: imageUrl, gender: index % 2 ? 'male' : 'female', last_molt: '2026-08-12', bl_terms: '繁殖条件と管理履歴を確認のうえ、外部連絡先から相談してください。', owner_name: `募集者 ${index + 1}`, contact_url: 'https://example.com/contact/' })) },
+        species: { items: species },
+        speciesSearch: '',
+        speciesDetail: p.get('detail') === '1' && view === 'species' ? speciesDetail : null
+      };
+    }
+
+    const app = document.querySelector('#app');
+    if (screen === 'settings') {
+      app.innerHTML = renderSettings({
+        tab: view,
+        data: settingsData(),
+        offlineQueue: Array.from({ length: p.get('queue') === 'many' ? 20 : 0 }, (_, index) => ({ action: 'create_log', operation_id: `operation-${index}-${'x'.repeat(80)}`, created_at: '2026-08-26 20:00:00' })),
+        personalization: { presetId: 'research', previewPresetId: 'research', customized: false },
+        dashboard: { sections: [{ widgets: [{}, {}, {}, {}] }] },
+        animalCardConfig: { mode: 'data', density: 'detailed' },
+        savedViewCount: 6,
+        todayTasks: { visible: true },
+        appInfo: { version: '1.0.242' }
+      });
+    } else if (screen === 'community') {
+      app.innerHTML = renderCommunity({ tab: view, authenticated: p.get('auth') !== '0', data: communityData() });
+    } else {
+      app.innerHTML = `<div class="page qr-page"><header class="page-header compact-header"><div><div class="eyebrow">QR &amp; LABELS</div><h1>QR・識別票</h1></div></header>${renderQrWorkspace({ qr: qrState(), animals })}</div>`;
+    }
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const nested = document.querySelectorAll('button button, button a, a button, label label').length;
+      const reactions = [...document.querySelectorAll('.reaction-button')];
+      document.body.dataset.overflow = document.documentElement.scrollWidth <= window.innerWidth + 1 ? 'pass' : 'fail';
+      document.body.dataset.nestedInteractive = String(nested);
+      document.body.dataset.reactionTouch = reactions.length ? String(Math.min(...reactions.map((node) => Math.round(node.getBoundingClientRect().height)))) : 'none';
+      document.body.dataset.ready = 'true';
+    }));
+  </script>
+</body>
+</html>

@@ -1,0 +1,3307 @@
+/* Specimen collection and record dashboard. Loaded last to isolate the new layout. */
+
+#section-my,
+#section-my-detail {
+    --specimen-ink: #102c24;
+    --specimen-copy: #31463f;
+    --specimen-muted: #718079;
+    --specimen-line: #dbe3df;
+    --specimen-line-strong: #c7d3cd;
+    --specimen-surface: #ffffff;
+    --specimen-surface-soft: #f6f9f7;
+    --specimen-canvas: #f2f5f3;
+    --specimen-green: #087451;
+    --specimen-green-strong: #075c43;
+    --specimen-green-soft: #e8f5ee;
+    --specimen-blue: #2469b2;
+    --specimen-blue-soft: #eaf2fc;
+    --specimen-amber: #ba7000;
+    --specimen-amber-soft: #fff2dc;
+    --specimen-red: #c94545;
+    --specimen-red-soft: #fff0ef;
+    --specimen-shadow: 0 1px 2px rgba(16, 44, 36, 0.06), 0 8px 22px rgba(16, 44, 36, 0.07);
+    box-sizing: border-box;
+    color: var(--specimen-copy);
+}
+
+#section-my *,
+#section-my-detail * {
+    box-sizing: border-box;
+    letter-spacing: 0;
+}
+
+/* Collection shell */
+#section-my {
+    position: relative;
+    width: 100%;
+    max-width: none !important;
+    padding: 22px clamp(18px, 2.2vw, 36px) 48px !important;
+    background: var(--specimen-canvas);
+}
+
+#section-my .setae-my-hub-header {
+    display: flex !important;
+    min-width: 0;
+    align-items: center !important;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 12px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#section-my .setae-my-hub-title {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+}
+
+#section-my .setae-my-hub-title h1 {
+    margin: 0 !important;
+    color: var(--specimen-ink) !important;
+    font-size: 25px !important;
+    font-weight: 780 !important;
+    line-height: 1.2 !important;
+}
+
+#section-my .setae-my-hub-kicker {
+    color: var(--specimen-muted) !important;
+    font-size: 11px !important;
+    font-weight: 600;
+}
+
+#section-my #btn-add-spider {
+    display: inline-flex !important;
+    width: auto !important;
+    min-width: 128px !important;
+    min-height: 42px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 0 18px !important;
+    border: 1px solid #075e45 !important;
+    border-radius: 12px !important;
+    background: var(--specimen-green-strong) !important;
+    color: #fff !important;
+    box-shadow: 0 5px 13px rgba(7, 92, 67, 0.18) !important;
+    font-size: 12px !important;
+    font-weight: 760 !important;
+}
+
+#section-my #btn-add-spider svg {
+    width: 16px !important;
+    height: 16px !important;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+#section-my .setae-my-tool-switch {
+    display: inline-flex !important;
+    width: auto !important;
+    max-width: 100%;
+    gap: 2px !important;
+    margin: 0 0 14px !important;
+    padding: 3px !important;
+    overflow-x: auto;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.74) !important;
+    box-shadow: none !important;
+}
+
+#section-my .setae-my-tool-tab {
+    min-height: 32px !important;
+    padding: 0 11px !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: var(--specimen-muted) !important;
+    font-size: 10px !important;
+    font-weight: 720 !important;
+    white-space: nowrap;
+}
+
+#section-my .setae-my-tool-tab.is-active {
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-green-strong) !important;
+    box-shadow: 0 1px 4px rgba(16, 44, 36, 0.11) !important;
+}
+
+#section-my .setae-my-tool-count {
+    min-width: 18px;
+    padding: 1px 4px;
+    border-radius: 6px !important;
+    background: var(--specimen-green-soft) !important;
+    color: var(--specimen-green-strong) !important;
+    font-size: 8px !important;
+}
+
+#section-my #setae-my-collection-pane,
+#section-my .setae-my-workspace,
+#section-my .setae-my-main {
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#section-my #setae-my-collection-pane {
+    display: flex !important;
+    flex-direction: column;
+}
+
+#section-my #setae-my-collection-pane > .setae-toolbar-container { order: 1; }
+#section-my #setae-my-collection-pane > .setae-my-desktop-dashboard { order: 2; }
+#section-my #setae-my-collection-pane > .setae-my-workspace { order: 3; }
+
+/* Collection KPIs */
+#section-my .setae-my-desktop-dashboard {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    display: block !important;
+    width: 100%;
+    margin: 0 0 14px !important;
+    padding: 0 !important;
+}
+
+#section-my .my-collection-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+}
+
+#section-my .my-collection-kpi {
+    position: relative;
+    display: grid !important;
+    grid-template-columns: 54px minmax(0, 1fr) !important;
+    gap: 13px !important;
+    min-width: 0;
+    min-height: 105px !important;
+    align-items: center !important;
+    padding: 15px 18px !important;
+    overflow: hidden;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 16px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-copy) !important;
+    box-shadow: 0 1px 3px rgba(16, 44, 36, 0.035) !important;
+    text-align: left !important;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+#section-my .my-collection-kpi:hover,
+#section-my .my-collection-kpi:focus-visible,
+#section-my .my-collection-kpi.is-active {
+    border-color: #93b8a8 !important;
+    box-shadow: var(--specimen-shadow) !important;
+    transform: translateY(-1px);
+}
+
+#section-my .my-collection-kpi-icon {
+    display: grid !important;
+    width: 54px !important;
+    height: 54px !important;
+    place-items: center;
+    border-radius: 50% !important;
+    background: var(--specimen-green-soft) !important;
+    color: var(--specimen-green) !important;
+    font-size: 24px !important;
+    line-height: 54px !important;
+}
+
+#section-my .my-collection-kpi.is-mint .my-collection-kpi-icon {
+    background: #e7f4ea !important;
+    color: #248254 !important;
+}
+
+#section-my .my-collection-kpi.is-amber .my-collection-kpi-icon {
+    background: var(--specimen-amber-soft) !important;
+    color: var(--specimen-amber) !important;
+}
+
+#section-my .my-collection-kpi.is-blue .my-collection-kpi-icon {
+    background: var(--specimen-blue-soft) !important;
+    color: var(--specimen-blue) !important;
+}
+
+#section-my .my-collection-kpi-copy {
+    display: grid !important;
+    gap: 1px !important;
+    min-width: 0;
+}
+
+#section-my .my-collection-kpi-copy small {
+    color: var(--specimen-copy) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+}
+
+#section-my .my-collection-kpi-copy strong {
+    color: var(--specimen-green-strong) !important;
+    font-size: 27px !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+}
+
+#section-my .my-collection-kpi-copy strong em {
+    margin-left: 3px;
+    color: var(--specimen-copy) !important;
+    font-size: 10px !important;
+    font-style: normal;
+}
+
+#section-my .my-collection-kpi-copy i {
+    overflow: hidden;
+    color: var(--specimen-muted) !important;
+    font-size: 9px !important;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my .my-collection-kpi-progress {
+    position: absolute;
+    right: 14px;
+    bottom: 11px;
+    left: 85px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #e5ece8;
+}
+
+#section-my .my-collection-kpi-progress i {
+    display: block;
+    width: var(--kpi-progress);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--specimen-green);
+}
+
+/* Search, filters, and sort */
+#section-my .setae-toolbar-container {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 12 !important;
+    width: 100% !important;
+    margin: 0 0 14px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+#section-my .setae-toolbar-header {
+    display: grid !important;
+    grid-template-columns: minmax(280px, 1fr) auto !important;
+    gap: 10px !important;
+    align-items: center !important;
+    margin: 0 0 10px !important;
+}
+
+#section-my .setae-search-wrapper {
+    position: relative;
+    width: 100% !important;
+    min-width: 0;
+    max-width: none !important;
+}
+
+#section-my .setae-search-wrapper .search-icon {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 14px;
+    width: 16px;
+    height: 16px;
+    color: var(--specimen-muted);
+    transform: translateY(-50%);
+}
+
+#section-my #setae-spider-search {
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 14px 0 42px !important;
+    border: 1px solid var(--specimen-line-strong) !important;
+    border-radius: 12px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-ink) !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+}
+
+#section-my #setae-spider-search:focus {
+    border-color: var(--specimen-green) !important;
+    box-shadow: 0 0 0 3px rgba(8, 116, 81, 0.12) !important;
+    outline: 0;
+}
+
+#section-my .setae-actions {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+}
+
+#section-my :is(#btn-my-filter-toggle, #btn-sort-menu, #btn-qr-manager) {
+    display: inline-flex !important;
+    width: auto !important;
+    min-width: 94px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    padding: 0 13px !important;
+    border: 1px solid var(--specimen-line-strong) !important;
+    border-radius: 12px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-copy) !important;
+    box-shadow: none !important;
+    font-size: 11px !important;
+    font-weight: 720 !important;
+}
+
+#section-my :is(#btn-my-filter-toggle, #btn-sort-menu, #btn-qr-manager) svg {
+    width: 15px !important;
+    height: 15px !important;
+    flex: 0 0 15px;
+}
+
+#section-my #btn-qr-manager {
+    min-width: 62px !important;
+}
+
+#section-my .setae-decks-scroll {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0;
+    gap: 8px !important;
+    padding: 0 !important;
+    overflow-x: auto !important;
+    border: 0 !important;
+    background: transparent !important;
+    scrollbar-width: none;
+}
+
+#section-my .setae-decks-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+#section-my .setae-decks-scroll .deck-pill {
+    display: inline-flex !important;
+    flex: 0 0 auto;
+    min-height: 34px !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 0 13px !important;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 10px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-copy) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
+}
+
+#section-my .setae-decks-scroll .deck-pill.active {
+    border-color: var(--specimen-green-strong) !important;
+    background: var(--specimen-green-strong) !important;
+    color: #fff !important;
+}
+
+#section-my .setae-decks-scroll .count-badge {
+    display: inline-grid;
+    min-width: 17px;
+    height: 17px;
+    place-items: center;
+    padding: 0 4px;
+    border-radius: 6px !important;
+    background: rgba(16, 44, 36, 0.07) !important;
+    color: inherit !important;
+    font-size: 8px !important;
+}
+
+#section-my .deck-pill.active .count-badge {
+    background: rgba(255, 255, 255, 0.18) !important;
+}
+
+#section-my .is-filters-collapsed .setae-decks-scroll {
+    display: none !important;
+}
+
+/* Specimen grid */
+#section-my #setae-spider-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+#section-my #setae-spider-list > :is(.my-desktop-list-header, .setae-list-header, .setae-empty-state, .setae-view-state) {
+    grid-column: 1 / -1 !important;
+}
+
+#section-my #setae-spider-list > .my-desktop-list-header {
+    min-height: 28px;
+    margin: 0 !important;
+    padding: 0 2px !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#section-my .my-desktop-list-heading-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--specimen-muted);
+    font-size: 10px;
+}
+
+#section-my .my-desktop-list-heading-main strong {
+    color: var(--specimen-ink);
+    font-size: 14px;
+}
+
+#section-my .my-desktop-list-heading-main em {
+    overflow: hidden;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 {
+    container: specimen-v5 / inline-size;
+    position: relative;
+    min-width: 0;
+    min-height: 284px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    isolation: isolate;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 > .specimen-v5-shell {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 112px minmax(0, 1fr) !important;
+    grid-template-rows: 118px 43px 34px 52px !important;
+    grid-template-areas:
+        "photo identity"
+        "metrics metrics"
+        "stage stage"
+        "care care" !important;
+    gap: 7px 10px !important;
+    width: 100% !important;
+    height: 284px !important;
+    min-height: 284px !important;
+    align-items: stretch !important;
+    margin: 0 !important;
+    padding: 11px !important;
+    overflow: visible !important;
+    border: 1px solid var(--specimen-line-strong) !important;
+    border-radius: 16px !important;
+    background: var(--specimen-surface) !important;
+    box-shadow: var(--specimen-shadow) !important;
+    transform: translate3d(0, 0, 0) perspective(900px) rotateX(var(--card-tilt-x, 0deg)) rotateY(var(--card-tilt-y, 0deg));
+    transform-origin: center;
+    transition: border-color 180ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(0.2, 0.78, 0.2, 1) !important;
+    will-change: transform;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5.is-swipe-active > .specimen-v5-shell {
+    transition: none !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5.is-swipe-committing > .specimen-v5-shell {
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5:hover > .specimen-v5-shell,
+#section-my #setae-spider-list > .specimen-card-v5:focus-within > .specimen-v5-shell {
+    z-index: 5;
+    border-color: #8eb4a4 !important;
+    box-shadow: 0 3px 7px rgba(16, 44, 36, 0.08), 0 16px 34px rgba(16, 44, 36, 0.13) !important;
+    transform: translate3d(0, -3px, 0) perspective(900px) rotateX(var(--card-tilt-x, 0deg)) rotateY(var(--card-tilt-y, 0deg));
+}
+
+#section-my #setae-spider-list > .specimen-card-v5[data-status="pre_molt"] > .specimen-v5-shell {
+    border-color: #97b5d4 !important;
+    background: linear-gradient(145deg, #f8fbff 0%, #edf5fd 100%) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5[data-status="fasting"] > .specimen-v5-shell,
+#section-my #setae-spider-list > .specimen-card-v5.is-care-due > .specimen-v5-shell {
+    border-color: #dbb171 !important;
+    background: linear-gradient(145deg, #fffdf8 0%, #fff5e5 100%) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5[data-status="post_molt"] > .specimen-v5-shell {
+    border-color: #8fc7ab !important;
+    background: linear-gradient(145deg, #fbfffc 0%, #eaf7f0 100%) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-photo {
+    grid-area: photo !important;
+    position: relative !important;
+    width: 112px !important;
+    height: 118px !important;
+    min-width: 112px !important;
+    min-height: 118px !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(16, 44, 36, 0.17) !important;
+    border-radius: 12px !important;
+    background: #e4ebe7 !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-photo :is(.setae-avatar-img, img, .setae-avatar-img > img) {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    object-fit: cover !important;
+    transform: scale(1.015);
+    transition: transform 300ms ease, filter 300ms ease;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5:hover .specimen-v5-photo :is(.setae-avatar-img, img, .setae-avatar-img > img) {
+    filter: saturate(1.04) contrast(1.025);
+    transform: scale(1.045);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .setae-classification-mark,
+#section-my #setae-spider-list > .specimen-card-v5 .setae-avatar-source {
+    display: none !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-photo-code {
+    position: absolute !important;
+    right: 6px !important;
+    bottom: 6px !important;
+    max-width: calc(100% - 12px);
+    padding: 2px 5px !important;
+    overflow: hidden;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: rgba(5, 15, 11, 0.78) !important;
+    color: #fff !important;
+    font-size: 8px !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 760 !important;
+    line-height: 1.45;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    backdrop-filter: blur(5px);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-favorite {
+    position: absolute !important;
+    z-index: 3;
+    top: 5px !important;
+    right: 5px !important;
+    display: grid !important;
+    width: 27px !important;
+    min-width: 27px !important;
+    height: 27px !important;
+    min-height: 27px !important;
+    place-items: center;
+    padding: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.72) !important;
+    border-radius: 50% !important;
+    background: rgba(10, 19, 15, 0.48) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.18) !important;
+    backdrop-filter: blur(5px);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-favorite .dashicons {
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 16px !important;
+    line-height: 16px !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-favorite.is-active {
+    border-color: #ffe18a !important;
+    background: #fff5ca !important;
+    color: #b97a00 !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-identity {
+    grid-area: identity !important;
+    display: grid !important;
+    grid-template-rows: auto auto auto 1fr;
+    align-content: start !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 3px 0 0 !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .setae-scientific-name {
+    display: block !important;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-green-strong) !important;
+    font-size: 10px !important;
+    font-weight: 680 !important;
+    line-height: 1.25 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .setae-scientific-name i {
+    font-style: normal !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .setae-nickname-row {
+    min-width: 0;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .setae-nickname {
+    display: -webkit-box !important;
+    width: 100%;
+    max-width: 100%;
+    min-height: 34px;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--specimen-ink) !important;
+    font-size: 14px !important;
+    font-weight: 790 !important;
+    line-height: 1.25 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges {
+    display: flex !important;
+    min-width: 0;
+    align-items: center;
+    gap: 4px !important;
+    overflow: hidden;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges > span {
+    display: inline-flex !important;
+    min-width: 0;
+    min-height: 21px !important;
+    align-items: center;
+    gap: 3px;
+    padding: 0 6px !important;
+    overflow: hidden;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 7px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    color: var(--specimen-copy) !important;
+    font-size: 7px !important;
+    font-weight: 720 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges .specimen-condition {
+    border-color: #a9d5be !important;
+    background: var(--specimen-green-soft) !important;
+    color: var(--specimen-green-strong) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges .specimen-condition.is-watch {
+    border-color: #e5c58f !important;
+    background: var(--specimen-amber-soft) !important;
+    color: var(--specimen-amber) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges .specimen-condition.is-alert {
+    border-color: #edb0ad !important;
+    background: var(--specimen-red-soft) !important;
+    color: var(--specimen-red) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-condition i {
+    width: 5px;
+    height: 5px;
+    flex: 0 0 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .today-row-note,
+#section-my #setae-spider-list > .specimen-card-v5 .today-row-actions {
+    display: none !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics {
+    grid-area: metrics !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    min-width: 0;
+    min-height: 43px;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 1px solid rgba(16, 44, 36, 0.09) !important;
+    border-radius: 9px !important;
+    background: rgba(255, 255, 255, 0.58) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics > span {
+    display: grid !important;
+    grid-template-columns: 13px minmax(0, auto) !important;
+    grid-template-rows: auto auto !important;
+    gap: 0 4px !important;
+    min-width: 0;
+    align-content: center;
+    justify-content: center;
+    margin: 0 !important;
+    padding: 4px 3px !important;
+    border: 0 !important;
+    text-align: left;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics > span + span {
+    border-left: 1px solid rgba(16, 44, 36, 0.08) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics i {
+    position: relative;
+    grid-row: 1 / span 2 !important;
+    align-self: center;
+    width: 11px !important;
+    height: 15px !important;
+    color: var(--specimen-red);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics i::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 4px;
+    width: 3px;
+    height: 10px;
+    border: 1.5px solid currentColor;
+    border-radius: 3px 3px 0 0;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics i::after {
+    content: "";
+    position: absolute;
+    right: 1px;
+    bottom: 0;
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-humidity i {
+    width: 11px !important;
+    height: 14px !important;
+    border: 1.5px solid var(--specimen-blue);
+    border-radius: 9px 9px 9px 2px;
+    color: var(--specimen-blue);
+    transform: rotate(45deg) scale(0.72);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-humidity i::before,
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-humidity i::after {
+    content: none;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-feed i::before,
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-molt i::before {
+    content: "給";
+    position: static;
+    display: block;
+    width: 13px;
+    height: 15px;
+    border: 0;
+    color: var(--specimen-amber);
+    font-size: 8px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 15px;
+    text-align: center;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-molt i::before {
+    content: "脱";
+    color: var(--specimen-green);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-feed i::after,
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-molt i::after {
+    content: none;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics b {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-ink) !important;
+    font-size: 9px !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 790 !important;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics small {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-muted) !important;
+    font-size: 6px !important;
+    font-weight: 650 !important;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage {
+    grid-area: stage !important;
+    display: block !important;
+    min-width: 0;
+    padding: 2px 2px 0;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    align-items: center;
+    min-height: 28px;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 5%;
+    left: 5%;
+    height: 2px;
+    background: #dce5e0;
+    transform: translateY(-50%);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track span {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track i {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border: 1px solid #d2dcd7;
+    border-radius: 50%;
+    background: var(--specimen-surface);
+    color: var(--specimen-muted);
+    font-size: 6px;
+    font-style: normal;
+    font-weight: 780;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track .is-complete i {
+    border-color: #83b79f;
+    background: var(--specimen-green-soft);
+    color: var(--specimen-green);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track .is-current i {
+    border-color: var(--specimen-green-strong);
+    background: var(--specimen-green-strong);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(8, 116, 81, 0.12);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage-track .is-adult i {
+    width: 28px;
+    border-style: dashed;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark {
+    display: none;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-care {
+    grid-area: care !important;
+    position: relative;
+    display: grid !important;
+    grid-template-columns: 26px minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    min-width: 0;
+    min-height: 52px !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 7px 8px !important;
+    border: 1px solid rgba(16, 44, 36, 0.11) !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.66) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-icon {
+    position: relative;
+    display: grid !important;
+    width: 26px !important;
+    height: 26px !important;
+    place-items: center;
+    border: 1.5px solid var(--specimen-green) !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-icon::before,
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-icon::after {
+    content: "";
+    position: absolute;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-icon::before {
+    top: 7px;
+    right: 4px;
+    left: 4px;
+    border-top: 1.5px solid var(--specimen-green);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-icon::after {
+    top: -4px;
+    width: 10px;
+    height: 7px;
+    border-right: 1.5px solid var(--specimen-green);
+    border-left: 1.5px solid var(--specimen-green);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 1px 8px !important;
+    min-width: 0;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy small {
+    color: var(--specimen-muted) !important;
+    font-size: 7px !important;
+    font-weight: 680 !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy strong {
+    grid-row: 1 / span 2 !important;
+    grid-column: 2 !important;
+    align-self: center;
+    color: var(--specimen-green-strong) !important;
+    font-size: 13px !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 820 !important;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy em {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-copy) !important;
+    font-size: 8px !important;
+    font-style: normal;
+    font-weight: 700 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-detail-button {
+    display: inline-flex !important;
+    min-width: 70px !important;
+    min-height: 32px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px !important;
+    border: 1px solid var(--specimen-line-strong) !important;
+    border-radius: 9px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-green-strong) !important;
+    font-size: 8px !important;
+    font-weight: 760 !important;
+    white-space: nowrap;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-more {
+    display: none !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-menu {
+    position: absolute;
+    z-index: 50;
+    top: 38px;
+    right: 8px;
+    display: grid;
+    width: 136px;
+    padding: 5px;
+    border: 1px solid var(--specimen-line-strong);
+    border-radius: 12px;
+    background: var(--specimen-surface);
+    box-shadow: 0 14px 32px rgba(16, 44, 36, 0.18);
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-menu[hidden] {
+    display: none !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-menu button {
+    min-height: 34px;
+    padding: 0 9px;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: var(--specimen-copy) !important;
+    font-size: 10px;
+    font-weight: 680;
+    text-align: left;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-menu button:hover,
+#section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-menu button:focus-visible {
+    background: var(--specimen-green-soft) !important;
+    color: var(--specimen-green-strong) !important;
+}
+
+#section-my #setae-spider-list > .specimen-card-v5 .setae-card-sync-state {
+    position: absolute !important;
+    z-index: 12;
+    right: 10px !important;
+    bottom: 10px !important;
+    display: inline-flex !important;
+    min-height: 24px;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    border: 1px solid #a5cfbb;
+    border-radius: 8px !important;
+    background: #eef9f3 !important;
+    color: var(--specimen-green-strong) !important;
+    box-shadow: 0 4px 12px rgba(16, 44, 36, 0.12);
+    font-size: 8px;
+    font-weight: 760;
+}
+
+/* Detail shell */
+#section-my-detail {
+    width: 100%;
+    max-width: none !important;
+    grid-template-columns: 302px minmax(0, 1fr);
+    grid-template-areas:
+        "topbar topbar"
+        "hero command"
+        "hero content";
+    gap: 12px 14px;
+    align-items: start;
+    padding: 18px clamp(16px, 1.8vw, 30px) 48px !important;
+    background: var(--specimen-canvas);
+}
+
+#section-my-detail .setae-detail-topbar {
+    grid-area: topbar;
+    position: relative !important;
+    top: auto !important;
+    z-index: 20 !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) auto !important;
+    min-width: 0;
+    min-height: 46px !important;
+    align-items: center !important;
+    gap: 9px;
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#section-my-detail .setae-detail-icon-button {
+    display: inline-grid !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    place-items: center;
+    padding: 0 !important;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 10px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-ink) !important;
+    box-shadow: none !important;
+}
+
+#section-my-detail .setae-detail-icon-button svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+#section-my-detail .setae-detail-title {
+    display: flex !important;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+}
+
+#section-my-detail .setae-detail-title span {
+    color: var(--specimen-muted) !important;
+    font-size: 10px !important;
+}
+
+#section-my-detail .setae-detail-title span::after {
+    content: ">";
+    margin-left: 8px;
+    color: #9aa7a1;
+}
+
+#section-my-detail .setae-detail-title strong {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-copy) !important;
+    font-size: 11px !important;
+    font-weight: 680 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .setae-detail-topbar-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 7px !important;
+}
+
+#section-my-detail #btn-edit-spider-trigger {
+    width: auto !important;
+    min-width: 66px !important;
+    grid-auto-flow: column;
+    gap: 6px;
+    padding: 0 11px !important;
+}
+
+#section-my-detail #btn-edit-spider-trigger::after {
+    content: "編集";
+    font-size: 10px;
+    font-weight: 720;
+}
+
+#section-my-detail .setae-spider-hero {
+    grid-area: hero;
+    position: sticky !important;
+    top: 14px;
+    display: block !important;
+    width: 100% !important;
+    min-width: 0;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--specimen-line-strong) !important;
+    border-radius: 16px !important;
+    background: var(--specimen-surface) !important;
+    box-shadow: 0 1px 4px rgba(16, 44, 36, 0.045) !important;
+}
+
+#section-my-detail .hero-backdrop {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 1.28 / 1;
+    margin: 0 !important;
+    overflow: hidden;
+    border: 1px solid rgba(16, 44, 36, 0.13);
+    border-radius: 12px !important;
+    background-position: center !important;
+    background-size: cover !important;
+}
+
+#section-my-detail .hero-content {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    min-width: 0;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 14px 2px 2px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#section-my-detail .detail-hero-summary {
+    display: block !important;
+    min-width: 0;
+}
+
+#section-my-detail .hero-info {
+    display: grid !important;
+    min-width: 0;
+    gap: 5px;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#section-my-detail #detail-spider-id-badge {
+    position: absolute;
+    z-index: 3;
+    top: 19px;
+    left: 19px;
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    padding: 0 7px;
+    border: 1px solid rgba(255, 255, 255, 0.38) !important;
+    border-radius: 7px !important;
+    background: rgba(6, 16, 12, 0.7) !important;
+    color: #fff !important;
+    font-size: 8px !important;
+    font-weight: 780 !important;
+    backdrop-filter: blur(5px);
+}
+
+#section-my-detail .hero-info h1 {
+    display: -webkit-box;
+    margin: 0 !important;
+    overflow: hidden;
+    color: var(--specimen-ink) !important;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25px !important;
+    font-weight: 650 !important;
+    line-height: 1.08 !important;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+#section-my-detail .hero-info .species-name {
+    margin: 0 !important;
+    overflow: hidden;
+    color: var(--specimen-copy) !important;
+    font-size: 12px !important;
+    font-weight: 680 !important;
+    line-height: 1.35 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-hero-tags {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 5px !important;
+    margin: 8px 0 0 !important;
+}
+
+#section-my-detail .detail-hero-tags > span {
+    display: inline-flex;
+    min-height: 25px !important;
+    align-items: center;
+    padding: 0 8px !important;
+    border-radius: 8px !important;
+    font-size: 8px !important;
+}
+
+#section-my-detail .detail-hero-facts {
+    display: grid !important;
+    gap: 6px !important;
+    margin: 11px 0 0 !important;
+}
+
+#section-my-detail .detail-hero-facts > div {
+    display: grid !important;
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 8px !important;
+    min-width: 0;
+    align-items: baseline;
+}
+
+#section-my-detail .detail-hero-facts dt,
+#section-my-detail .detail-hero-facts dd {
+    margin: 0 !important;
+    font-size: 9px !important;
+}
+
+#section-my-detail .detail-hero-facts dt {
+    color: var(--specimen-muted) !important;
+}
+
+#section-my-detail .detail-hero-facts dd {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-copy) !important;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-hero-stats,
+#section-my-detail .detail-health-meter {
+    display: none !important;
+}
+
+#section-my-detail .setae-detail-command-bar {
+    grid-area: command;
+    position: sticky !important;
+    top: 8px !important;
+    z-index: 18 !important;
+    display: flex !important;
+    min-width: 0;
+    min-height: 46px !important;
+    align-items: center !important;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 !important;
+    padding: 4px !important;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    box-shadow: 0 5px 18px rgba(16, 44, 36, 0.06) !important;
+    backdrop-filter: blur(16px);
+}
+
+#section-my-detail .setae-detail-tabs {
+    display: inline-flex !important;
+    width: auto !important;
+    min-width: 0;
+    gap: 2px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+#section-my-detail .setae-detail-tabs .tab-btn {
+    min-width: 84px;
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: var(--specimen-muted) !important;
+    font-size: 10px !important;
+    font-weight: 720 !important;
+}
+
+#section-my-detail .setae-detail-tabs .tab-btn.active {
+    background: var(--specimen-green-soft) !important;
+    color: var(--specimen-green-strong) !important;
+    box-shadow: none !important;
+}
+
+#section-my-detail .setae-detail-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#section-my-detail .setae-detail-nav-btn {
+    min-height: 34px !important;
+    padding: 0 9px !important;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 9px !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-copy) !important;
+    font-size: 9px !important;
+}
+
+#section-my-detail .setae-detail-container {
+    grid-area: content;
+    width: 100% !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#section-my-detail .setae-detail-workspace {
+    display: grid !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    grid-auto-flow: row dense;
+    gap: 12px !important;
+    align-items: stretch;
+}
+
+#section-my-detail .setae-detail-workspace > * {
+    min-width: 0;
+}
+
+#section-my-detail .detail-care-focus,
+#section-my-detail .detail-archive-notice {
+    grid-column: 1 / -1 !important;
+}
+
+#section-my-detail .detail-care-focus--calm {
+    display: none !important;
+}
+
+#section-my-detail #detail-condition-slot {
+    grid-column: 1 / span 3 !important;
+}
+
+#section-my-detail .detail-environment-panel {
+    grid-column: 4 / span 5 !important;
+}
+
+#section-my-detail #detail-feeding-slot {
+    grid-column: 9 / span 4 !important;
+}
+
+#section-my-detail #detail-stage-slot {
+    grid-column: 1 / span 7 !important;
+}
+
+#section-my-detail #detail-weekly-slot {
+    grid-column: 8 / span 5 !important;
+}
+
+#section-my-detail .detail-activity-slot {
+    grid-column: 1 / span 3 !important;
+}
+
+#section-my-detail #detail-heatmap-slot {
+    grid-column: 4 / span 4 !important;
+}
+
+#section-my-detail #detail-reminder-slot {
+    grid-column: 8 / span 5 !important;
+}
+
+#section-my-detail #detail-recent-slot {
+    grid-column: 1 / span 5 !important;
+}
+
+#section-my-detail .detail-notes-panel {
+    grid-column: 6 / span 4 !important;
+}
+
+#section-my-detail .detail-quick-panel {
+    grid-column: 10 / span 3 !important;
+}
+
+#section-my-detail .detail-photo-panel {
+    grid-column: 1 / span 6 !important;
+}
+
+#section-my-detail .detail-growth-panel {
+    grid-column: 7 / span 6 !important;
+}
+
+#section-my-detail .detail-prey-panel {
+    grid-column: 1 / span 5 !important;
+}
+
+#section-my-detail .detail-consult-action {
+    grid-column: 6 / -1 !important;
+}
+
+#section-my-detail .detail-dashboard-slot > .detail-data-panel,
+#section-my-detail .detail-dashboard-slot > section {
+    height: 100%;
+}
+
+#section-my-detail :is(.detail-data-panel, .detail-activity-card, .detail-consult-button) {
+    min-width: 0;
+    margin: 0 !important;
+    padding: 14px !important;
+    overflow: hidden;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 16px !important;
+    background: var(--specimen-surface) !important;
+    box-shadow: 0 1px 4px rgba(16, 44, 36, 0.045) !important;
+}
+
+#section-my-detail .detail-panel-head {
+    display: flex !important;
+    min-width: 0;
+    align-items: flex-start !important;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 10px !important;
+}
+
+#section-my-detail .detail-panel-head > div {
+    min-width: 0;
+}
+
+#section-my-detail .detail-panel-kicker {
+    display: block;
+    margin-bottom: 1px;
+    color: var(--specimen-green) !important;
+    font-size: 7px !important;
+    font-weight: 780 !important;
+}
+
+#section-my-detail .detail-panel-head h3 {
+    margin: 0 !important;
+    color: var(--specimen-ink) !important;
+    font-size: 13px !important;
+    font-weight: 760 !important;
+    line-height: 1.25 !important;
+}
+
+#section-my-detail :is(.detail-panel-count, .detail-panel-source, .detail-stage-forecast) {
+    color: var(--specimen-muted) !important;
+    font-size: 8px !important;
+    font-weight: 680 !important;
+}
+
+/* Detail condition */
+#section-my-detail .detail-condition-body {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding: 2px 0 4px;
+    text-align: center;
+}
+
+#section-my-detail .detail-condition-ring {
+    --condition-color: var(--specimen-green);
+    position: relative;
+    display: grid;
+    width: 88px;
+    height: 88px;
+    place-items: center;
+    margin: 0 auto 4px;
+    border-radius: 50%;
+    background: conic-gradient(var(--condition-color) var(--detail-condition), #e6ece9 0);
+}
+
+#section-my-detail .detail-condition-ring.is-watch {
+    --condition-color: var(--specimen-amber);
+}
+
+#section-my-detail .detail-condition-ring.is-alert {
+    --condition-color: var(--specimen-red);
+}
+
+#section-my-detail .detail-condition-ring::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    background: var(--specimen-surface);
+}
+
+#section-my-detail .detail-condition-ring span {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: baseline;
+    color: var(--condition-color);
+}
+
+#section-my-detail .detail-condition-ring b {
+    font-size: 27px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 820;
+    line-height: 1;
+}
+
+#section-my-detail .detail-condition-ring small {
+    font-size: 10px;
+    font-weight: 760;
+}
+
+#section-my-detail .detail-condition-body > strong {
+    color: var(--specimen-green-strong);
+    font-size: 11px;
+}
+
+#section-my-detail .detail-condition-body > small {
+    color: var(--specimen-muted);
+    font-size: 8px;
+}
+
+/* Environment */
+#section-my-detail .detail-environment-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 1px solid var(--specimen-line);
+    border-radius: 11px;
+    background: var(--specimen-surface-soft);
+}
+
+#section-my-detail .detail-environment-metrics > :is(div, button) {
+    position: relative;
+    display: grid !important;
+    grid-template-columns: 20px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto;
+    gap: 0 5px !important;
+    min-width: 0;
+    align-content: center;
+    min-height: 72px;
+    margin: 0 !important;
+    padding: 7px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    text-align: left;
+}
+
+#section-my-detail .detail-environment-metrics > :is(div, button) + :is(div, button) {
+    border-left: 1px solid var(--specimen-line) !important;
+}
+
+#section-my-detail .detail-environment-metrics > :is(div, button) > span {
+    grid-row: 1 / span 3;
+    align-self: center;
+    display: grid;
+    width: 20px;
+    height: 28px;
+    place-items: center;
+    color: var(--specimen-green);
+}
+
+#section-my-detail .detail-environment-metrics > :is(div, button) > span::before {
+    content: "•";
+    font-size: 24px;
+    line-height: 1;
+}
+
+#section-my-detail .detail-environment-metrics .is-temperature > span::before {
+    content: "°";
+    color: var(--specimen-red);
+}
+
+#section-my-detail .detail-environment-metrics .is-humidity > span::before {
+    content: "◇";
+    color: var(--specimen-blue);
+}
+
+#section-my-detail .detail-environment-metrics .is-substrate > span::before {
+    content: "≋";
+    color: var(--specimen-green-strong);
+}
+
+#section-my-detail .detail-environment-metrics .is-check > span::before {
+    content: "▣";
+    color: var(--specimen-green);
+    font-size: 15px;
+}
+
+#section-my-detail .detail-environment-metrics :is(small, strong, em) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-environment-metrics small {
+    color: var(--specimen-muted) !important;
+    font-size: 7px !important;
+    font-weight: 650;
+}
+
+#section-my-detail .detail-environment-metrics strong {
+    color: var(--specimen-ink) !important;
+    font-size: 13px !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 780;
+}
+
+#section-my-detail .detail-environment-metrics em {
+    color: var(--specimen-muted) !important;
+    font-size: 7px !important;
+    font-style: normal;
+}
+
+/* Feeding */
+#section-my-detail .detail-feeding-body {
+    display: grid;
+    grid-template-columns: 94px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+}
+
+#section-my-detail .detail-feeding-ring {
+    position: relative;
+    display: grid;
+    width: 88px;
+    height: 88px;
+    place-items: center;
+    border-radius: 50%;
+    background: conic-gradient(var(--specimen-green) var(--detail-feeding), #e7ece9 0);
+}
+
+#section-my-detail .detail-feeding-ring::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    background: var(--specimen-surface);
+}
+
+#section-my-detail .detail-feeding-ring span {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+}
+
+#section-my-detail .detail-feeding-ring small,
+#section-my-detail .detail-feeding-ring em {
+    color: var(--specimen-muted);
+    font-size: 6px;
+    font-style: normal;
+}
+
+#section-my-detail .detail-feeding-ring b {
+    color: var(--specimen-green-strong);
+    font-size: 23px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+}
+
+#section-my-detail .detail-feeding-ring b i {
+    font-size: 7px;
+    font-style: normal;
+}
+
+#section-my-detail .detail-feeding-body dl {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    margin: 0;
+}
+
+#section-my-detail .detail-feeding-body dl > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    min-width: 0;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--specimen-line);
+}
+
+#section-my-detail .detail-feeding-body dt,
+#section-my-detail .detail-feeding-body dd {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-feeding-body dt {
+    color: var(--specimen-muted);
+}
+
+#section-my-detail .detail-feeding-body dd {
+    color: var(--specimen-copy);
+    font-weight: 720;
+}
+
+/* Growth stage */
+#section-my-detail .detail-stage-track {
+    position: relative;
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(42px, 1fr)) !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 3px 0 9px !important;
+    overflow-x: visible !important;
+}
+
+#section-my-detail .detail-stage-track::before {
+    top: 18px !important;
+    right: 6% !important;
+    left: 6% !important;
+    height: 2px !important;
+    background: #dbe4df !important;
+}
+
+#section-my-detail .detail-stage-track > span {
+    gap: 4px !important;
+}
+
+#section-my-detail .detail-stage-track i {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 50% !important;
+    font-size: 8px !important;
+}
+
+#section-my-detail .detail-stage-track small {
+    font-size: 6px !important;
+}
+
+#section-my-detail .detail-stage-summary {
+    display: flex !important;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 5px 12px !important;
+    padding-top: 8px !important;
+    border-top: 1px solid var(--specimen-line) !important;
+}
+
+#section-my-detail .detail-stage-summary span,
+#section-my-detail .detail-stage-summary b {
+    font-size: 8px !important;
+}
+
+/* Weekly activity */
+#section-my-detail .detail-weekly-chart {
+    display: grid;
+    grid-template-rows: 92px auto;
+    min-width: 0;
+}
+
+#section-my-detail .detail-weekly-chart svg {
+    width: 100%;
+    height: 92px;
+    overflow: visible;
+}
+
+#section-my-detail .detail-weekly-grid {
+    fill: none;
+    stroke: #e1e7e4;
+    stroke-width: 1;
+}
+
+#section-my-detail .detail-weekly-chart polyline {
+    fill: none;
+    stroke: var(--specimen-green);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.4;
+    vector-effect: non-scaling-stroke;
+}
+
+#section-my-detail .detail-weekly-chart circle {
+    fill: var(--specimen-green);
+    stroke: var(--specimen-surface);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+}
+
+#section-my-detail .detail-weekly-chart > div {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    color: var(--specimen-muted);
+    font-size: 7px;
+    text-align: center;
+}
+
+/* Summary, heatmap, reminders, recent, notes, and actions */
+#section-my-detail .detail-activity-card {
+    height: 100%;
+}
+
+#section-my-detail .detail-activity-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--specimen-ink);
+}
+
+#section-my-detail .detail-activity-head > span {
+    font-size: 10px;
+    font-weight: 740;
+}
+
+#section-my-detail .detail-activity-head > strong {
+    color: var(--specimen-green-strong);
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+}
+
+#section-my-detail .detail-activity-head small {
+    margin-left: 2px;
+    font-size: 7px;
+}
+
+#section-my-detail .detail-activity-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    margin: 9px 0;
+}
+
+#section-my-detail .detail-activity-metrics span {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 7px 2px;
+    border: 1px solid var(--specimen-line);
+    border-radius: 8px;
+    color: var(--specimen-muted);
+    font-size: 6px;
+    text-align: center;
+}
+
+#section-my-detail .detail-activity-metrics b {
+    color: var(--specimen-ink);
+    font-size: 15px;
+}
+
+#section-my-detail .detail-latest-event {
+    display: grid;
+    gap: 2px;
+    min-height: 42px;
+    padding: 7px;
+    border-radius: 8px;
+    background: var(--specimen-surface-soft);
+}
+
+#section-my-detail .detail-latest-event :is(span, em) {
+    color: var(--specimen-muted);
+    font-size: 7px;
+    font-style: normal;
+}
+
+#section-my-detail .detail-latest-event strong {
+    color: var(--specimen-copy);
+    font-size: 9px;
+}
+
+#section-my-detail .detail-history-link {
+    width: 100%;
+    min-height: 30px;
+    margin-top: 7px;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: var(--specimen-green-strong) !important;
+    font-size: 8px;
+    font-weight: 720;
+}
+
+#section-my-detail .detail-care-heatmap {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(11px, 1fr)) !important;
+    gap: 4px !important;
+}
+
+#section-my-detail .detail-care-heatmap i {
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 0 !important;
+    border-radius: 2px !important;
+    background: #edf2ef;
+}
+
+#section-my-detail .detail-care-heatmap .is-level-1 { background: #d9eee3; }
+#section-my-detail .detail-care-heatmap .is-level-2 { background: #acd9c2; }
+#section-my-detail .detail-care-heatmap .is-level-3 { background: #65b28c; }
+#section-my-detail .detail-care-heatmap .is-level-4 { background: var(--specimen-green); }
+
+#section-my-detail .detail-heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    margin-top: 7px;
+    color: var(--specimen-muted);
+    font-size: 7px;
+}
+
+#section-my-detail .detail-heatmap-legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+}
+
+#section-my-detail .detail-reminder-list {
+    display: grid !important;
+    gap: 5px !important;
+}
+
+#section-my-detail .detail-reminder-list button {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 7px;
+    min-width: 0;
+    min-height: 40px !important;
+    align-items: center;
+    padding: 6px 9px !important;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 9px !important;
+    background: var(--specimen-surface-soft) !important;
+    text-align: left;
+}
+
+#section-my-detail .detail-reminder-list button > span {
+    display: grid;
+    min-width: 0;
+}
+
+#section-my-detail .detail-reminder-list :is(small, em) {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--specimen-copy) !important;
+    font-size: 8px !important;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-reminder-list em {
+    color: var(--specimen-muted) !important;
+    font-size: 7px !important;
+}
+
+#section-my-detail .detail-reminder-list strong {
+    color: var(--specimen-green-strong) !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-recent-list {
+    display: grid !important;
+}
+
+#section-my-detail .detail-recent-list > div {
+    display: grid !important;
+    grid-template-columns: 21px auto minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+    min-width: 0;
+    min-height: 34px !important;
+    align-items: center;
+    border-bottom: 1px solid var(--specimen-line) !important;
+}
+
+#section-my-detail .detail-recent-list .dashicons {
+    display: grid;
+    width: 21px !important;
+    height: 21px !important;
+    place-items: center;
+    border-radius: 6px !important;
+    background: var(--specimen-green-soft) !important;
+    color: var(--specimen-green) !important;
+    font-size: 12px !important;
+    line-height: 21px !important;
+}
+
+#section-my-detail .detail-recent-list :is(strong, small, time) {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 8px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-recent-list strong {
+    color: var(--specimen-copy) !important;
+}
+
+#section-my-detail .detail-recent-list :is(small, time) {
+    color: var(--specimen-muted) !important;
+}
+
+#section-my-detail .detail-notes-panel > p {
+    display: -webkit-box;
+    min-height: 68px;
+    margin: 0 0 8px !important;
+    overflow: hidden;
+    color: var(--specimen-copy) !important;
+    font-size: 9px !important;
+    line-height: 1.65 !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
+#section-my-detail .detail-notes-panel > small {
+    color: var(--specimen-muted) !important;
+    font-size: 7px !important;
+}
+
+#section-my-detail .detail-quick-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+}
+
+#section-my-detail .detail-quick-grid button {
+    display: grid !important;
+    grid-template-columns: 18px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto;
+    gap: 0 4px !important;
+    min-width: 0;
+    min-height: 42px !important;
+    align-content: center;
+    padding: 5px 6px !important;
+    border: 1px solid var(--specimen-line) !important;
+    border-radius: 9px !important;
+    background: var(--specimen-surface-soft) !important;
+    text-align: left;
+}
+
+#section-my-detail .detail-quick-grid .dashicons {
+    grid-row: 1 / span 2 !important;
+    width: 18px !important;
+    height: 18px !important;
+    color: var(--specimen-green) !important;
+    font-size: 16px !important;
+    line-height: 18px !important;
+}
+
+#section-my-detail .detail-quick-grid :is(strong, small) {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 7px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#section-my-detail .detail-quick-grid strong {
+    color: var(--specimen-copy) !important;
+    font-size: 8px !important;
+}
+
+#section-my-detail .detail-quick-grid small {
+    color: var(--specimen-muted) !important;
+}
+
+#section-my-detail :is(.detail-growth-chart, .detail-prey-chart) {
+    min-height: 210px;
+    border-radius: 10px !important;
+    background: var(--specimen-surface-soft) !important;
+}
+
+/* Mid-sized screens */
+@media (max-width: 1290px) {
+    #section-my-detail {
+        grid-template-columns: 270px minmax(0, 1fr);
+    }
+
+    #section-my-detail .setae-detail-workspace {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+
+    #section-my-detail #detail-condition-slot { grid-column: 1 / span 2 !important; }
+    #section-my-detail .detail-environment-panel { grid-column: 3 / span 4 !important; }
+    #section-my-detail #detail-feeding-slot { grid-column: 1 / span 3 !important; }
+    #section-my-detail #detail-weekly-slot { grid-column: 4 / span 3 !important; }
+    #section-my-detail #detail-stage-slot { grid-column: 1 / -1 !important; }
+    #section-my-detail .detail-activity-slot { grid-column: 1 / span 2 !important; }
+    #section-my-detail #detail-heatmap-slot { grid-column: 3 / span 2 !important; }
+    #section-my-detail #detail-reminder-slot { grid-column: 5 / span 2 !important; }
+    #section-my-detail #detail-recent-slot { grid-column: 1 / span 3 !important; }
+    #section-my-detail .detail-notes-panel { grid-column: 4 / span 3 !important; }
+    #section-my-detail .detail-quick-panel { grid-column: 1 / span 3 !important; }
+    #section-my-detail .detail-photo-panel { grid-column: 4 / span 3 !important; }
+    #section-my-detail .detail-growth-panel { grid-column: 1 / span 4 !important; }
+    #section-my-detail .detail-prey-panel { grid-column: 5 / span 2 !important; }
+    #section-my-detail .detail-consult-action { grid-column: 1 / -1 !important; }
+}
+
+@media (max-width: 1119px) {
+    #section-my #setae-spider-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1120px) {
+    #section-my .setae-my-hub-header {
+        margin-bottom: 52px !important;
+    }
+
+    #section-my .setae-my-tool-switch {
+        position: absolute !important;
+        z-index: 13;
+        top: 70px;
+        left: clamp(18px, 2.2vw, 36px);
+        margin: 0 !important;
+    }
+
+    #section-my #setae-my-collection-pane > .setae-my-desktop-dashboard { order: 1; }
+    #section-my #setae-my-collection-pane > .setae-toolbar-container { order: 2; }
+
+    #section-my .setae-toolbar-container {
+        position: static !important;
+    }
+
+    #section-my .setae-toolbar-header {
+        position: absolute !important;
+        z-index: 15;
+        top: 22px;
+        right: 180px;
+        width: min(680px, calc(100% - 510px)) !important;
+        margin: 0 !important;
+    }
+}
+
+@media (max-width: 1040px) and (min-width: 768px) {
+    #section-my #setae-spider-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #section-my .my-collection-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #section-my-detail {
+        grid-template-columns: 236px minmax(0, 1fr);
+    }
+
+    #section-my-detail .detail-feeding-body {
+        grid-template-columns: 78px minmax(0, 1fr);
+    }
+
+    #section-my-detail .detail-feeding-ring {
+        width: 74px;
+        height: 74px;
+    }
+}
+
+/* Mobile collection and record */
+@media (max-width: 767px) {
+    #section-my {
+        padding: 12px 10px calc(96px + env(safe-area-inset-bottom)) !important;
+        overflow-x: clip;
+    }
+
+    #section-my .setae-my-hub-header {
+        min-height: 43px;
+        justify-content: center !important;
+        margin-bottom: 8px !important;
+    }
+
+    #section-my .setae-my-hub-title {
+        justify-items: center;
+    }
+
+    #section-my .setae-my-hub-title h1 {
+        font-size: 21px !important;
+    }
+
+    #section-my .setae-my-hub-kicker {
+        display: none !important;
+    }
+
+    #section-my #btn-add-spider {
+        position: absolute !important;
+        top: 12px;
+        right: 10px;
+        width: 40px !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+    }
+
+    #section-my #btn-add-spider span {
+        display: none !important;
+    }
+
+    #section-my #btn-add-spider svg {
+        width: 19px !important;
+        height: 19px !important;
+    }
+
+    #section-my .setae-my-tool-switch {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+
+    #section-my .setae-my-tool-tab {
+        flex: 1 0 auto;
+        justify-content: center;
+        min-height: 34px !important;
+        font-size: 9px !important;
+    }
+
+    #section-my .setae-my-desktop-dashboard {
+        order: 1 !important;
+        margin-bottom: 10px !important;
+    }
+
+    #section-my #setae-my-collection-pane > .setae-toolbar-container { order: 2; }
+    #section-my #setae-my-collection-pane > .setae-my-workspace { order: 3; }
+
+    #section-my .my-collection-kpis {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+    }
+
+    #section-my .my-collection-kpi {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+        min-height: 82px !important;
+        justify-items: center;
+        padding: 8px 3px !important;
+        border-radius: 14px !important;
+        text-align: center !important;
+    }
+
+    #section-my .my-collection-kpi-icon {
+        width: 27px !important;
+        height: 27px !important;
+        font-size: 14px !important;
+        line-height: 27px !important;
+    }
+
+    #section-my .my-collection-kpi-copy {
+        justify-items: center;
+    }
+
+    #section-my .my-collection-kpi-copy small {
+        max-width: 100%;
+        overflow: hidden;
+        font-size: 6px !important;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #section-my .my-collection-kpi-copy strong {
+        font-size: 18px !important;
+    }
+
+    #section-my .my-collection-kpi-copy strong em {
+        font-size: 7px !important;
+    }
+
+    #section-my .my-collection-kpi-copy i,
+    #section-my .my-collection-kpi-progress {
+        display: none !important;
+    }
+
+    #section-my .setae-toolbar-container {
+        margin-bottom: 10px !important;
+    }
+
+    #section-my .setae-toolbar-header {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 7px !important;
+        margin-bottom: 9px !important;
+    }
+
+    #section-my #setae-spider-search {
+        height: 40px !important;
+        min-height: 40px !important;
+        border-radius: 14px !important;
+        font-size: 11px !important;
+    }
+
+    #section-my .setae-actions {
+        gap: 5px !important;
+    }
+
+    #section-my :is(#btn-my-filter-toggle, #btn-sort-menu, #btn-qr-manager) {
+        width: 40px !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+    }
+
+    #section-my :is(#btn-sort-menu, #btn-qr-manager) {
+        display: none !important;
+    }
+
+    #section-my #btn-my-filter-toggle span {
+        display: none !important;
+    }
+
+    #section-my .setae-decks-scroll {
+        gap: 6px !important;
+    }
+
+    #section-my .setae-decks-scroll .deck-pill {
+        min-height: 34px !important;
+        padding: 0 12px !important;
+        border-radius: 17px !important;
+        font-size: 9px !important;
+    }
+
+    #section-my #setae-spider-list {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+        padding: 0 !important;
+    }
+
+    #section-my #setae-spider-list > .my-desktop-list-header {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 {
+        width: 100% !important;
+        min-height: 116px !important;
+        height: 116px !important;
+        border-radius: 16px !important;
+        touch-action: pan-y;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 > .specimen-v5-shell {
+        grid-template-columns: 82px minmax(0, 1fr) 92px !important;
+        grid-template-rows: 42px 40px 20px !important;
+        grid-template-areas:
+            "photo identity care"
+            "photo metrics care"
+            "photo spark care" !important;
+        gap: 2px 8px !important;
+        width: 100% !important;
+        height: 116px !important;
+        min-height: 116px !important;
+        padding: 8px !important;
+        overflow: visible !important;
+        border-radius: 16px !important;
+        transform: translate3d(0, 0, 0);
+        transition: transform 220ms cubic-bezier(0.22, 0.75, 0.2, 1), box-shadow 180ms ease, border-color 180ms ease !important;
+        will-change: transform;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5:hover > .specimen-v5-shell,
+    #section-my #setae-spider-list > .specimen-card-v5:focus-within > .specimen-v5-shell {
+        box-shadow: var(--specimen-shadow) !important;
+        transform: translate3d(0, 0, 0);
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-photo {
+        width: 82px !important;
+        min-width: 82px !important;
+        height: 100px !important;
+        min-height: 100px !important;
+        border-radius: 11px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-photo-code {
+        right: 5px !important;
+        bottom: 5px !important;
+        padding: 1px 4px !important;
+        font-size: 7px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-favorite {
+        top: 4px !important;
+        right: 4px !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-favorite .dashicons {
+        width: 14px !important;
+        height: 14px !important;
+        font-size: 14px !important;
+        line-height: 14px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-identity {
+        grid-template-rows: 12px 19px 17px !important;
+        align-content: start !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .setae-scientific-name {
+        font-size: 8px !important;
+        line-height: 12px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .setae-nickname {
+        display: block !important;
+        min-height: 0 !important;
+        overflow: hidden;
+        font-size: 11px !important;
+        line-height: 19px !important;
+        text-overflow: ellipsis;
+        white-space: nowrap !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges {
+        gap: 3px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges > span {
+        min-height: 15px !important;
+        padding: 0 4px !important;
+        border-radius: 5px !important;
+        font-size: 5.5px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges > span:nth-child(3) {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics {
+        min-height: 40px;
+        border: 0 !important;
+        border-top: 1px solid rgba(16, 44, 36, 0.08) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics > span {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0 2px !important;
+        justify-items: center;
+        padding: 3px 1px !important;
+        border: 0 !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics > span + span {
+        border-left: 0 !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics i {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics .is-humidity i {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics b {
+        font-size: 7px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics small {
+        font-size: 4.5px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-stage {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark {
+        grid-area: spark !important;
+        display: grid !important;
+        grid-template-columns: repeat(13, minmax(0, 1fr));
+        gap: 2px;
+        height: 18px;
+        align-items: end;
+        padding: 2px 0 1px;
+        overflow: hidden;
+        border-top: 1px solid rgba(16, 44, 36, 0.07);
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark i {
+        display: block;
+        height: var(--spark-height);
+        min-height: 1px;
+        border-radius: 1px 1px 0 0;
+        background: #d5dfda;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark i.is-active {
+        background: var(--specimen-green);
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark.is-hungry i.is-active,
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark.is-fasting i.is-active {
+        background: var(--specimen-amber);
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-spark.is-pre_molt i.is-active {
+        background: var(--specimen-blue);
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-care {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 15px 1fr 26px !important;
+        gap: 2px !important;
+        min-height: 0 !important;
+        height: 100px !important;
+        align-content: center;
+        padding: 7px 4px 5px 8px !important;
+        border: 0 !important;
+        border-left: 1px solid rgba(16, 44, 36, 0.1) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        text-align: center;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-icon {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 12px 23px 11px !important;
+        gap: 0 !important;
+        align-content: center;
+        justify-items: center;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy small {
+        font-size: 6px !important;
+        line-height: 12px;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy strong {
+        grid-row: 2 !important;
+        grid-column: 1 !important;
+        font-size: 14px !important;
+        line-height: 23px;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-next-care-copy em {
+        max-width: 100%;
+        font-size: 5.5px !important;
+        line-height: 11px;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-detail-button {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 25px !important;
+        padding: 0 3px !important;
+        border-radius: 8px !important;
+        font-size: 6.5px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-more {
+        position: absolute !important;
+        z-index: 4;
+        top: -5px !important;
+        right: -3px !important;
+        display: grid !important;
+        width: 23px !important;
+        min-width: 23px !important;
+        height: 23px !important;
+        min-height: 23px !important;
+        place-items: center;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 7px !important;
+        background: transparent !important;
+        color: var(--specimen-ink) !important;
+        font-size: 8px;
+        line-height: 1;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-menu {
+        top: 25px;
+        right: 3px;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .setae-card-sync-state {
+        right: 96px !important;
+        bottom: 6px !important;
+    }
+
+    /* Mobile detail */
+    #section-my-detail {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "topbar"
+            "hero"
+            "command"
+            "content";
+        gap: 9px;
+        padding: 7px 8px calc(92px + env(safe-area-inset-bottom)) !important;
+        overflow-x: clip;
+    }
+
+    #section-my-detail .setae-detail-topbar {
+        position: sticky !important;
+        top: calc(4px + env(safe-area-inset-top)) !important;
+        min-height: 48px !important;
+        grid-template-columns: 38px minmax(0, 1fr) auto !important;
+        padding: 3px 5px !important;
+        border: 1px solid var(--specimen-line) !important;
+        border-radius: 16px !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        box-shadow: 0 4px 14px rgba(16, 44, 36, 0.07) !important;
+        backdrop-filter: blur(16px);
+    }
+
+    #section-my-detail .setae-detail-topbar.is-stacked {
+        border-radius: 16px 16px 0 0 !important;
+    }
+
+    #section-my-detail .setae-detail-title {
+        justify-content: center;
+    }
+
+    #section-my-detail .setae-detail-title span {
+        display: none !important;
+    }
+
+    #section-my-detail .setae-detail-title strong {
+        color: var(--specimen-ink) !important;
+        font-size: 0 !important;
+        font-weight: 760 !important;
+        text-align: center;
+    }
+
+    #section-my-detail .setae-detail-title strong::after {
+        content: "個体詳細";
+        font-size: 13px;
+    }
+
+    #section-my-detail #btn-edit-spider-trigger,
+    #section-my-detail #btn-detail-favorite {
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    #section-my-detail #btn-edit-spider-trigger::after,
+    #section-my-detail #btn-detail-favorite {
+        display: none !important;
+    }
+
+    #section-my-detail .setae-spider-hero {
+        position: relative !important;
+        top: auto !important;
+        display: grid !important;
+        grid-template-columns: 88px minmax(0, 1fr) 76px !important;
+        min-height: 110px !important;
+        align-items: center;
+        gap: 9px;
+        padding: 10px !important;
+        overflow: hidden !important;
+    }
+
+    #section-my-detail .hero-backdrop {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: 88px !important;
+        height: 88px !important;
+        min-height: 88px !important;
+        aspect-ratio: auto;
+        border-radius: 11px !important;
+    }
+
+    #section-my-detail .hero-content {
+        display: contents !important;
+    }
+
+    #section-my-detail .detail-hero-summary {
+        display: contents !important;
+    }
+
+    #section-my-detail .hero-info {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        align-self: center;
+        gap: 3px;
+        min-width: 0;
+        padding: 0 !important;
+    }
+
+    #section-my-detail #detail-spider-id-badge {
+        position: static;
+        width: fit-content;
+        min-height: 20px;
+        padding: 0 6px;
+        border-color: #d5c69d !important;
+        background: #fff7df !important;
+        color: var(--specimen-copy) !important;
+        font-size: 6px !important;
+        backdrop-filter: none;
+    }
+
+    #section-my-detail .hero-info h1 {
+        display: -webkit-box;
+        font-size: 14px !important;
+        line-height: 1.08 !important;
+        overflow-wrap: anywhere;
+        white-space: normal !important;
+        -webkit-line-clamp: 2;
+    }
+
+    #section-my-detail .hero-info .species-name {
+        font-size: 8px !important;
+    }
+
+    #section-my-detail .detail-hero-tags {
+        gap: 3px !important;
+        margin-top: 3px !important;
+    }
+
+    #section-my-detail .detail-hero-tags > span {
+        min-height: 18px !important;
+        padding: 0 5px !important;
+        border-radius: 6px !important;
+        font-size: 5.5px !important;
+    }
+
+    #section-my-detail .detail-hero-tags > span:nth-child(3) {
+        display: none;
+    }
+
+    #section-my-detail .detail-hero-facts {
+        gap: 2px !important;
+        margin-top: 2px !important;
+    }
+
+    #section-my-detail .detail-hero-facts > div {
+        grid-template-columns: 45px minmax(0, 1fr);
+        gap: 4px !important;
+    }
+
+    #section-my-detail .detail-hero-facts > div:nth-child(3) {
+        display: none !important;
+    }
+
+    #section-my-detail .detail-hero-facts :is(dt, dd) {
+        font-size: 5.5px !important;
+    }
+
+    #section-my-detail .detail-health-meter {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+        gap: 4px !important;
+        min-width: 0;
+        padding: 0 !important;
+        border: 0 !important;
+        text-align: center !important;
+    }
+
+    #section-my-detail .detail-health-ring {
+        width: 68px !important;
+        height: 68px !important;
+    }
+
+    #section-my-detail .detail-health-ring::before {
+        inset: 6px !important;
+        background: var(--specimen-surface) !important;
+    }
+
+    #section-my-detail .detail-health-ring b {
+        font-size: 20px !important;
+    }
+
+    #section-my-detail .detail-health-ring small {
+        font-size: 7px !important;
+    }
+
+    #section-my-detail .detail-health-meter > div:last-child {
+        display: grid !important;
+        gap: 0 !important;
+    }
+
+    #section-my-detail .detail-health-meter > div:last-child small,
+    #section-my-detail .detail-health-meter > div:last-child em {
+        display: none !important;
+    }
+
+    #section-my-detail .detail-health-meter > div:last-child strong {
+        font-size: 7px !important;
+    }
+
+    #section-my-detail .detail-hero-stats {
+        display: none !important;
+    }
+
+    #section-my-detail .setae-detail-command-bar {
+        top: calc(56px + env(safe-area-inset-top)) !important;
+        min-height: 42px !important;
+        border-radius: 14px !important;
+    }
+
+    #section-my-detail .setae-detail-command-bar.is-stuck {
+        margin-top: -9px !important;
+        border-radius: 0 0 16px 16px !important;
+    }
+
+    #section-my-detail .setae-detail-tabs {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    #section-my-detail .setae-detail-tabs .tab-btn {
+        min-width: 0;
+        min-height: 32px !important;
+        padding: 0 6px !important;
+        font-size: 8px !important;
+    }
+
+    #section-my-detail .setae-detail-nav {
+        display: none !important;
+    }
+
+    #section-my-detail .setae-detail-workspace {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-areas: none !important;
+        grid-auto-columns: minmax(0, 1fr) !important;
+        grid-auto-flow: row !important;
+        gap: 9px !important;
+    }
+
+    #section-my-detail #tab-overview .setae-detail-workspace > * {
+        grid-area: auto / 1 / auto / -1 !important;
+        grid-column: 1 / -1 !important;
+        grid-row: auto !important;
+    }
+
+    #section-my-detail #detail-condition-slot {
+        display: none !important;
+    }
+
+    #section-my-detail .detail-environment-panel { order: 1; }
+    #section-my-detail #detail-stage-slot { order: 2; }
+    #section-my-detail #tab-overview #detail-recent-slot { order: 3; grid-area: auto / 1 !important; grid-column: 1 !important; }
+    #section-my-detail #tab-overview #detail-heatmap-slot { order: 3; grid-area: auto / 2 !important; grid-column: 2 !important; }
+    #section-my-detail #detail-reminder-slot { order: 4; }
+    #section-my-detail .detail-quick-panel { order: 5; }
+    #section-my-detail #detail-feeding-slot { order: 6; }
+    #section-my-detail #detail-weekly-slot { order: 7; }
+    #section-my-detail .detail-activity-slot { order: 8; }
+    #section-my-detail .detail-notes-panel { order: 9; }
+    #section-my-detail .detail-photo-panel { order: 10; }
+    #section-my-detail .detail-growth-panel { order: 11; }
+    #section-my-detail .detail-prey-panel { order: 12; }
+    #section-my-detail .detail-consult-action { order: 13; }
+
+    #section-my-detail :is(.detail-data-panel, .detail-activity-card, .detail-consult-button) {
+        padding: 9px !important;
+        border-radius: 16px !important;
+    }
+
+    #section-my-detail .detail-panel-head {
+        margin-bottom: 6px !important;
+    }
+
+    #section-my-detail .detail-panel-kicker {
+        display: none !important;
+    }
+
+    #section-my-detail .detail-panel-head h3 {
+        font-size: 11px !important;
+    }
+
+    #section-my-detail .detail-environment-metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    #section-my-detail .detail-environment-metrics > :is(div, button) {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 19px auto auto !important;
+        justify-items: center;
+        min-height: 53px;
+        padding: 3px 2px !important;
+        text-align: center;
+    }
+
+    #section-my-detail .detail-environment-metrics > :is(div, button) > span {
+        grid-row: 1;
+        width: 18px;
+        height: 18px;
+    }
+
+    #section-my-detail .detail-environment-metrics small {
+        font-size: 5.5px !important;
+    }
+
+    #section-my-detail .detail-environment-metrics strong {
+        max-width: 100%;
+        font-size: 9px !important;
+    }
+
+    #section-my-detail .detail-environment-metrics em {
+        max-width: 100%;
+        font-size: 5px !important;
+    }
+
+    #section-my-detail .detail-stage-track {
+        grid-template-columns: repeat(7, minmax(35px, 1fr)) !important;
+        overflow-x: auto !important;
+        scrollbar-width: none;
+    }
+
+    #section-my-detail .detail-stage-track i {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 7px !important;
+    }
+
+    #section-my-detail .detail-stage-summary {
+        justify-content: space-between;
+    }
+
+    #section-my-detail #detail-recent-slot > section,
+    #section-my-detail #detail-heatmap-slot > section {
+        height: 100%;
+    }
+
+    #section-my-detail #detail-recent-slot .detail-panel-head,
+    #section-my-detail #detail-heatmap-slot .detail-panel-head {
+        min-height: 27px;
+    }
+
+    #section-my-detail #detail-recent-slot .detail-inline-link,
+    #section-my-detail #detail-recent-slot .detail-recent-list small,
+    #section-my-detail #detail-recent-slot .detail-recent-list time {
+        display: none !important;
+    }
+
+    #section-my-detail #detail-recent-slot .detail-recent-list > div {
+        grid-template-columns: 19px minmax(0, 1fr) !important;
+        min-height: 30px !important;
+    }
+
+    #section-my-detail #detail-recent-slot .detail-recent-list .dashicons {
+        width: 19px !important;
+        height: 19px !important;
+        font-size: 10px !important;
+        line-height: 19px !important;
+    }
+
+    #section-my-detail #detail-recent-slot .detail-recent-list strong {
+        font-size: 7px !important;
+    }
+
+    #section-my-detail #detail-heatmap-slot .detail-care-heatmap {
+        grid-template-columns: repeat(7, minmax(0, 14px)) !important;
+        justify-content: space-between;
+        gap: 3px !important;
+    }
+
+    #section-my-detail #detail-heatmap-slot .detail-heatmap-legend {
+        margin-top: 5px;
+    }
+
+    #section-my-detail .detail-reminder-list button {
+        min-height: 34px !important;
+    }
+
+    #section-my-detail .detail-quick-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+    }
+
+    #section-my-detail .detail-quick-grid button {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 20px auto !important;
+        justify-items: center;
+        min-height: 51px !important;
+        padding: 5px 2px !important;
+        text-align: center;
+    }
+
+    #section-my-detail .detail-quick-grid .dashicons {
+        grid-row: 1 !important;
+    }
+
+    #section-my-detail .detail-quick-grid strong {
+        font-size: 6.5px !important;
+    }
+
+    #section-my-detail .detail-quick-grid small {
+        display: none !important;
+    }
+
+    #section-my-detail .detail-feeding-body {
+        grid-template-columns: 82px minmax(0, 1fr);
+    }
+
+    #section-my-detail .detail-feeding-ring {
+        width: 76px;
+        height: 76px;
+    }
+
+    #section-my-detail .detail-weekly-chart {
+        grid-template-rows: 82px auto;
+    }
+
+    #section-my-detail .detail-weekly-chart svg {
+        height: 82px;
+    }
+}
+
+@media (max-width: 374px) {
+    #section-my {
+        padding-right: 7px !important;
+        padding-left: 7px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 > .specimen-v5-shell {
+        grid-template-columns: 76px minmax(0, 1fr) 84px !important;
+        gap: 2px 6px !important;
+        padding: 7px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-photo {
+        width: 76px !important;
+        min-width: 76px !important;
+        height: 102px !important;
+        min-height: 102px !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-card-badges > span:nth-child(2),
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics small {
+        display: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics > span {
+        grid-template-columns: 1fr !important;
+        justify-items: center;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-metrics i {
+        display: none !important;
+    }
+
+    #section-my-detail .setae-spider-hero {
+        grid-template-columns: 78px minmax(0, 1fr) 64px !important;
+        gap: 7px;
+    }
+
+    #section-my-detail .hero-backdrop {
+        width: 78px !important;
+        height: 96px !important;
+        min-height: 96px !important;
+    }
+
+    #section-my-detail .detail-health-ring {
+        width: 58px !important;
+        height: 58px !important;
+    }
+
+    #section-my-detail .hero-info h1 {
+        font-size: 13px !important;
+    }
+}
+
+/* Dark mode */
+html[data-setae-theme="dark"] #section-my,
+html[data-setae-theme="dark"] #section-my-detail {
+    --specimen-ink: #eff7f3;
+    --specimen-copy: #d3dfd9;
+    --specimen-muted: #9bacA4;
+    --specimen-line: #34463f;
+    --specimen-line-strong: #465b52;
+    --specimen-surface: #17231f;
+    --specimen-surface-soft: #1d2c27;
+    --specimen-canvas: #101916;
+    --specimen-green: #5dcc98;
+    --specimen-green-strong: #7bd9ab;
+    --specimen-green-soft: #1c3a2e;
+    --specimen-blue: #76ace4;
+    --specimen-blue-soft: #1c3044;
+    --specimen-amber: #efb254;
+    --specimen-amber-soft: #3d2e19;
+    --specimen-red: #f08383;
+    --specimen-red-soft: #402524;
+    --specimen-shadow: 0 1px 2px rgba(0, 0, 0, 0.26), 0 10px 26px rgba(0, 0, 0, 0.26);
+    background: var(--specimen-canvas) !important;
+    color-scheme: dark;
+}
+
+html[data-setae-theme="dark"] #section-my :is(.setae-my-tool-switch, .my-collection-kpi, #setae-spider-search, #btn-my-filter-toggle, #btn-sort-menu, #btn-qr-manager, .deck-pill),
+html[data-setae-theme="dark"] #section-my #setae-spider-list > .specimen-card-v5 > .specimen-v5-shell,
+html[data-setae-theme="dark"] #section-my-detail :is(.setae-detail-topbar, .setae-detail-command-bar, .setae-spider-hero, .detail-data-panel, .detail-activity-card, .detail-consult-button) {
+    border-color: var(--specimen-line) !important;
+    background: var(--specimen-surface) !important;
+    color: var(--specimen-copy) !important;
+}
+
+html[data-setae-theme="dark"] #section-my #setae-spider-list > .specimen-card-v5[data-status="pre_molt"] > .specimen-v5-shell {
+    border-color: #47749f !important;
+    background: linear-gradient(145deg, #17231f 0%, #192c3c 100%) !important;
+}
+
+html[data-setae-theme="dark"] #section-my #setae-spider-list > .specimen-card-v5[data-status="fasting"] > .specimen-v5-shell,
+html[data-setae-theme="dark"] #section-my #setae-spider-list > .specimen-card-v5.is-care-due > .specimen-v5-shell {
+    border-color: #8f672e !important;
+    background: linear-gradient(145deg, #17231f 0%, #342919 100%) !important;
+}
+
+html[data-setae-theme="dark"] #section-my #setae-spider-list > .specimen-card-v5[data-status="post_molt"] > .specimen-v5-shell {
+    border-color: #3d765c !important;
+    background: linear-gradient(145deg, #17231f 0%, #193126 100%) !important;
+}
+
+html[data-setae-theme="dark"] #section-my #setae-spider-list > .specimen-card-v5 :is(.specimen-v5-metrics, .specimen-v5-care, .specimen-card-badges > span, .specimen-detail-button),
+html[data-setae-theme="dark"] #section-my-detail :is(.detail-environment-metrics, .detail-reminder-list button, .detail-quick-grid button, .detail-latest-event, .detail-history-link) {
+    border-color: var(--specimen-line) !important;
+    background: var(--specimen-surface-soft) !important;
+    color: var(--specimen-copy) !important;
+}
+
+html[data-setae-theme="dark"] #section-my-detail :is(.detail-condition-ring, .detail-feeding-ring)::before,
+html[data-setae-theme="dark"] #section-my-detail .detail-health-ring::before {
+    background: var(--specimen-surface) !important;
+}
+
+html[data-setae-theme="dark"] #section-my-detail :is(.detail-condition-ring, .detail-feeding-ring) {
+    background-color: #2c3a34;
+}
+
+html[data-setae-theme="dark"] #section-my-detail .detail-care-heatmap i {
+    background: #27352f;
+}
+
+html[data-setae-theme="dark"] #section-my-detail .detail-care-heatmap .is-level-1 { background: #24523e; }
+html[data-setae-theme="dark"] #section-my-detail .detail-care-heatmap .is-level-2 { background: #287353; }
+html[data-setae-theme="dark"] #section-my-detail .detail-care-heatmap .is-level-3 { background: #39a473; }
+html[data-setae-theme="dark"] #section-my-detail .detail-care-heatmap .is-level-4 { background: #62d09b; }
+
+html[data-setae-theme="dark"] #section-my-detail .detail-weekly-grid {
+    stroke: #33463e;
+}
+
+html[data-setae-theme="dark"] #section-my-detail .detail-weekly-chart circle {
+    stroke: var(--specimen-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #section-my #setae-spider-list > .specimen-card-v5 > .specimen-v5-shell,
+    #section-my #setae-spider-list > .specimen-card-v5:hover > .specimen-v5-shell {
+        transition: none !important;
+    }
+
+    #section-my #setae-spider-list > .specimen-card-v5 .specimen-v5-photo :is(.setae-avatar-img, img, .setae-avatar-img > img) {
+        transition: none !important;
+        transform: none !important;
+    }
+}

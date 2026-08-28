@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SETAE UI System v4 Viewport Harness</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #d8d8d4; }
+    body { width: max-content; padding: 16px; }
+    iframe { display: block; border: 0; background: #f3f2ed; box-shadow: 0 0 0 1px #aaa; }
+  </style>
+</head>
+<body>
+  <iframe id="preview" title="SETAE responsive preview"></iframe>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const allowedWidths = [390, 768, 1440];
+    const requestedWidth = Number(params.get('width'));
+    const width = allowedWidths.includes(requestedWidth) ? requestedWidth : 390;
+    const preview = document.querySelector('#preview');
+    preview.width = String(width);
+    preview.height = String(width === 390 ? 1600 : 1200);
+    preview.src = `ui-system-v4-specimen-preview.html${params.get('theme') === 'dark' ? '?theme=dark' : ''}`;
+  </script>
+</body>
+</html>

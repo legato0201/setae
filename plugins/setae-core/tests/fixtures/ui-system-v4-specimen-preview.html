@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE UI System v4 Specimen Workspace</title>
+  <script>
+    const params = new URLSearchParams(location.search);
+    if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+    window.SETAE_CONFIG = {
+      siteOrigin: location.origin,
+      specimenAssets: {
+        spider: new URL('../../assets/images/specimen/spider-silhouette.svg', location.href).href,
+        generic: new URL('../../assets/images/specimen/generic-specimen.svg', location.href).href
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/combobox.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/property-list.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/activity-list.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/identity-panel.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/data-visualization.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media-grid.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css?v=1.0.242">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css?v=1.0.242">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css?v=1.0.242">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css?v=1.0.242">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/specimen-workspace.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen-intake.css?v=1.0.228">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/settings.css?v=1.0.228">
+  <script src="../../assets/app/vendor/qrcode.min.js?v=1.0.228"></script>
+</head>
+<body>
+  <div id="fixture-root"></div>
+  <script type="module">
+    import { renderAppFrame } from '../../assets/app/components/app-frame.js';
+    import { nextTabIndex } from '../../assets/app/components/primitives.js';
+    import { registerMediaFallbacks } from '../../assets/app/components/media.js';
+    import { renderFieldLabelDialog } from '../../assets/app/features/specimen/field-label.js';
+    import { renderSpecimenWorkspace } from '../../assets/app/features/specimen/view.js';
+
+    const params = new URLSearchParams(location.search);
+    const animal = {
+      id: 1,
+      individual_code: 'C001',
+      species_name: 'Typhochlaena seladonia',
+      family_name: 'Theraphosidae',
+      classification: 'tarantula',
+      image_url: new URL('../../assets/images/specimen/spider.svg', location.href).href,
+      has_own_image: true,
+      gender: 'female',
+      status: 'pre_molt',
+      instar: 8,
+      origin: 'CB',
+      acquired_date: '2026-05-12',
+      photo_date: '2026-08-20T15:21:00+09:00',
+      last_feed: '2026-08-18T18:42:00+09:00',
+      last_molt: '2026-08-02T09:16:00+09:00',
+      last_observation: '2026-08-21T08:32:00+09:00',
+      substrate: 'Coco peat',
+      notes: '巣穴入口を閉じている。脱皮前として給餌を見送る。',
+      is_favorite: true,
+      permanent_url: 'https://setae.net/k7mp3x/',
+      housing: {
+        current: {
+          id: 3,
+          code: 'A03',
+          name: 'Rack A / Upper',
+          type_label: 'Acrylic enclosure',
+          substrate: 'Coco peat',
+          location: 'Rack A / Upper',
+          last_environment: { temperature: 26.0, humidity: 70 }
+        },
+        history: [
+          { enclosure_id: 2, enclosure_code: 'A02', started_at: '2026-05-12', ended_at: '2026-07-18' },
+          { enclosure_id: 3, enclosure_code: 'A03', started_at: '2026-07-18', ended_at: '' }
+        ]
+      }
+    };
+    const events = [
+      {
+        id: 108,
+        type: 'observation',
+        date: '2026-08-21T08:32:00+09:00',
+        data: { label: '脱皮前', note: '巣穴入口を閉じている。状態は安定。' },
+        image: new URL('../../assets/images/specimen/spider.svg', location.href).href
+      },
+      {
+        id: 107,
+        type: 'feed',
+        date: '2026-08-18T18:42:00+09:00',
+        data: { prey_type: 'レッドローチ M', quantity: 1 }
+      },
+      {
+        id: 104,
+        type: 'molt',
+        date: '2026-08-02T09:16:00+09:00',
+        data: { instar: 8, note: '脱皮殻を回収。' },
+        image: new URL('../../assets/images/specimen/spider.svg', location.href).href,
+        is_best_shot: true
+      },
+      {
+        id: 96,
+        type: 'feed',
+        date: '2026-07-24T17:50:00+09:00',
+        data: { prey_type: 'レッドローチ S', quantity: 1 }
+      },
+      {
+        id: 88,
+        type: 'molt',
+        date: '2026-06-29T06:21:00+09:00',
+        data: { instar: 7 }
+      },
+      {
+        id: 72,
+        type: 'molt',
+        date: '2026-05-18T10:08:00+09:00',
+        data: { instar: 6 }
+      },
+      {
+        id: 67,
+        type: 'pairing',
+        date: '2026-05-14T20:12:00+09:00',
+        data: { partner_name: 'C014', result: 'successful' }
+      }
+    ];
+    const babyGroups = [
+      {
+        id: 3,
+        name: 'N003',
+        birth_date: '2026-07-18',
+        living_count: 42,
+        parent_spider_ids: [1, 14]
+      }
+    ];
+    const allowedTabs = ['overview', 'timeline', 'growth', 'photos', 'breeding'];
+    const state = {
+      tab: allowedTabs.includes(params.get('tab')) ? params.get('tab') : 'overview',
+      timelineFilter: 'all',
+      photoFilter: 'all',
+      labelOpen: params.get('label') === '1'
+    };
+
+    function draw() {
+      const content = renderSpecimenWorkspace({
+        animal,
+        events,
+        babyGroups,
+        tab: state.tab,
+        timelineFilter: state.timelineFilter,
+        photoFilter: state.photoFilter
+      });
+      const overlaysHtml = state.labelOpen
+        ? renderFieldLabelDialog({
+            type: 'field-label',
+            animal,
+            target: {
+              object_id: animal.id,
+              manage_code: animal.individual_code,
+              species_name: animal.species_name,
+              url: animal.permanent_url,
+              instar: animal.instar,
+              gender: animal.gender
+            },
+            labelConfig: { output: 'a4', size: 'standard' }
+          })
+        : '';
+      document.querySelector('#fixture-root').innerHTML = renderAppFrame({
+        content,
+        page: 'animals',
+        pageTitle: '個体',
+        authenticated: true,
+        online: true,
+        userName: 'テスト飼育者',
+        overlaysHtml
+      });
+      registerMediaFallbacks(document.querySelector('#fixture-root'), { timeoutMs: 1000 });
+    }
+
+    document.querySelector('#fixture-root').addEventListener('click', (event) => {
+      const clickedMenu = event.target.closest('.action-menu');
+      document.querySelectorAll('.action-menu[open]').forEach((menu) => {
+        if (menu !== clickedMenu) menu.removeAttribute('open');
+      });
+      const action = event.target.closest('[data-action]');
+      if (!action) return;
+      action.closest('.action-menu')?.removeAttribute('open');
+      if (action.dataset.action === 'specimen-tab') state.tab = action.dataset.tab;
+      if (action.dataset.action === 'specimen-timeline-filter') state.timelineFilter = action.dataset.filter;
+      if (action.dataset.action === 'specimen-photo-filter') state.photoFilter = action.dataset.filter;
+      if (action.dataset.action === 'open-field-label') state.labelOpen = true;
+      if (action.dataset.action === 'close-modal') {
+        if (action.classList.contains('modal-backdrop') && event.target.closest('[data-modal]')) return;
+        state.labelOpen = false;
+      }
+      draw();
+    });
+
+    document.querySelector('#fixture-root').addEventListener('keydown', (event) => {
+      const tab = event.target.closest?.('.specimen-workspace-tabs [role="tab"]');
+      if (!tab || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      const currentIndex = allowedTabs.indexOf(tab.dataset.tab);
+      state.tab = allowedTabs[nextTabIndex(currentIndex, allowedTabs.length, event.key)];
+      draw();
+      requestAnimationFrame(() => document.querySelector('.specimen-workspace-tabs [aria-selected="true"]')?.focus());
+    });
+
+    draw();
+  </script>
+</body>
+</html>

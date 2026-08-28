@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>SETAE PWA fixture</title>
+    <link rel="stylesheet" href="../../assets/css/setae-global.css">
+    <link rel="stylesheet" href="../../assets/css/modules/modals.css">
+    <link rel="stylesheet" href="../../assets/css/modules/pwa.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #eef2ef; color: #263a31; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .fixture-header { height: 64px; padding: 0 24px; background: #fff; border-bottom: 1px solid #dce4e0; display: flex; align-items: center; justify-content: space-between; }
+        .fixture-header strong { font-size: 18px; }
+        .fixture-main { width: min(1180px, calc(100% - 32px)); margin: 18px auto 100px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; }
+        .fixture-panel { min-width: 0; padding: 18px; border: 1px solid #dce4e0; border-radius: 16px; background: #fff; }
+        .fixture-panel h1, .fixture-panel h2 { margin: 0 0 12px; font-size: 18px; }
+        .fixture-card { position: relative; min-height: 118px; padding: 16px; border: 1px solid #cad7d0; border-radius: 16px; background: #fff; box-shadow: 0 12px 30px rgba(34, 50, 42, 0.1); }
+        .fixture-card span { display: block; color: #6b7d74; font-size: 11px; }
+        .fixture-card strong { display: block; margin-top: 6px; font-size: 16px; }
+        .fixture-trial-preview { min-height: 0 !important; margin-top: 18px; padding: 18px; border-radius: 16px; background: #173429; color: #fff; }
+        .fixture-trial-preview > span { display: block; color: #a9dbc0; font-size: 10px; font-weight: 800; }
+        .fixture-trial-preview .setae-public-hero-actions { margin-top: 10px; }
+        .fixture-open-settings { width: 100%; min-height: 44px; margin-top: 14px; border: 1px solid #bdd0c7; border-radius: 12px; background: #fff; color: #28513f; font-weight: 800; cursor: pointer; }
+        #fixture-result { margin-top: 12px; padding: 12px; border-radius: 12px; background: #f4f8f6; font: 12px/1.6 ui-monospace, monospace; white-space: pre-wrap; }
+        @media (max-width: 760px) {
+            .fixture-main { width: calc(100% - 24px); grid-template-columns: 1fr; }
+            .fixture-header { padding: 0 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="setae-app" class="is-guest-trial">
+        <header class="fixture-header">
+            <strong>SETAE</strong>
+            <span class="setae-guest-avatar">S</span>
+        </header>
+        <aside class="setae-guest-trial-bar">
+            <div class="setae-guest-trial-copy">
+                <span class="setae-guest-trial-kicker">この端末だけに保存</span>
+                <strong>登録なしで5匹まで試せます</strong>
+                <p>登録後に、この端末の個体と記録をそのまま同期できます。</p>
+            </div>
+            <div class="setae-guest-trial-actions">
+                <button type="button" class="setae-pwa-install-action">ホーム画面に追加</button>
+                <a class="setae-guest-register-action" href="#">無料登録して同期</a>
+                <a class="setae-guest-login-action" href="#">ログイン</a>
+            </div>
+        </aside>
+
+        <main class="fixture-main">
+            <section class="fixture-panel">
+                <h1>オフライン個体管理</h1>
+                <div class="fixture-card setae-spider-list-row is-local-only" data-sync-label="端末保存">
+                    <span>Grammostola pulchra</span>
+                    <strong>くろまる</strong>
+                    <span>給餌 7/25 / 脱皮 7/20</span>
+                </div>
+                <div id="fixture-result" role="status">IndexedDBを確認しています</div>
+            </section>
+
+            <aside class="fixture-panel">
+                <h2>通知と同期</h2>
+                <div class="setae-pwa-profile-card">
+                    <div>
+                        <span class="setae-pwa-profile-kicker">PWA</span>
+                        <strong>ホーム画面・通知</strong>
+                        <p>飼育確認と相談の返信を、端末ごとに設定できます。</p>
+                    </div>
+                    <div class="setae-pwa-profile-actions">
+                        <button type="button">通知設定</button>
+                    </div>
+                </div>
+                <button type="button" class="fixture-open-settings" id="fixture-open-settings">通知設定を確認</button>
+                <div class="setae-public-home-v2 fixture-trial-preview">
+                    <span>登録なしで始める</span>
+                    <div class="setae-public-hero-actions">
+                        <a href="#" class="setae-public-secondary-btn">
+                            <span class="setae-public-trial-main">登録なしで、すぐ試す</span>
+                            <small class="setae-public-trial-note">5匹までこの端末に保存</small>
+                        </a>
+                    </div>
+                </div>
+            </aside>
+        </main>
+        <div class="setae-connectivity-status is-offline">
+            <span class="setae-connectivity-dot"></span>
+            <span class="setae-connectivity-label">オフライン保存中</span>
+        </div>
+    </div>
+
+    <div id="setae-pwa-settings-modal" class="setae-modal setae-pwa-settings-modal" style="display:none;" aria-hidden="true">
+        <div class="setae-modal-content setae-pwa-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="setae-pwa-settings-title">
+            <div class="setae-pwa-settings-head">
+                <div><span>PWA NOTIFICATIONS</span><h2 id="setae-pwa-settings-title">通知とホーム画面</h2></div>
+                <button type="button" class="setae-pwa-settings-close" aria-label="閉じる">&times;</button>
+            </div>
+            <div class="setae-pwa-support-note">
+                <strong>この端末ごとに設定されます</strong>
+                <p>飼育の確認時刻と相談への返信通知を選べます。</p>
+            </div>
+            <section class="setae-pwa-subscription-panel">
+                <div><strong>この端末の通知</strong><p>通知は許可されています</p></div>
+                <button type="button">通知を停止</button>
+            </section>
+            <form id="setae-pwa-preferences-form">
+                <label class="setae-pwa-toggle-row">
+                    <span><strong>飼育リマインダー</strong><small>今日まだ確認していない個体を通知</small></span>
+                    <input type="checkbox" checked>
+                    <i aria-hidden="true"></i>
+                </label>
+                <label class="setae-pwa-time-row">
+                    <span><strong>通知する時刻</strong><small>端末のタイムゾーンで配信</small></span>
+                    <input type="time" value="20:00">
+                </label>
+                <label class="setae-pwa-toggle-row">
+                    <span><strong>相談広場の返信</strong><small>参加中の相談に返信が届いたとき</small></span>
+                    <input type="checkbox" checked>
+                    <i aria-hidden="true"></i>
+                </label>
+                <div class="setae-pwa-settings-actions">
+                    <button type="button">テスト通知</button>
+                    <button type="submit">設定を保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        window.SetaeSettings = {
+            guest_mode: true,
+            current_user_id: 0,
+            current_user: { spider_limit: 5 }
+        };
+        window.SetaeCore = { state: { apiRoot: '', nonce: '' } };
+        window.jQuery = function () {
+            return { val: function () { return ''; } };
+        };
+    </script>
+    <script src="../../assets/js/modules/offline-store.js"></script>
+    <script>
+        window.__setaeFixtureReady = new Promise(function (resolve, reject) {
+            const deletion = indexedDB.deleteDatabase('setae-care-offline');
+            deletion.onsuccess = run;
+            deletion.onerror = function () { reject(deletion.error); };
+
+            function run() {
+                SetaeOffline.createSpider({
+                    classification: 'other',
+                    custom_species: 'Grammostola pulchra',
+                    name: 'くろまる',
+                    last_molt: '2026-07-20',
+                    last_feed: '2026-07-25'
+                }).then(function (created) {
+                    return SetaeOffline.createLog(
+                        created.id,
+                        'feed',
+                        '2026-07-25',
+                        { prey_type: 'ヨーロッパイエコオロギ', refused: false },
+                        null
+                    ).then(function () { return created.id; });
+                }).then(function (id) {
+                    return Promise.all([
+                        SetaeOffline.getSpiders({ scope: 'active' }),
+                        SetaeOffline.getSpiderDetail(id),
+                        SetaeOffline.getSpiderEvents(id)
+                    ]);
+                }).then(function (values) {
+                    const summary = {
+                        spiders: values[0].length,
+                        title: values[1].title,
+                        events: values[2].length,
+                        lastFeed: values[1].last_feed,
+                        syncState: values[1].sync_state
+                    };
+                    document.getElementById('fixture-result').textContent = JSON.stringify(summary, null, 2);
+                    document.body.dataset.testStatus = 'passed';
+                    resolve(summary);
+                }).catch(function (error) {
+                    document.getElementById('fixture-result').textContent = error.message;
+                    document.body.dataset.testStatus = 'failed';
+                    reject(error);
+                });
+            }
+        });
+
+        (function () {
+            const modal = document.getElementById('setae-pwa-settings-modal');
+            function closeSettings() {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('setae-pwa-settings-open');
+            }
+            document.getElementById('fixture-open-settings').addEventListener('click', function () {
+                modal.style.display = 'flex';
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('setae-pwa-settings-open');
+            });
+            document.querySelector('.setae-pwa-settings-close').addEventListener('click', closeSettings);
+            document.getElementById('setae-pwa-preferences-form').addEventListener('submit', function (event) {
+                event.preventDefault();
+                closeSettings();
+                document.body.dataset.settingsSaved = 'true';
+            });
+        })();
+    </script>
+</body>
+</html>

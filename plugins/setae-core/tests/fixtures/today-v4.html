@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Today Workbench v4</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/task-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/today.css">
+  <style>
+    .fixture-main {
+      min-height: 100dvh;
+      padding: var(--space-5) var(--space-4) var(--space-7);
+      background: var(--bg-app);
+    }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><main class="fixture-main"><div id="app"></div></main></div>
+  <script type="module">
+    import { renderToday } from '../../assets/app/pages/today.js';
+
+    const count = Math.max(0, Number(fixtureParams.get('tasks') || 20));
+    const requestedOverdue = fixtureParams.has('overdue')
+      ? Math.max(0, Number(fixtureParams.get('overdue')))
+      : count > 8 ? Math.min(12, count) : Math.min(2, count);
+    const overdueCount = Math.min(count, requestedOverdue);
+    const todayCount = count - overdueCount;
+    const editing = fixtureParams.get('editing') === '1';
+    const showAll = fixtureParams.get('showAll') === '1';
+    const handledCount = fixtureParams.get('handled') === '0' ? 0 : 4;
+    const upcomingCount = fixtureParams.get('upcoming') === '0' ? 0 : 3;
+    const species = [
+      'Typhochlaena seladonia living collection specimen with an exceptionally long scientific identification',
+      'Caribena versicolor',
+      'Poecilotheria metallica'
+    ];
+    const animals = Array.from({ length: Math.max(12, count) }, (_, index) => ({
+      id: index + 1,
+      code: `C${String(index + 1).padStart(3, '0')}`,
+      species_name: species[index % species.length],
+      is_favorite: index < 4,
+      last_molt: `2026-08-${String(Math.max(1, 23 - index)).padStart(2, '0')}`,
+      image_url: index < 6 ? '../../assets/images/specimen/spider.svg' : '',
+      enclosure_id: index + 1
+    }));
+    const task = (index, priority) => ({
+      id: `${priority}-${index}`,
+      targetType: 'animal',
+      targetId: animals[index].id,
+      type: index % 3 === 0 ? 'feed' : 'observation',
+      title: animals[index].code,
+      subtitle: animals[index].species_name,
+      reason: priority === 'overdue' ? `給餌予定を${(index % 5) + 1}日超過` : '本日の状態確認',
+      priority,
+      action: { recordType: index % 3 === 0 ? 'feed' : 'observation' }
+    });
+    const overdue = Array.from({ length: overdueCount }, (_, index) => task(index, 'overdue'));
+    const today = Array.from({ length: todayCount }, (_, index) => task(overdueCount + index, 'today'));
+    const upcoming = Array.from({ length: upcomingCount }, (_, index) => ({
+      ...task((overdueCount + todayCount + index) % animals.length, 'upcoming'),
+      daysUntilDue: index + 1
+    }));
+    const handled = Array.from({ length: handledCount }, (_, index) => ({
+      title: animals[index].code,
+      type: index % 2 ? 'observation' : 'feed',
+      outcome: 'completed'
+    }));
+    const required = count + handledCount;
+    const careModel = {
+      overdue,
+      today,
+      upcoming,
+      handled,
+      completed: handled,
+      progress: {
+        completed: handledCount,
+        required,
+        percent: required ? Math.round((handledCount / required) * 100) : 100
+      }
+    };
+    const records = animals.slice(0, 6).map((animal, index) => ({
+      targetType: 'animal',
+      targetId: animal.id,
+      animal,
+      event: { type: index % 2 ? 'observation' : 'feed', date: `2026-08-${String(24 - index).padStart(2, '0')}` }
+    }));
+    const dashboard = {
+      version: 2,
+      sections: [
+        { id: 'recent', title: '最近の動き', widgets: [
+          { id: 'recent-records', type: 'recent_records', title: '最近の記録', size: 'large', config: { limit: 6 } },
+          { id: 'recent-molts', type: 'recent_molts', title: '最近の脱皮', size: 'medium', config: { limit: 5 } }
+        ] },
+        { id: 'collection', title: 'コレクションノート', widgets: [
+          { id: 'favorites', type: 'favorites', title: 'お気に入り', size: 'medium', config: { limit: 5 } },
+          { id: 'environment', type: 'environment', title: '飼育環境', size: 'medium', config: {} }
+        ] }
+      ]
+    };
+
+    document.querySelector('#app').innerHTML = renderToday({
+      summary: {},
+      animals,
+      babyGroups: { items: [] },
+      feeders: { items: [] },
+      enclosures: { items: animals.slice(0, 8).map((animal, index) => ({ id: index + 1, last_environment: { temperature: 25 + (index / 10), humidity: 70 + index } })) },
+      records,
+      careModel,
+      taskQueueVisible: true,
+      taskPreferences: { collapsed: false, compactThreshold: 8, showAll, sections: { overdue: true, today: true, upcoming: fixtureParams.get('upcomingOpen') === '1' } },
+      dashboard,
+      dashboardEditing: editing
+    });
+  </script>
+</body>
+</html>

@@ -1,122 +1,269 @@
-/* Setae Custom Login Styles (Light Glass Theme) */
+/* WordPress administrator and recovery fallback. Regular users enter through /app/. */
+:root {
+    --login-canvas: #f3f2ed;
+    --login-surface: #faf9f6;
+    --login-ink: #20231f;
+    --login-secondary: #70756d;
+    --login-rule: #deddd7;
+    --login-rule-strong: #c8c7c0;
+    --login-botanical: #48604d;
+    --login-danger: #9b5149;
+}
+
 body.login {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: grid;
+    min-width: 320px;
+    min-height: 100dvh;
+    margin: 0;
+    place-items: center;
+    background: var(--login-canvas) !important;
+    color: var(--login-ink);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.login * {
+    box-sizing: border-box;
+    letter-spacing: 0;
 }
 
 #login {
-    width: 400px;
-    padding: 0;
+    width: min(100%, 400px);
     margin: 0;
+    padding: 40px 20px;
+}
+
+#login h1 {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 25px;
+    place-items: center;
+}
+
+#login h1::after {
+    color: var(--login-secondary);
+    content: "LIVING COLLECTION";
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: .14em;
 }
 
 #login h1 a {
-    background-image: none !important;
-    text-indent: 0 !important;
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     width: auto !important;
+    min-height: 36px;
     height: auto !important;
-    font-size: 36px !important;
+    margin: 0 !important;
+    background: none !important;
+    color: var(--login-ink) !important;
+    font-size: 20px !important;
     font-weight: 800 !important;
-    background: linear-gradient(to right, #2c3e50, #3498db) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    letter-spacing: -1px;
-    margin-bottom: 30px !important;
-    display: block !important;
-    text-align: center;
+    line-height: 1 !important;
+    text-decoration: none;
+    text-indent: 0 !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+#login h1 a::before {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border: 3px solid var(--login-botanical);
+    border-radius: 50%;
+    content: "";
+}
+
+#login h1 a::after {
+    position: absolute;
+    bottom: 2px;
+    left: 14px;
+    width: 7px;
+    height: 2px;
+    background: var(--login-danger);
+    content: "";
+    transform: rotate(45deg);
 }
 
 .login form {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
-    padding: 40px !important;
-}
-
-.login label {
-    color: #555 !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    margin-bottom: 8px !important;
-}
-
-.login input[type="text"],
-.login input[type="password"],
-.login input[type="email"] {
-    background: rgba(255, 255, 255, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-    border-radius: 12px !important;
-    color: #333 !important;
-    padding: 12px 15px !important;
-    font-size: 16px !important;
-    margin-bottom: 5px !important;
+    margin: 0 !important;
+    padding: 28px !important;
+    border: 1px solid var(--login-rule) !important;
+    border-radius: 6px !important;
+    background: var(--login-surface) !important;
     box-shadow: none !important;
 }
 
-.login input:focus {
-    background: rgba(255, 255, 255, 0.9) !important;
-    border-color: #3498db !important;
-    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1) !important;
-    outline: none !important;
+.login form::before {
+    display: block;
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--login-rule);
+    color: var(--login-secondary);
+    content: "ACCESS";
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 700;
 }
 
-.login .button-primary {
-    background: linear-gradient(135deg, #2c3e50, #34495e) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    color: #fff !important;
-    font-weight: 600 !important;
-    padding: 12px 20px !important;
-    height: auto !important;
-    width: 100% !important;
-    margin-top: 25px !important;
-    transition: transform 0.2s, box-shadow 0.2s !important;
-    text-shadow: none !important;
-    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3) !important;
+.login label {
+    color: var(--login-secondary) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.4;
+}
+
+.login .input,
+.login input[type="text"],
+.login input[type="password"],
+.login input[type="email"] {
+    width: 100%;
+    min-height: 46px;
+    margin: 6px 0 17px !important;
+    padding: 0 2px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--login-rule-strong) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--login-ink) !important;
     font-size: 16px !important;
 }
 
-.login .button-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(44, 62, 80, 0.4) !important;
+.login input:focus {
+    border-bottom-color: var(--login-botanical) !important;
+    outline: 0 !important;
+    box-shadow: 0 1px 0 var(--login-botanical) !important;
+}
+
+.login .wp-pwd {
+    position: relative;
+}
+
+.login .button.wp-hide-pw {
+    top: 5px;
+    right: 0;
+    width: 40px;
+    min-width: 40px;
+    height: 42px;
+    border: 0 !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+    color: var(--login-secondary) !important;
+    box-shadow: none !important;
+}
+
+.login .forgetmenot {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+    margin: 0 !important;
+}
+
+.login .forgetmenot label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.login input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    border: 1px solid var(--login-rule-strong);
+    border-radius: 3px;
+    box-shadow: none;
+    accent-color: var(--login-botanical);
+}
+
+.login .submit {
+    margin: 18px 0 0 !important;
+    padding: 0 !important;
+}
+
+.login .button-primary {
+    width: 100% !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 18px !important;
+    border: 1px solid var(--login-ink) !important;
+    border-radius: 6px !important;
+    background: var(--login-ink) !important;
+    box-shadow: none !important;
+    color: #f7f7f3 !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    line-height: 1.2 !important;
+    text-shadow: none !important;
+}
+
+.login .button-primary:hover,
+.login .button-primary:focus {
+    border-color: #30342f !important;
+    background: #30342f !important;
 }
 
 .login #nav,
 .login #backtoblog {
-    text-align: center !important;
-    margin: 20px 0 0 0 !important;
+    margin: 15px 0 0 !important;
     padding: 0 !important;
+    text-align: center !important;
 }
 
 .login #nav a,
-.login #backtoblog a {
-    color: #7f8c8d !important;
-    transition: color 0.2s !important;
-    font-size: 13px !important;
+.login #backtoblog a,
+.login .privacy-policy-page-link a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    color: var(--login-secondary) !important;
+    font-size: 11px !important;
+    font-weight: 650;
+    text-decoration: none;
 }
 
 .login #nav a:hover,
-.login #backtoblog a:hover {
-    color: #2c3e50 !important;
+.login #backtoblog a:hover,
+.login .privacy-policy-page-link a:hover {
+    color: var(--login-botanical) !important;
 }
 
-/* Hide bits we don't want */
-.login .forgetmenot {
-    margin-bottom: 10px !important;
+.login .message,
+.login .notice,
+.login #login_error {
+    margin: 0 0 14px !important;
+    padding: 12px 14px !important;
+    border: 1px solid var(--login-rule) !important;
+    border-left: 3px solid var(--login-botanical) !important;
+    border-radius: 4px !important;
+    background: var(--login-surface) !important;
+    box-shadow: none !important;
+    color: var(--login-secondary) !important;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.login #login_error {
+    border-left-color: var(--login-danger) !important;
+}
+
+.login .language-switcher {
+    display: none !important;
 }
 
 .login .privacy-policy-page-link {
-    display: none;
+    margin: 8px 0 0;
 }
 
-/* Hide language switcher as requested to prevent layout issues */
-.login .language-switcher {
-    display: none !important;
+@media (max-width: 480px) {
+    body.login { align-items: start; }
+    #login { padding: max(24px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom)); }
+    .login form { padding: 23px 20px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login * { transition-duration: .01ms !important; }
 }

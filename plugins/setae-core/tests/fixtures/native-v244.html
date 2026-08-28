@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE v1.0.244 Native QA</title>
+  <script src="../../assets/app/vendor/qrcode.min.js"></script>
+  <script src="../../assets/app/vendor/jsQR.js"></script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/property-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/activity-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/ledger.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/task-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen-intake.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/quick-record.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/today.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/husbandry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/settings.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/diagnostics.css">
+  <style>
+    .v244-test-page { min-height: 1200px; }
+    .v244-selected-row { position: relative; min-height: var(--touch-target); display: flex; align-items: center; gap: var(--space-2); border: 1px solid var(--border-default); padding: var(--space-3); }
+    .v244-selected-row::before { position: absolute; inset-block: 0; left: 0; width: var(--active-indicator-width); background: var(--accent); content: ''; }
+  </style>
+</head>
+<body data-fixture-ready="false">
+  <div id="app"></div>
+  <script type="module">
+    import { renderAppFrame } from '../../assets/app/components/app-frame.js';
+    import { button, dateField, tabPanel, tabs } from '../../assets/app/components/primitives.js';
+    import { renderToday } from '../../assets/app/pages/today.js';
+    import { renderCollection } from '../../assets/app/pages/collection.js';
+    import { renderRecords } from '../../assets/app/pages/records.js';
+    import { renderHusbandry } from '../../assets/app/pages/husbandry.js';
+    import { renderSettings } from '../../assets/app/pages/settings.js';
+    import { renderSpecimenIntake } from '../../assets/app/features/specimen-intake/view.js';
+    import { renderQuickRecordLauncher } from '../../assets/app/features/records/quick-record-view.js';
+    import { cameraErrorPresentation, decodeQrImage } from '../../assets/app/features/qr/scanner.js';
+    import { buildPrintCalibrationDocument, createQrSvg } from '../../assets/app/features/qr/labels.js';
+    import { createNativeViewportController } from '../../assets/app/runtime/native-viewport-controller.js';
+
+    const app = document.querySelector('#app');
+    const params = new URLSearchParams(location.search);
+    const view = params.get('view') || 'semantic';
+    const animals = [{ id: 1, individual_code: 'C001', manage_code: 'C001', species_name: 'Typhochlaena seladonia', gender: 'female', instar: 8, status: 'normal', last_feed: '2026-08-20', last_molt: '2026-07-12' }];
+    const careModel = { tasks: [], handled: [], sections: [], progress: { completed: 0, total: 0 } };
+    const frameOptions = { page: view === 'collection' || view === 'nursery' ? 'animals' : view === 'husbandry' ? 'husbandry' : view === 'records' || view === 'qr' ? 'records' : view === 'settings' ? 'settings' : 'today', pageTitle: 'Native QA', authenticated: true, online: true, userName: 'QA', activeViewId: 'all', savedViews: [] };
+
+    const semanticContent = (active = 'overview') => `<div class="page v244-test-page">
+      <header class="page-header"><div><div class="eyebrow">NATIVE CERTIFICATION</div><h1>アクセシビリティ検査</h1></div></header>
+      <section aria-labelledby="v244-form-title"><h2 id="v244-form-title">入力と状態</h2>
+        ${tabs([{ id: 'overview', label: '概要' }, { id: 'history', label: '履歴' }], { activeId: active, action: 'fixture-tab', dataKey: 'tab', label: '検査タブ', idPrefix: 'fixture', panelId: 'fixture-panel' })}
+        ${tabPanel(`<h3>${active === 'overview' ? '現在の状態' : '記録履歴'}</h3><p>長い説明文でも文字が切れず、読みやすい行として表示されます。</p>`, { id: 'fixture-panel', idPrefix: 'fixture', activeId: active })}
+        ${dateField({ label: '記録日', name: 'date', value: '2026-08-27', id: 'fixture-date' })}
+        <div class="v244-selected-row" aria-current="true"><input id="fixture-choice" type="checkbox" checked><label for="fixture-choice">選択中の標本 C001</label></div>
+        <div class="inline-actions">${button('記録を保存する', { primary: true })}${button('詳細を確認する')}</div>
+      </section>
+    </div>`;
+
+    function pageFor(name) {
+      if (name === 'today') return renderToday({ animals, records: [], careModel, taskQueueVisible: false, dashboard: { sections: [] } });
+      if (name === 'collection') return renderCollection({ animals, animalMode: 'table', animalViews: [{ id: 'all', title: 'すべて', query: {} }], activeAnimalView: { id: 'all', title: 'すべて', query: {} }, collectionSelection: { selectedId: null, selectedIds: [], selectionMode: false }, animalCardConfig: {} });
+      if (name === 'nursery') return renderCollection({ tab: 'babies', animals, babyGroups: { groups: [{ id: 3, name: 'N003', code_start: 'A001', code_end: 'A084', species_name: 'Typhochlaena seladonia', living_count: 84 }] } });
+      if (name === 'records') return renderRecords({ records: [], animals, view: 'history' });
+      if (name === 'qr') return renderRecords({ records: [], animals, view: 'qr', qr: { section: 'scan', scannerMode: 'single', cameraState: params.get('camera') || 'idle' } });
+      if (name === 'husbandry') return renderHusbandry({ tab: 'feeders', animals, feeders: { items: [] }, enclosures: { items: [] }, careModel });
+      if (name === 'settings') return renderSettings({ tab: 'about', data: { profile: {} }, animals, appInfo: { version: '1.0.244', termsUrl: '/terms/', privacyUrl: '/privacy/' }, diagnostics: { enabled: true, data: { pwa: { mode: 'browser' }, viewport: { innerWidth: 390, innerHeight: 844, visualWidth: 390, visualHeight: 844, safeArea: { top: 0, right: 0, bottom: 0, left: 0 }, keyboardOpen: false, documentScrollWidth: 390 }, serviceWorker: { controlled: true }, camera: { getUserMedia: true, permission: 'prompt' } } } });
+      return semanticContent();
+    }
+
+    let activeTab = 'overview';
+    let overlaysHtml = '';
+    if (view === 'intake' || view === 'modal') overlaysHtml = renderSpecimenIntake({ type: 'animal', data: {} }, { enclosures: { items: [] } });
+    if (view === 'quick' || view === 'sheet') overlaysHtml = renderQuickRecordLauncher({ animals, careTasks: [] });
+    const content = ['intake', 'modal', 'quick', 'sheet'].includes(view) ? semanticContent() : pageFor(view);
+    app.innerHTML = renderAppFrame({ ...frameOptions, content, overlaysHtml });
+
+    function renderSemantic() {
+      app.innerHTML = renderAppFrame({ ...frameOptions, content: semanticContent(activeTab) });
+    }
+    app.addEventListener('click', (event) => {
+      const tab = event.target.closest('[data-action="fixture-tab"]');
+      if (!tab) return;
+      activeTab = tab.dataset.tab;
+      renderSemantic();
+      app.querySelector(`#fixture-tab-${activeTab}`)?.focus();
+    });
+    app.addEventListener('keydown', (event) => {
+      const tab = event.target.closest('[role="tab"]');
+      if (!tab || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      activeTab = activeTab === 'overview' ? 'history' : 'overview';
+      renderSemantic();
+      app.querySelector(`#fixture-tab-${activeTab}`)?.focus();
+    });
+
+    function runViewportMock({ layoutHeight = 800, visualHeight = 500 } = {}) {
+      const values = {};
+      let scrolled = 0;
+      const field = { matches: () => true, getBoundingClientRect: () => ({ top: visualHeight + 20, bottom: visualHeight + 70 }), scrollIntoView: () => { scrolled += 1; } };
+      const root = { dataset: {}, style: { setProperty: (key, value) => { values[key] = value; } } };
+      const documentRef = { activeElement: field, documentElement: root, addEventListener() {}, removeEventListener() {} };
+      const visualViewport = { width: 390, height: visualHeight, offsetTop: 0, addEventListener() {}, removeEventListener() {} };
+      const windowRef = { innerWidth: 390, innerHeight: layoutHeight, visualViewport, navigator: { standalone: true }, matchMedia: () => ({ matches: true }), addEventListener() {}, removeEventListener() {}, requestAnimationFrame: (callback) => { callback(); return 1; }, cancelAnimationFrame() {}, setTimeout: (callback) => { callback(); return 1; }, clearTimeout() {} };
+      const controller = createNativeViewportController({ windowRef, documentRef }).start();
+      const result = { snapshot: controller.snapshot(), values, keyboardAttribute: root.dataset.setaeKeyboardOpen, scrolled };
+      controller.stop();
+      return result;
+    }
+
+    async function runQrImageFallback() {
+      const svg = createQrSvg('https://setae.net/v24b/');
+      const image = new Image();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      await image.decode();
+      const source = document.createElement('canvas');
+      source.width = 512;
+      source.height = 512;
+      source.getContext('2d').drawImage(image, 0, 0, 512, 512);
+      const blob = await new Promise((resolve) => source.toBlob(resolve, 'image/png'));
+      const file = new File([blob], 'setae-qr.png', { type: 'image/png' });
+      const target = document.createElement('canvas');
+      const original = globalThis.createImageBitmap;
+      globalThis.createImageBitmap = async () => { throw new Error('forced fallback'); };
+      try {
+        return { code: await decodeQrImage(file, target), width: target.width, height: target.height };
+      } finally {
+        globalThis.createImageBitmap = original;
+      }
+    }
+
+    window.v244Harness = {
+      cameraErrorPresentation,
+      buildPrintCalibrationDocument,
+      runViewportMock,
+      runQrImageFallback,
+      renderCameraState(state) {
+        const root = app.querySelector('[data-role="qr-scan-status"]');
+        const stage = app.querySelector('.qr-camera-stage');
+        const presentation = cameraErrorPresentation({ name: state });
+        if (root) root.textContent = presentation.message;
+        if (stage) stage.dataset.cameraState = presentation.state;
+        return presentation;
+      }
+    };
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

@@ -6,9 +6,9 @@ class Setae_CPT_Spider
     public function register()
     {
         $labels = array(
-            'name' => 'My Spiders',
-            'singular_name' => 'Spider',
-            'menu_name' => 'My Spiders',
+            'name' => '登録個体',
+            'singular_name' => '個体',
+            'menu_name' => '登録個体',
             'add_new' => '個体登録',
             'add_new_item' => '個体を追加',
             'edit_item' => '個体を編集',
@@ -40,7 +40,7 @@ class Setae_CPT_Spider
             'setae_classification',
             'setae_spider',
             array(
-                'label' => 'Classification',
+                'label' => '分類',
                 'rewrite' => array('slug' => 'classification'),
                 'hierarchical' => true, // カテゴリーのように振る舞う
                 'show_in_rest' => true,

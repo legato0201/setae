@@ -41,47 +41,57 @@ class Setae_Spider_Meta
                 </td>
             </tr>
             <tr>
-                <th><label for="setae_gender">Gender</label></th>
+                <th><label for="setae_gender">性別</label></th>
                 <td>
                     <select name="setae_gender" id="setae_gender">
                         <option value="unknown" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'unknown'); ?>>
-                            Unknown (不明)</option>
+                            不明</option>
                         <option value="female" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'female'); ?>>
-                            Female (メス ♀)</option>
-                        <option value="male" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'male'); ?>>Male
-                            (オス ♂)</option>
+                            メス ♀</option>
+                        <option value="male" <?php selected(get_post_meta($post->ID, '_setae_gender', true), 'male'); ?>>オス ♂</option>
                     </select>
                 </td>
             </tr>
             <tr>
-                <th><label for="setae_last_molt_date">Last Molt</label></th>
+                <th><label for="setae_last_molt_date">最終脱皮日</label></th>
                 <td><input type="date" name="setae_last_molt_date" id="setae_last_molt_date"
                         value="<?php echo esc_attr($molt_date); ?>" /></td>
             </tr>
             <tr>
-                <th><label for="setae_last_feed_date">Last Feed</label></th>
+                <th><label for="setae_last_feed_date">最終給餌日</label></th>
                 <td><input type="date" name="setae_last_feed_date" id="setae_last_feed_date"
                         value="<?php echo esc_attr($feed_date); ?>" /></td>
             </tr>
             <tr>
-                <th><label for="setae_bl_status">BL Status</label></th>
+                <th><label for="setae_bl_status">繁殖募集</label></th>
                 <td>
                     <select name="setae_bl_status" id="setae_bl_status">
-                        <option value="none" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'none'); ?>>None
-                            (募集なし)</option>
-                        <option value="recruiting" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'recruiting'); ?>>Recruiting (募集中)</option>
-                        <option value="loaned" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'loaned'); ?>>
-                            Loaned (貸出中)</option>
+                        <option value="none" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'none'); ?>>募集なし</option>
+                        <option value="recruiting" <?php selected(get_post_meta($post->ID, '_setae_bl_status', true), 'recruiting'); ?>>募集中</option>
                     </select>
                 </td>
             </tr>
             <tr>
-                <th><label for="setae_bl_terms">BL Terms</label></th>
+                <th><label for="setae_bl_terms">募集条件・備考</label></th>
                 <td>
                     <input type="text" name="setae_bl_terms" id="setae_bl_terms" class="regular-text"
                         value="<?php echo esc_attr(get_post_meta($post->ID, '_setae_bl_terms', true)); ?>"
-                        placeholder="Ex: 50/50 split" />
+                        placeholder="例: 産卵した場合は折半、送料は申請者負担" />
                 </td>
+            </tr>
+            <tr>
+                <th><label for="setae_breeding_contact_url">外部連絡先</label></th>
+                <td>
+                    <input type="url" name="setae_breeding_contact_url" id="setae_breeding_contact_url" class="regular-text"
+                        value="<?php echo esc_attr(get_post_meta($post->ID, '_setae_breeding_contact_url', true)); ?>"
+                        placeholder="https://..." />
+                    <p class="description">募集中にする場合はHTTPSの外部連絡先が必要です。</p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="setae_breeding_contact_label">リンクの表示名</label></th>
+                <td><input type="text" name="setae_breeding_contact_label" id="setae_breeding_contact_label" class="regular-text"
+                    maxlength="80" value="<?php echo esc_attr(get_post_meta($post->ID, '_setae_breeding_contact_label', true)); ?>" /></td>
             </tr>
         </table>
         <?php
@@ -108,8 +118,34 @@ class Setae_Spider_Meta
         if (isset($_POST['setae_last_feed_date']))
             update_post_meta($post_id, '_setae_last_feed_date', sanitize_text_field($_POST['setae_last_feed_date']));
 
-        if (isset($_POST['setae_bl_status']))
-            update_post_meta($post_id, '_setae_bl_status', sanitize_text_field($_POST['setae_bl_status']));
+        $bl_status = isset($_POST['setae_bl_status']) ? sanitize_key($_POST['setae_bl_status']) : 'none';
+        if (!in_array($bl_status, array('none', 'recruiting'), true)) {
+            $bl_status = 'none';
+        }
+
+        $contact_url = isset($_POST['setae_breeding_contact_url']) ? esc_url_raw(wp_unslash($_POST['setae_breeding_contact_url'])) : '';
+        $contact_parts = $contact_url ? wp_parse_url($contact_url) : array();
+        if (!$contact_url || empty($contact_parts['scheme']) || strtolower($contact_parts['scheme']) !== 'https') {
+            $contact_url = '';
+            if ($bl_status === 'recruiting') {
+                $bl_status = 'none';
+            }
+        }
+        update_post_meta($post_id, '_setae_bl_status', $bl_status);
+        if ($contact_url) {
+            update_post_meta($post_id, '_setae_breeding_contact_url', $contact_url);
+        } else {
+            delete_post_meta($post_id, '_setae_breeding_contact_url');
+        }
+
+        $contact_label = isset($_POST['setae_breeding_contact_label'])
+            ? mb_substr(sanitize_text_field(wp_unslash($_POST['setae_breeding_contact_label'])), 0, 80)
+            : '';
+        if ($contact_label) {
+            update_post_meta($post_id, '_setae_breeding_contact_label', $contact_label);
+        } else {
+            delete_post_meta($post_id, '_setae_breeding_contact_label');
+        }
 
         if (isset($_POST['setae_bl_terms']))
             update_post_meta($post_id, '_setae_bl_terms', sanitize_text_field($_POST['setae_bl_terms']));
@@ -135,12 +171,27 @@ class Setae_Spider_Meta
                     'last_feed' => get_post_meta($object['id'], '_setae_last_feed_date', true),
                     'bl_status' => get_post_meta($object['id'], '_setae_bl_status', true),
                     'bl_terms' => get_post_meta($object['id'], '_setae_bl_terms', true),
+                    'breeding_contact_url' => get_post_meta($object['id'], '_setae_breeding_contact_url', true),
+                    'breeding_contact_label' => get_post_meta($object['id'], '_setae_breeding_contact_label', true),
                     'owner_id' => get_post_meta($object['id'], '_setae_owner_id', true),
                 );
             },
             'update_callback' => function ($meta_value, $object, $field_name) {
                 if (!is_array($meta_value)) {
                     return;
+                }
+                $bl_status = isset($meta_value['bl_status'])
+                    ? sanitize_key($meta_value['bl_status'])
+                    : sanitize_key(get_post_meta($object->ID, '_setae_bl_status', true));
+                $contact_url = isset($meta_value['breeding_contact_url'])
+                    ? esc_url_raw($meta_value['breeding_contact_url'])
+                    : esc_url_raw(get_post_meta($object->ID, '_setae_breeding_contact_url', true));
+                $contact_parts = $contact_url ? wp_parse_url($contact_url) : array();
+                if ($contact_url && (empty($contact_parts['scheme']) || strtolower($contact_parts['scheme']) !== 'https')) {
+                    return new WP_Error('invalid_breeding_contact_url', '外部連絡先はHTTPSのURLを入力してください。', array('status' => 400));
+                }
+                if ($bl_status === 'recruiting' && !$contact_url) {
+                    return new WP_Error('breeding_contact_required', '繁殖募集を公開するには外部連絡先が必要です。', array('status' => 400));
                 }
                 if (isset($meta_value['species_id'])) {
                     update_post_meta($object->ID, '_setae_species_id', sanitize_text_field($meta_value['species_id']));
@@ -155,10 +206,19 @@ class Setae_Spider_Meta
                     update_post_meta($object->ID, '_setae_last_feed_date', sanitize_text_field($meta_value['last_feed']));
                 }
                 if (isset($meta_value['bl_status'])) {
-                    update_post_meta($object->ID, '_setae_bl_status', sanitize_text_field($meta_value['bl_status']));
+                    update_post_meta($object->ID, '_setae_bl_status', in_array($bl_status, array('none', 'recruiting'), true) ? $bl_status : 'none');
                 }
                 if (isset($meta_value['bl_terms'])) {
                     update_post_meta($object->ID, '_setae_bl_terms', sanitize_text_field($meta_value['bl_terms']));
+                }
+                if (array_key_exists('breeding_contact_url', $meta_value)) {
+                    if ($contact_url) update_post_meta($object->ID, '_setae_breeding_contact_url', $contact_url);
+                    else delete_post_meta($object->ID, '_setae_breeding_contact_url');
+                }
+                if (array_key_exists('breeding_contact_label', $meta_value)) {
+                    $label = mb_substr(sanitize_text_field($meta_value['breeding_contact_label']), 0, 80);
+                    if ($label) update_post_meta($object->ID, '_setae_breeding_contact_label', $label);
+                    else delete_post_meta($object->ID, '_setae_breeding_contact_label');
                 }
                 return true;
             },

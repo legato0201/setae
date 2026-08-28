@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SETAE specimen dashboard preview</title>
+    <link rel="stylesheet" href="../../assets/css/setae-global.css">
+    <link rel="stylesheet" href="../../assets/css/modules/layout.css">
+    <link rel="stylesheet" href="../../assets/css/modules/cards.css">
+    <link rel="stylesheet" href="../../assets/css/modules/modals.css">
+    <link rel="stylesheet" href="../../assets/css/modules/my-spiders.css">
+    <link rel="stylesheet" href="../../assets/css/modules/unified-design.css">
+    <link rel="stylesheet" href="../../assets/css/modules/dark-mode.css">
+    <link rel="stylesheet" href="../../assets/css/modules/specimen-dashboard.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f5f7f6; color: #17221d; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        #setae-app { display: block !important; width: 100%; max-width: none; min-height: 100vh; padding: 24px; }
+        .setae-section { width: 100%; margin: 0 auto 40px; }
+        #section-my-detail { display: grid; }
+        .fixture-title { margin: 0 0 18px; font-size: 24px; }
+        .fixture-divider { height: 1px; margin: 48px 0; background: #d5ded9; }
+        .dashicons { display: inline-grid; place-items: center; }
+        .dashicons::before { content: "•"; }
+        .dashicons-star-filled::before { content: "★"; }
+        .dashicons-star-empty::before { content: "☆"; }
+        .dashicons-calendar-alt::before { content: "▣"; }
+        .dashicons-food::before { content: "+"; }
+        .dashicons-chart-line::before { content: "↗"; }
+        .dashicons-dashboard::before { content: "°"; }
+        .dashicons-admin-site-alt3::before { content: "◌"; }
+        .dashicons-warning::before { content: "!"; }
+        .dashicons-hourglass::before { content: "⌛"; }
+        .dashicons-admin-users::before { content: "●"; }
+        .fixture-photo { display: grid; place-items: center; background: #244a3c; color: #d9efe4; font-size: 38px; }
+        .fixture-photo::before { content: "✦"; }
+        @media (max-width: 767px) { #setae-app { padding: 10px; } .fixture-divider { margin: 28px 0; } }
+    </style>
+</head>
+<body>
+<div id="setae-app">
+    <section id="section-my" class="setae-section">
+        <header class="setae-my-hub-header">
+            <div class="setae-my-hub-title"><h1>個体一覧</h1><span class="setae-my-hub-kicker">飼育中の個体をひと目で管理</span></div>
+            <button class="setae-add-btn" id="btn-add-spider" aria-label="個体を追加"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg><span>個体を追加</span></button>
+        </header>
+        <div class="setae-my-tool-switch"><button class="setae-my-tool-tab is-active">飼育一覧 24</button><button class="setae-my-tool-tab">アーカイブ 3</button><button class="setae-my-tool-tab">餌管理</button></div>
+        <div id="setae-my-collection-pane">
+            <aside id="setae-my-desktop-dashboard" class="setae-my-desktop-dashboard">
+                <section class="my-collection-kpis">
+                    <button class="my-collection-kpi is-green is-active"><span class="my-collection-kpi-icon dashicons dashicons-admin-users"></span><span class="my-collection-kpi-copy"><small>総個体数</small><strong>24<em>匹</em></strong><i>今日の確認 3/24</i></span><span class="my-collection-kpi-progress" style="--kpi-progress:12.5%"><i></i></span></button>
+                    <button class="my-collection-kpi is-mint"><span class="my-collection-kpi-icon dashicons dashicons-heart"></span><span class="my-collection-kpi-copy"><small>通常管理</small><strong>18<em>匹</em></strong><i>健全に飼育中</i></span></button>
+                    <button class="my-collection-kpi is-amber"><span class="my-collection-kpi-icon dashicons dashicons-hourglass"></span><span class="my-collection-kpi-copy"><small>脱皮が近い</small><strong>3<em>匹</em></strong><i>静かに観察</i></span></button>
+                    <button class="my-collection-kpi is-blue"><span class="my-collection-kpi-icon dashicons dashicons-admin-site-alt3"></span><span class="my-collection-kpi-copy"><small>給餌が近い</small><strong>5<em>匹</em></strong><i>次回給餌を確認</i></span></button>
+                </section>
+            </aside>
+            <div class="setae-toolbar-container">
+                <div class="setae-toolbar-header"><div class="setae-search-wrapper"><svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-5-5"></path></svg><input id="setae-spider-search" class="setae-search-input" placeholder="個体名・種類・IDで検索"></div><div class="setae-actions"><button id="btn-my-filter-toggle" class="setae-icon-btn"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v5l-4 2v-7Z"></path></svg><span>絞り込み</span></button><button id="btn-qr-manager" class="setae-icon-btn"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6"></rect><rect x="15" y="3" width="6" height="6"></rect><rect x="3" y="15" width="6" height="6"></rect><path d="M15 15h6v6h-6Z"></path></svg><span>QR</span></button><button id="btn-sort-menu" class="setae-icon-btn"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"></path></svg><span>並び替え</span></button></div></div>
+                <div class="setae-decks-scroll"><button class="deck-pill active">すべて 24</button><button class="deck-pill">給餌目安 5</button><button class="deck-pill">脱皮前 3</button><button class="deck-pill">要確認 1</button><button class="deck-pill">お気に入り 4</button></div>
+            </div>
+            <div class="setae-my-workspace">
+            <main class="setae-my-main">
+                <div id="setae-spider-list" class="setae-list-container"></div>
+            </main>
+            </div>
+        </div>
+    </section>
+
+    <div class="fixture-divider"></div>
+
+    <section id="section-my-detail" class="setae-section">
+        <header class="setae-detail-topbar"><button class="setae-detail-icon-button"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></button><div class="setae-detail-title"><span>マイ個体</span><strong>AV-008</strong></div><div class="setae-detail-topbar-actions"><button class="setae-fab-record"><span class="fab-icon">+</span><span class="fab-text">記録を追加</span></button><button id="btn-detail-favorite" class="setae-detail-icon-button is-active"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9Z"></path></svg></button><button id="btn-edit-spider-trigger" class="setae-detail-icon-button"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg></button></div></header>
+        <section class="setae-spider-hero">
+            <div class="hero-backdrop fixture-photo"></div>
+            <div class="hero-content">
+                <div class="detail-hero-summary">
+                    <div class="hero-info"><span id="detail-spider-id-badge" class="spider-badge-id">AV008</span><h1>Avicularia minatrix</h1><p class="species-name">ミナトリックス #008</p><div class="detail-hero-tags"><span class="is-normal">通常管理</span><span>メス ♀</span><span>L5</span></div><dl class="detail-hero-facts"><div><dt>産地・入手元</dt><dd>CB / ペルー</dd></div><div><dt>管理開始</dt><dd>2025-03-10</dd></div><div><dt>飼育容器</dt><dd>A-12</dd></div></dl></div>
+                    <dl class="detail-hero-stats"><div class="detail-hero-stat"><dt>最終給餌</dt><dd>6 / 18</dd></div><div class="detail-hero-stat"><dt>最終脱皮</dt><dd>6 / 15</dd></div><div class="detail-hero-stat"><dt>現在の状態</dt><dd>通常</dd></div></dl>
+                </div>
+                <aside class="detail-health-meter"><div class="detail-health-ring is-good" style="--detail-health:90%"><span><b>90</b><small>%</small></span></div><div><small>ケアコンディション</small><strong>非常に良好</strong><em>記録が安定しています</em></div></aside>
+            </div>
+        </section>
+        <div class="setae-detail-command-bar"><div class="setae-detail-tabs"><button class="tab-btn active">カルテ</button><button class="tab-btn">すべての記録</button><button class="tab-btn">設定</button></div></div>
+        <div class="setae-detail-container"><div id="tab-overview" class="detail-tab-content"><main class="setae-detail-workspace">
+            <section class="detail-care-focus detail-care-focus--calm"><div class="detail-care-focus-copy"><span>今日の飼育</span><h3>今日の小さな変化を残しましょう</h3><p>ひとことの観察でも、この個体だけのカルテになります。</p></div></section>
+            <div id="detail-condition-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-condition-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">CONDITION</span><h3>健康状態</h3></div></header><div class="detail-condition-body"><div class="detail-condition-ring is-good" style="--detail-condition:90%"><span><b>90</b><small>%</small></span></div><strong>非常に良好</strong><small>記録が安定しています</small></div></section></div>
+            <section class="detail-data-panel detail-environment-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">ENVIRONMENT</span><h3>環境ステータス</h3></div><span class="detail-panel-source">現在値</span></header><div class="detail-environment-metrics"><div class="is-temperature"><span></span><small>温度</small><strong>26℃</strong><em>24-28℃</em></div><div class="is-humidity"><span></span><small>湿度</small><strong>75%</strong><em>60-80%</em></div><div class="is-substrate"><span></span><small>床材・環境</small><strong>良好</strong><em>ヤシガラ</em></div><button class="is-check"><span></span><small>最終確認</small><strong>08/04</strong><em>詳細を見る</em></button></div></section>
+            <div id="detail-feeding-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-feeding-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">FEEDING</span><h3>給餌ステータス</h3></div></header><div class="detail-feeding-body"><div class="detail-feeding-ring" style="--detail-feeding:72%"><span><small>給餌間隔</small><b>7<i>日</i></b><em>良好</em></span></div><dl><div><dt>最終給餌日</dt><dd>08/03</dd></div><div><dt>前の種類</dt><dd>コオロギM</dd></div><div><dt>平均間隔</dt><dd>7日</dd></div><div><dt>直近30日</dt><dd>12回</dd></div></dl></div></section></div>
+            <div id="detail-stage-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-stage-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">GROWTH STAGE</span><h3>脱皮・成長ステージ</h3></div><span class="detail-stage-forecast">次回目安まで約42日</span></header><div class="detail-stage-track"><span class="is-complete"><i>L2</i><small>記録済</small></span><span class="is-complete"><i>L3</i><small>記録済</small></span><span class="is-complete"><i>L4</i><small>記録済</small></span><span class="is-current"><i>L5</i><small>現在</small></span><span><i>L6</i><small>-</small></span><span><i>L7</i><small>-</small></span><span><i>L8</i><small>-</small></span></div><div class="detail-stage-summary"><span>脱皮記録 <b>5回</b></span><span>平均間隔 <b>82日</b></span><span>最終脱皮 <b>2026-06-15</b></span></div></section></div>
+            <div id="detail-weekly-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-weekly-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">7 DAYS</span><h3>週間アクティビティ</h3></div><span class="detail-panel-count">8件</span></header><div class="detail-weekly-chart"><svg viewBox="0 0 400 100" preserveAspectRatio="none"><path class="detail-weekly-grid" d="M14 26H386M14 57H386M14 88H386"></path><polyline points="14,72 76,64 138,84 200,52 262,67 324,73 386,26"></polyline><circle cx="14" cy="72" r="3"></circle><circle cx="76" cy="64" r="3"></circle><circle cx="138" cy="84" r="3"></circle><circle cx="200" cy="52" r="3"></circle><circle cx="262" cy="67" r="3"></circle><circle cx="324" cy="73" r="3"></circle><circle cx="386" cy="26" r="3"></circle></svg><div><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span></div></div></section></div>
+            <div id="detail-reminder-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-reminder-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">NEXT CARE</span><h3>次の予定</h3></div></header><div class="detail-reminder-list"><button><span><small>給餌目安</small><em>平均7日周期</em></span><strong>あと2日</strong></button><button><span><small>環境チェック</small><em>温湿度・給水</em></span><strong>あと4日</strong></button></div></section></div>
+            <div id="detail-recent-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-recent-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">LATEST</span><h3>最新の記録</h3></div><button class="detail-inline-link">すべて見る</button></header><div class="detail-recent-list"><div><span class="dashicons dashicons-food"></span><strong>給餌</strong><small>コオロギM 1匹</small><time>08/03</time></div><div><span class="dashicons dashicons-chart-line"></span><strong>脱皮</strong><small>L5へ成長</small><time>07/28</time></div><div><span class="dashicons"></span><strong>観察</strong><small>巣を広げた</small><time>07/25</time></div></div></section></div>
+            <div id="detail-heatmap-slot" class="detail-dashboard-slot"><section class="detail-data-panel detail-heatmap-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">42 DAYS</span><h3>ケアヒートマップ</h3></div><span class="detail-panel-count">18日</span></header><div class="detail-care-heatmap" id="fixture-heatmap"></div><div class="detail-heatmap-legend"><span>少</span><i></i><i></i><i></i><i></i><span>多</span></div></section></div>
+            <section class="detail-data-panel detail-quick-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">QUICK ACTION</span><h3>すぐに記録</h3></div></header><div class="detail-quick-grid"><button><span class="dashicons dashicons-food"></span><strong>給餌</strong><small>記録</small></button><button><span class="dashicons"></span><strong>観察</strong><small>記録</small></button><button><span class="dashicons dashicons-chart-line"></span><strong>脱皮</strong><small>記録</small></button><button><span class="dashicons"></span><strong>計測</strong><small>記録</small></button></div></section>
+            <div class="detail-activity-slot"><section class="detail-activity-card"><div class="detail-activity-head"><span>飼育カルテ</span><strong>42<small>記録</small></strong></div><div class="detail-activity-metrics"><span><b>12</b>給餌</span><span><b>5</b>脱皮</span><span><b>25</b>観察</span></div></section></div>
+            <section class="detail-data-panel detail-notes-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">PROFILE NOTE</span><h3>個体メモ</h3></div><button class="detail-inline-link">編集</button></header><p>非常におとなしい性格。夜間の活動が多く、隠れ家をよく利用する。湿度が下がると隠れ家にこもる傾向。</p><small>管理開始: 2025-03-10</small></section>
+            <section class="detail-data-panel detail-photo-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">ALBUM</span><h3>記録写真</h3></div><span class="detail-panel-count">8</span></header><div class="detail-photo-grid"><div class="detail-photo-tile is-featured fixture-photo"></div><div class="detail-photo-tile fixture-photo"></div><div class="detail-photo-tile fixture-photo"></div></div></section>
+            <section class="detail-data-panel detail-growth-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">SIZE</span><h3>成長記録</h3></div></header><div style="height:180px;display:grid;place-items:center;color:#176b50;border-bottom:2px solid #8fc9aa">3.2 cm　↗　4.1 cm</div></section>
+            <section class="detail-data-panel detail-prey-panel"><header class="detail-panel-head"><div><span class="detail-panel-kicker">FEED</span><h3>餌の傾向</h3></div></header><div style="height:180px;display:grid;place-items:center"><div style="width:120px;height:120px;border:18px solid #176b50;border-right-color:#d99a3d;border-radius:50%"></div></div></section>
+        </main></div></div>
+    </section>
+</div>
+<script>
+    if (new URLSearchParams(window.location.search).get('theme') === 'dark') {
+        document.documentElement.setAttribute('data-setae-theme', 'dark');
+    }
+    const specimenRows = [
+        ['normal', 'Avicularia minatrix', 'ミナトリックス #008', 'AV008', 'ケア良好', '90', '7日', '82日', 'あと 2日'],
+        ['pre_molt', 'Psalmopoeus irminia', 'イルミニア #012', 'PS012', '経過観察', '78', '9日', '98日', '今日'],
+        ['fasting', 'Brachypelma hamorii', 'ハモリイ #003', 'BP003', '要確認', '66', '12日', '120日', '今日'],
+        ['post_molt', 'Grammostola pulchripes', 'プルクリペス #005', 'GP005', 'ケア良好', '88', '8日', '45日', 'あと 1日']
+    ];
+    document.getElementById('setae-spider-list').innerHTML = '<div class="my-desktop-list-header"><div class="my-desktop-list-heading-main"><strong>個体一覧</strong><span>4 / 24匹</span></div></div>' + specimenRows.map((row, index) => `
+        <div class="setae-spider-list-row specimen-card specimen-card-v5" data-status="${row[0]}"><article class="setae-list-content specimen-v5-shell">
+            <div class="setae-avatar-container specimen-card-photo specimen-v5-photo fixture-photo"><span class="specimen-photo-code">${row[3]}</span><button class="specimen-favorite ${index === 0 ? 'is-active' : ''}"><span class="dashicons ${index === 0 ? 'dashicons-star-filled' : 'dashicons-star-empty'}"></span></button></div>
+            <div class="setae-info-column specimen-card-identity specimen-v5-identity"><div class="setae-scientific-name"><i>${row[1]}</i></div><div class="setae-nickname-row"><button class="setae-nickname">${row[2]}</button></div><div class="specimen-card-badges"><span class="specimen-condition ${row[4] === '要確認' ? 'is-alert' : ''}"><i></i>${row[4]}</span><span>L${index + 4}</span><span>メス ♀</span></div></div>
+            <div class="specimen-card-metrics specimen-v5-metrics"><span class="is-temperature"><i></i><b>26℃</b><small>温度</small></span><span class="is-humidity"><i></i><b>75%</b><small>湿度</small></span><span class="is-feed"><i></i><b>${row[6]}</b><small>給餌間隔</small></span><span class="is-molt"><i></i><b>${row[7]}</b><small>脱皮後</small></span></div>
+            <div class="specimen-v5-stage"><div class="specimen-v5-stage-track">${Array.from({length:6}, (_,i) => `<span class="${i < index + 2 ? 'is-complete' : (i === index + 2 ? 'is-current' : '')}"><i>L${i + 1}</i></span>`).join('')}<span class="is-adult"><i>成体</i></span></div></div>
+            <div class="specimen-v5-spark">${Array.from({length:13}, (_,i) => `<i class="is-active" style="--spark-height:${15 + ((i * 17) % 80)}%"></i>`).join('')}</div>
+            <aside class="specimen-next-care specimen-v5-care"><button class="specimen-v5-more"><span>•••</span></button><span class="specimen-next-care-icon"></span><span class="specimen-next-care-copy"><small>次の給餌予定</small><strong>${row[8]}</strong><em>平均周期から算出</em></span><button class="specimen-detail-button">詳細を見る</button></aside>
+        </article></div>`).join('');
+    document.getElementById('fixture-heatmap').innerHTML = Array.from({length:42}, (_, i) => `<i class="is-level-${i % 5}"></i>`).join('');
+</script>
+</body>
+</html>

@@ -239,7 +239,7 @@ class Setae_BL_Contracts
 
                 // Get Species Name
                 $species_id = get_post_meta($spider_id, '_setae_species_id', true);
-                $species_name = $species_id ? get_the_title($species_id) : 'Unknown Species';
+                $species_name = $species_id ? get_the_title($species_id) : '種類不明';
 
                 // Check Proven Status
                 $is_proven = $this->check_is_proven($spider_id);

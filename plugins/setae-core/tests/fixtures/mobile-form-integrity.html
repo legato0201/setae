@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Mobile Form Integrity</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/combobox.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen-intake.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/quick-record.css">
+  <style>
+    .fixture-page {
+      width: min(100%, var(--content-reading-width));
+      min-inline-size: 0;
+      margin-inline: auto;
+      padding: var(--space-4);
+    }
+
+    .fixture-page > header,
+    .fixture-section {
+      min-inline-size: 0;
+      padding-block: var(--space-4);
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .fixture-page h1,
+    .fixture-page h2,
+    .fixture-page p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .fixture-section h2 {
+      margin-bottom: var(--space-3);
+      font-size: var(--type-section);
+    }
+
+    .fixture-scientific-name {
+      font-family: var(--font-taxon);
+      font-style: italic;
+      overflow-wrap: anywhere;
+    }
+
+    .fixture-dialog-demo {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .fixture-dialog-demo .modal-backdrop,
+    .fixture-dialog-demo .sheet-backdrop {
+      position: relative;
+      z-index: 0;
+      inset: auto;
+      min-inline-size: 0;
+      min-height: 360px;
+      padding: var(--space-3);
+      background: var(--bg-subtle);
+    }
+
+    .fixture-dialog-demo .modal,
+    .fixture-dialog-demo .sheet {
+      position: relative;
+      inset: auto;
+      width: 100%;
+      height: auto;
+      max-height: none;
+    }
+
+    .fixture-dialog-demo .sheet {
+      padding: var(--space-3);
+    }
+
+    @media (max-width: 767px) {
+      .fixture-dialog-demo {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .fixture-dialog-demo .modal,
+      .fixture-dialog-demo .sheet {
+        border-radius: var(--radius-overlay);
+      }
+    }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
+  <script type="module">
+    import {
+      button,
+      checkboxControl,
+      dateField,
+      fileField,
+      modal,
+      selectField,
+      sheet,
+      textField,
+      textareaField
+    } from '../../assets/app/components/primitives.js';
+    import { syncDateFieldDisplay } from '../../assets/app/components/date-field.js';
+    import { renderSpecimenIntake } from '../../assets/app/features/specimen-intake/view.js';
+    import { renderRecordForm } from '../../assets/app/features/records/record-form-view.js';
+    import { renderQrWorkspace } from '../../assets/app/features/qr/view.js';
+
+    const app = document.querySelector('#app');
+    const screen = fixtureParams.get('screen') || 'controls';
+    const specimen = {
+      id: 41,
+      title: 'C041-LIVING-COLLECTION-WORKBENCH',
+      classification: 'tarantula',
+      species_id: 501,
+      species_name: 'Typhochlaena seladonia',
+      gender: 'female',
+      instar: 8,
+      status: 'pre_molt',
+      enclosure_id: 4,
+      last_feed: '2026-08-12',
+      last_molt: '2026-07-19',
+      acquired_date: '2026-03-14',
+      temperature: '26.0',
+      humidity: '72',
+      substrate: 'ヤシガラ土',
+      origin: 'Captive bred / Living Collection Workbench / Japan',
+      notes: '長い観察メモでも入力欄やダイアログを押し広げないことを確認します。'
+    };
+
+    function controlsFixture() {
+      const form = `<form class="form-grid" aria-label="全入力コントロール">
+        ${textField({ label: 'Text', name: 'text', value: 'Living Collection Workbench' })}
+        ${textField({ label: 'Search', name: 'search', type: 'search', placeholder: '個体を検索' })}
+        ${textField({ label: 'Number', name: 'number', type: 'number', value: '42', min: 0 })}
+        ${dateField({ label: '最終脱皮日', name: 'date', value: '2026-08-24' })}
+        ${dateField({ label: '時刻', name: 'time', type: 'time', value: '18:42' })}
+        ${dateField({ label: '日時', name: 'datetime', type: 'datetime-local', value: '2026-08-24T18:42' })}
+        ${dateField({ label: '月', name: 'month', type: 'month', value: '2026-08' })}
+        ${selectField({ label: 'Select', name: 'select', value: 'normal', options: [{ value: 'normal', label: '通常' }, { value: 'pre_molt', label: '脱皮前' }] })}
+        ${selectField({ label: 'Long select', name: 'long_select', value: 'long', options: [{ value: 'long', label: 'Typhochlaena seladonia / Living Collection Workbench / Captive bred specimen' }] })}
+        ${textareaField({ label: 'Textarea', name: 'textarea', value: '観察内容を記録します。', rows: 3 })}
+        ${checkboxControl({ label: 'Checkbox + 長い説明ラベルでも親幅を押し広げない', name: 'checkbox', checked: true })}
+        ${fileField({ label: 'File picker', name: 'file', fileName: '選択されていません' })}
+        <div class="field"><span>温度</span><div class="input-with-unit"><input class="text-field" type="number" value="26.5" step="0.1"><span>°C</span></div></div>
+        <div class="form-row">${dateField({ label: '入手日', name: 'acquired', value: '2026-03-14' })}${textField({ label: '齢期', name: 'instar', type: 'number', value: '8' })}</div>
+        <div class="field"><span>非常に長い入力項目ラベルでも親コンテナの横幅を増やさないことを確認する項目</span><input class="text-field" value="Typhochlaena seladonia"></div>
+        <p class="fixture-scientific-name">Poecilotheria metallica and Typhochlaena seladonia living collection specimen record</p>
+      </form>`;
+      const modalHtml = modal(`<header class="modal-header"><h2>入力Modal</h2></header><div class="modal-body"><form class="form-grid">${dateField({ label: '記録日', name: 'modal_date', value: '2026-08-24' })}${selectField({ label: '長い選択肢', name: 'modal_select', value: 'long', options: [{ value: 'long', label: 'Living Collection Workbench / Typhochlaena seladonia' }] })}<div class="modal-actions"><span></span>${button('キャンセル')}${button('保存する', { type: 'submit', primary: true })}</div></form></div>`, { label: '入力Modal' });
+      const sheetHtml = sheet(`<div class="sheet-title-row"><h2>入力Sheet</h2></div><form class="form-grid">${dateField({ label: '日付', name: 'sheet_date', value: '2026-08-24' })}${textareaField({ label: 'メモ', name: 'sheet_note', value: '長いメモ' })}<div class="form-actions">${button('キャンセル')}${button('記録する', { type: 'submit', primary: true })}</div></form>`, { label: '入力Sheet' });
+      return `<main class="fixture-page"><header><span class="eyebrow">PROFESSIONAL UI FOUNDATION</span><h1>Mobile Form Integrity</h1></header><section class="fixture-section"><h2>Controls</h2>${form}</section><section class="fixture-section"><h2>Modal / Sheet</h2><div class="fixture-dialog-demo"><div>${modalHtml}</div><div>${sheetHtml}</div></div></section></main>`;
+    }
+
+    function intakeFixture() {
+      return renderSpecimenIntake({
+        type: 'animal',
+        classification: 'tarantula',
+        speciesMode: 'catalog',
+        speciesId: 501,
+        selectedSpecies: { id: 501, ja_name: 'セラドニア', scientific_name: 'Typhochlaena seladonia' },
+        data: specimen
+      }, { enclosures: { items: [{ id: 4, code: 'E004', name: 'Rack A / Upper / Living Collection Workbench' }] } });
+    }
+
+    function quickRecordFixture() {
+      return renderRecordForm({
+        quickRecord: { type: 'feed', animalId: specimen.id, animalIds: [], submitting: false, error: '' },
+        animals: [specimen],
+        selectedAnimalId: specimen.id,
+        recent: [{ prey_type: 'レッドローチ M' }],
+        today: '2026-08-24'
+      });
+    }
+
+    function qrFixture() {
+      const queue = [
+        { code: 'k7mp3x', manage_code: 'C041', species_name: 'Typhochlaena seladonia / Living Collection Workbench' },
+        { code: 'x7m4p9', manage_code: 'C042', species_name: 'Poecilotheria metallica' }
+      ];
+      return `<main class="fixture-page">${renderQrWorkspace({
+        qr: {
+          section: 'scan',
+          scannerMode: 'batch',
+          batchMode: 'capture',
+          batchStep: 'edit',
+          batchEventType: 'feed',
+          sameDate: '2026-08-24',
+          scanQueue: queue,
+          batchRows: {
+            k7mp3x: { date: '2026-08-24', prey_type: 'D. hydei', note: '長いメモでも横幅を増やさない' },
+            x7m4p9: { date: '2026-08-24', prey_type: 'レッドローチ M', note: '' }
+          }
+        },
+        animals: [specimen]
+      })}</main>`;
+    }
+
+    app.innerHTML = screen === 'intake'
+      ? intakeFixture()
+      : screen === 'quick'
+        ? quickRecordFixture()
+        : screen === 'qr'
+          ? qrFixture()
+          : controlsFixture();
+
+    ['input', 'change'].forEach((eventName) => app.addEventListener(eventName, (event) => {
+      if (event.target.matches('.date-field-control')) syncDateFieldDisplay(event.target);
+    }));
+
+    requestAnimationFrame(() => {
+      const results = [...app.querySelectorAll('.date-field-frame')].map((frame) => {
+        const input = frame.querySelector('.date-field-control');
+        const frameRect = frame.getBoundingClientRect();
+        const inputRect = input?.getBoundingClientRect();
+        return Boolean(inputRect && inputRect.left >= frameRect.left - 0.5 && inputRect.right <= frameRect.right + 0.5);
+      });
+      document.body.dataset.dateGeometry = results.length && results.every(Boolean) ? 'pass' : 'fail';
+      document.body.dataset.dateFieldCount = String(results.length);
+      document.body.dataset.documentOverflow = document.documentElement.scrollWidth <= window.innerWidth + 1 ? 'pass' : 'fail';
+    });
+  </script>
+</body>
+</html>

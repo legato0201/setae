@@ -5,22 +5,8 @@ if (!defined('ABSPATH'))
 
 function setae_theme_enqueue_scripts()
 {
-    // Global Styles (Optionally keep if they define basics not in plugin)
-    // wp_enqueue_style('setae-global', get_template_directory_uri() . '/assets/css/setae-global.css', array(), '1.0.0');
-
-    // NOTE: Assets are now managed by Setae Core Plugin (class-setae-dashboard.php)
-
-    // Enqueue QRCode Lib (Ensure it's loaded if Plugin doesn't?)
-    // Plugin ui module depends on 'qrcode-js', so we should ensure it's registered or loaded here or there.
-    // Plugin uses 'qrcode-js' in dependency array.
-    wp_enqueue_script('qrcode-js', 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', array(), '1.0.0', true);
-
-    // Enqueue Chart.js
-    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '4.4.0', true);
-
-    // User Settings & Localization (Moved to Plugin?)
-    // The plugin dashboard class handles localization for 'setae-app-core'.
-    // We should NOT duplicate it here to avoid conflicts or overwrites.
+    // Dashboard assets, including offline-capable QR and chart libraries, are
+    // registered by Setae Core to keep one deterministic dependency graph.
 }
 add_action('wp_enqueue_scripts', 'setae_theme_enqueue_scripts');
 

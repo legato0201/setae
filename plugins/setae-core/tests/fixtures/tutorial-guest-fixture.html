@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>SETAE guest tutorial fixture</title>
+    <link rel="stylesheet" href="../../assets/css/setae-global.css">
+    <link rel="stylesheet" href="../../assets/css/modules/layout.css">
+    <link rel="stylesheet" href="../../assets/css/modules/cards.css">
+    <link rel="stylesheet" href="../../assets/css/modules/modals.css">
+    <link rel="stylesheet" href="../../assets/css/modules/views.css">
+    <link rel="stylesheet" href="../../assets/css/modules/my-spiders.css">
+    <link rel="stylesheet" href="../../assets/css/modules/unified-design.css">
+    <link rel="stylesheet" href="../../assets/css/modules/pwa.css">
+    <link rel="stylesheet" href="../../assets/css/modules/tutorial.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f6f8f7; color: #263a31; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .fixture-shell { min-height: 100vh; }
+        .fixture-header { min-height: 64px; padding: 0 16px; border-bottom: 1px solid #dce4e0; background: #fff; display: flex; align-items: center; justify-content: space-between; }
+        .fixture-header strong { font-size: 18px; }
+        .fixture-main { width: min(900px, calc(100% - 24px)); margin: 12px auto 110px; }
+        .fixture-section { padding: 0 !important; }
+        .fixture-card { margin-top: 16px; }
+        .fixture-card .setae-list-content { min-height: 118px; padding: 16px; }
+        .fixture-card-copy span { display: block; color: #738079; font-size: 11px; }
+        .fixture-card-copy strong { display: block; margin-top: 5px; font-size: 17px; }
+        .fixture-card-copy small { display: block; margin-top: 8px; color: #5f7068; }
+        .fixture-log-dialog { width: min(540px, calc(100% - 20px)); max-height: calc(100dvh - 20px); padding: 18px; overflow: auto; }
+        .fixture-log-dialog h2 { margin: 0 0 14px; font-size: 20px; }
+        .fixture-log-dialog .setae-form-group { margin-bottom: 14px; padding: 14px; border: 1px solid #dde6e1; border-radius: 16px; }
+        .fixture-log-dialog label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 800; }
+        .fixture-type-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .fixture-type-buttons button { min-height: 42px; border: 1px solid #cad8d1; border-radius: 12px; background: #fff; }
+        .upload-group button { width: 100%; min-height: 48px; border: 1px dashed #9eb8aa; border-radius: 12px; background: #f6faf8; }
+        .log-share-options { padding: 12px; border-radius: 12px; background: #f2f7f4; font-size: 12px; }
+        .setae-btn-submit { width: 100%; min-height: 46px; border: 0; border-radius: 12px; background: #247552; color: #fff; font-weight: 800; }
+        @media (min-width: 768px) {
+            .fixture-main { margin-top: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="setae-app" class="is-guest-trial fixture-shell">
+        <header class="fixture-header">
+            <strong>SETAE</strong>
+            <span class="setae-guest-avatar">S</span>
+        </header>
+
+        <aside id="setae-guest-trial-bar" class="setae-guest-trial-bar">
+            <div class="setae-guest-trial-copy">
+                <span class="setae-guest-trial-kicker">この端末だけに保存</span>
+                <strong>登録なしで5匹まで試せます</strong>
+                <p>登録後に、この端末の個体と記録をそのまま同期できます。</p>
+            </div>
+            <div class="setae-guest-trial-actions">
+                <a class="setae-guest-register-action" href="#">無料登録して同期</a>
+                <a class="setae-guest-login-action" href="#">ログイン</a>
+            </div>
+        </aside>
+
+        <main class="fixture-main">
+            <section id="section-my-detail" class="setae-section fixture-section">
+                <header class="setae-detail-topbar">
+                    <button type="button" class="setae-detail-icon-button" aria-label="個体一覧に戻る">‹</button>
+                    <div class="setae-detail-title"><span>マイ個体</span><strong>くろまる</strong></div>
+                    <div class="setae-detail-topbar-actions">
+                        <div id="setae-detail-primary-actions">
+                            <button type="button" id="btn-add-log" class="setae-fab-record">
+                                <span class="fab-icon">+</span>
+                                <span class="fab-text">記録を追加</span>
+                            </button>
+                        </div>
+                        <button type="button" id="btn-edit-spider-trigger" class="setae-detail-icon-button" aria-label="個体情報を編集">•••</button>
+                    </div>
+                </header>
+            </section>
+
+            <section id="section-my" class="setae-section fixture-section">
+                <div class="setae-spider-list-row fixture-card" data-id="-101" data-status="normal" data-classification="tarantula" data-prey="コオロギ">
+                    <div class="setae-swipe-bg swipe-left"></div>
+                    <div class="setae-swipe-bg swipe-right"></div>
+                    <div class="setae-list-content">
+                        <div class="fixture-card-copy">
+                            <span>Grammostola pulchra</span>
+                            <strong>くろまる</strong>
+                            <small>給餌 7/25 ・ 脱皮 7/20</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <nav class="setae-nav" aria-label="メインメニュー">
+            <button class="setae-nav-item"><span class="setae-nav-label">図鑑</span></button>
+            <button class="setae-nav-item active"><span class="setae-nav-label">マイ個体</span></button>
+            <button class="setae-nav-item"><span class="setae-nav-label">ベビー</span></button>
+            <button class="setae-nav-item"><span class="setae-nav-label">交流</span></button>
+            <button class="setae-nav-item"><span class="setae-nav-label">繁殖</span></button>
+        </nav>
+    </div>
+
+    <div id="setae-log-modal" class="setae-modal" style="display:none;">
+        <div class="setae-modal-content fixture-log-dialog">
+            <form id="setae-log-form">
+                <h2>記録を追加</h2>
+                <div class="setae-form-group type-group">
+                    <label>記録の種類</label>
+                    <div class="fixture-type-buttons">
+                        <button type="button">給餌</button>
+                        <button type="button">脱皮</button>
+                        <button type="button">成長</button>
+                        <button type="button">観察</button>
+                    </div>
+                </div>
+                <div class="setae-form-group upload-group">
+                    <label>写真とメモ</label>
+                    <button type="button">写真を選択</button>
+                </div>
+                <div class="log-share-options">お世話フィードに共有</div>
+                <button type="submit" class="setae-btn-submit">保存する</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        localStorage.removeItem('setae_tutorial_add_log_v2');
+        window.SetaeSettings = { guest_mode: true };
+        window.SetaeCore = {
+            state: {
+                cachedSpiders: [{
+                    id: -101,
+                    status: 'normal',
+                    classification: 'tarantula',
+                    last_feed: '2026-07-25'
+                }]
+            },
+            track: function () {},
+            showToast: function () {}
+        };
+    </script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../../assets/js/modules/ui/actions.js"></script>
+    <script src="../../assets/js/modules/app-tutorial.js"></script>
+    <script>
+        jQuery(function ($) {
+            $('#btn-add-log').on('click', function () {
+                $('#setae-log-modal').css('display', 'flex');
+                SetaeTutorial.initAddLog();
+            });
+            $('#setae-log-form').on('submit', function (event) {
+                event.preventDefault();
+            });
+            document.body.dataset.fixtureReady = 'true';
+        });
+    </script>
+</body>
+</html>

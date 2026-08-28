@@ -1,0 +1,145 @@
+/* Shared registration layout. Control, focus and dialog surfaces belong to Public Foundation. */
+.setae-public-register-dialog {
+    width: min(520px, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.setae-public-register-dialog-frame {
+    display: grid;
+    gap: var(--setae-public-space-4);
+    padding: var(--setae-public-space-6);
+    overflow-wrap: anywhere;
+}
+
+.setae-public-register-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: center;
+    gap: var(--setae-public-space-2) var(--setae-public-space-3);
+}
+
+.setae-public-register-heading > div {
+    display: contents;
+}
+
+.setae-public-register-heading > [data-public-register-close] {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: max-content;
+    justify-self: end;
+    white-space: nowrap;
+}
+
+.setae-public-register-heading h2 {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-width: 0;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: var(--setae-public-weight-semibold);
+    line-height: 1.4;
+    text-wrap: balance;
+}
+
+.setae-public-register-eyebrow {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    color: var(--setae-public-muted);
+    font-size: .75rem;
+    font-weight: var(--setae-public-weight-semibold);
+    letter-spacing: .08em;
+}
+
+.setae-public-register-dialog-frame > p {
+    margin: 0;
+    color: var(--setae-public-muted);
+}
+
+.setae-public-register-dialog form {
+    display: grid;
+    gap: var(--setae-public-space-4);
+    margin: 0;
+}
+
+.setae-public-register-consent {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--setae-public-space-2) var(--setae-public-space-4);
+}
+
+.setae-public-register-consent > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--setae-public-touch-target);
+    color: var(--setae-public-accent);
+    text-underline-offset: .2em;
+}
+
+.setae-public-register-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--setae-public-touch-target);
+    gap: var(--setae-public-space-3);
+    cursor: pointer;
+}
+
+.setae-public-register-dialog[data-busy="true"] {
+    cursor: wait;
+}
+
+.setae-public-register-notice {
+    position: fixed;
+    z-index: 1000;
+    inset-inline: var(--setae-public-space-4);
+    bottom: var(--setae-public-space-4);
+    width: min(36rem, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    margin: 0 auto;
+    padding: var(--setae-public-space-4);
+    border: 1px solid var(--setae-public-rule-strong);
+    border-inline-start: 3px solid var(--setae-public-success);
+    border-radius: var(--setae-public-radius-control);
+    background: var(--setae-public-surface);
+    color: var(--setae-public-ink);
+    box-shadow: var(--setae-public-shadow-overlay);
+    font-family: var(--setae-public-font-ui);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-register-notice:empty {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+}
+
+@media (max-width: 767px) {
+    .setae-public-register-dialog-frame {
+        padding: var(--setae-public-space-5) var(--setae-public-space-4);
+    }
+
+    .setae-public-register-dialog .setae-public-form-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (forced-colors: active) {
+    .setae-public-register-notice {
+        border-width: 2px;
+        box-shadow: none;
+    }
+}
+
+@media print {
+    .setae-public-register-dialog,
+    .setae-public-register-notice {
+        display: none;
+    }
+}

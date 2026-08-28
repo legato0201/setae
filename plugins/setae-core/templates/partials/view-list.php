@@ -6,7 +6,7 @@
         <div class="setae-fixed-header-group">
             <!-- Collapsing Header Title -->
             <div class="setae-header-area" style="padding: 20px 16px 10px;">
-                <h2 style="margin:0; font-size:28px; font-weight:800;">My Spiders</h2>
+                <h2 style="margin:0; font-size:28px; font-weight:800;">マイ個体</h2>
             </div>
 
             <!-- Advanced Control Bar (Modern) -->

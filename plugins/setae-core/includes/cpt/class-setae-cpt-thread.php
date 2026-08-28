@@ -5,9 +5,9 @@ class Setae_CPT_Thread
     public function register()
     {
         $labels = array(
-            'name' => 'Community Threads',
-            'singular_name' => 'Thread',
-            'menu_name' => 'Community',
+            'name' => '相談スレッド',
+            'singular_name' => 'スレッド',
+            'menu_name' => '相談広場',
             'add_new' => '新規スレッド',
             'add_new_item' => 'スレッドを追加',
             'edit_item' => 'スレッドを編集',

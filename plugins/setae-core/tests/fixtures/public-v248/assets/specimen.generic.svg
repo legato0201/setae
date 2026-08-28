@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Generic specimen silhouette</title>
+  <g fill="none" stroke="#555b53" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="80" cy="58" r="34" stroke-width="5"/>
+    <path d="M80 24v68M56 44c19 6 29 23 24 48M104 44C85 50 75 67 80 92" stroke-width="5"/>
+    <path d="M66 100h28M80 92v8" stroke-width="5"/>
+    <circle cx="80" cy="58" r="7" fill="#555b53" stroke-width="3"/>
+  </g>
+</svg>

@@ -5,19 +5,9 @@ var SetaeUIDesktop = (function ($) {
     let isTouch = false;
 
     function init() {
-        // ▼▼▼ 追加: 一度でも画面がタッチされたらフラグを立てる ▼▼▼
         $(document).on('touchstart', function () {
             isTouch = true;
         });
-
-        // マウスが動いた時の処理（ホバーで背景チラ見せ）
-        $(document).on('mousemove', '.setae-spider-list-row', handleMouseMove);
-
-        // マウスが離れた時の処理（リセット）
-        $(document).on('mouseleave', '.setae-spider-list-row', handleMouseLeave);
-
-        // クリック時の処理（アクション実行）
-        $(document).on('click', '.setae-spider-list-row', handleClick);
     }
 
     function handleMouseMove(e) {
@@ -49,9 +39,16 @@ var SetaeUIDesktop = (function ($) {
         if (!isPlant && $row.data('classification') === 'plant') isPlant = true;
 
 
+        // ▼ 追加: キャプション（エサの名前）の取得
+        const preyType = $row.data('prey') || $row.attr('data-prey') || '';
+        let rightCaption = '';
+        if ((config.right_swipe.action === 'feed' || config.right_swipe.action === 'ate') && preyType) {
+            rightCaption = preyType;
+        }
+
         // 左端 (20%未満) -> 右スワイプアクション (Reveal Left BG)
         if (percent < 0.2) {
-            setupSwipeBg(bgLeft, config.right_swipe);
+            setupSwipeBg(bgLeft, config.right_swipe, rightCaption);
 
             // 植物用のアイコン上書き
             if (isPlant) {
@@ -202,10 +199,30 @@ var SetaeUIDesktop = (function ($) {
     }
 
     // Helper: 背景セットアップ
-    function setupSwipeBg(el, conf) {
+    function setupSwipeBg(el, conf, caption = '') {
         if (!el || !conf) return;
         el.style.backgroundColor = conf.color;
-        el.innerHTML = `<span class="swipe-icon" style="font-size:24px; line-height:1;">${conf.icon}</span>`;
+
+        if (caption) {
+            // ▼ ここを追加: キャプションがある時はCSSの20pxを上書きして0にする
+            el.style.setProperty('padding-left', '0px', 'important');
+
+            // 括弧内の日本語だけを抽出する（例: "Dubia (デュビア)" -> "デュビア"）
+            const match = caption.match(/\((.*?)\)/);
+            const shortCaption = match ? match[1] : caption;
+
+            el.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%;">
+                    <span class="swipe-icon" style="font-size:20px; line-height:1; margin-bottom:2px;">${conf.icon}</span>
+                    <span style="font-size:9px; color:#fff; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90%; text-shadow:0 1px 2px rgba(0,0,0,0.3); letter-spacing:0.5px;">${shortCaption}</span>
+                </div>
+            `;
+        } else {
+            // ▼ ここを追加: キャプションがない時はインライン指定を消し、CSSの20pxに戻す
+            el.style.removeProperty('padding-left');
+
+            el.innerHTML = `<span class="swipe-icon" style="font-size:24px; line-height:1;">${conf.icon}</span>`;
+        }
     }
 
     // Fallback if module is missing

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SETAE v1.0.245 Modal Boundary Fixture</title>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/form-safety.css">
+  <style>
+    #fixture-root { min-height: 100dvh; }
+    .fixture-launcher { padding: var(--space-5); }
+    .fixture-modal-body { min-height: 180px; overflow-y: auto; padding: var(--space-4); }
+    .fixture-modal-blank { min-height: 56px; border: 1px dashed var(--border-default); }
+  </style>
+</head>
+<body>
+  <main id="fixture-root"></main>
+  <script type="module">
+    import { button, dateField, modal, selectField, textField, textareaField } from '../../assets/app/components/primitives.js';
+    import { createOverlayController, resolveActionInvocation } from '../../assets/app/components/overlay-controller.js';
+    import { createFormSafetyController } from '../../assets/app/components/form-safety-controller.js';
+
+    const root = document.querySelector('#fixture-root');
+    let initialValue = '初期値';
+    let open = false;
+    let multiple = false;
+    let navigationCount = 0;
+    const overlay = createOverlayController(root);
+    const safety = createFormSafetyController(root, {
+      ownerId: () => 'fixture-245',
+      onOverlayChange: () => overlay.sync()
+    });
+
+    function modalHtml() {
+      return modal(`
+        <header class="modal-header" data-fixture-region="header"><h2 id="fixture-modal-title">個体情報</h2><div>${button('画面移動', { action: 'fixture-navigation' })}${button('閉じる', { action: 'close-modal' })}</div></header>
+        <form class="fixture-modal-body" data-role="fixture-form" data-draft-policy="guard" data-draft-type="fixture" data-draft-entity="same-key">
+          ${textField({ label: '管理名', name: 'title', value: initialValue, id: 'fixture-title' })}
+          ${dateField({ label: '日付', name: 'date', value: '2026-08-27', id: 'fixture-date' })}
+          ${selectField({ label: '状態', name: 'status', value: 'normal', options: [{ value: 'normal', label: '通常' }, { value: 'pre_molt', label: '脱皮前' }], id: 'fixture-status' })}
+          ${textareaField({ label: 'メモ', name: 'note', value: '', id: 'fixture-note' })}
+          <p data-fixture-region="description">入力内容を確認して保存します。</p>
+          <div class="fixture-modal-blank" data-fixture-region="blank" aria-label="モーダル本文の余白"></div>
+          <footer class="modal-actions" data-fixture-region="footer">${button('キャンセル', { action: 'close-modal' })}${button('保存', { type: 'submit', primary: true })}</footer>
+        </form>
+        ${multiple ? `<form class="fixture-modal-body" data-role="fixture-second-form" data-draft-policy="guard" data-draft-type="fixture-second" data-draft-entity="second">${textField({ label: '補足', name: 'secondary', value: '', id: 'fixture-secondary' })}</form>` : ''}`, {
+        labelledBy: 'fixture-modal-title',
+        backdropAction: 'close-modal'
+      });
+    }
+
+    function render() {
+      overlay.beforeRender();
+      root.innerHTML = open
+        ? modalHtml()
+        : `<div class="fixture-launcher">${button('フォームを開く', { action: 'open-fixture' })}</div>`;
+      safety.sync();
+      overlay.sync();
+    }
+
+    function closeModal() {
+      open = false;
+      render();
+    }
+
+    root.addEventListener('click', (event) => {
+      const invocation = resolveActionInvocation(event);
+      if (!invocation?.action) return;
+      if (invocation.action === 'open-fixture') {
+        open = true;
+        render();
+        return;
+      }
+      if (invocation.action === 'fixture-navigation') {
+        const commit = () => { navigationCount += 1; };
+        if (!safety.guard(commit, { scope: root, mode: 'navigation' })) commit();
+        return;
+      }
+      if (invocation.action !== 'close-modal') return;
+      const scope = invocation.element.closest('[data-overlay-backdrop]');
+      if (safety.guard(closeModal, { scope, mode: 'overlay' })) return;
+      closeModal();
+    });
+
+    root.addEventListener('submit', (event) => event.preventDefault());
+    window.__setaeModal245 = {
+      safety,
+      setInitial(value) { initialValue = String(value); },
+      setMultiple(value) { multiple = Boolean(value); render(); },
+      open() { open = true; render(); },
+      isOpen: () => open,
+      navigationCount: () => navigationCount,
+      guardCount: () => root.querySelectorAll('.form-safety-dialog').length,
+      dirty: () => root.querySelector('[data-role="fixture-form"]')?.dataset.formDirty || 'absent'
+    };
+    open = true;
+    render();
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

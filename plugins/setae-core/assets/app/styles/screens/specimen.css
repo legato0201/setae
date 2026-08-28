@@ -1,0 +1,310 @@
+@layer screens {
+  .specimen-workspace-header {
+    min-height: calc(var(--touch-target) + var(--space-7));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "back actions"
+      "title title";
+    align-items: start;
+    gap: var(--space-3) var(--space-5);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  .specimen-workspace-back {
+    grid-area: back;
+  }
+
+  .specimen-workspace-back .button {
+    padding-left: 0;
+  }
+
+  .specimen-workspace-title {
+    min-width: 0;
+    display: grid;
+    grid-area: title;
+    gap: var(--space-2);
+  }
+
+  .specimen-workspace-title > span {
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-body);
+    font-weight: var(--weight-semibold);
+  }
+
+  .specimen-workspace-title h1 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-taxon);
+    font-size: var(--type-specimen-display);
+    font-style: italic;
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-display);
+  }
+
+  .specimen-workspace-title > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-secondary);
+  }
+
+  .specimen-workspace-header-actions {
+    display: flex;
+    grid-area: actions;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .favorite-button {
+    color: var(--text-muted);
+  }
+
+  .favorite-button .ui-icon:not(.is-custom-icon) {
+    fill: none;
+  }
+
+  .favorite-button.is-favorite {
+    background: var(--favorite-soft);
+    color: var(--favorite);
+  }
+
+  .favorite-button.is-favorite .ui-icon:not(.is-custom-icon) {
+    fill: currentColor;
+  }
+
+  .specimen-workspace-v4 .specimen-workspace-navigation {
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  .specimen-workspace-tabs {
+    min-height: var(--touch-target);
+    gap: var(--space-5);
+    overflow-x: auto;
+    border-bottom: 0;
+  }
+
+  .specimen-workspace-v4 .specimen-workspace-content {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-7);
+  }
+
+  .specimen-overview-v4,
+  .specimen-tab-panel {
+    min-width: 0;
+  }
+
+  .specimen-section {
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .specimen-section > header,
+  .specimen-panel-header {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .specimen-section > header > div,
+  .specimen-panel-header > div {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .specimen-section > header span {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-meta);
+  }
+
+  .specimen-section > header h2 {
+    margin: 0;
+    font-size: var(--type-workbench-section);
+    font-weight: var(--weight-semibold);
+  }
+
+  .specimen-panel-header {
+    padding-bottom: var(--space-4);
+  }
+
+  .specimen-panel-header span,
+  .specimen-panel-header small {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-meta);
+  }
+
+  .specimen-panel-header h2 {
+    margin: 0;
+    font-size: var(--type-workbench-title);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-display);
+  }
+
+  .specimen-filter-tabs {
+    min-height: var(--touch-target);
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .specimen-analysis-section {
+    padding: var(--space-5) 0;
+  }
+
+  .specimen-analysis-section h3,
+  .specimen-media-group > h3 {
+    margin: 0 0 var(--space-3);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-caption);
+    font-weight: var(--weight-semibold);
+  }
+
+  .specimen-media-group + .specimen-media-group {
+    margin-top: var(--space-6);
+  }
+
+  .specimen-empty {
+    min-height: calc(var(--touch-target) * 2);
+    display: grid;
+    padding-block: var(--space-5);
+    color: var(--text-muted);
+    place-items: center;
+    text-align: center;
+  }
+
+  .specimen-empty.compact {
+    min-height: var(--touch-target);
+  }
+
+  .specimen-notes-section .property-row {
+    align-items: start;
+    padding-block: var(--space-3);
+  }
+
+  .specimen-section-copy {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: var(--leading-body);
+    white-space: pre-line;
+  }
+
+  @media (min-width: 1200px) {
+    .specimen-workspace-header {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "back actions"
+        "title actions";
+      align-items: center;
+      padding-top: var(--space-2);
+    }
+
+    .specimen-workspace-header-actions {
+      align-self: center;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .specimen-workspace-v4 .specimen-identity-panel {
+      display: grid;
+      grid-template-columns: minmax(var(--specimen-media-min-width), .8fr) minmax(0, 1.2fr);
+      gap: var(--space-5);
+      padding-block: var(--space-5);
+    }
+
+    .specimen-identity-panel .identity-panel-media {
+      grid-row: 1 / span 4;
+    }
+
+    .specimen-identity-panel .identity-panel-heading,
+    .specimen-identity-panel .identity-panel-facts {
+      grid-column: 2;
+      margin-top: 0;
+    }
+
+    .specimen-identity-panel .identity-panel-actions,
+    .specimen-identity-panel .identity-panel-label {
+      grid-column: 2;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .page.specimen-workspace-v4 {
+      padding-inline: var(--page-gutter-mobile);
+    }
+
+    .specimen-workspace-header {
+      padding-top: var(--space-2);
+    }
+
+    .specimen-workspace-title h1 {
+      font-size: var(--type-page);
+    }
+
+    .specimen-workspace-v4 .specimen-identity-panel {
+      padding-block: var(--space-4);
+    }
+
+    .specimen-workspace-v4 .specimen-workspace-navigation {
+      margin-inline: calc(-1 * var(--space-4));
+      padding-inline: var(--page-gutter-mobile);
+      scroll-padding-inline: var(--page-gutter-mobile);
+    }
+
+    .specimen-workspace-tabs {
+      gap: var(--space-1);
+      scroll-padding-inline: var(--page-gutter-mobile);
+      scroll-snap-type: x proximity;
+    }
+
+    .specimen-workspace-tabs > [role="tab"] {
+      min-width: auto;
+      padding-inline: var(--space-3);
+      scroll-snap-align: start;
+    }
+
+    .specimen-tab-panel > .specimen-panel-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .specimen-tab-panel > .specimen-panel-header > .button {
+      max-width: 100%;
+      align-self: flex-start;
+      white-space: normal;
+    }
+
+    .specimen-workspace-v4 .property-row {
+      grid-template-columns: minmax(var(--specimen-activity-date-width), .7fr) minmax(0, 1.3fr);
+    }
+
+    .specimen-workspace-v4 .property-row-action {
+      grid-column: 2;
+    }
+
+    .specimen-workspace-v4 .activity-row {
+      grid-template-columns: var(--specimen-activity-date-width) var(--space-5) minmax(0, 1fr);
+    }
+
+    .specimen-workspace-v4 .activity-row-actions {
+      grid-column: 3;
+    }
+
+    .field-label-dialog .field-label-dialog-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .field-label-dialog .field-label-dialog-actions .button {
+      width: 100%;
+    }
+
+  }
+}

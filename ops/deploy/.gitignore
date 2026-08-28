@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+server/config.json
+identity
+id_*
+known_hosts
+*.sql
+*.sql.gz
+*.zip
+.work/

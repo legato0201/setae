@@ -1,0 +1,124 @@
+# INERT TEMPLATE: this is not in .github/workflows and is not installed remotely.
+# Production only: enable after manual server checks, current-source sync,
+# tag/branch protections and production reviewers have been configured.
+# Unexecuted WP/restore checks retain NOT_RUN and need per-release risk approval.
+name: SETAE reviewed release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Published stable release tag (setae-vX.Y.Z or setae-vX.Y.Z.N)'
+        required: true
+        type: string
+      confirm_production_only:
+        description: 'I reviewed this exact candidate for production-only deployment; no staging run is available'
+        required: true
+        default: false
+        type: boolean
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: setae-release-deployment
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.release_tag || github.event.release.tag_name }}
+
+jobs:
+  verify:
+    if: >-
+      vars.SETAE_PIPELINE_ENABLED == 'true' && github.repository == 'legato0201/setae' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event.release.draft == false && github.event.release.prerelease == false))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      commit: ${{ steps.candidate.outputs.commit }}
+      version: ${{ steps.candidate.outputs.version }}
+      sha256: ${{ steps.candidate.outputs.sha256 }}
+    steps:
+      - name: Validate tag before checkout
+        shell: bash
+        env:
+          WORKFLOW_REF: ${{ github.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_CONFIRMATION: ${{ inputs.confirm_production_only }}
+          AUTOMATIC_RELEASES_ENABLED: ${{ vars.SETAE_AUTOMATIC_RELEASES_ENABLED }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^setae-v(0|[1-9][0-9]{0,5})(\.(0|[1-9][0-9]{0,5})){2,3}$ ]]
+          [[ "$WORKFLOW_REF" == "refs/tags/$RELEASE_TAG" ]]
+          if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
+            [[ "$MANUAL_CONFIRMATION" == 'true' ]] || { echo 'STOP: production-only confirmation is required'; exit 1; }
+          else
+            [[ "$AUTOMATIC_RELEASES_ENABLED" == 'true' ]] || { echo 'STOP: complete the first manually confirmed production run before enabling release-event deployment'; exit 1; }
+          fi
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2; verified upstream tag
+        with:
+          ref: refs/tags/${{ inputs.release_tag || github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Deployment tool tests (no credentials)
+        run: python3 ops/deploy/tests/run_tests.py --report "$RUNNER_TEMP/setae-evidence/deployment-tool-tests.json"
+      - name: Verify protected release, source and exact ZIP
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 ops/deploy/release/ci_release.py --tag "$RELEASE_TAG"
+          --directory "$RUNNER_TEMP/setae-candidate"
+          --extract "$RUNNER_TEMP/setae-checked"
+      - name: Test the exact packaged plugin with PHP 8.3
+        run: >-
+          python3 ops/deploy/release/check_plugin.py
+          --plugin "$RUNNER_TEMP/setae-checked/wp-content/plugins/setae-core"
+          --php /usr/bin/php8.3 --node node
+          --report "$RUNNER_TEMP/setae-evidence/plugin-checks.json"
+      - name: Keep plugin test evidence (no DB backups or SSH material)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2; verified upstream tag
+        with:
+          name: setae-plugin-checks-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/setae-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  production:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    # Every run, including the first manual run, requires a production reviewer.
+    # This environment must require an administrator's approval, restrict release
+    # tags, and prohibit bypass. The YAML name alone does not configure protection.
+    environment: setae-production
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.verify.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Recheck the same release bytes and commit
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_COMMIT: ${{ needs.verify.outputs.commit }}
+        run: >-
+          python3 ops/deploy/release/ci_release.py --tag "$RELEASE_TAG"
+          --expected-commit "$EXPECTED_COMMIT" --directory "$RUNNER_TEMP/setae-candidate"
+      - name: Deploy to production through the restricted helper
+        env:
+          SETAE_SSH_HOST: ${{ vars.SETAE_SSH_HOST }}
+          SETAE_SSH_PORT: ${{ vars.SETAE_SSH_PORT }}
+          SETAE_SSH_PRIVATE_KEY: ${{ secrets.SETAE_SSH_PRIVATE_KEY }}
+          SETAE_SSH_KNOWN_HOSTS: ${{ secrets.SETAE_SSH_KNOWN_HOSTS }}
+          ARCHIVE: ${{ steps.candidate.outputs.archive }}
+          DECLARATION: ${{ steps.candidate.outputs.declaration }}
+          COMMIT: ${{ needs.verify.outputs.commit }}
+        run: >-
+          python3 ops/deploy/release/release.py send --archive "$ARCHIVE"
+          --declaration "$DECLARATION" --plugin-source plugins/setae-core --commit "$COMMIT"

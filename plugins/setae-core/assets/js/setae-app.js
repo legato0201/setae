@@ -19,6 +19,9 @@ jQuery(document).ready(function ($) {
     if (urlParams.get('verified') === '1') {
         // 少し遅延させてから表示（UIが描画された後）
         setTimeout(function () {
+            if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.track === 'function') {
+                SetaeCore.track('email_verified');
+            }
             if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
                 SetaeCore.showToast('メール認証が完了しました。ログインしてください。', 'success');
             } else {
@@ -38,71 +41,161 @@ jQuery(document).ready(function ($) {
     // Note: SetaeUI (Renderer) auto-initializes on document.ready in app-ui-renderer.js
     // SetaeUIActions binds touch events automatically in app-ui-renderer.js
 
-    // Registration Logic
-    $('#setae-btn-register-start').on('click', function (e) {
-        e.preventDefault();
-        $('#setae-register-modal').fadeIn(200).css('display', 'flex');
+    if ($('#setae-public-home').length && typeof SetaeCore !== 'undefined' && typeof SetaeCore.track === 'function') {
+        SetaeCore.track('public_home_view');
+    }
+
+    // Retain incoming referral attribution for existing app navigation only.
+    // Public registration is owned by public-registration.js.
+    try {
+        const code = String(urlParams.get('ref') || urlParams.get('referral_code') || '').trim().slice(0, 64);
+        const source = String(urlParams.get('src') || urlParams.get('ref_src') || urlParams.get('utm_source') || '')
+            .trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '_').slice(0, 48);
+        if (code) localStorage.setItem('setae_referral_code', code);
+        if (source) localStorage.setItem('setae_referral_source', source);
+    } catch (error) { /* Referral storage is optional. */ }
+
+    function publicRegistrationUrl() {
+        const existingLink = document.querySelector('a#setae-btn-register-start[href]');
+        if (existingLink) return existingLink.href;
+        const configured = window.SetaeSettings && window.SetaeSettings.registration_url;
+        const url = new URL(configured || '?setae_auth=register', window.location.href);
+        url.searchParams.delete('register');
+        url.searchParams.set('setae_auth', 'register');
+        return url.href;
+    }
+
+    // Public preview navigation and safe demo interactions.
+    $('.setae-public-nav-item[data-public-scroll]').on('click', function () {
+        const targetSelector = $(this).data('public-scroll');
+        const $target = $(targetSelector);
+        if (!$target.length) return;
+
+        $('.setae-public-nav-item').removeClass('active');
+        $(this).addClass('active');
+
+        $('html, body').animate({
+            scrollTop: Math.max(0, $target.offset().top - 18)
+        }, 320);
     });
 
-    $('#close-register-modal').on('click', function () {
-        $('#setae-register-modal').fadeOut(200);
+    $('[data-public-preview-open]').on('click', function () {
+        if ($(this).data('was-swiped')) {
+            $(this).data('was-swiped', false);
+            return;
+        }
+
+        if (!$('#setae-public-preview-modal').length) {
+            $('body').append(`
+                <div id="setae-public-preview-modal" class="setae-modal" style="display:none;">
+                    <div class="setae-modal-content setae-public-preview-modal">
+                        <button type="button" class="setae-close" id="close-public-preview-modal">&times;</button>
+                        <div class="setae-public-preview-modal-hero">🕷️</div>
+                        <h3>ベニヒザ 1号</h3>
+                        <p>Brachypelma hamorii</p>
+                        <div class="setae-public-preview-status">
+                            <div><span>給餌</span><strong>14日前</strong></div>
+                            <div><span>脱皮</span><strong>32日前</strong></div>
+                            <div><span>状態</span><strong>通常</strong></div>
+                        </div>
+                        <a class="setae-btn setae-btn-primary" data-public-preview-register>
+                            自分の個体を登録する
+                        </a>
+                    </div>
+                </div>
+            `);
+        }
+
+        $('[data-public-preview-register]').attr('href', publicRegistrationUrl());
+        $('#setae-public-preview-modal').fadeIn(180).css('display', 'flex');
     });
 
-    $('#setae-register-form').on('submit', function (e) {
-        e.preventDefault();
+    $(document).on('click', '#close-public-preview-modal', function () {
+        $('#setae-public-preview-modal').fadeOut(160);
+    });
 
-        var $btn = $(this).find('button[type="submit"]');
-        var originalText = $btn.text();
-        $btn.text('処理中...').prop('disabled', true);
+    let publicSwipe = null;
+    function setupPublicSwipeBg($row) {
+        const $left = $row.find('.swipe-left');
+        const $right = $row.find('.swipe-right');
+        $left.css('background-color', '#2ecc71').html('<span class="swipe-icon" style="font-size:24px; line-height:1;">🦗</span>');
+        $right.css('background-color', '#f1c40f').html('<span class="swipe-icon" style="font-size:24px; line-height:1;">✋</span>');
+    }
 
-        var data = {
-            action: 'setae_register_user',
-            username: $('#reg-username').val(),
-            email: $('#reg-email').val(),
-            password: $('#reg-password').val(),
-            // ▼ 追加: 紹介コードを送信データに含める
-            referral_code: $('#reg-referral-code').val()
+    $('.setae-public-demo-row').on('pointerdown', function (e) {
+        setupPublicSwipeBg($(this));
+        publicSwipe = {
+            row: this,
+            startX: e.originalEvent.clientX,
+            startY: e.originalEvent.clientY,
+            moved: false
         };
+    });
 
-        var ajaxUrl = (typeof setae_vars !== 'undefined' && setae_vars.ajax_url) ? setae_vars.ajax_url : '/wp-admin/admin-ajax.php';
+    $(document).on('pointermove', function (e) {
+        if (!publicSwipe) return;
 
-        $.ajax({
-            url: ajaxUrl,
-            type: 'POST',
-            data: data,
-            success: function (response) {
-                if (response.success) {
-                    // アラートとリロードを削除し、トースト通知に変更
-                    const successMsg = '仮登録が完了しました。入力されたメールアドレスに認証リンクを送信しましたので、ご確認ください。';
+        const endX = (typeof e.originalEvent.clientX === 'number') ? e.originalEvent.clientX : publicSwipe.startX;
+        const diffX = endX - publicSwipe.startX;
+        const diffY = e.originalEvent.clientY - publicSwipe.startY;
+        if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 12) return;
+        if (Math.abs(diffX) < 8) return;
 
-                    if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
-                        SetaeCore.showToast(successMsg, 'success');
-                    } else {
-                        alert(successMsg);
-                    }
+        publicSwipe.moved = true;
+        const $row = $(publicSwipe.row);
+        const $content = $row.find('.setae-list-content');
+        const $left = $row.find('.swipe-left');
+        const $right = $row.find('.swipe-right');
+        const moveX = Math.max(-90, Math.min(90, diffX * 0.6));
 
-                    // モーダルを閉じてボタンを復元
-                    $('#setae-register-modal').fadeOut(200);
-                    $btn.text(originalText).prop('disabled', false);
+        $content.css('transform', `translateX(${moveX}px)`);
 
-                    // フォームをリセット
-                    $('#setae-register-form')[0].reset();
+        if (diffX > 0) {
+            $left.addClass('is-visible').css('width', `${64 + Math.max(0, diffX - 60) * 0.35}px`);
+            $right.removeClass('is-visible');
+        } else {
+            $right.addClass('is-visible').css('width', `${64 + Math.max(0, Math.abs(diffX) - 60) * 0.35}px`);
+            $left.removeClass('is-visible');
+        }
+    });
 
-                    // ※仮登録状態のため location.reload() は行わず、そのまま待機させる
-                } else {
-                    if (typeof SetaeCore !== 'undefined' && typeof SetaeCore.showToast === 'function') {
-                        SetaeCore.showToast('エラー: ' + (response.data || 'Unknown error'), 'error');
-                    } else {
-                        alert('エラー: ' + (response.data || 'Unknown error'));
-                    }
-                    $btn.text(originalText).prop('disabled', false);
-                }
-            },
-            error: function () {
-                alert('通信エラーが発生しました。');
-                $btn.text(originalText).prop('disabled', false);
-            }
+    $(document).on('pointerup pointercancel', function (e) {
+        if (!publicSwipe) return;
+
+        const endX = (typeof e.originalEvent.clientX === 'number') ? e.originalEvent.clientX : publicSwipe.startX;
+        const diffX = endX - publicSwipe.startX;
+        const $row = $(publicSwipe.row);
+        const $content = $row.find('.setae-list-content');
+        const $left = $row.find('.swipe-left');
+        const $right = $row.find('.swipe-right');
+
+        if (publicSwipe.moved) {
+            $row.data('was-swiped', true);
+            setTimeout(function () {
+                $row.data('was-swiped', false);
+            }, 600);
+        }
+
+        if (diffX > 80) {
+            $left.addClass('swipe-triggered');
+            $row.find('[data-demo-feed]').text('今日').removeClass('alert-text');
+        } else if (diffX < -80) {
+            $right.addClass('swipe-triggered');
+            $row.find('[data-demo-feed]').text('拒食').addClass('alert-text');
+        }
+
+        $content.css({
+            transition: 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)',
+            transform: 'translateX(0)'
         });
+
+        setTimeout(function () {
+            $content.css('transition', '');
+            $left.removeClass('is-visible swipe-triggered').css('width', '64px');
+            $right.removeClass('is-visible swipe-triggered').css('width', '64px');
+        }, 320);
+
+        publicSwipe = null;
     });
 
     // ▼▼▼ 追加機能: 編集提案モーダル (ここに追加) ▼▼▼
@@ -200,7 +293,7 @@ jQuery(document).ready(function ($) {
         } else {
             // リセット
             $('#suggested-temperament-input').val('');
-            $('#temperament-selector-trigger').html('<span style="color:#999;">タップして選択してください...</span>');
+            $('#temperament-selector-trigger').html('<span class="temperament-placeholder">タップして選択してください...</span>');
         }
 
         // ▲▲▲ 追加終了 ▲▲▲
@@ -279,7 +372,7 @@ jQuery(document).ready(function ($) {
             const html = labels.map(lbl => `<span class="temp-chip">${lbl}</span>`).join('');
             $tempTrigger.html(html);
         } else {
-            $tempTrigger.html('<span style="color:#999;">タップして選択してください...</span>');
+            $tempTrigger.html('<span class="temperament-placeholder">タップして選択してください...</span>');
         }
 
         $tempDialog.fadeOut(100);
@@ -307,19 +400,19 @@ jQuery(document).ready(function ($) {
             contentType: false,
             success: function (response) {
                 if (response.success) {
-                    alert('提案を送信しました。ありがとうございます！');
+                    SetaeCore.showToast('提案を送信しました。ありがとうございます。', 'success');
                     $('#setae-species-edit-modal').fadeOut(200);
                     $('#setae-species-edit-form')[0].reset();
                     // プレビューなどをリセット
                     $('#edit-image-preview').hide();
                     $('#edit-image-placeholder').show();
-                    $('#temperament-selector-trigger').html('<span style="color:#999;">タップして選択してください...</span>');
+                    $('#temperament-selector-trigger').html('<span class="temperament-placeholder">タップして選択してください...</span>');
                 } else {
-                    alert('エラー: ' + (response.data || 'Error'));
+                    SetaeCore.showToast('送信できませんでした: ' + (response.data || '内容を確認してください。'), 'error');
                 }
             },
             error: function () {
-                alert('通信エラーが発生しました。');
+                SetaeCore.showToast('通信状態を確認して、もう一度お試しください。', 'error');
             },
             complete: function () {
                 $btn.text('提案を送信する').prop('disabled', false);
@@ -329,32 +422,13 @@ jQuery(document).ready(function ($) {
 
     // ▲▲▲ 追加機能終了 ▲▲▲
 
-    // ▼▼▼ 追加機能: PWA向け Pull-to-Refresh (プロ仕様UI版) ▼▼▼
+    // ▼▼▼ 追加機能: PWA向け Pull-to-Refresh ▼▼▼
     (function () {
-        // 1. プロ仕様のモダングラスモーフィズム・デザイン
         const ptrContainer = document.createElement('div');
         ptrContainer.id = 'setae-ptr-container';
         ptrContainer.innerHTML = `
-            <div id="setae-ptr-spinner" style="
-                width: 42px; height: 42px;
-                background: rgba(35, 35, 35, 0.85); /* サイトに馴染むダーク透過 */
-                backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* グラス効果 */
-                border: 1px solid rgba(255, 255, 255, 0.15); /* 繊細なエッジ */
-                border-radius: 50%;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-                display: flex; align-items: center; justify-content: center;
-                color: #aaa; transition: color 0.3s, border-color 0.3s;
-            ">
-                <svg id="setae-ptr-icon" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none" style="transition: transform 0.1s;">
-                    <line x1="12" y1="3" x2="12" y2="6" opacity="1"></line>
-                    <line x1="18.36" y1="5.64" x2="16.24" y2="7.76" opacity="0.8"></line>
-                    <line x1="21" y1="12" x2="18" y2="12" opacity="0.6"></line>
-                    <line x1="18.36" y1="18.36" x2="16.24" y2="16.24" opacity="0.4"></line>
-                    <line x1="12" y1="21" x2="12" y2="18" opacity="0.3"></line>
-                    <line x1="5.64" y1="18.36" x2="7.76" y2="16.24" opacity="0.2"></line>
-                    <line x1="3" y1="12" x2="6" y2="12" opacity="0.2"></line>
-                    <line x1="5.64" y1="5.64" x2="7.76" y2="7.76" opacity="0.2"></line>
-                </svg>
+            <div id="setae-ptr-spinner" role="status" aria-label="更新中">
+                <span id="setae-ptr-icon" aria-hidden="true"></span>
             </div>
         `;
 
@@ -373,19 +447,35 @@ jQuery(document).ready(function ($) {
 
         const spinner = document.getElementById('setae-ptr-spinner');
         const icon = document.getElementById('setae-ptr-icon');
+        let touchStartX = 0;
         let touchStartY = 0;
         let pullDistance = 0;
         const PULL_THRESHOLD = 70; // 基準点が下がっているため、引き量は標準的でOK
         const MAX_PULL = 120;
         let isAtTop = false;
         let isRefreshing = false;
+        let isPullGesture = false;
+        let ignorePullGesture = false;
+
+        function resetPullGesture() {
+            touchStartX = 0;
+            touchStartY = 0;
+            pullDistance = 0;
+            isAtTop = false;
+            isPullGesture = false;
+            ignorePullGesture = false;
+        }
 
         // タッチ開始時
         window.addEventListener('touchstart', function (e) {
             if (isRefreshing) return;
             if (window.scrollY <= 1) {
                 isAtTop = true;
+                touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
+                pullDistance = 0;
+                isPullGesture = false;
+                ignorePullGesture = false;
                 ptrContainer.style.transition = 'none';
             } else {
                 isAtTop = false;
@@ -394,9 +484,21 @@ jQuery(document).ready(function ($) {
 
         // タッチ移動時
         window.addEventListener('touchmove', function (e) {
-            if (!isAtTop || isRefreshing) return;
+            if (!isAtTop || isRefreshing || ignorePullGesture) return;
 
-            pullDistance = e.touches[0].clientY - touchStartY;
+            const diffX = e.touches[0].clientX - touchStartX;
+            const diffY = e.touches[0].clientY - touchStartY;
+
+            if (!isPullGesture) {
+                if (Math.max(Math.abs(diffX), Math.abs(diffY)) < 9) return;
+                if (diffY <= 0 || Math.abs(diffY) <= Math.abs(diffX) * 1.2) {
+                    ignorePullGesture = true;
+                    return;
+                }
+                isPullGesture = true;
+            }
+
+            pullDistance = diffY;
 
             if (pullDistance > 0) {
                 let resistance = pullDistance * 0.45;
@@ -413,14 +515,7 @@ jQuery(document).ready(function ($) {
                 // 枠全体ではなく、中のアイコンだけを回転させて上品に
                 icon.style.transform = `rotate(${resistance * 4}deg)`;
 
-                // 閾値を超えたら洗練されたブルーのアクセントカラーに
-                if (resistance >= PULL_THRESHOLD) {
-                    spinner.style.color = '#4ea8de';
-                    spinner.style.borderColor = 'rgba(78, 168, 222, 0.5)';
-                } else {
-                    spinner.style.color = '#aaa';
-                    spinner.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                }
+                spinner.classList.toggle('is-ready', resistance >= PULL_THRESHOLD);
 
                 if (e.cancelable) e.preventDefault();
             }
@@ -429,6 +524,10 @@ jQuery(document).ready(function ($) {
         // タッチ終了時
         window.addEventListener('touchend', function () {
             if (!isAtTop || isRefreshing) return;
+            if (!isPullGesture || ignorePullGesture) {
+                resetPullGesture();
+                return;
+            }
 
             ptrContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
 
@@ -440,10 +539,9 @@ jQuery(document).ready(function ($) {
                 // 4. 更新中はノッチ下の定位置(translateY: 0px)で固定
                 ptrContainer.style.transform = `translate(-50%, 0px) scale(1)`;
                 ptrContainer.style.opacity = '1';
-
-                icon.style.transition = 'transform 1s linear';
-                let currentRotation = resistance * 4;
-                icon.style.transform = `rotate(${currentRotation + 1080}deg)`;
+                spinner.classList.remove('is-ready');
+                spinner.classList.add('is-refreshing');
+                icon.style.transform = '';
 
                 setTimeout(() => {
                     window.location.reload(true);
@@ -453,15 +551,22 @@ jQuery(document).ready(function ($) {
                 // キャンセル時は元の隠れ位置へ戻す
                 ptrContainer.style.transform = 'translate(-50%, -80px) scale(0.8)';
                 ptrContainer.style.opacity = '0';
-                spinner.style.color = '#aaa';
-                spinner.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                spinner.classList.remove('is-ready', 'is-refreshing');
+                icon.style.transform = '';
             }
 
-            touchStartY = 0;
-            pullDistance = 0;
-            isAtTop = false;
+            resetPullGesture();
         });
     })();
     // ▲▲▲ 追加機能終了 ▲▲▲
+
+    // Legacy home/trial links retain a real navigation path to the existing app auth route.
+    if (urlParams.get('register') === '1' && !document.querySelector('[data-public-registration]')) {
+        const destination = new URL(publicRegistrationUrl(), window.location.href);
+        destination.searchParams.delete('register');
+        destination.searchParams.set('setae_auth', 'register');
+        if (urlParams.get('from') === 'trial') destination.searchParams.set('from', 'trial');
+        if (destination.href !== window.location.href) window.location.replace(destination.href);
+    }
 
 }); // ← この閉じカッコの中に全てのコードが入っている必要があります

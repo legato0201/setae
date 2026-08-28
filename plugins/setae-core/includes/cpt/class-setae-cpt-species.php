@@ -145,7 +145,7 @@ class Setae_CPT_Species
     {
         // Genus
         register_taxonomy('setae_genus', 'setae_species', array(
-            'label' => '属 (Genus)',
+            'label' => '属',
             'rewrite' => array('slug' => 'genus'),
             'hierarchical' => true,
             'show_in_rest' => true,
@@ -154,7 +154,7 @@ class Setae_CPT_Species
 
         // Habitat
         register_taxonomy('setae_habitat', 'setae_species', array(
-            'label' => 'Region (Locality)', // Renamed from Habitat
+            'label' => '産地・地域', // Renamed from Habitat
             'hierarchical' => true,
             'show_in_rest' => true,
             'show_admin_column' => true,
@@ -162,7 +162,7 @@ class Setae_CPT_Species
 
         // ★追加: 習性 (Type) - 地上性/樹上性/地中性
         register_taxonomy('setae_lifestyle', 'setae_species', array(
-            'label' => 'Lifestyle (Type)',
+            'label' => '生活型',
             'hierarchical' => true,
             'show_in_rest' => true,
             'show_admin_column' => true,
@@ -170,7 +170,7 @@ class Setae_CPT_Species
 
         // Temperament
         register_taxonomy('setae_temperament', 'setae_species', array(
-            'label' => '性格 (Temperament)',
+            'label' => '性格',
             'hierarchical' => false,
             'show_in_rest' => true,
             'show_admin_column' => true,
@@ -188,10 +188,10 @@ class Setae_CPT_Species
         // Reorder columns: Checkbox, Thumb, Title, Counts, Genus, Habitat, Date
         $new_columns = array();
         $new_columns['cb'] = $columns['cb'];
-        $new_columns['setae_thumb'] = 'Image';
-        $new_columns['title'] = 'Name (Japanese / Common)';
-        $new_columns['spider_count'] = 'Count'; // Added
-        $new_columns['setae_size'] = 'Max Legspan (cm)';
+        $new_columns['setae_thumb'] = '画像';
+        $new_columns['title'] = '名前（和名・通称）';
+        $new_columns['spider_count'] = '飼育数'; // Added
+        $new_columns['setae_size'] = '最大レッグスパン（cm）';
 
         // Add taxonomies (added auto by WP, but we want to control order)
         if (isset($columns['taxonomy-setae_genus']))

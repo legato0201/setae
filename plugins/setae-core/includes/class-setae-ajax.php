@@ -23,6 +23,10 @@ class Setae_Ajax
         // コミュニティの未読管理
         add_action('wp_ajax_setae_get_unread_community_count', array($this, 'get_unread_community_count'));
         add_action('wp_ajax_setae_update_com_last_checked', array($this, 'update_com_last_checked'));
+
+        // Funnel metrics
+        add_action('wp_ajax_setae_track_event', array($this, 'track_event'));
+        add_action('wp_ajax_nopriv_setae_track_event', array($this, 'track_event'));
     }
 
     /**
@@ -40,9 +44,20 @@ class Setae_Ajax
 
         $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
         $search_query = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
-        $filter_type = isset($_POST['filter_type']) ? sanitize_text_field($_POST['filter_type']) : '';
+        $filter_type = isset($_POST['filter_type']) ? sanitize_key($_POST['filter_type']) : '';
         $filter_value = isset($_POST['filter_value']) ? urldecode(sanitize_text_field($_POST['filter_value'])) : '';
-        $sort = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'name_asc';
+        $lifestyle = isset($_POST['lifestyle']) ? sanitize_title($_POST['lifestyle']) : '';
+        $habitat = isset($_POST['habitat']) ? sanitize_title($_POST['habitat']) : '';
+        $content_filter = isset($_POST['content_filter']) ? sanitize_key($_POST['content_filter']) : 'all';
+        $sort = isset($_POST['sort']) ? sanitize_key($_POST['sort']) : 'name_asc';
+
+        // Backward compatibility for a cached version of the former single-filter UI.
+        if (!$lifestyle && $filter_type === 'lifestyle') {
+            $lifestyle = sanitize_title($filter_value);
+        }
+        if (!$habitat && in_array($filter_type, array('habitat', 'region'), true)) {
+            $habitat = sanitize_title($filter_value);
+        }
 
         // 検索パラメータをプロパティにセット（フィルター内で使用）
         $this->search_params = [
@@ -54,46 +69,64 @@ class Setae_Ajax
         $args = array(
             'post_type' => 'setae_species',
             'post_status' => 'publish',
-            'posts_per_page' => 12,
+            'posts_per_page' => 18,
             'paged' => $paged,
             'suppress_filters' => false, // フィルターを有効化
         );
 
-        // --- フィルタリング (Taxonomy) ---
-        // ここはWP_Query標準機能でOK
-        if (!empty($filter_type) && !empty($filter_value) && $filter_type !== 'all') {
-            $taxonomy = '';
-            $term_value = $filter_value;
+        $tax_query = array('relation' => 'AND');
+        if ($lifestyle) {
+            $tax_query[] = array(
+                'taxonomy' => 'setae_lifestyle',
+                'field' => 'slug',
+                'terms' => $lifestyle,
+            );
+        }
+        if ($habitat) {
+            $tax_query[] = array(
+                'taxonomy' => 'setae_habitat',
+                'field' => 'slug',
+                'terms' => $habitat,
+            );
+        }
+        if (count($tax_query) > 1) {
+            $args['tax_query'] = $tax_query;
+        }
 
-            switch ($filter_type) {
-                case 'lifestyle':
-                    $taxonomy = 'setae_lifestyle';
-                    // 英語->日本語スラッグ変換マップ
-                    $slug_map = [
-                        'arboreal' => '樹上性',
-                        'terrestrial' => '地表性',
-                        'fossorial' => '地中性'
-                    ];
-                    if (isset($slug_map[$filter_value])) {
-                        $term_value = $slug_map[$filter_value];
-                    }
-                    break;
-                case 'habitat':
-                case 'region':
-                    $taxonomy = 'setae_habitat';
-                    // 日本語エンコード対応は上でurldecode済み
-                    break;
-            }
-
-            if ($taxonomy) {
-                $args['tax_query'] = array(
-                    array(
-                        'taxonomy' => $taxonomy,
-                        'field' => 'slug',
-                        'terms' => $term_value,
-                    ),
-                );
-            }
+        if ($content_filter === 'researched') {
+            $args['meta_query'] = array(
+                array(
+                    'key' => '_setae_research_status',
+                    'value' => array('draft', 'reviewed', 'verified'),
+                    'compare' => 'IN',
+                ),
+            );
+        } elseif ($content_filter === 'community') {
+            global $wpdb;
+            $community_ids = $wpdb->get_col(
+                "SELECT DISTINCT CAST(species_pm.meta_value AS UNSIGNED)
+                FROM {$wpdb->postmeta} species_pm
+                INNER JOIN {$wpdb->posts} related_posts ON related_posts.ID = species_pm.post_id
+                WHERE species_pm.meta_key IN ('_setae_species_id', '_setae_related_species_id')
+                    AND related_posts.post_type IN ('setae_spider', 'setae_topic', 'setae_log')
+                    AND related_posts.post_status = 'publish'"
+            );
+            $args['post__in'] = !empty($community_ids) ? array_map('absint', $community_ids) : array(0);
+        } elseif ($content_filter === 'breeding') {
+            global $wpdb;
+            $breeding_ids = $wpdb->get_col(
+                "SELECT DISTINCT CAST(species_pm.meta_value AS UNSIGNED)
+                FROM {$wpdb->postmeta} species_pm
+                INNER JOIN {$wpdb->posts} spiders ON spiders.ID = species_pm.post_id
+                INNER JOIN {$wpdb->postmeta} status_pm
+                    ON status_pm.post_id = spiders.ID
+                    AND status_pm.meta_key = '_setae_bl_status'
+                    AND status_pm.meta_value = 'recruiting'
+                WHERE species_pm.meta_key = '_setae_species_id'
+                    AND spiders.post_type = 'setae_spider'
+                    AND spiders.post_status = 'publish'"
+            );
+            $args['post__in'] = !empty($breeding_ids) ? array_map('absint', $breeding_ids) : array(0);
         }
 
         // --- フックの登録 ---
@@ -111,6 +144,7 @@ class Setae_Ajax
 
         // 結果出力
         if ($query->have_posts()) {
+            $GLOBALS['setae_species_card_query_ids'] = wp_list_pluck($query->posts, 'ID');
             ob_start();
             while ($query->have_posts()) {
                 $query->the_post();
@@ -126,13 +160,14 @@ class Setae_Ajax
             wp_send_json_success(array(
                 'html' => $html,
                 'max_page' => $query->max_num_pages,
+                'total' => (int) $query->found_posts,
             ));
         } else {
             $html = '';
             if ($paged === 1) {
                 $html = '<div class="no-results" style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">条件に一致する種が見つかりませんでした。</div>';
             }
-            wp_send_json_success(array('html' => $html, 'max_page' => 0));
+            wp_send_json_success(array('html' => $html, 'max_page' => 0, 'total' => 0));
         }
         wp_die();
     }
@@ -161,6 +196,9 @@ class Setae_Ajax
             // 難易度順: _setae_difficulty
             $join .= " LEFT JOIN {$wpdb->postmeta} AS mt2 ON ({$wpdb->posts}.ID = mt2.post_id AND mt2.meta_key = '_setae_difficulty') ";
         }
+        if ($sort === 'research_recent') {
+            $join .= " LEFT JOIN {$wpdb->postmeta} AS mt_research ON ({$wpdb->posts}.ID = mt_research.post_id AND mt_research.meta_key = '_setae_last_researched_at') ";
+        }
 
         return $join;
     }
@@ -180,7 +218,16 @@ class Setae_Ajax
             // タイトル OR 和名(mt1.meta_value)
             // 既存のWHERE句に追加する形にする
             $where .= $wpdb->prepare(
-                " AND ({$wpdb->posts}.post_title LIKE %s OR mt1.meta_value LIKE %s) ",
+                " AND ({$wpdb->posts}.post_title LIKE %s OR mt1.meta_value LIKE %s OR EXISTS (
+                    SELECT 1
+                    FROM {$wpdb->term_relationships} enc_tr
+                    INNER JOIN {$wpdb->term_taxonomy} enc_tt ON enc_tt.term_taxonomy_id = enc_tr.term_taxonomy_id
+                    INNER JOIN {$wpdb->terms} enc_t ON enc_t.term_id = enc_tt.term_id
+                    WHERE enc_tr.object_id = {$wpdb->posts}.ID
+                        AND enc_tt.taxonomy = 'setae_genus'
+                        AND enc_t.name LIKE %s
+                )) ",
+                $like,
                 $like,
                 $like
             );
@@ -211,6 +258,20 @@ class Setae_Ajax
                     AND p_spider.post_type = 'setae_spider'
                     AND p_spider.post_status = 'publish'
                 ) DESC, {$wpdb->posts}.post_title ASC";
+
+            case 'topic_recent':
+                return "(
+                    SELECT MAX(p_topic.post_modified_gmt)
+                    FROM {$wpdb->postmeta} AS pm_topic_species
+                    INNER JOIN {$wpdb->posts} AS p_topic ON p_topic.ID = pm_topic_species.post_id
+                    WHERE pm_topic_species.meta_key = '_setae_related_species_id'
+                    AND pm_topic_species.meta_value = {$wpdb->posts}.ID
+                    AND p_topic.post_type = 'setae_topic'
+                    AND p_topic.post_status = 'publish'
+                ) DESC, {$wpdb->posts}.post_title ASC";
+
+            case 'research_recent':
+                return "COALESCE(NULLIF(mt_research.meta_value, ''), '0000-00-00T00:00:00Z') DESC, {$wpdb->posts}.post_title ASC";
 
             case 'diff_asc':
                 // 難易度 (beginner -> intermediate -> expert)
@@ -248,8 +309,204 @@ class Setae_Ajax
     }
     // ▲▲▲ 新規追加ここまで ▲▲▲
 
+    private function normalize_referral_source($source)
+    {
+        $source = sanitize_key((string) $source);
+        $source = substr($source, 0, 48);
+
+        return $source ?: 'unknown';
+    }
+
+    private function increment_referral_source_count($referrer_id, $source)
+    {
+        $referrer_id = absint($referrer_id);
+        if (!$referrer_id) {
+            return;
+        }
+
+        $source = $this->normalize_referral_source($source);
+        $counts = get_user_meta($referrer_id, '_setae_referral_source_counts', true);
+        $counts = is_array($counts) ? $counts : array();
+        $counts[$source] = isset($counts[$source]) ? ((int) $counts[$source] + 1) : 1;
+
+        update_user_meta($referrer_id, '_setae_referral_source_counts', $counts);
+        update_user_meta($referrer_id, '_setae_referral_registration_count', array_sum(array_map('intval', $counts)));
+        update_user_meta($referrer_id, '_setae_referral_last_registration_at', current_time('mysql'));
+    }
+
+    private function generate_unique_username_from_email($email)
+    {
+        $email_parts = explode('@', $email);
+        $base = isset($email_parts[0]) ? sanitize_user($email_parts[0], true) : '';
+
+        if (empty($base)) {
+            $base = 'setae_user';
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+
+        while (username_exists($candidate)) {
+            $candidate = $base . $suffix;
+            $suffix++;
+        }
+
+        return $candidate;
+    }
+
+    public function track_event()
+    {
+        $result = Setae_App_Operations::track_event(isset($_POST['event']) ? wp_unslash($_POST['event']) : '');
+        if (is_wp_error($result)) {
+            $status = (int) $result->get_error_data('status');
+            wp_send_json_error($result->get_error_code(), $status ?: 400);
+        }
+        wp_send_json_success($result);
+        return;
+
+        $event = isset($_POST['event']) ? sanitize_key($_POST['event']) : '';
+
+        if (empty($event)) {
+            wp_send_json_error('missing_event');
+        }
+
+        $allowed_events = array(
+            'public_home_view',
+            'register_start',
+            'register_referral_prefill',
+            'register_submit_success',
+            'register_referral_submit_success',
+            'profile_public_link_copy',
+            'profile_qr_open',
+            'profile_qr_download',
+            'profile_qr_link_copy',
+            'profile_qr_source_change',
+            'public_profile_view',
+            'public_profile_link_copy',
+            'public_profile_text_copy',
+            'public_profile_x_click',
+            'public_profile_line_click',
+            'partner_page_view',
+            'partner_page_link_copy',
+            'partner_page_text_copy',
+            'partner_page_x_click',
+            'partner_page_line_click',
+            'email_verified',
+            'empty_my_spiders_seen',
+            'my_spiders_filter_empty_seen',
+            'my_spiders_filter_reset',
+            'first_spider_start',
+            'first_record_prompt_seen',
+            'first_record_prompt_click',
+            'daily_streak_panel_seen',
+            'daily_streak_modal_seen',
+            'daily_streak_calendar_open',
+            'daily_streak_log_open',
+            'daily_streak_quick_record_open',
+            'daily_streak_share_to_feed',
+            'daily_streak_invite_copy',
+            'daily_streak_invite_x',
+            'continue_spider_panel_seen',
+            'continue_spider_open',
+            'continue_spider_dismiss',
+            'detail_spider_nav_click',
+            'detail_topic_click',
+            'encyclopedia_empty_seen',
+            'encyclopedia_empty_reset',
+            'encyclopedia_empty_topic_cta',
+            'spider_create_success',
+            'spider_first_photo_add',
+            'baby_group_create',
+            'baby_bulk_update',
+            'baby_filter_change',
+            'baby_codes_copy',
+            'baby_label_print',
+            'baby_csv_download',
+            'baby_range_select',
+            'baby_bulk_invalid_block',
+            'baby_bulk_large_dead_confirm',
+            'today_check_record_click',
+            'today_check_topic_click',
+            'log_date_quick_select',
+            'log_draft_restored',
+            'log_draft_discard',
+            'log_note_template_click',
+            'log_feed_choice_saved',
+            'log_save_next_click',
+            'log_create_success',
+            'log_create_error',
+            'care_feed_share_success',
+            'care_feed_share_link_copy',
+            'care_feed_share_text_copy',
+            'care_feed_share_x',
+            'care_feed_share_line',
+            'care_feed_activity_panel_seen',
+            'care_feed_activity_open',
+            'care_feed_quick_comment_select',
+            'care_feed_comment_success',
+            'care_feed_comment_cta_open',
+            'care_feed_preview_comment_open',
+            'care_feed_comments_empty_focus',
+            'care_feed_reply_start',
+            'care_feed_reply_success',
+            'care_feed_reply_parent_open',
+            'care_feed_sort_change',
+            'care_feed_empty_seen',
+            'care_feed_empty_filter_reset',
+            'care_feed_empty_record_cta',
+            'care_share_view',
+            'care_share_link_copy',
+            'care_share_text_copy',
+            'care_share_x_click',
+            'care_share_line_click',
+            'bl_empty_seen',
+            'bl_empty_my_spiders_cta',
+            'bl_empty_board_cta',
+            'topic_comment_success',
+            'topic_draft_restored',
+            'topic_draft_discard',
+            'topic_comment_template_select',
+            'topic_comment_empty_focus',
+            'topic_comment_reply_start',
+            'topic_comment_read_from_start',
+            'community_empty_seen',
+            'community_empty_reset',
+            'community_empty_topic_cta',
+            'community_topic_created_open_detail',
+        );
+
+        if (!in_array($event, $allowed_events, true)) {
+            wp_send_json_error('invalid_event');
+        }
+
+        $day_key = 'setae_metrics_' . gmdate('Ymd');
+        $metrics = get_option($day_key, array());
+
+        if (!is_array($metrics)) {
+            $metrics = array();
+        }
+
+        if (!isset($metrics[$event])) {
+            $metrics[$event] = 0;
+        }
+
+        $metrics[$event]++;
+        update_option($day_key, $metrics, false);
+
+        wp_send_json_success(array('event' => $event, 'count' => $metrics[$event]));
+    }
+
     public function handle_register_user()
     {
+        $result = Setae_App_Operations::register_user(wp_unslash($_POST));
+        if (is_wp_error($result)) {
+            $data = $result->get_error_data();
+            $status = is_array($data) ? absint($data['status'] ?? 0) : 0;
+            wp_send_json_error($result->get_error_message(), $status ?: 400);
+        }
+        wp_send_json_success($result['message']);
+        return;
+
         // 設定がOFFなら拒否
         if (!get_option('setae_enable_registration')) {
             wp_send_json_error('現在、新規登録は受け付けていません。');
@@ -280,17 +537,29 @@ class Setae_Ajax
         // ▲▲▲ 新規追加ここまで ▲▲▲
 
         // 入力データの取得とサニタイズ
-        $username = isset($_POST['username']) ? sanitize_user($_POST['username']) : '';
         $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $username = isset($_POST['username']) ? sanitize_user($_POST['username'], true) : '';
         $password = isset($_POST['password']) ? $_POST['password'] : '';
 
         // ▼▼▼ 追加: 紹介コードの取得 ▼▼▼
         $referral_code = isset($_POST['referral_code']) ? sanitize_text_field($_POST['referral_code']) : '';
+        $referral_source = isset($_POST['referral_source']) ? $this->normalize_referral_source($_POST['referral_source']) : 'unknown';
+        $qr_claim_code = isset($_POST['qr_claim_code']) && class_exists('Setae_QR_Manager')
+            ? Setae_QR_Manager::sanitize_code(wp_unslash($_POST['qr_claim_code']))
+            : '';
         // ▲▲▲ 追加ここまで ▲▲▲
 
         // バリデーション
-        if (empty($username) || empty($email) || empty($password)) {
-            wp_send_json_error('すべての項目を入力してください。');
+        if (empty($email) || empty($password)) {
+            wp_send_json_error('メールアドレスとパスワードを入力してください。');
+        }
+
+        if (!is_email($email)) {
+            wp_send_json_error('メールアドレスの形式を確認してください。');
+        }
+
+        if (empty($username)) {
+            $username = $this->generate_unique_username_from_email($email);
         }
 
         if (username_exists($username)) {
@@ -320,6 +589,10 @@ class Setae_Ajax
 
         // デフォルトのボーナス枠を0で初期化
         update_user_meta($user_id, '_setae_bonus_spider_limit', 0);
+        update_user_meta($user_id, '_setae_registration_source', $referral_source);
+        if ($qr_claim_code && class_exists('Setae_QR_Manager')) {
+            Setae_QR_Manager::store_pending_claim($user_id, $qr_claim_code);
+        }
 
         // 2. 紹介コードが入力されている場合の処理
         if (!empty($referral_code)) {
@@ -341,6 +614,9 @@ class Setae_Ajax
                 // 紹介した側（既存ユーザー）のボーナス枠を+1
                 $current_bonus_ref = (int) get_user_meta($referrer_id, '_setae_bonus_spider_limit', true);
                 update_user_meta($referrer_id, '_setae_bonus_spider_limit', $current_bonus_ref + 1);
+                update_user_meta($user_id, '_setae_referred_by_user_id', $referrer_id);
+                update_user_meta($user_id, '_setae_referral_source', $referral_source);
+                $this->increment_referral_source_count($referrer_id, $referral_source);
             }
         }
         // ▲▲▲ 新規追加ここまで ▲▲▲
@@ -390,6 +666,24 @@ class Setae_Ajax
             wp_send_json_error(array('message' => 'Not logged in'), 401);
         }
 
+        $result = Setae_App_Operations::update_profile(
+            get_current_user_id(),
+            wp_unslash($_POST),
+            $_FILES
+        );
+        if (is_wp_error($result)) {
+            $status = (int) $result->get_error_data('status');
+            wp_send_json_error(array('message' => $result->get_error_message()), $status ?: 400);
+        }
+        $legacy_result = array(
+            'message' => 'Profile updated',
+            'theme_preference' => $result['theme_preference'],
+            'show_care_focus' => $result['show_care_focus'],
+            'avatar_url' => $result['avatar_url'],
+        );
+        wp_send_json_success($legacy_result);
+        return;
+
         $user_id = get_current_user_id();
 
         // 3. Prepare Update Data
@@ -413,6 +707,23 @@ class Setae_Ajax
 
         if (is_wp_error($user_id)) {
             wp_send_json_error(array('message' => $user_id->get_error_message()), 500);
+        }
+
+        if (isset($_POST['theme_preference'])) {
+            $theme_preference = sanitize_key(wp_unslash($_POST['theme_preference']));
+            if (!in_array($theme_preference, array('light', 'dark', 'system'), true)) {
+                wp_send_json_error(array('message' => '表示テーマの値が正しくありません。'), 400);
+            }
+            update_user_meta($user_id, '_setae_theme_preference', $theme_preference);
+        }
+
+        if (isset($_POST['show_care_focus'])) {
+            $show_care_focus = in_array(
+                sanitize_key(wp_unslash($_POST['show_care_focus'])),
+                array('1', 'true', 'on'),
+                true
+            );
+            update_user_meta($user_id, '_setae_show_care_focus', $show_care_focus ? '1' : '0');
         }
 
         // 5. Handle Image Upload (with strict validation)
@@ -444,18 +755,40 @@ class Setae_Ajax
             }
         }
 
-        if (isset($attachment_id) && !is_wp_error($attachment_id)) {
-            $avatar_url = wp_get_attachment_url($attachment_id);
-            wp_send_json_success(array(
-                'message' => 'Profile updated',
-                'avatar_url' => $avatar_url
-            ));
-        } else {
-            wp_send_json_success(array('message' => 'Profile updated'));
+        $saved_theme_preference = sanitize_key(
+            get_user_meta($user_id, '_setae_theme_preference', true)
+        );
+        if (!in_array($saved_theme_preference, array('light', 'dark', 'system'), true)) {
+            $saved_theme_preference = 'system';
         }
+        $saved_care_focus = get_user_meta($user_id, '_setae_show_care_focus', true);
+        $response_data = array(
+            'message' => 'Profile updated',
+            'theme_preference' => $saved_theme_preference,
+            'show_care_focus' => $saved_care_focus === ''
+                ? true
+                : !in_array((string) $saved_care_focus, array('0', 'false', 'off'), true),
+        );
+        if (isset($attachment_id) && !is_wp_error($attachment_id)) {
+            $response_data['avatar_url'] = wp_get_attachment_url($attachment_id);
+        }
+
+        wp_send_json_success($response_data);
     }
     public function handle_submit_species_edit()
     {
+        $result = Setae_App_Operations::submit_species_suggestion(
+            wp_unslash($_POST),
+            $_FILES,
+            get_current_user_id()
+        );
+        if (is_wp_error($result)) {
+            $status = (int) $result->get_error_data('status');
+            wp_send_json_error($result->get_error_message(), $status ?: 400);
+        }
+        wp_send_json_success($result['message']);
+        return;
+
         // ... (冒頭のIDチェック等は同じ) ...
         $species_id = isset($_POST['species_id']) ? intval($_POST['species_id']) : 0;
         if (!$species_id)
@@ -547,8 +880,18 @@ class Setae_Ajax
         check_ajax_referer('setae_best_shot_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(__('You do not have permission.', 'setae'));
+            wp_send_json_error(__('権限がありません。', 'setae'));
         }
+
+        $params = wp_unslash($_POST);
+        $params['action'] = isset($params['type']) ? $params['type'] : '';
+        $result = Setae_App_Operations::moderate_best_shot($params);
+        if (is_wp_error($result)) {
+            $status = (int) $result->get_error_data('status');
+            wp_send_json_error($result->get_error_message(), $status ?: 400);
+        }
+        wp_send_json_success($result['message']);
+        return;
 
         $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
         $log_id = isset($_POST['log_id']) ? intval($_POST['log_id']) : 0;
@@ -556,13 +899,13 @@ class Setae_Ajax
         $image_id = isset($_POST['image_id']) ? intval($_POST['image_id']) : 0;
 
         if (!$log_id) {
-            wp_send_json_error(__('Invalid request.', 'setae'));
+            wp_send_json_error(__('不正なリクエストです。', 'setae'));
         }
 
         // ▼ 修正: approve と revoke 両方に対応
         if ($type === 'approve' || $type === 'revoke') {
             if (!$species_id) {
-                wp_send_json_error(__('Required data is missing.', 'setae'));
+                wp_send_json_error(__('必要なデータが不足しています。', 'setae'));
             }
 
             // 画像URLを取得（図鑑API側は画像のURLを配列として読み込んでいるため）
@@ -592,7 +935,7 @@ class Setae_Ajax
                     $current_bonus = (int) get_user_meta($author_id, '_setae_bonus_spider_limit', true);
                     update_user_meta($author_id, '_setae_bonus_spider_limit', $current_bonus + 1);
                 }
-                wp_send_json_success(__('Approved and added to the gallery.', 'setae'));
+                wp_send_json_success(__('承認してギャラリーに追加しました。', 'setae'));
             } elseif ($type === 'revoke') {
                 if ($index !== false) {
                     unset($gallery[$index]);
@@ -601,16 +944,16 @@ class Setae_Ajax
                 }
                 // ログのステータスを承認待ち（pending）に戻す
                 update_post_meta($log_id, '_best_shot_status', 'pending');
-                wp_send_json_success(__('Revoked and removed from the gallery.', 'setae'));
+                wp_send_json_success(__('承認を取り消し、ギャラリーから削除しました。', 'setae'));
             }
 
         } elseif ($type === 'reject') {
             // ログのステータスを却下済みに変更
             update_post_meta($log_id, '_best_shot_status', 'rejected');
-            wp_send_json_success(__('Request rejected (deleted).', 'setae'));
+            wp_send_json_success(__('申請を却下しました。', 'setae'));
         } else {
             // 上記以外のアクションはエラーにする
-            wp_send_json_error(__('Invalid operation.', 'setae'));
+            wp_send_json_error(__('不正な操作です。', 'setae'));
         }
     }
 

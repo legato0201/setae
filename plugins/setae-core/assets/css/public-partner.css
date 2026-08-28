@@ -1,0 +1,252 @@
+/* Partner Entry Journey. Shared controls and document chrome belong to Foundation. */
+.setae-public-partner-shell {
+    min-width: 0;
+    padding-block-end: var(--setae-public-space-6);
+}
+
+.setae-public-partner-hero {
+    display: grid;
+    min-width: 0;
+    gap: var(--setae-public-space-5);
+    padding-block: calc(var(--setae-public-space-6) * 2) var(--setae-public-space-6);
+    border-block-end: 1px solid var(--setae-public-rule);
+}
+
+.setae-public-partner-title {
+    max-width: 22em;
+    margin: 0;
+    color: var(--setae-public-ink);
+    font-family: var(--setae-public-font-ui);
+    font-size: clamp(2rem, 1.35rem + 2.2vw, 3.25rem);
+    font-weight: var(--setae-public-weight-semibold);
+    line-height: 1.5;
+    letter-spacing: -.025em;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-title-line {
+    display: block;
+    text-wrap: balance;
+}
+
+.setae-public-partner-lead {
+    max-width: 47em;
+    margin: 0;
+    color: var(--setae-public-muted);
+    font-size: 1.0625rem;
+    font-weight: var(--setae-public-weight-regular);
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-hero-controls {
+    display: grid;
+    min-width: 0;
+    gap: var(--setae-public-space-2);
+    padding-block-start: var(--setae-public-space-2);
+}
+
+.setae-public-partner-actions {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--setae-public-space-2);
+}
+
+.setae-public-partner-section {
+    display: grid;
+    min-width: 0;
+    gap: var(--setae-public-space-6);
+    padding-block: calc(var(--setae-public-space-6) * 1.5);
+    border-block-end: 1px solid var(--setae-public-rule);
+}
+
+.setae-public-partner-section-heading {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: var(--setae-public-space-3);
+}
+
+.setae-public-partner-heading {
+    margin: 0;
+    color: var(--setae-public-ink);
+    font-family: var(--setae-public-font-ui);
+    font-size: 1.625rem;
+    font-weight: var(--setae-public-weight-semibold);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-description {
+    max-width: 46em;
+    margin: 0;
+    color: var(--setae-public-muted);
+    font-size: 1rem;
+    font-weight: var(--setae-public-weight-regular);
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-features {
+    min-width: 0;
+}
+
+.setae-public-partner-feature {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--setae-public-space-6);
+    padding-block: var(--setae-public-space-5);
+}
+
+.setae-public-partner-feature + .setae-public-partner-feature {
+    border-block-start: 1px solid var(--setae-public-rule);
+}
+
+.setae-public-partner-feature-heading,
+.setae-public-partner-feature-copy {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: var(--setae-public-space-2);
+}
+
+.setae-public-partner-subheading {
+    margin: 0;
+    color: var(--setae-public-ink);
+    font-family: var(--setae-public-font-ui);
+    font-size: 1.1875rem;
+    font-weight: var(--setae-public-weight-semibold);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-feature-kind {
+    margin: 0;
+    color: var(--setae-public-ink);
+    font-size: .875rem;
+    font-weight: var(--setae-public-weight-medium);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-steps {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--setae-public-space-6);
+    margin: 0;
+    padding: 0;
+    list-style: decimal;
+}
+
+.setae-public-partner-step {
+    min-width: 0;
+    margin: 0 0 0 1.75em;
+    padding-inline-start: var(--setae-public-space-2);
+}
+
+.setae-public-partner-step::marker {
+    color: var(--setae-public-accent);
+    font-family: var(--setae-public-font-mono);
+    font-size: 1.125rem;
+    font-weight: var(--setae-public-weight-semibold);
+}
+
+.setae-public-partner-step .setae-public-partner-description {
+    margin-block-start: var(--setae-public-space-3);
+}
+
+.setae-public-partner-copy-kit {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    align-items: start;
+    gap: var(--setae-public-space-6);
+    padding-block: calc(var(--setae-public-space-6) * 1.5);
+    border-block-end: 1px solid var(--setae-public-rule);
+}
+
+.setae-public-partner-copy-content {
+    display: grid;
+    min-width: 0;
+    gap: var(--setae-public-space-3);
+}
+
+.setae-public-partner-invite-text {
+    min-height: 17em;
+    max-width: 100%;
+    resize: vertical;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.setae-public-partner-final {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--setae-public-space-5);
+    padding-block: calc(var(--setae-public-space-6) * 1.5);
+}
+
+.setae-public-partner-final-copy {
+    display: grid;
+    min-width: 0;
+    flex: 1 1 28rem;
+    gap: var(--setae-public-space-3);
+}
+
+@media (max-width: 1199px) {
+    .setae-public-partner-hero {
+        padding-block-start: calc(var(--setae-public-space-5) * 2);
+    }
+
+    .setae-public-partner-copy-kit {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .setae-public-partner-steps {
+        gap: var(--setae-public-space-5);
+    }
+}
+
+@media (max-width: 767px) {
+    .setae-public-partner-hero {
+        gap: var(--setae-public-space-5);
+        padding-block-start: var(--setae-public-space-6);
+    }
+
+    .setae-public-partner-title {
+        font-size: 2rem;
+        line-height: 1.55;
+    }
+
+    .setae-public-partner-heading {
+        font-size: 1.375rem;
+    }
+
+    .setae-public-partner-feature {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--setae-public-space-4);
+    }
+
+    .setae-public-partner-steps {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--setae-public-space-6);
+    }
+
+    .setae-public-partner-section,
+    .setae-public-partner-copy-kit,
+    .setae-public-partner-final {
+        padding-block: var(--setae-public-space-6);
+    }
+
+    .setae-public-partner-actions > .setae-public-button,
+    .setae-public-partner-final > .setae-public-button {
+        flex: 1 1 100%;
+    }
+}

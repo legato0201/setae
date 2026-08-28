@@ -1,0 +1,337 @@
+@layer screens {
+  .specimen-intake-dialog {
+    width: min(100%, var(--specimen-intake-width));
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    max-height: min(94dvh, var(--specimen-intake-max-height));
+  }
+
+  .specimen-intake-form,
+  .specimen-intake-body,
+  .specimen-intake-section,
+  .specimen-intake-section-fields,
+  .specimen-intake-grid,
+  .specimen-intake-grid > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .specimen-intake-form {
+    min-height: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .specimen-intake-header {
+    min-height: calc(var(--touch-target) + var(--space-6));
+    display: flex;
+    flex: 0 0 auto;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .specimen-intake-header > div {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .specimen-intake-header h2,
+  .specimen-intake-header p {
+    margin: 0;
+  }
+
+  .specimen-intake-header h2 {
+    overflow-wrap: anywhere;
+    font-size: var(--type-workbench-title);
+    font-weight: var(--weight-semibold);
+  }
+
+  .specimen-intake-header p {
+    color: var(--text-secondary);
+    font-size: var(--type-workbench-body);
+  }
+
+  .specimen-intake-error {
+    margin: var(--space-3) var(--space-5) 0;
+  }
+
+  .specimen-intake-body {
+    min-height: 0;
+    overflow-x: clip;
+    overflow-y: auto;
+    padding: 0 var(--space-5);
+  }
+
+  .specimen-intake-section {
+    display: grid;
+    grid-template-columns: minmax(var(--specimen-intake-section-width), 1fr) minmax(0, 3fr);
+    gap: var(--space-5);
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .specimen-intake-section:last-child {
+    border-bottom: 0;
+  }
+
+  .specimen-intake-section > :is(header, summary) {
+    display: grid;
+    grid-template-columns: var(--space-6) minmax(0, 1fr) auto;
+    align-content: start;
+    gap: var(--space-2);
+  }
+
+  .specimen-intake-section > :is(header, summary) > span:first-child {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-workbench-meta);
+  }
+
+  .specimen-intake-section > header h3,
+  .specimen-intake-section > header p,
+  .specimen-intake-section > summary strong {
+    margin: 0;
+  }
+
+  .specimen-intake-section > header h3,
+  .specimen-intake-section > summary strong {
+    font-size: var(--type-workbench-section);
+  }
+
+  .specimen-intake-section > header p,
+  .specimen-intake-section > summary small {
+    display: block;
+    margin-top: var(--space-1);
+    color: var(--text-secondary);
+    font-size: var(--type-workbench-caption);
+    line-height: var(--leading-body);
+  }
+
+  section.specimen-intake-section > :not(header) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    grid-column: 2;
+  }
+
+  details.specimen-intake-section {
+    display: block;
+    padding: 0;
+  }
+
+  .specimen-intake-optional > summary {
+    min-height: var(--touch-target);
+    align-items: center;
+    padding: var(--space-4) 0;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .specimen-intake-optional > summary::-webkit-details-marker { display: none; }
+  .specimen-intake-optional > summary > .ui-icon { color: var(--text-muted); transform: rotate(-90deg); }
+  .specimen-intake-optional[open] > summary > .ui-icon { transform: none; }
+
+  .specimen-intake-section-fields {
+    display: grid;
+    gap: var(--space-3);
+    padding: 0 0 var(--space-5) calc(var(--space-6) + var(--space-2));
+  }
+
+  .specimen-intake-grid {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .specimen-intake-grid.is-two-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .specimen-intake-grid.is-three-column {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .specimen-intake-grid.is-four-column {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .specimen-species-search,
+  .specimen-species-manual {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .specimen-species-search > .button,
+  .specimen-species-manual > .button {
+    justify-self: start;
+  }
+
+  .specimen-species-selected {
+    margin-top: var(--space-3);
+  }
+
+  .specimen-species-record {
+    min-height: calc(var(--touch-target) + var(--space-4));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-control);
+    background: var(--bg-subtle);
+  }
+
+  .specimen-species-record > div {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .specimen-species-record strong,
+  .specimen-species-record em {
+    overflow-wrap: anywhere;
+  }
+
+  .specimen-species-record strong {
+    font-size: var(--type-workbench-body);
+  }
+
+  .specimen-species-record em {
+    color: var(--text-secondary);
+    font-family: var(--font-taxon);
+    font-size: var(--type-body);
+  }
+
+  .file-field .file-picker {
+    position: relative;
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .file-field .file-picker input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    inline-size: 1px;
+    min-inline-size: 1px;
+    max-inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .file-field .file-picker:focus-within .button {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .file-field [data-file-name] {
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: var(--type-workbench-caption);
+    overflow-wrap: anywhere;
+  }
+
+  .specimen-intake-file-status, .specimen-intake-busy-status, .specimen-intake-save-note {
+    color: var(--text-secondary);
+    font-size: var(--type-workbench-caption);
+    line-height: var(--leading-body);
+  }
+  .specimen-intake-file-status { margin-top: var(--space-1); }
+  .specimen-intake-busy-status { align-self: center; }
+  .specimen-intake-footer {
+    min-height: calc(var(--touch-target) + var(--space-4));
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-5) calc(var(--space-2) + var(--safe-bottom));
+    border-top: 1px solid var(--border-default);
+    background: var(--bg-elevated);
+  }
+
+  .specimen-intake-footer > div {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  @media (max-width: 767px) {
+    .specimen-intake-dialog {
+      height: 100dvh;
+      max-height: 100dvh;
+      border-radius: 0;
+    }
+
+    .specimen-intake-header {
+      min-height: calc(var(--touch-target) + var(--space-4));
+      align-items: flex-start;
+      padding: calc(var(--space-3) + var(--safe-top)) max(var(--space-4), var(--safe-right)) var(--space-3) max(var(--space-4), var(--safe-left));
+    }
+
+    .specimen-intake-error {
+      margin-inline: var(--space-4);
+    }
+
+    .specimen-intake-body {
+      padding-right: max(var(--space-4), var(--safe-right));
+      padding-left: max(var(--space-4), var(--safe-left));
+    }
+
+    .specimen-intake-section {
+      display: block;
+      padding: var(--space-4) 0;
+    }
+
+    .specimen-intake-section > header {
+      margin-bottom: var(--space-3);
+    }
+
+    .specimen-intake-section-fields { padding-inline-start: 0; }
+
+    .specimen-intake-grid.is-two-column,
+    .specimen-intake-grid.is-three-column,
+    .specimen-intake-grid.is-four-column {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .specimen-intake-footer {
+      align-items: stretch;
+      flex-direction: column-reverse;
+      padding-right: max(var(--space-4), var(--safe-right));
+      padding-left: max(var(--space-4), var(--safe-left));
+    }
+
+    .specimen-intake-footer > div,
+    .specimen-intake-footer .button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .specimen-intake-footer > div:last-child {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .specimen-intake-busy-status { grid-column: 1 / -1; }
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .specimen-intake-section {
+      grid-template-columns: minmax(var(--specimen-intake-section-width-medium), 1fr) minmax(0, 3fr);
+    }
+
+    .specimen-intake-grid.is-four-column {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

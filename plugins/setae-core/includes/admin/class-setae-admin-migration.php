@@ -352,23 +352,23 @@ class Setae_Admin_Migration
                                 <div class="setae-radio-group mig-val-class-group" style="display:flex; gap:5px; flex-wrap:wrap;">
                                     <label class="radio-chip ${defaultClass === 'tarantula' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="tarantula" ${defaultClass === 'tarantula' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url('assets/images/emoji/1f577.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🕷️">クモ
+                                        <img src="<?php echo esc_url(Setae_Icon_Registry::asset_url('specimen.spider')); ?>" alt="">クモ
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'scorpion' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="scorpion" ${defaultClass === 'scorpion' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url('assets/images/emoji/1f982.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🦂">サソリ
+                                        <img src="<?php echo esc_url(Setae_Icon_Registry::asset_url('specimen.scorpion')); ?>" alt="">サソリ
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'reptile' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="reptile" ${defaultClass === 'reptile' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url('assets/images/emoji/1f98e.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🦎">爬虫類
+                                        <img src="<?php echo esc_url(Setae_Icon_Registry::asset_url('specimen.generic')); ?>" alt="">爬虫類
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'plant' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="plant" ${defaultClass === 'plant' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url('assets/images/emoji/1f33f.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="🌿">植物
+                                        <img src="<?php echo esc_url(Setae_Icon_Registry::asset_url('specimen.plant')); ?>" alt="">植物
                                     </label>
                                     <label class="radio-chip ${defaultClass === 'other' ? 'active' : ''}">
                                         <input type="radio" name="${radioName}" value="other" ${defaultClass === 'other' ? 'checked' : ''} hidden>
-                                        <img src="<?php echo plugins_url('assets/images/emoji/1f4e6.svg', dirname(__DIR__, 2) . '/setae-core.php'); ?>" alt="📦">その他
+                                        <img src="<?php echo esc_url(Setae_Icon_Registry::asset_url('specimen.generic')); ?>" alt="">その他
                                     </label>
                                 </div>
                             `;
@@ -748,7 +748,10 @@ class Setae_Admin_Migration
                 $new_post_id = wp_insert_post($post_data);
             }
 
-            if (!is_wp_error($new_post_id)) {
+            if ($new_post_id && !is_wp_error($new_post_id)) {
+                if (!$is_update_animal || !get_post_meta($new_post_id, Setae_Entitlements::SOURCE_META, true)) {
+                    Setae_Entitlements::mark_specimen_source($new_post_id, 'import');
+                }
                 update_post_meta($new_post_id, '_setae_gender', $this->map_gender($animal['gender']));
                 if ($animal['last_shed_date'])
                     update_post_meta($new_post_id, '_setae_last_molt_date', $animal['last_shed_date']);
@@ -889,7 +892,8 @@ class Setae_Admin_Migration
                 $new_log_id = wp_insert_post($log_post_data);
             }
 
-            if (!is_wp_error($new_log_id)) {
+            if ($new_log_id && !is_wp_error($new_log_id)) {
+                Setae_Entitlements::mark_log_recorder($new_log_id, $new_wp_user_id);
 
                 // ▼ 修正: ログ画像のダウンロード処理 ▼
                 $new_image_url = '';

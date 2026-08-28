@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Modal Pending Preview</title>
+  <script>
+    if (new URLSearchParams(location.search).get('theme') === 'dark') {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <style>
+    body { min-height: 100dvh; background: var(--bg-canvas); color: var(--text-primary); }
+    .fixture-page { width: min(100% - 32px, 880px); margin: 0 auto; padding: 48px 0; }
+    .fixture-page > h1 { margin-bottom: 24px; font-size: var(--type-page); }
+    .fixture-stack { display: grid; gap: 18px; }
+    .fixture-page .app-update-notice { position: static; width: 100%; }
+    .fixture-state { display: grid; gap: 8px; padding-top: 18px; border-top: 1px solid var(--border-default); }
+    .fixture-state > div { display: flex; flex-wrap: wrap; gap: 8px; }
+    .fixture-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+    .fixture-dialog-host .modal-backdrop { position: static; min-height: 520px; }
+  </style>
+</head>
+<body>
+  <main id="fixture-root"></main>
+  <script type="module">
+    import { button, iconButton, modal } from '../../assets/app/components/primitives.js';
+    import { renderRecordForm } from '../../assets/app/features/records/record-form-view.js';
+    import { setDialogPending, setFormPending, syncBusyDialogControls } from '../../assets/app/components/async-state.js';
+
+    const params = new URLSearchParams(location.search);
+    const view = params.get('view') || 'notice';
+    const root = document.querySelector('#fixture-root');
+    const animal = {
+      id: 1,
+      individual_code: 'C001',
+      species_name: 'Typhochlaena seladonia'
+    };
+
+    function renderNotice() {
+      root.innerHTML = `<div class="fixture-page"><h1>更新通知のButton状態</h1><div class="fixture-stack">
+        <aside class="app-update-notice"><div class="app-update-copy"><strong>新しいバージョンがあります</strong><span>更新すると最新の画面へ切り替わります。</span></div>${button('更新', { primary: true })}</aside>
+        <section class="fixture-state"><strong>Primary states</strong><div>${button('更新', { primary: true })}${button('更新中…', { primary: true, loading: true, disabled: true })}${button('更新', { primary: true, disabled: true })}</div></section>
+      </div></div>`;
+    }
+
+    function renderBusyRecord() {
+      root.innerHTML = renderRecordForm({
+        animals: [animal],
+        selectedAnimalId: animal.id,
+        quickRecord: {
+          animalId: animal.id,
+          animalIds: [],
+          type: 'feed',
+          submitting: true,
+          error: null
+        },
+        recent: [],
+        today: '2026-08-23'
+      });
+      syncBusyDialogControls(root);
+    }
+
+    function renderRecoveryDialog() {
+      const content = `<header class="modal-header"><h2>エラー復帰検証</h2>${iconButton('close', { action: 'close-modal', label: '閉じる' })}</header><div class="modal-body"><form data-role="fixture-form"><div id="fixture-error" class="inline-error" role="alert" hidden>保存できませんでした。入力内容を確認してください。</div><label class="field"><span>個体番号</span><input name="code" value="C001"></label><label class="field"><span>状態</span><select name="status"><option value="normal">通常</option><option value="pre_molt" selected>脱皮前</option></select></label><label class="field"><span>メモ</span><textarea name="note">入力内容を保持</textarea></label><label class="checkbox-row"><input name="favorite" type="checkbox" checked>お気に入り</label><button type="button" class="button" data-originally-disabled disabled>元から無効</button><div class="modal-actions"><span></span><button type="button" class="button">キャンセル</button><button type="submit" class="button primary">保存する</button></div></form></div>`;
+      root.innerHTML = `<div class="fixture-page"><div class="fixture-controls">${button('送信を開始', { action: 'fixture-start' })}${button('通信失敗で復帰', { action: 'fixture-stop' })}</div><div class="fixture-dialog-host">${modal(content, { label: 'エラー復帰検証', backdropAction: 'close-modal', busyLabel: '設定を保存しています…' })}</div></div>`;
+      const panel = root.querySelector('.modal');
+      const form = root.querySelector('form');
+      root.addEventListener('click', (event) => {
+        const action = event.target.closest('[data-action]')?.dataset.action;
+        if (action === 'fixture-start') {
+          setFormPending(form, true, { label: '保存中…' });
+          setDialogPending(panel, true, { label: '設定を保存しています…' });
+        }
+        if (action === 'fixture-stop') {
+          setDialogPending(panel, false);
+          setFormPending(form, false);
+          root.querySelector('#fixture-error').hidden = false;
+        }
+      });
+    }
+
+    if (view === 'busy') renderBusyRecord();
+    else if (view === 'recovery') renderRecoveryDialog();
+    else renderNotice();
+  </script>
+</body>
+</html>

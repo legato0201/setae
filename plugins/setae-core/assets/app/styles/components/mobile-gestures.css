@@ -1,0 +1,85 @@
+@layer components {
+  .sheet > .quick-record-header,
+  .sheet > .sheet-title-row {
+    touch-action: none;
+  }
+
+  [data-specimen-tab-content] {
+    touch-action: pan-y;
+  }
+
+  html[data-setae-standalone="true"] {
+    overscroll-behavior-x: none;
+  }
+
+  .sheet :is(.quick-record-form-body, .animal-card-editor-scroll) {
+    overscroll-behavior-y: contain;
+  }
+
+  .is-edge-swipe-tracking::before {
+    content: '';
+    position: fixed;
+    z-index: 120;
+    inset-block-start: 50%;
+    inset-inline-start: max(var(--space-3), var(--safe-left));
+    width: var(--space-2);
+    height: var(--space-2);
+    border-block-start: 2px solid var(--text-primary);
+    border-inline-start: 2px solid var(--text-primary);
+    opacity: var(--edge-swipe-progress, 0);
+    pointer-events: none;
+    transform: translateY(-50%) rotate(-45deg);
+  }
+
+  .is-edge-swipe-tracking [data-app-main] {
+    will-change: transform;
+    transform: translate3d(var(--edge-swipe-x, 0), 0, 0);
+  }
+
+  .is-edge-swipe-settling [data-app-main] {
+    transition: transform var(--motion-fast) var(--ease-standard);
+    transform: translate3d(0, 0, 0);
+  }
+
+  .sheet.is-sheet-gesture-tracking {
+    will-change: transform;
+    transform: translate3d(0, var(--sheet-drag-y, 0), 0);
+  }
+
+  .sheet-backdrop.is-sheet-gesture-tracking {
+    background: color-mix(
+      in srgb,
+      var(--overlay-backdrop) var(--sheet-backdrop-strength, 100%),
+      transparent
+    );
+  }
+
+  .sheet.is-sheet-gesture-settling {
+    transition: transform var(--motion-fast) var(--ease-standard);
+    transform: translate3d(0, 0, 0);
+  }
+
+  [data-specimen-tab-content].is-tab-swipe-tracking {
+    will-change: transform;
+    transform: translate3d(var(--specimen-swipe-x, 0), 0, 0);
+  }
+
+  [data-specimen-tab-content].is-tab-swipe-settling {
+    transition: transform var(--motion-fast) var(--ease-standard);
+    transform: translate3d(0, 0, 0);
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    :is(.button, .icon-button, .action-row, .content-action, .selection-row):active {
+      background: var(--bg-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-edge-swipe-settling [data-app-main],
+    .sheet.is-sheet-gesture-settling,
+    [data-specimen-tab-content].is-tab-swipe-settling {
+      transition: none;
+    }
+  }
+}

@@ -1,0 +1,25 @@
+SETAE Composer dependency license manifest
+Generated from composer.lock for SETAE 1.0.238.
+
+Package                              Version   Declared license
+brick/math                           0.17.2    MIT
+guzzlehttp/guzzle                    7.15.1    MIT
+guzzlehttp/promises                  2.5.1     MIT
+guzzlehttp/psr7                      2.13.0     MIT
+minishlink/web-push                  v9.0.4    MIT
+psr/clock                            1.0.0     MIT
+psr/http-client                      1.0.3     MIT
+psr/http-factory                     1.1.0     MIT
+psr/http-message                     2.0       MIT
+ralouphie/getallheaders              3.0.3     MIT
+spomky-labs/base64url                v2.0.4    MIT
+spomky-labs/pki-framework            1.5.0     MIT
+stripe/stripe-php                    v21.0.0   MIT
+symfony/deprecation-contracts        v3.7.1    MIT
+symfony/polyfill-php80               v1.37.0   MIT
+symfony/polyfill-php82               v1.38.1   MIT
+web-token/jwt-library                4.1.7     MIT
+
+The complete license text distributed by each package remains in that
+package's directory under vendor/. This manifest records the package names,
+locked versions, and license identifiers declared in composer.lock.

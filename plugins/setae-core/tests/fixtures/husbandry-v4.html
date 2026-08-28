@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE Husbandry Workbench v4</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/ledger.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/care-plan.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/husbandry.css?v=1.0.242">
+  <style>
+    body { min-height: 100dvh; background: var(--bg-app); }
+    #app { width: 100%; min-inline-size: 0; padding: var(--space-6); }
+    @media (max-width: 767px) { #app { padding: 0; } }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><main id="app"></main></div>
+  <script type="module">
+    import { renderHusbandry } from '../../assets/app/pages/husbandry.js';
+    import { renderModal } from '../../assets/app/components/modals.js';
+
+    const mode = fixtureParams.get('mode') || 'registry';
+    const itemCount = Math.max(0, Number(fixtureParams.get('items') ?? 10));
+    const occupantCount = Math.max(0, Number(fixtureParams.get('occupants') ?? 2));
+    const eventCount = Math.max(0, Number(fixtureParams.get('events') ?? 12));
+    const historyCount = Math.max(0, Number(fixtureParams.get('history') ?? 3));
+    const longText = fixtureParams.get('long') === '1';
+    const missingReadings = fixtureParams.get('readings') === 'missing';
+    const dueMode = fixtureParams.get('due') || 'mixed';
+
+    const animals = Array.from({ length: Math.max(8, occupantCount) }, (_, index) => ({
+      id: index + 1,
+      code: `C${String(index + 1).padStart(3, '0')}`,
+      species_name: longText
+        ? 'Psalmopoeus victori exceptionally long natural history collection identification'
+        : index % 2 ? 'Caribena versicolor' : 'Typhochlaena seladonia',
+      enclosure_id: index < occupantCount ? 1 : null,
+      enclosure: index < occupantCount ? 'T-04' : ''
+    }));
+
+    const eventTypes = ['environment_check', 'watering', 'maintenance', 'misting', 'substrate_change', 'animal_move_in'];
+    const makeEnclosure = (index) => {
+      const environmentDue = dueMode === 'all' || (dueMode === 'mixed' && index % 3 === 0);
+      const maintenanceDue = dueMode === 'all' || (dueMode === 'mixed' && index % 4 === 0);
+      const occupants = index === 0 ? animals.slice(0, occupantCount).map((animal, occupantIndex) => ({
+        occupancy_id: occupantIndex + 1,
+        animal_id: animal.id,
+        animal_code: animal.code,
+        species_name: animal.species_name,
+        started_at: '2026-08-01',
+        ended_at: '',
+        note: ''
+      })) : [];
+      return {
+        id: index + 1,
+        code: index === 0 ? 'T-04' : `E-${String(index + 1).padStart(2, '0')}`,
+        name: longText ? '樹上種ラック上段・長期環境比較観察用の非常に長い飼育容器名称' : index === 0 ? '樹上種ラック 上段' : `飼育容器 ${index + 1}`,
+        enclosure_type: 'acrylic',
+        type_label: 'アクリル容器',
+        dimensions_label: '15 × 15 × 20 cm',
+        location: longText ? '飼育室北側の非常に長い名称を持つラック / 最上段 / 左から三番目' : '飼育棚A / 上段',
+        photo_url: fixtureParams.get('photo') === '1' ? new URL('../../assets/images/specimen/spider.svg', location.href).href : '',
+        target_temp_min: 24,
+        target_temp_max: 27,
+        target_humidity_min: 70,
+        target_humidity_max: 80,
+        substrate: longText ? 'ヤシガラと赤玉土を配合した保湿・掘削行動観察用の非常に長い床材名' : 'ヤシガラ',
+        substrate_depth_mm: 40,
+        occupant_count: occupants.length,
+        occupants,
+        last_environment: {
+          event_date: '2026-08-24',
+          temperature: missingReadings ? null : index === 0 ? 22.8 : 26.2,
+          humidity: missingReadings ? null : 76
+        },
+        last_maintenance: { event_date: '2026-08-18' },
+        care: {
+          environment_due: environmentDue,
+          maintenance_due: maintenanceDue,
+          environment_due_at: '2026-08-25',
+          maintenance_due_at: '2026-08-28'
+        },
+        events: Array.from({ length: eventCount }, (_, eventIndex) => ({
+          id: eventIndex + 1,
+          event_type: eventTypes[eventIndex % eventTypes.length],
+          event_label: ['環境確認', '給水', 'メンテナンス', '霧吹き', '床材交換', '入居'][eventIndex % eventTypes.length],
+          event_date: `2026-08-${String(24 - (eventIndex % 20)).padStart(2, '0')}`,
+          temperature: eventIndex % 3 === 0 ? 26.2 : null,
+          humidity: eventIndex % 3 === 0 ? 76 : null,
+          animal_code: eventIndex % 6 === 5 ? 'C001' : '',
+          note: longText ? '容器内の環境と個体の行動位置を継続観察し、長い記録でも画面外へはみ出さないことを確認します。' : eventIndex % 2 ? '状態良好' : ''
+        })),
+        occupancy_history: Array.from({ length: historyCount }, (_, historyIndex) => ({
+          animal_code: `C${String(historyIndex + 14).padStart(3, '0')}`,
+          started_at: '2026-05-12',
+          ended_at: '2026-08-20'
+        }))
+      };
+    };
+
+    const enclosureItems = Array.from({ length: itemCount }, (_, index) => makeEnclosure(index));
+    const detail = enclosureItems[0] || makeEnclosure(0);
+    const enclosures = {
+      items: enclosureItems,
+      summary: {
+        active: enclosureItems.length,
+        occupants: enclosureItems.reduce((total, item) => total + item.occupant_count, 0),
+        environment_due: enclosureItems.filter((item) => item.care.environment_due).length,
+        maintenance_due: enclosureItems.filter((item) => item.care.maintenance_due).length
+      }
+    };
+    const feeders = {
+      summary: { total_count: 365, low_stock_count: 1, active_egg_batches: 2, next_hatch_date: '2026-08-29' },
+      inventory: [
+        { feeder_type: 'cricket', common_name: 'イエコオロギ', label: 'Acheta domesticus', count: 240, initialized: true, low_stock_threshold: 30 },
+        { feeder_type: 'red_runner', common_name: 'レッドローチ', label: 'Shelfordella lateralis', count: 18, initialized: true, low_stock_threshold: 30 }
+      ],
+      egg_batches: [
+        { id: 1, feeder_common_name: 'イエコオロギ', feeder_label: 'Acheta domesticus', set_date: '2026-08-20', estimated_hatch_date: '2026-08-29', status: 'incubating' },
+        { id: 2, feeder_common_name: 'レッドローチ', set_date: '2026-08-10', estimated_hatch_date: '2026-08-20', status: 'hatched' }
+      ],
+      events: Array.from({ length: 12 }, (_, index) => ({ id: index + 1, action: index % 2 ? 'consume' : 'purchase', action_label: index % 2 ? '給餌に使用' : '追加購入', feeder_label: index % 2 ? 'レッドローチ' : 'イエコオロギ', quantity: index % 2 ? -2 : 50, date: `2026-08-${String(24 - index).padStart(2, '0')}` }))
+    };
+    const careProfile = {
+      defaults: { feedIntervalDays: 7, observationIntervalDays: 14, preMoltObservationDays: 2, postMoltFeedDelayDays: 3, dueSoonDays: 3, excludePreMoltFeed: true },
+      species: { 'species:314': { feedIntervalDays: 5 } },
+      animals: { '1': { observationIntervalDays: 7 } }
+    };
+    const enclosureCareProfile = {
+      defaults: { environment: 1, misting: 0, watering: 3, maintenance: 14, substrate: 60, dueSoonDays: 3 },
+      types: { acrylic: { environment: 2 } },
+      enclosures: { '1': { maintenance: fixtureParams.get('care') === 'disabled' ? 0 : 7 } }
+    };
+    const nurseryCareProfile = { defaults: { feed: 3, observation: 2, count: 7, environment: 7, dueSoonDays: 3 }, species: {}, nurseries: {} };
+    const babyGroups = { items: [{ id: 1, name: 'Seladonia 2026-08', species_id: 314, species_name: 'Typhochlaena seladonia' }] };
+    const app = document.querySelector('#app');
+    const startedAt = performance.now();
+
+    if (['registry', 'detail', 'feeders', 'care'].includes(mode)) {
+      const tab = mode === 'feeders' ? 'feeders' : mode === 'care' ? 'care' : 'enclosures';
+      app.innerHTML = renderHusbandry({
+        tab,
+        animals,
+        feeders,
+        enclosures,
+        enclosureDetail: mode === 'detail' ? detail : null,
+        careProfile,
+        enclosureCareProfile,
+        babyGroups,
+        nurseryCareProfile
+      });
+    } else {
+      const modalType = ({ 'enclosure-form': 'enclosure', 'event-form': 'enclosure-event', 'occupancy-form': 'enclosure-occupancy' })[mode] || 'enclosure';
+      app.innerHTML = renderModal({
+        type: modalType,
+        data: fixtureParams.get('editing') === '1' ? detail : {},
+        enclosureId: detail.id,
+        enclosureCode: detail.code,
+        eventType: fixtureParams.get('event') || 'environment_check',
+        submitting: fixtureParams.get('busy') === '1',
+        error: fixtureParams.get('error') === '1' ? '保存できませんでした。入力内容を確認してください。' : ''
+      }, { animals, feeders, enclosures });
+    }
+
+    requestAnimationFrame(() => {
+      const row = app.querySelector('.enclosure-record-row');
+      const rowStyle = row ? getComputedStyle(row) : null;
+      document.body.dataset.overflow = document.documentElement.scrollWidth <= window.innerWidth + 1 ? 'pass' : 'fail';
+      document.body.dataset.renderMs = String(Math.round((performance.now() - startedAt) * 10) / 10);
+      document.body.dataset.registryRows = String(app.querySelectorAll('.enclosure-record-row').length);
+      document.body.dataset.ledgerRows = String(app.querySelectorAll('.enclosure-ledger-row').length);
+      document.body.dataset.rowRadius = rowStyle?.borderRadius || '';
+      document.body.dataset.rowShadow = rowStyle?.boxShadow || '';
+    });
+  </script>
+</body>
+</html>

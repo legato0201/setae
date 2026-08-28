@@ -1,0 +1,305 @@
+{
+    "generatedAt": "2026-08-28T21:50:12+09:00",
+    "sourceKind": "Actual production PHP controllers/templates and QR data layer; synthetic WordPress APIs and data. Not a live WordPress installation.",
+    "baseUrl": "http://127.0.0.1:8872",
+    "sources": {
+        "includes/frontend/class-setae-public-qr.php": "fd07ae1bb6c4a4801bd9f5ae1e923f49eb938933c8452c43070649559e9d4192",
+        "includes/frontend/class-setae-public-profile.php": "48dc2b4de1e8c25d854ded4fa6fc03a440a2f432c7edd3f74bfa6edc0b4e91b7",
+        "includes/frontend/class-setae-public-care-share.php": "9f2bbf7785f3bdf74c9f3f58d181f89ba48d5996b96535bb148d4b029034600f",
+        "includes/frontend/class-setae-public-partner.php": "ff78b475ff33e070a4710c53a8a8d1268b414acac5c750744788bd1a4e7c6ce5",
+        "includes/frontend/class-setae-public-registration.php": "94da9cab96cbdbf325d408b7d21e28d888c69168f5cf890390411e119e6f6208",
+        "includes/class-setae-qr-manager.php": "1993c2b237b1f5ab4b01c245c5fa3b6af5c94ca8fc18796d3601be4b0496ac32",
+        "tests/helpers/public-passport-fixture.php": "9e4d23bc153c7c823782d1ee9eeef32e67d62da217c40b87b804f0279ab8cc30",
+        "tests/helpers/public-registration-fixture.php": "2f971728896c39d547707122136a14ff52302a4f3d8b02a49e1d979bbbc0b9ba",
+        "tests/helpers/public-surfaces-fixture.php": "21c9d076b07570a7d0d3015508bdfd28de8678da319de6ee5fe4f4d75ef53864",
+        "templates/public/care-share-content.php": "99db5598ecb77eb1321cb475439c70294d60ebb558f5f4fa73c0917cfe60aad9",
+        "templates/public/care-share-document.php": "38bb6e74e7ab02f4862c3ea2a69babde40981b020b1b6fa9f40dbb9cbd354641",
+        "templates/public/care-share-not-found.php": "00aff45e57eb2e7d377836e25e18d9d50b0445ac4f04182cfb54ab023ebdada3",
+        "templates/public/partner-content.php": "2303dd66cd28def7e81a3f2f07dfa3ed84172b1bec1a0abefbced76476c316e1",
+        "templates/public/partner-document.php": "8768b66214e1324f63a468986a73e3c2d26443754468ef7b506f70882e296bef",
+        "templates/public/passport-content.php": "62383ef0362754718963a6ee7e93c6b07e48063152b3d5e57ffb13157dfc3893",
+        "templates/public/passport-document.php": "b5c88ffe6231fcac3f195028053af8c4f09304de6d9b95a3409cb64d1d13fa93",
+        "templates/public/passport-history.php": "16baa2b3fc6dde27b347f9dc0d0878003db4a7a6273845da023a8c9d7ee7c329",
+        "templates/public/passport-photo-dialog.php": "ac156af350ec45046182d8ae0f9513e46460fde25d2b4fadf564edad10c972d7",
+        "templates/public/passport-transfer-state.php": "13d578ee1e8e23a251d3d04965f7347f34fb44ee858f05d1998b2c0b4ebf4ce1",
+        "templates/public/profile-content.php": "bbc9ce90f44fa4877e7132fc318825af547df289ba42736c6bc624c373c3e415",
+        "templates/public/profile-document.php": "4f26f41165654de2f7a382b611e926e5637de300eab622525dff4b03760d3ebb",
+        "templates/public/profile-not-found.php": "24a9fe9994d688cb5ca79f3b3728bec2dc93dd5ed24c926927140932eecc6aaa",
+        "templates/public/registration-dialog.php": "68012db6a1b22a0d7e32b5262bcda2e99f840cbe36762dd4f25ad0c9720d57f6",
+        "templates/public/surface-footer.php": "8c5c018da22c064a772dc1749209e016f6521a42d4cb868874e4c9e69aafeb4a",
+        "templates/public/surface-header.php": "347cf3c845403d36d5eecbde1e55ef4f47781e94915186a7fe47490919299c0e",
+        "assets/css/public-foundation.css": "4b3a80b1be2711442710ce21e239707f7a69534b9c76a64068c2cdce25979db6",
+        "assets/css/public-passport.css": "5cac983292d9bb52ac8aea6c4c18b712e2f9fbf3ae122a36371719645f7d38f4",
+        "assets/css/public-profile.css": "3200c1b6eeeee4a83983852a27dc6651f40d08d11bf328745ba2c1c2c854a847",
+        "assets/css/public-registration.css": "1b352392855db2b2f628fef54f8e8484983e90a02bed4a99928457253cd27a3f",
+        "assets/css/public-care-share.css": "69d6c5811a918a6fe001668161dd80bf77ba9563fb612fc1bb4d91941a407a46",
+        "assets/css/public-partner.css": "3632f288ed6a6ba9e24f17f5717dd542f91723d7a459d85fb662d842e040777d",
+        "assets/js/public-passport.js": "d62571b3fdcc843b9e1837eedecd31b20047fe2fefbed964d12c495bd28c3167",
+        "assets/js/public-profile.js": "08380df10298543999e829a77d4d1d5dc5b1e34935552c9d98262cde7a4642fc",
+        "assets/js/public-registration.js": "8aca0f3a0b51f134b3040e5f7c3d422f13b51a60b223d913c7ab479c12397c1e",
+        "assets/js/public-share.js": "d676d519b15d4aa33877380a3a1131e8f033edad98ff7ab1b200888aff22ea50",
+        "assets/js/public-care-share.js": "56061fa41d92d38d9276b82fe0413e0d040ad81baa971cab502263ef54a2555f",
+        "assets/js/public-partner.js": "fdbff34f6da97c294c30e7f142a654f9250707f8b4dad188f0b9a9241432e917"
+    },
+    "fixtures": {
+        "private": {
+            "file": "passport-private.html",
+            "mode": "private",
+            "visitor_mode": "private",
+            "options": {
+                "visibility": "private"
+            },
+            "sha256": "a9fceaa0505c6cff43e314a158eab0be49f06d8e93a6e60acf736cb21d854938"
+        },
+        "private-owner": {
+            "file": "passport-private-owner.html",
+            "mode": "owner",
+            "visitor_mode": "private",
+            "options": {
+                "visibility": "private",
+                "viewer": 11
+            },
+            "sha256": "f6e06d461cb3faf101db4640c69eb030429f3fc56a28f8db1835be3035a8bfc0"
+        },
+        "transfer": {
+            "file": "passport-transfer.html",
+            "mode": "transfer",
+            "visitor_mode": "transfer",
+            "options": {
+                "visibility": "private",
+                "transfer": true
+            },
+            "sha256": "04e0a282807ee40f44cfd6557d9aa64c8b5765caaa2e580d2a15614bb0e87269"
+        },
+        "transfer-logged-in": {
+            "file": "passport-transfer-logged-in.html",
+            "mode": "transfer",
+            "visitor_mode": "transfer",
+            "options": {
+                "visibility": "private",
+                "transfer": true,
+                "viewer": 22
+            },
+            "sha256": "86a1bc123bd86889a3500b8d96e7d7e0241e5b4838800bafa14534bacc25ca20"
+        },
+        "transfer-requested": {
+            "file": "passport-transfer-requested.html",
+            "mode": "transfer",
+            "visitor_mode": "transfer",
+            "options": {
+                "visibility": "private",
+                "transfer": true,
+                "viewer": 22,
+                "requested": true
+            },
+            "sha256": "4a4b2d9f80ff5d80eb2f1c48e11b04eebc8b6accbded57e9a3a8efffd787d47a"
+        },
+        "basic": {
+            "file": "passport-basic.html",
+            "mode": "basic",
+            "visitor_mode": "basic",
+            "options": {
+                "visibility": "basic"
+            },
+            "sha256": "ab8143ca303a30ebab3c55f4147d382ddff85632a8c0b04c98accec4688447ff"
+        },
+        "life-history": {
+            "file": "passport-life-history.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "visibility": "life_history"
+            },
+            "sha256": "c8fa2f465c58a71d3e24f34993ecec1b516d4d2fb36bcd5f7282cf3d033a1a99"
+        },
+        "owner-basic": {
+            "file": "passport-owner-basic.html",
+            "mode": "owner",
+            "visitor_mode": "basic",
+            "options": {
+                "visibility": "basic",
+                "viewer": 11
+            },
+            "sha256": "5ab2a7ccc4bfea4e8a4b0e24213c4e0614d647b99624254868524e9b20358be2"
+        },
+        "owner": {
+            "file": "passport-owner.html",
+            "mode": "owner",
+            "visitor_mode": "life_history",
+            "options": {
+                "visibility": "life_history",
+                "viewer": 11
+            },
+            "sha256": "a91d599dc337e4668d85ea08e99849ee036fca39ee6297608674c15bcc0d7431"
+        },
+        "no-photos": {
+            "file": "passport-no-photos.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "photos": 0
+            },
+            "sha256": "218912df8f9585d87b5c6e6296bd0ef7a29497123c95efa76ff6dba7049480c2"
+        },
+        "one-photo": {
+            "file": "passport-one-photo.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "photos": 1
+            },
+            "sha256": "7ba8dac5fe777fd8d3fd143288f30fb4d4b10fbc78d0fc5824fe8c17e1876a50"
+        },
+        "nine-photos": {
+            "file": "passport-nine-photos.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "photos": 9
+            },
+            "sha256": "c8fa2f465c58a71d3e24f34993ecec1b516d4d2fb36bcd5f7282cf3d033a1a99"
+        },
+        "no-history": {
+            "file": "passport-no-history.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "history": 0,
+                "photos": 0
+            },
+            "sha256": "2683f5e33b8bd3105abdd72d5b7aa7910afa80243fb8433f0f9b8a70419e1e7b"
+        },
+        "one-history": {
+            "file": "passport-one-history.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "history": 1,
+                "photos": 1
+            },
+            "sha256": "5ca7e3931cdb9fa5cebbe7c94e5bf165e41d41477ee5808b3e01cb7f1245009f"
+        },
+        "many-history": {
+            "file": "passport-many-history.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "history": 35
+            },
+            "sha256": "c8fa2f465c58a71d3e24f34993ecec1b516d4d2fb36bcd5f7282cf3d033a1a99"
+        },
+        "missing-species": {
+            "file": "passport-missing-species.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "species": false,
+                "photos": 0
+            },
+            "sha256": "43d66abf51ab61c2c32ac2aa0db4be3959bf28d506b35b573d6b7d2a695b89e0"
+        },
+        "long-identity": {
+            "file": "passport-long-identity.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "long": true
+            },
+            "sha256": "1d0242d5fbd30e6e1bdfad65efd40c174009d8e599523062f1ae38b1cd87fcff"
+        },
+        "undetermined": {
+            "file": "passport-undetermined.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "gender": "unknown",
+                "stage": "undetermined"
+            },
+            "sha256": "9972a6f516dd554bba592d52cc51370371f2a66f1b97330bdb4776a410fb6f82"
+        },
+        "species-fallback": {
+            "file": "passport-species-fallback.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "image_source": "species"
+            },
+            "sha256": "ac8d705d4b766a8ed39e9cfe16b68514a37ffecafe87dd0190bda23a3160249d"
+        },
+        "registration-disabled": {
+            "file": "passport-registration-disabled.html",
+            "mode": "life_history",
+            "visitor_mode": "life_history",
+            "options": {
+                "registration": false
+            },
+            "sha256": "b9e9cda776dec7ad958ba5ea8c8a9a4dce978409b946317f8c98c93ebf5c3cb6"
+        },
+        "public_profile-guest": {
+            "file": "public_profile-guest.html",
+            "surface": "public_profile",
+            "options": [],
+            "sha256": "725da8c0d8072f46dea6d4b825fb9bf8f0601593248429aebed7bb3b21cbe697"
+        },
+        "public_profile-logged-in": {
+            "file": "public_profile-logged-in.html",
+            "surface": "public_profile",
+            "options": {
+                "viewer": 22
+            },
+            "sha256": "1454824b536f7881eb4abfc07212427f827c0273bfd1397bae608c37e1f1a24d"
+        },
+        "public_profile-disabled": {
+            "file": "public_profile-disabled.html",
+            "surface": "public_profile",
+            "options": {
+                "registration": false
+            },
+            "sha256": "6901b8e1e47e32f6704cf1e4a70a8fd13aa0eab55d85a0a05efff57659e7bfac"
+        },
+        "public_care_share-guest": {
+            "file": "public_care_share-guest.html",
+            "surface": "public_care_share",
+            "options": [],
+            "sha256": "2274e6924b2b0f9ffd6ececfec4a7fe30587acf347b3b9e74e97decfd09a298f"
+        },
+        "public_care_share-logged-in": {
+            "file": "public_care_share-logged-in.html",
+            "surface": "public_care_share",
+            "options": {
+                "viewer": 22
+            },
+            "sha256": "d4e38f1b0caac0297031767cb0d9746a917bf2f9ef81d0ca25445f5afe3324dc"
+        },
+        "public_care_share-disabled": {
+            "file": "public_care_share-disabled.html",
+            "surface": "public_care_share",
+            "options": {
+                "registration": false
+            },
+            "sha256": "556ac30bd4720f07ed5c33168cc981a937bffdc9e6eb62a80099517ee3b457d1"
+        },
+        "public_partner-guest": {
+            "file": "public_partner-guest.html",
+            "surface": "public_partner",
+            "options": [],
+            "sha256": "3265d43b63e0e3cc8a8e3bd7a91450c07f60f9747287c8e634670ae6ad49ac7f"
+        },
+        "public_partner-logged-in": {
+            "file": "public_partner-logged-in.html",
+            "surface": "public_partner",
+            "options": {
+                "viewer": 22
+            },
+            "sha256": "e841d4e5e66f1a496fb3b33125772babb11bed2cdc0c60711bbb930f788474b7"
+        },
+        "public_partner-disabled": {
+            "file": "public_partner-disabled.html",
+            "surface": "public_partner",
+            "options": {
+                "registration": false
+            },
+            "sha256": "38ed31d055a04923bbbd6a7bf22db597b3619343fd81e31f7ec9aaab1e186d32"
+        }
+    }
+}

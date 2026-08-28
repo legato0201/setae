@@ -6,9 +6,28 @@ var SetaeUIActions = (function ($) {
     let touchStartY = 0;
     let currentSwipeRow = null;
     let isSwipeActionTaken = false;
-    // ▼ 追加: 動作判定用のフラグ
     let isSwiping = false;
     let isScrolling = false;
+    let touchStartTime = 0;
+    let lastTouchX = 0;
+    let lastTouchTime = 0;
+    let swipeVelocityX = 0;
+    let swipeThresholdArmed = false;
+    let swipeHapticSent = false;
+    let isSwipeGestureActive = false;
+    let swipeContent = null;
+    let swipeBgLeft = null;
+    let swipeBgRight = null;
+    let swipeConfig = null;
+    let swipeFrameRequest = null;
+    let pendingSwipeFrame = null;
+    let swipeVisualDirection = 0;
+    let swipeVisualArmed = false;
+    let swipeGestureId = 0;
+    const SWIPE_ACTION_THRESHOLD = 88;
+    const SWIPE_FLICK_THRESHOLD = 46;
+    const SWIPE_FLICK_VELOCITY = 0.52;
+    const SWIPE_MAX_TRANSLATE = 118;
 
     function getStatusColor(status) {
         switch (status) {
@@ -44,15 +63,28 @@ var SetaeUIActions = (function ($) {
         return config;
     }
 
-    function handleQuickAction(id, action, data = {}) {
+    function getSwipeConfigForRow(rowElement) {
+        const rowData = rowElement && rowElement.dataset ? rowElement.dataset : {};
+        const classification = rowData.classification || 'tarantula';
+        if (classification === 'plant') {
+            return {
+                right_swipe: { color: '#0a84ff', icon: '+', action: 'feed', next: 'normal', label: '水やり' },
+                left_swipe: { color: '#7c3aed', icon: '↻', action: 'molt', next: 'normal', label: '植え替え' }
+            };
+        }
+
+        return getSwipeConfig(rowData.status || 'normal');
+    }
+
+    function handleQuickAction(id, requestedAction, data = {}, rowElement = null) {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
         const today = `${year}-${month}-${day}`;
 
-        const $row = $(`.setae-spider-list-row[data-id="${id}"]`);
-
+        const $row = rowElement ? $(rowElement) : $(`.setae-spider-list-row[data-id="${id}"]`);
+        let action = requestedAction;
         let nextStatus = $row.data('status');
         let toastMsg = '';
         let toastType = 'success';
@@ -60,94 +92,112 @@ var SetaeUIActions = (function ($) {
         if (action === 'feed') {
             nextStatus = 'normal';
             toastMsg = '給餌を記録しました';
-
-            // キャッシュデータの更新（Refused判定用）
-            if (SetaeCore.state.cachedSpiders) {
-                const cachedSpider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
-                if (cachedSpider) {
-                    cachedSpider.last_feed = today; // 今日の日付で更新
-                    cachedSpider.is_hungry = false;
-                    cachedSpider.status = 'normal';
-                }
-            }
         } else if (action === 'refused') {
             nextStatus = 'fasting';
-            toastMsg = ''; // メッセージはAPI成功後に表示または処理内でハンドリング
+            toastMsg = '拒食・様子見モードへ移行しました';
             toastType = 'warning';
         } else if (action === 'ate') {
             action = 'feed';
             nextStatus = 'normal';
-            toastMsg = '拒食終了・通常モードへ戻ります';
+            toastMsg = '拒食終了・通常モードへ戻しました';
         } else if (action === 'signs') {
             nextStatus = 'pre_molt';
-            toastMsg = '脱皮準備モードへ移行します';
+            toastMsg = '脱皮準備モードへ移行しました';
             toastType = 'warning';
         } else if (action === 'molt') {
             nextStatus = 'post_molt';
-            toastMsg = '脱皮を記録しました🎉';
-            toastType = 'success';
+            toastMsg = '脱皮を記録しました';
         } else if (action === 'measure') {
             nextStatus = 'normal';
-            toastMsg = '通常モードへ復帰しました';
+            toastMsg = '通常モードへ戻しました';
+        } else {
+            return;
         }
 
-        // Optimistic UI Update via executeSwipeAction logic directly or just attributes
-        // Replicating logic here for consistency
-        $row.attr('data-status', nextStatus);
-        $row.data('status', nextStatus);
-        $row.find('.setae-status-strip').css('background-color', getStatusColor(nextStatus));
-
-        const $pipeline = $row.find('.setae-pipeline');
-        $pipeline.find('.pipeline-step').removeClass('active');
-        $pipeline.find(`.pipeline-step[data-step="${nextStatus}"]`).addClass('active');
-
+        const optimisticChanges = { status: nextStatus };
         if (action === 'feed') {
-            $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Feed|給餌)$/); }).next('.meta-value').text('たった今').removeClass('alert-text');
+            optimisticChanges.last_feed = today;
+            optimisticChanges.last_prey = data.prey || 'コオロギ';
+            optimisticChanges.is_hungry = false;
         }
         if (action === 'molt') {
-            $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Molt|脱皮)$/); }).next('.meta-value').text('たった今');
+            optimisticChanges.last_molt = today;
         }
 
-        if (toastMsg) SetaeCore.showToast(toastMsg, toastType);
+        if (window.SetaeUIList && SetaeUIList.updateSpiderCard) {
+            SetaeUIList.updateSpiderCard(id, optimisticChanges, {
+                state: 'saving',
+                label: '保存中'
+            });
+        } else {
+            $row.attr('data-status', nextStatus).data('status', nextStatus);
+        }
 
-        // API Call
-        // API Call
-        if (action === 'signs') {
-            SetaeAPI.updateSpiderStatus(id, 'pre_molt');
-        } else if (action === 'measure') {
-            SetaeAPI.updateSpiderStatus(id, 'normal');
-            if (window.SetaeUILogModal && SetaeUILogModal.openLogModal) {
-                SetaeUILogModal.openLogModal(id, 'growth');
+        const completeAction = function (response) {
+            const serverChanges = response && (response.spider || response.data)
+                ? (response.spider || response.data)
+                : optimisticChanges;
+
+            if (window.SetaeUIList && SetaeUIList.updateSpiderCard) {
+                SetaeUIList.updateSpiderCard(id, serverChanges, {
+                    state: 'updated',
+                    label: '更新済み'
+                });
             }
-            toastMsg = '計測しましょう';
+            if (toastMsg) SetaeCore.showToast(toastMsg, toastType);
+        };
+
+        const rollbackAction = function (xhr, fallbackMessage) {
+            const message = typeof SetaeCore.getErrorMessage === 'function'
+                ? SetaeCore.getErrorMessage(xhr, fallbackMessage || '記録を保存できませんでした。')
+                : (fallbackMessage || '記録を保存できませんでした。');
+            SetaeCore.showToast(message, 'error');
+            if (window.SetaeUIList && SetaeUIList.refresh) {
+                SetaeUIList.refresh();
+            }
+        };
+
+        if (action === 'signs') {
+            SetaeAPI.updateSpiderStatus(id, 'pre_molt', completeAction, function (xhr) {
+                rollbackAction(xhr, '脱皮準備モードへ変更できませんでした。');
+            });
+        } else if (action === 'measure') {
+            SetaeAPI.updateSpiderStatus(id, 'normal', function (response) {
+                completeAction(response);
+                if (window.SetaeUILogModal && SetaeUILogModal.openLogModal) {
+                    SetaeUILogModal.openLogModal(id, 'growth');
+                }
+            }, function (xhr) {
+                rollbackAction(xhr, '状態を更新できませんでした。');
+            });
         } else if (action === 'refused') {
-            // Refused logic: Update existing log instead of creating new one
             SetaeAPI.getSpiderDetail(id, function (detailData) {
                 const logs = detailData.history || [];
-                // Find latest feed log that is not yet refused
                 const targetLog = logs.find(l => l.type === 'feed' && !l.refused);
 
                 if (targetLog) {
                     SetaeAPI.updateLog(targetLog.id, { refused: true }, () => {
-                        SetaeAPI.updateSpiderStatus(id, nextStatus);
-                        SetaeCore.showToast('拒食・様子見モードへ移行します', 'warning');
+                        SetaeAPI.updateSpiderStatus(id, nextStatus, completeAction, function (xhr) {
+                            rollbackAction(xhr, '拒食状態を保存できませんでした。');
+                        });
+                    }, function (xhr) {
+                        rollbackAction(xhr, '給餌記録を更新できませんでした。');
                     });
                 } else {
-                    SetaeCore.showToast('更新対象の給餌記録が見つかりませんでした', 'error');
-                    // Reload list to fix UI inconsistency
-                    if (window.SetaeUIList) SetaeUIList.refresh();
+                    rollbackAction(null, '更新対象の給餌記録が見つかりませんでした。');
                 }
+            }, function (xhr) {
+                rollbackAction(xhr, '個体情報を確認できませんでした。');
             });
         } else if (action === 'feed' || action === 'molt') {
             const logType = (action === 'molt') ? 'molt' : 'feed';
-
             const payload = {
-                prey_type: data.prey || 'Cricket',
+                prey_type: data.prey || 'コオロギ',
                 refused: false
             };
 
-            SetaeAPI.logEvent(id, logType, today, payload, () => {
-                SetaeAPI.updateSpiderStatus(id, nextStatus);
+            SetaeAPI.logEvent(id, logType, today, payload, null, completeAction, function (xhr) {
+                rollbackAction(xhr, `${logType === 'molt' ? '脱皮' : '給餌'}記録を保存できませんでした。`);
             });
         }
     }
@@ -161,8 +211,7 @@ var SetaeUIActions = (function ($) {
         const $content = $row.find('.setae-list-content');
         const id = $row.data('id');
         const actionType = actionConfig.action;
-        const newStatus = actionConfig.next;
-        const preyType = $row.data('prey') || 'Cricket';
+        const preyType = $row.data('prey') || 'コオロギ';
 
         // Check classification logic
         let isPlant = false;
@@ -218,89 +267,194 @@ var SetaeUIActions = (function ($) {
                 }
             }
 
-            // Default behavior (Quick Action / current logic)
-            console.log(`🚀 Executing: ${actionType} -> New Status: ${newStatus} `);
-
-            // 1. UIの即時更新
-            $row.attr('data-status', newStatus);
-            $row[0].dataset.status = newStatus;
-            $content.attr('data-status', newStatus);
-
-            // アニメーションの残像を消すため、少し遅延させてからインナーHTMLをクリア
-            setTimeout(() => {
-                $row.find('.setae-swipe-bg').removeAttr('style').html('').removeClass('swipe-triggered');
-            }, 100);
-
-            const $pipeline = $row.find('.setae-pipeline');
-            if ($pipeline.length) {
-                $pipeline.find('.pipeline-step').removeClass('active');
-                const $nextStep = $pipeline.find(`.pipeline-step[data-step="${newStatus}"]`);
-                if ($nextStep.length) $nextStep.addClass('active');
-            }
-
-            if (actionType === 'feed' || actionType === 'ate') {
-                const $label = $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Feed|給餌)$/); });
-                if ($label.length) {
-                    $label.next('.meta-value').text('今日').css('color', '').removeClass('alert-text').css('background-color', '#e8f5e9').animate({ backgroundColor: 'transparent' }, 1000);
-                }
-            } else if (actionType === 'molt') {
-                const $label = $row.find('.meta-label').filter(function () { return jQuery(this).text().trim().match(/^(Molt|脱皮)$/); });
-                if ($label.length) {
-                    $label.next('.meta-value').text('今日').css('background-color', '#f3e5f5').animate({ backgroundColor: 'transparent' }, 1000);
-                }
-            }
-
-            // スワイプ操作完了後、カードを少しモノクロ・半透明にして「お世話済み」を表現
-            $content.css({
-                'filter': 'grayscale(90%) opacity(1)'
-            });
-
-            // 2. API送信
             let extraData = {};
             if (actionType === 'feed' || actionType === 'ate') {
                 extraData = { prey: preyType };
             }
-            handleQuickAction(id, actionType, extraData);
+            handleQuickAction(id, actionType, extraData, rowElement);
         }
     };
 
     // ==========================================
     // Swipe Logic (Stateful)
     // ==========================================
+    function getTouchPoint(e) {
+        const sourceEvent = e && e.originalEvent ? e.originalEvent : e;
+        const touches = sourceEvent && sourceEvent.changedTouches && sourceEvent.changedTouches.length
+            ? sourceEvent.changedTouches
+            : (sourceEvent ? sourceEvent.touches : null);
+        const touch = touches && touches.length ? touches[0] : null;
+        return touch
+            ? { x: touch.clientX, y: touch.clientY }
+            : { x: touchStartX, y: touchStartY };
+    }
+
+    function clearSwipeVisuals(row, content, bgLeft, bgRight) {
+        if (content) {
+            content.style.transform = '';
+            content.style.transition = '';
+        }
+        if (row) {
+            row.classList.remove('is-swipe-active', 'is-swipe-committing');
+        }
+        if (bgLeft) {
+            bgLeft.classList.remove('is-visible', 'is-armed', 'swipe-triggered', 'is-resetting');
+            bgLeft.style.transition = '';
+        }
+        if (bgRight) {
+            bgRight.classList.remove('is-visible', 'is-armed', 'swipe-triggered', 'is-resetting');
+            bgRight.style.transition = '';
+        }
+    }
+
+    function cancelScheduledSwipeFrame(discardPending) {
+        if (swipeFrameRequest !== null && typeof window.cancelAnimationFrame === 'function') {
+            window.cancelAnimationFrame(swipeFrameRequest);
+        }
+        swipeFrameRequest = null;
+        if (discardPending) pendingSwipeFrame = null;
+    }
+
+    function updateSwipeBackgrounds(direction, isArmed) {
+        if (!swipeBgLeft || !swipeBgRight) return;
+        if (direction === swipeVisualDirection && isArmed === swipeVisualArmed) return;
+
+        if (direction > 0) {
+            swipeBgLeft.classList.add('is-visible');
+            swipeBgLeft.classList.toggle('is-armed', isArmed);
+            swipeBgRight.classList.remove('is-visible', 'is-armed');
+        } else if (direction < 0) {
+            swipeBgRight.classList.add('is-visible');
+            swipeBgRight.classList.toggle('is-armed', isArmed);
+            swipeBgLeft.classList.remove('is-visible', 'is-armed');
+        } else {
+            swipeBgLeft.classList.remove('is-visible', 'is-armed');
+            swipeBgRight.classList.remove('is-visible', 'is-armed');
+        }
+
+        swipeVisualDirection = direction;
+        swipeVisualArmed = isArmed;
+    }
+
+    function renderSwipeFrame() {
+        swipeFrameRequest = null;
+        if (!currentSwipeRow || !swipeContent || !pendingSwipeFrame) return;
+
+        const frame = pendingSwipeFrame;
+        pendingSwipeFrame = null;
+        const action = frame.diffX >= 0 ? swipeConfig.right_swipe : swipeConfig.left_swipe;
+        const isUnavailable = !action || !action.action || action.action === 'locked' || action.action === 'wait';
+
+        if (isUnavailable) {
+            swipeContent.style.transform = 'translate3d(0, 0, 0)';
+            updateSwipeBackgrounds(0, false);
+            return;
+        }
+
+        const overThreshold = Math.max(0, frame.absX - SWIPE_ACTION_THRESHOLD);
+        const translated = Math.min(
+            (Math.min(frame.absX, SWIPE_ACTION_THRESHOLD) * 0.84) + (overThreshold * 0.22),
+            SWIPE_MAX_TRANSLATE
+        );
+        const moveX = Math.sign(frame.diffX) * translated;
+        const isArmed = frame.absX >= SWIPE_ACTION_THRESHOLD;
+
+        swipeContent.style.transform = `translate3d(${moveX}px, 0, 0)`;
+
+        if (isArmed && !swipeThresholdArmed && !swipeHapticSent) {
+            swipeHapticSent = true;
+            if (window.navigator && typeof window.navigator.vibrate === 'function') {
+                window.navigator.vibrate(5);
+            }
+        }
+
+        swipeThresholdArmed = isArmed;
+        updateSwipeBackgrounds(Math.sign(frame.diffX), isArmed);
+    }
+
+    function scheduleSwipeFrame() {
+        if (swipeFrameRequest !== null) return;
+        if (typeof window.requestAnimationFrame === 'function') {
+            swipeFrameRequest = window.requestAnimationFrame(renderSwipeFrame);
+            return;
+        }
+        renderSwipeFrame();
+    }
+
+    function flushScheduledSwipeFrame() {
+        cancelScheduledSwipeFrame(false);
+        if (pendingSwipeFrame) renderSwipeFrame();
+    }
+
+    function releaseSwipeSession(row, gestureId, content, bgLeft, bgRight) {
+        if (currentSwipeRow !== row || swipeGestureId !== gestureId) return;
+
+        clearSwipeVisuals(row, content, bgLeft, bgRight);
+        currentSwipeRow = null;
+        swipeContent = null;
+        swipeBgLeft = null;
+        swipeBgRight = null;
+        swipeConfig = null;
+        pendingSwipeFrame = null;
+        swipeVisualDirection = 0;
+        swipeVisualArmed = false;
+        isSwiping = false;
+        isScrolling = false;
+    }
+
     function handleTouchStart(e) {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
+        const point = getTouchPoint(e);
+        const now = window.performance ? window.performance.now() : Date.now();
+
+        cancelScheduledSwipeFrame(true);
+        if (currentSwipeRow) {
+            clearSwipeVisuals(
+                currentSwipeRow,
+                swipeContent || currentSwipeRow.querySelector('.setae-list-content'),
+                swipeBgLeft || currentSwipeRow.querySelector('.swipe-left'),
+                swipeBgRight || currentSwipeRow.querySelector('.swipe-right')
+            );
+        }
+
+        swipeGestureId += 1;
+        touchStartX = point.x;
+        touchStartY = point.y;
+        touchStartTime = now;
+        lastTouchX = point.x;
+        lastTouchTime = now;
+        swipeVelocityX = 0;
+        swipeThresholdArmed = false;
+        swipeHapticSent = false;
         currentSwipeRow = this;
+        isSwipeGestureActive = true;
+        this.classList.add('is-swipe-active');
         isSwipeActionTaken = false;
         isSwiping = false;
         isScrolling = false;
+        swipeVisualDirection = 0;
+        swipeVisualArmed = false;
 
-        const content = this.querySelector('.setae-list-content');
-        const bgLeft = this.querySelector('.swipe-left');
-        const bgRight = this.querySelector('.swipe-right');
+        swipeContent = this.querySelector('.setae-list-content');
+        swipeBgLeft = this.querySelector('.swipe-left');
+        swipeBgRight = this.querySelector('.swipe-right');
+        swipeConfig = getSwipeConfigForRow(this);
 
-        // ▼ 追加: スワイプ開始時にtransitionを無効化（ガタつき防止の最重要ポイント）
-        if (content) content.style.transition = 'none';
+        if (swipeContent) {
+            swipeContent.style.transition = 'none';
+            swipeContent.style.transform = 'translate3d(0, 0, 0)';
+        }
 
-        if (!bgLeft || !bgRight) return;
+        if (!swipeBgLeft || !swipeBgRight) return;
 
-        // ▼ 追加: 背景側のtransitionも無効化
-        bgLeft.style.transition = 'none';
-        bgRight.style.transition = 'none';
+        swipeBgLeft.style.transition = 'none';
+        swipeBgRight.style.transition = 'none';
 
-        $('.setae-list-content').css('transform', 'translateX(0)');
-
-        bgLeft.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
-        bgRight.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
-        bgLeft.style.width = '64px';
-        bgRight.style.width = '64px';
-
-        const status = $(this).data('status') || 'normal';
-        const config = getSwipeConfig(status);
+        swipeBgLeft.classList.remove('is-visible', 'is-armed', 'swipe-triggered', 'is-resetting');
+        swipeBgRight.classList.remove('is-visible', 'is-armed', 'swipe-triggered', 'is-resetting');
 
         // ▼ 変更箇所
-        const preyType = $(this).data('prey') || '';
-        const spiderId = $(this).data('id');
+        const preyType = this.dataset.prey || '';
+        const spiderId = this.dataset.id;
         let hasLastFeed = false;
 
         // キャッシュから過去の給餌履歴があるか確認
@@ -311,12 +465,12 @@ var SetaeUIActions = (function ($) {
 
         // 右スワイプが給餌（feedまたはate）で、かつ過去の履歴がある（即時実行される）場合のみキャプションを渡す
         let rightCaption = '';
-        if ((config.right_swipe.action === 'feed' || config.right_swipe.action === 'ate') && hasLastFeed) {
+        if ((swipeConfig.right_swipe.action === 'feed' || swipeConfig.right_swipe.action === 'ate') && hasLastFeed) {
             rightCaption = preyType;
         }
 
-        setupSwipeBg(bgLeft, config.right_swipe, rightCaption);
-        setupSwipeBg(bgRight, config.left_swipe);
+        setupSwipeBg(swipeBgLeft, swipeConfig.right_swipe, rightCaption);
+        setupSwipeBg(swipeBgRight, swipeConfig.left_swipe);
         // ▲ 変更箇所ここまで
     }
 
@@ -326,34 +480,44 @@ var SetaeUIActions = (function ($) {
         el.style.backgroundColor = conf.color;
         el.dataset.action = conf.action;
 
-        if (caption) {
-            // キャプションがある場合（プロ仕様のレイアウト）
-            // 括弧内の日本語だけを抽出する（例: "Dubia (デュビア)" -> "デュビア"）
-            const match = caption.match(/\((.*?)\)/);
-            const shortCaption = match ? match[1] : caption;
+        const match = String(caption || '').match(/\((.*?)\)/);
+        const shortCaption = match ? match[1] : String(caption || '');
+        const signature = [conf.color, conf.action, conf.icon, conf.label, shortCaption].join('||');
+        if (el.dataset.swipeSignature === signature) return;
 
-            el.innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%;">
-                    <span class="swipe-icon" style="font-size:20px; line-height:1; margin-bottom:2px;">${conf.icon}</span>
-                    <span style="font-size:9px; color:#fff; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90%; text-shadow:0 1px 2px rgba(0,0,0,0.3); letter-spacing:0.5px;">${shortCaption}</span>
-                </div>
-            `;
-        } else {
-            // 通常時
-            el.innerHTML = `<span class="swipe-icon" style="font-size:24px; line-height:1;">${conf.icon}</span>`;
+        el.dataset.swipeSignature = signature;
+        const action = document.createElement('span');
+        const icon = document.createElement('span');
+        const label = document.createElement('strong');
+
+        action.className = 'setae-swipe-action';
+        icon.className = 'swipe-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = conf.icon || '+';
+        label.textContent = conf.label || '記録';
+        action.append(icon, label);
+
+        if (shortCaption) {
+            const detail = document.createElement('small');
+            detail.textContent = shortCaption;
+            action.append(detail);
         }
+
+        el.replaceChildren(action);
     }
-    // ▲▲▲ 追加ここまで ▲▲▲
 
     function handleTouchMove(e) {
-        // ▼ 修正: スクロール判定済みなら処理を中断
-        if (!currentSwipeRow || isScrolling) return;
+        if (!currentSwipeRow || !isSwipeGestureActive || isScrolling) return;
 
-        const diffX = e.changedTouches[0].screenX - touchStartX;
-        const diffY = e.changedTouches[0].screenY - touchStartY;
+        const point = getTouchPoint(e);
+        const diffX = point.x - touchStartX;
+        const diffY = point.y - touchStartY;
+        const absX = Math.abs(diffX);
+        const absY = Math.abs(diffY);
 
         if (!isSwiping) {
-            if (Math.abs(diffX) > Math.abs(diffY)) {
+            if (Math.max(absX, absY) < 9) return;
+            if (absX > absY * 1.2) {
                 isSwiping = true;
             } else {
                 isScrolling = true;
@@ -361,322 +525,113 @@ var SetaeUIActions = (function ($) {
             }
         }
 
-        if (isSwiping) {
-            e.preventDefault();
-        }
+        if (typeof e.preventDefault === 'function' && e.cancelable !== false) e.preventDefault();
 
-        if (Math.abs(diffX) > 180) return;
+        const now = window.performance ? window.performance.now() : Date.now();
+        const elapsed = Math.max(1, now - lastTouchTime);
+        const instantVelocity = (point.x - lastTouchX) / elapsed;
+        swipeVelocityX = (swipeVelocityX * 0.58) + (instantVelocity * 0.42);
+        lastTouchX = point.x;
+        lastTouchTime = now;
 
-        const content = currentSwipeRow.querySelector('.setae-list-content');
-        const bgLeft = currentSwipeRow.querySelector('.swipe-left');
-        const bgRight = currentSwipeRow.querySelector('.swipe-right');
-        const status = $(currentSwipeRow).data('status');
-
-        if (status === 'pre_molt' && diffX < 0) return;
-
-        // ▼ 修正: 指への追従性を少し上げて重みを調整（dampFactor）
-        const dampFactor = 0.6;
-        const moveX = diffX * dampFactor;
-        content.style.transform = `translateX(${moveX}px)`;
-
-        // ▼ 修正: 玉が出現する閾値を少し早めに設定
-        const threshold = 15;
-
-        if (diffX > 0) {
-            if (diffX > threshold) {
-                if (!bgLeft.classList.contains('is-visible')) {
-                    bgLeft.classList.add('is-visible'); // ここでボワッとアニメーション発火
-                    bgRight.classList.remove('is-visible');
-                    bgLeft.style.width = '64px';
-                }
-                // 60pxまでは丸い玉のまま維持し、それ以上引くとニョーンと伸びる
-                const stretch = Math.max(0, diffX - 60);
-                bgLeft.style.width = (64 + stretch * 0.4) + 'px';
-            } else {
-                // 閾値未満に戻したら消す
-                bgLeft.classList.remove('is-visible');
-            }
-
-            let isPlant = false;
-            const id = $(currentSwipeRow).data('id');
-            if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
-                const spider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
-                if (spider && spider.classification === 'plant') isPlant = true;
-            }
-            if (!isPlant && $(currentSwipeRow).data('classification') === 'plant') isPlant = true;
-
-            if (isPlant) {
-                bgLeft.style.backgroundColor = '#3498db';
-                bgLeft.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">💧</span>';
-            }
-
-        } else if (diffX < 0) {
-            if (Math.abs(diffX) > threshold) {
-                if (!bgRight.classList.contains('is-visible')) {
-                    bgRight.classList.add('is-visible'); // ここでボワッとアニメーション発火
-                    bgLeft.classList.remove('is-visible');
-                    bgRight.style.width = '64px';
-                }
-                const stretch = Math.max(0, Math.abs(diffX) - 60);
-                bgRight.style.width = (64 + stretch * 0.4) + 'px';
-            } else {
-                // 閾値未満に戻したら消す
-                bgRight.classList.remove('is-visible');
-            }
-
-            let isPlant = false;
-            const id = $(currentSwipeRow).data('id');
-            if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
-                const spider = SetaeCore.state.cachedSpiders.find(s => s.id == id);
-                if (spider && spider.classification === 'plant') isPlant = true;
-            }
-            if (!isPlant && $(currentSwipeRow).data('classification') === 'plant') isPlant = true;
-
-            if (isPlant) {
-                bgRight.style.backgroundColor = '#8e44ad';
-                bgRight.innerHTML = '<span class="swipe-icon" style="font-size:24px; color:#fff;">🪴</span>';
-            }
-        }
+        pendingSwipeFrame = { diffX: diffX, absX: absX };
+        scheduleSwipeFrame();
     }
 
     function handleTouchEnd(e) {
-        if (!currentSwipeRow) return;
-        const diffX = e.changedTouches[0].screenX - touchStartX;
-        const row = currentSwipeRow;
-        const content = row.querySelector('.setae-list-content');
-        const status = $(row).data('status') || 'normal';
-        const config = getSwipeConfig(status);
-
-        let actionConf = null;
-
-        // スマホでの操作性を考慮し、アクション発動の閾値を少し軽く(90px)設定
-        const actionThreshold = 90;
-
-        if (diffX > actionThreshold) actionConf = config.right_swipe;
-        else if (diffX < -actionThreshold) actionConf = config.left_swipe;
-
-        let swipeBg = null;
-        if (diffX > actionThreshold) swipeBg = row.querySelector('.swipe-left');
-        else if (diffX < -actionThreshold) swipeBg = row.querySelector('.swipe-right');
-
-        // ▼ 追加: 指が離れた瞬間にtransitionを復元して滑らかに元の位置へ戻す
-        content.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-        const bgLeft = row.querySelector('.swipe-left');
-        const bgRight = row.querySelector('.swipe-right');
-        if (bgLeft) bgLeft.style.transition = '';
-        if (bgRight) bgRight.style.transition = '';
-
-        if (actionConf && actionConf.action && actionConf.action !== 'locked' && actionConf.action !== 'wait' && swipeBg) {
-            swipeBg.style.width = '64px';
-            swipeBg.classList.add('is-resetting');
-
-            setTimeout(() => {
-                swipeBg.classList.remove('is-resetting');
-                swipeBg.classList.add('swipe-triggered');
-
-                setTimeout(() => {
-                    const dir = (diffX > 0) ? 'right' : 'left';
-                    executeSwipeAction(row, actionConf, dir);
-                    isSwipeActionTaken = true;
-
-                    content.style.transform = 'translateX(0)';
-
-                    setTimeout(() => {
-                        content.style.transition = '';
-                        if (swipeBg) {
-                            swipeBg.classList.remove('is-visible', 'swipe-triggered');
-                            swipeBg.style.width = '64px';
-                        }
-                        currentSwipeRow = null;
-                        setTimeout(() => isSwipeActionTaken = false, 300);
-                    }, 400);
-                }, 300);
-            }, 150);
+        if (!currentSwipeRow || !isSwipeGestureActive) return;
+        const point = getTouchPoint(e);
+        const now = window.performance ? window.performance.now() : Date.now();
+        const diffX = point.x - touchStartX;
+        const absX = Math.abs(diffX);
+        if (isSwiping) {
+            pendingSwipeFrame = { diffX: diffX, absX: absX };
+            flushScheduledSwipeFrame();
         } else {
-            content.style.transform = 'translateX(0)';
-
-            if (bgLeft) bgLeft.style.width = '64px';
-            if (bgRight) bgRight.style.width = '64px';
-
-            setTimeout(() => {
-                content.style.transition = '';
-                if (bgLeft) bgLeft.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
-                if (bgRight) bgRight.classList.remove('is-visible', 'swipe-triggered', 'is-resetting');
-
-                currentSwipeRow = null;
-                setTimeout(() => isSwipeActionTaken = false, 300);
-            }, 400);
+            cancelScheduledSwipeFrame(true);
         }
+        const gestureDuration = Math.max(1, now - touchStartTime);
+        const overallVelocity = diffX / gestureDuration;
+        const recentVelocity = now - lastTouchTime > 120 ? 0 : swipeVelocityX;
+        const effectiveVelocity = Math.abs(recentVelocity) > Math.abs(overallVelocity)
+            ? recentVelocity
+            : overallVelocity;
+        const row = currentSwipeRow;
+        const content = swipeContent;
+        const bgLeft = swipeBgLeft;
+        const bgRight = swipeBgRight;
+        const config = swipeConfig;
+        const gestureId = swipeGestureId;
+        const actionConf = diffX > 0 ? config.right_swipe : config.left_swipe;
+        const swipeBg = diffX > 0 ? bgLeft : bgRight;
+        const isQuickFlick = absX >= SWIPE_FLICK_THRESHOLD
+            && Math.abs(effectiveVelocity) >= SWIPE_FLICK_VELOCITY
+            && Math.sign(effectiveVelocity) === Math.sign(diffX);
+        const shouldCommit = isSwiping
+            && (absX >= SWIPE_ACTION_THRESHOLD || isQuickFlick)
+            && actionConf
+            && actionConf.action
+            && actionConf.action !== 'locked'
+            && actionConf.action !== 'wait';
+
+        isSwipeGestureActive = false;
+        if (isSwiping && absX > 12) {
+            row.dataset.suppressClickUntil = String(Date.now() + 700);
+        }
+
+        if (!content) {
+            releaseSwipeSession(row, gestureId, content, bgLeft, bgRight);
+            return;
+        }
+        content.style.transition = 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)';
+
+        if (shouldCommit && swipeBg) {
+            isSwipeActionTaken = true;
+            row.classList.add('is-swipe-committing');
+            swipeBg.classList.add('is-visible', 'is-armed', 'swipe-triggered');
+            content.style.transform = `translate3d(${diffX > 0 ? SWIPE_MAX_TRANSLATE : -SWIPE_MAX_TRANSLATE}px, 0, 0)`;
+            if (!swipeHapticSent && window.navigator && typeof window.navigator.vibrate === 'function') {
+                window.navigator.vibrate(8);
+            }
+
+            window.setTimeout(function () {
+                executeSwipeAction(row, actionConf, diffX > 0 ? 'right' : 'left');
+                if (currentSwipeRow === row && swipeGestureId === gestureId) {
+                    content.style.transform = 'translate3d(0, 0, 0)';
+                }
+            }, 110);
+        } else {
+            content.style.transform = 'translate3d(0, 0, 0)';
+        }
+
+        window.setTimeout(function () {
+            releaseSwipeSession(row, gestureId, content, bgLeft, bgRight);
+            window.setTimeout(function () { isSwipeActionTaken = false; }, 300);
+        }, shouldCommit ? 430 : 280);
     }
 
-    // ==========================================
-    // PC用: ホバー時の玉の出現（ボワッ）
-    // ==========================================
-    function initDesktopHoverLogic() {
-        $(document).on('mousemove', '.setae-spider-list-row', function (e) {
-            if (currentSwipeRow) return;
-            const width = $(this).outerWidth();
-            const percent = (e.pageX - $(this).offset().left) / width;
-            const content = this.querySelector('.setae-list-content');
+    function handleTouchCancel() {
+        if (!currentSwipeRow || !isSwipeGestureActive) return;
+        const row = currentSwipeRow;
+        const content = swipeContent;
+        const bgLeft = swipeBgLeft;
+        const bgRight = swipeBgRight;
+        const gestureId = swipeGestureId;
+        isSwipeGestureActive = false;
+        cancelScheduledSwipeFrame(true);
 
-            const bgLeft = this.querySelector('.swipe-left');
-            const bgRight = this.querySelector('.swipe-right');
-
-            // ★ PC版：ホバー時に背景色やアイコンを生成する
-            if (bgLeft && !bgLeft.hasAttribute('data-setup')) {
-                const status = $(this).attr('data-status') || $(this).data('status') || 'normal';
-                const config = getSwipeConfig(status);
-
-                // ▼▼▼ 修正箇所: jQueryのキャッシュを回避し、最新の属性値を優先取得 ▼▼▼
-                const preyType = $(this).attr('data-prey') || $(this).data('prey') || '';
-                const spiderId = $(this).attr('data-id') || $(this).data('id');
-                let hasLastFeed = false;
-
-                // 1. キャッシュから給餌履歴を確認
-                if (typeof SetaeCore !== 'undefined' && SetaeCore.state && SetaeCore.state.cachedSpiders) {
-                    const spider = SetaeCore.state.cachedSpiders.find(s => s.id == spiderId);
-                    if (spider && spider.last_feed) hasLastFeed = true;
-                }
-
-                // 2. キャッシュが無い場合のフォールバック（画面上のテキストから判定）
-                if (!hasLastFeed) {
-                    const feedText = $(this).find('.meta-label').filter(function () {
-                        return $(this).text().trim().match(/^(Feed|給餌)$/);
-                    }).next('.meta-value').text().trim();
-
-                    if (feedText && feedText !== '-' && feedText !== '未記録') {
-                        hasLastFeed = true;
-                    }
-                }
-
-                let rightCaption = '';
-                // 右スワイプが給餌系アクションで、かつ過去の履歴がある場合のみキャプションを渡す
-                if ((config.right_swipe.action === 'feed' || config.right_swipe.action === 'ate') && hasLastFeed) {
-                    rightCaption = preyType;
-                }
-
-                setupSwipeBg(bgLeft, config.right_swipe, rightCaption);
-                setupSwipeBg(bgRight, config.left_swipe);
-                // ▲▲▲ 変更ここまで ▲▲▲
-
-                bgLeft.setAttribute('data-setup', '1');
-                bgRight.setAttribute('data-setup', '1');
-
-                // インラインのvisibilityが残っている場合の対策
-                bgLeft.style.visibility = '';
-                bgRight.style.visibility = '';
-            }
-
-            if (percent < 0.2) {
-                content.style.transform = 'translateX(20px)';
-                if (bgLeft && !bgLeft.classList.contains('is-visible')) {
-                    bgLeft.classList.add('is-visible'); // ここで透明化を解除して出現させる
-                    if (bgRight) bgRight.classList.remove('is-visible');
-                    bgLeft.style.width = '64px'; // PC版は伸びずに玉のまま表示する
-                }
-            } else if (percent > 0.8) {
-                content.style.transform = 'translateX(-20px)';
-                if (bgRight && !bgRight.classList.contains('is-visible')) {
-                    bgRight.classList.add('is-visible'); // ここで透明化を解除して出現させる
-                    if (bgLeft) bgLeft.classList.remove('is-visible');
-                    bgRight.style.width = '64px';
-                }
-            } else {
-                content.style.transform = 'translateX(0)';
-                if (bgLeft) { bgLeft.classList.remove('is-visible'); bgLeft.style.width = '64px'; }
-                if (bgRight) { bgRight.classList.remove('is-visible'); bgRight.style.width = '64px'; }
-            }
-        });
-
-        $(document).on('mouseleave', '.setae-spider-list-row', function () {
-            const content = this.querySelector('.setae-list-content');
-            if (content) content.style.transform = 'translateX(0)';
-            const bgLeft = this.querySelector('.swipe-left');
-            const bgRight = this.querySelector('.swipe-right');
-
-            // ▼▼▼ 修正箇所: マウスが離れたら状態フラグをリセットし、次回ホバー時に再生成させる ▼▼▼
-            if (bgLeft) {
-                bgLeft.classList.remove('is-visible');
-                bgLeft.style.width = '64px';
-                bgLeft.removeAttribute('data-setup');
-            }
-            if (bgRight) {
-                bgRight.classList.remove('is-visible');
-                bgRight.style.width = '64px';
-                bgRight.removeAttribute('data-setup');
-            }
-        });
+        if (content) {
+            content.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
+            content.style.transform = 'translate3d(0, 0, 0)';
+        }
+        window.setTimeout(function () {
+            releaseSwipeSession(row, gestureId, content, bgLeft, bgRight);
+        }, 240);
     }
 
-    // ==========================================
-    // PC用: クリック実行時の弾けるアクション（パチン）
-    // ==========================================
-    function animateDesktopAction($card, direction, actionConfig, $row) {
-        // 対象の玉を取得
-        const swipeBg = (direction === 'right') ? $row[0].querySelector('.swipe-left') : $row[0].querySelector('.swipe-right');
 
-        // 弾ける水しぶきアニメーションのクラスを付与
-        if (swipeBg) swipeBg.classList.add('swipe-triggered');
 
-        // アニメーション（300ms）を見せてからアクションを実行
-        setTimeout(() => {
-            executeSwipeAction($row[0], actionConfig, direction);
 
-            // カードを元の位置に戻し、状態をリセット
-            setTimeout(() => {
-                $card.css('transform', 'translateX(0)');
-                if (swipeBg) swipeBg.classList.remove('is-visible', 'swipe-triggered');
-                $row.data('rendered-status', null);
-                $row.find('.swipe-left, .swipe-right').removeAttr('data-setup'); // 色とアイコンのリセット
-            }, 300);
-        }, 300);
-    }
-
-    function initDesktopClickLogic() {
-        // スマホやタブレットでも誤作動する環境があるため、以前の判定を削除
-        // if ('ontouchstart' in window) return;
-
-        $(document).on('click', '.setae-spider-list-row', function (e) {
-            // ▼▼▼ 追加: 操作元が「タッチ（スマホ等）」の場合はこの処理をスキップし、詳細画面を開く処理へ任せる ▼▼▼
-            if (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen')) {
-                return;
-            }
-
-            // ▼▼▼ ここから追加: iOS Safariなど pointerType が判定できないタッチデバイス向けの対策 ▼▼▼
-            if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
-                return;
-            }
-            // ▲▲▲ 追加ここまで ▲▲▲
-
-            const $row = $(this);
-            const $card = $row.find('.setae-list-content');
-
-            const width = $row.outerWidth();
-            const x = e.pageX - $row.offset().left;
-            const percent = x / width;
-
-            let direction = null;
-            if (percent < 0.20) {
-                direction = 'right';
-            } else if (percent > 0.80) {
-                direction = 'left';
-            }
-
-            if (direction) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-
-                const status = $row.attr('data-status') || 'normal';
-                const config = getSwipeConfig(status);
-
-                const actionConfig = (direction === 'right') ? config.right_swipe : config.left_swipe;
-
-                if (actionConfig && actionConfig.action && actionConfig.action !== 'locked' && actionConfig.action !== 'wait') {
-                    animateDesktopAction($card, direction, actionConfig, $row);
-                }
-            }
-        });
-    }
 
     return {
         handleQuickAction: handleQuickAction,
@@ -686,8 +641,7 @@ var SetaeUIActions = (function ($) {
         handleTouchStart: handleTouchStart,
         handleTouchMove: handleTouchMove,
         handleTouchEnd: handleTouchEnd,
-        initDesktopHoverLogic: initDesktopHoverLogic,
-        initDesktopClickLogic: initDesktopClickLogic
+        handleTouchCancel: handleTouchCancel
     };
 
 })(jQuery);

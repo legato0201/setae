@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SETAE v1.0.243 Runtime QA</title>
+  <script>window.SETAE_CONFIG = { siteOrigin: location.origin };</script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/feedback.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/progressive-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <style>
+    html, body { margin: 0; min-height: 100%; }
+    .runtime-continuity { min-height: 3200px; padding-block: 720px; }
+    .runtime-media-list { display: block; }
+    .runtime-media-item { width: 240px; min-height: 720px; }
+    .runtime-media-item .setae-media-frame { width: 240px; }
+    .runtime-search-results { min-height: 240px; }
+  </style>
+</head>
+<body data-fixture-ready="false">
+  <div id="app"></div>
+  <script type="module">
+    import { renderAppFeedback, renderAppFrame } from '../../assets/app/components/app-frame.js';
+    import { createRenderCoordinator } from '../../assets/app/runtime/render-coordinator.js';
+    import {
+      createListWindow,
+      extendListWindow,
+      restoreProgressiveListFocus
+    } from '../../assets/app/components/progressive-list.js';
+    import { appendRecordsWindow, renderRecords } from '../../assets/app/pages/records.js';
+    import { appendNurseryRegisterWindow, renderNurseryWorkspace } from '../../assets/app/features/nursery/view.js';
+    import { renderMediaFrame, registerMediaFallbacks } from '../../assets/app/components/media.js';
+    import { createAnimalSearchIndex, searchAnimalIndex } from '../../assets/app/queries/animal-search-index.js';
+    import { renderCollectionSearchResults } from '../../assets/app/features/collection/view.js';
+
+    const app = document.querySelector('#app');
+    const coordinator = createRenderCoordinator(app);
+    registerMediaFallbacks(app, { timeoutMs: 120 });
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const day = (offset = 0) => new Date(Date.UTC(2026, 7, 27 - offset, 9, 0, 0)).toISOString();
+    const animals = Array.from({ length: 500 }, (_, index) => ({
+      id: index + 1,
+      individual_code: `C${String(index + 1).padStart(4, '0')}`,
+      species_name: index % 3 === 0 ? 'Typhochlaena seladonia' : index % 3 === 1 ? 'Caribena versicolor' : 'Latouchia typica',
+      ja_name: index % 3 === 0 ? 'セラドニア' : index % 3 === 1 ? 'アンティルピンクトゥー' : 'キシノウエトタテグモ',
+      gender: index % 2 ? 'male' : 'female',
+      instar: 4 + (index % 8),
+      status: index % 11 === 0 ? 'pre_molt' : 'normal',
+      tags: index % 5 === 0 ? ['樹上'] : ['地表'],
+      last_feed: day(index % 24),
+      last_molt: day(index % 120),
+      last_observation: day(index % 18),
+      has_own_image: false
+    }));
+    const records = Array.from({ length: 1000 }, (_, index) => {
+      const animal = animals[index % animals.length];
+      return {
+        targetType: 'animal',
+        targetId: animal.id,
+        animal,
+        event: {
+          id: index + 1,
+          type: ['feed', 'observation', 'molt', 'growth'][index % 4],
+          date: day(index % 365),
+          data: { prey_type: 'レッドローチ', quantity: 1, note: `台帳記録 ${index + 1}`, instar: 4 + (index % 8) }
+        }
+      };
+    });
+    const nursery = {
+      id: 3,
+      name: 'N003',
+      code_start: 'A001',
+      code_end: 'A500',
+      species_name: 'Typhochlaena seladonia',
+      birth_date: '2026-07-18',
+      items: Array.from({ length: 500 }, (_, index) => ({
+        id: index + 1,
+        code: `A${String(index + 1).padStart(3, '0')}`,
+        status: index % 29 === 0 ? 'dead' : 'alive',
+        last_molt: day(index % 60),
+        note: index % 7 === 0 ? '状態確認済み' : ''
+      })),
+      events: Array.from({ length: 20 }, (_, index) => ({
+        id: index + 1,
+        type: index % 2 ? 'observation' : 'feed',
+        date: day(index),
+        scope: 'nursery',
+        data: { note: `群全体の記録 ${index + 1}` }
+      })),
+      development: [{ instar: 1, count: 120 }, { instar: 2, count: 280 }, { instar: 3, count: 100 }]
+    };
+    const searchIndex = createAnimalSearchIndex(animals);
+    const animalView = { id: 'all', title: 'すべて', query: {} };
+    let recordsWindow = createListWindow();
+    let nurseryWindow = createListWindow();
+
+    const frame = (content) => renderAppFrame({
+      content,
+      page: 'records',
+      pageTitle: '記録',
+      authenticated: true,
+      online: true,
+      userName: 'Runtime QA',
+      activeViewId: 'all',
+      savedViews: []
+    });
+    const recordsHtml = () => renderRecords({ records, animals, filter: 'all', view: 'history', listWindow: recordsWindow });
+    const nurseryHtml = () => `<main class="page nursery-runtime-page"><h1>ベビー群</h1>${renderNurseryWorkspace(nursery, { registerWindow: nurseryWindow })}</main>`;
+    const mount = (content) => coordinator.mount(frame(content), { view: 'app' });
+
+    function mountRecords(limit = 100) {
+      recordsWindow = createListWindow({ limit });
+      mount(recordsHtml());
+      return document.querySelectorAll('[data-record-id]').length;
+    }
+
+    function addRecords() {
+      const startedAt = performance.now();
+      recordsWindow = extendListWindow(recordsWindow, records.length);
+      const updated = appendRecordsWindow(app, { records, filter: 'all', listWindow: recordsWindow });
+      coordinator.accept('page', recordsHtml());
+      return { duration: performance.now() - startedAt, updated, count: document.querySelectorAll('[data-record-id]').length };
+    }
+
+    function mountNursery(limit = 100) {
+      nurseryWindow = createListWindow({ limit });
+      mount(nurseryHtml());
+      return document.querySelectorAll('[data-nursery-item-code]').length;
+    }
+
+    function addNursery() {
+      const startedAt = performance.now();
+      nurseryWindow = extendListWindow(nurseryWindow, nursery.items.length);
+      const updated = appendNurseryRegisterWindow(app, { items: nursery.items, registerWindow: nurseryWindow });
+      coordinator.accept('page', nurseryHtml());
+      return { duration: performance.now() - startedAt, updated, count: document.querySelectorAll('[data-nursery-item-code]').length };
+    }
+
+    function transient(name, value = true) {
+      const startedAt = performance.now();
+      if (name === 'toast') coordinator.feedback(value ? renderAppFeedback({ message: '記録しました。', type: 'success' }) : '');
+      if (name === 'modal') coordinator.overlays(value ? '<section class="modal" role="dialog" aria-modal="true"><h2>確認</h2><button type="button">閉じる</button></section>' : '');
+      if (name === 'sync') coordinator.sync(value ? '<div class="sync-notice" role="status">同期中</div>' : '');
+      if (name === 'update') coordinator.updateNotice(value ? '<aside class="app-update-notice" role="status">更新があります</aside>' : '');
+      if (name === 'error') coordinator.error(value ? '<div class="error-banner" role="alert">接続を確認してください。</div>' : '');
+      document.body.offsetHeight;
+      return performance.now() - startedAt;
+    }
+
+    function mountContinuity() {
+      mount(`<main class="runtime-continuity"><h1>継続性</h1>
+        <label for="runtime-draft">観察メモ</label>
+        <textarea id="runtime-draft">腹部の色を確認</textarea>
+        <video id="runtime-camera" muted playsinline data-camera-active="true"></video>
+      </main>`);
+      const video = document.querySelector('#runtime-camera');
+      video.runtimeStream = { id: 'stream-1', active: true };
+      return true;
+    }
+
+    function mountMedia() {
+      const asset = new URL('../../assets/app/icons/setae-icon-192.png', import.meta.url).href;
+      const missing = new URL('./missing-runtime-v243.png', import.meta.url).href;
+      const items = Array.from({ length: 100 }, (_, index) => `<div class="runtime-media-item" data-media-index="${index}">${renderMediaFrame({
+        src: `${asset}?runtime-media=${index}`,
+        alt: `標本 ${index + 1}`,
+        ratio: 'square',
+        loading: index === 0 ? 'eager' : 'lazy',
+        fetchPriority: index === 0 ? 'high' : 'low'
+      })}</div>`).join('');
+      mount(`<main class="page"><h1>写真台帳</h1><div data-broken-media>${renderMediaFrame({ src: missing, loading: 'eager' })}</div><div class="runtime-media-list">${items}</div></main>`);
+      return document.querySelectorAll('[data-media-image]').length;
+    }
+
+    function mountSearch() {
+      mount('<main class="page"><h1>検索</h1><div class="runtime-search-results" data-search-results></div></main>');
+      return search('seladonia');
+    }
+
+    function search(query) {
+      const startedAt = performance.now();
+      const matches = searchAnimalIndex(searchIndex, query);
+      document.querySelector('[data-search-results]').innerHTML = renderCollectionSearchResults({
+        animals: matches,
+        mode: 'table',
+        search: query,
+        activeView: animalView,
+        careTasks: [],
+        selection: { selectedId: null, selectedIds: [], selectionMode: false },
+        cardConfig: {}
+      });
+      document.querySelector('[data-search-results]').offsetHeight;
+      return { duration: performance.now() - startedAt, count: matches.length };
+    }
+
+    async function loadMoreWithContinuity(kind) {
+      const scrollY = window.scrollY;
+      const result = kind === 'nursery' ? addNursery() : addRecords();
+      restoreProgressiveListFocus(app,
+        kind === 'nursery' ? 'show-more-nursery-items' : 'show-more-records',
+        kind === 'nursery' ? 'nursery-progressive-footer' : 'records-progressive-footer', scrollY);
+      await nextFrame();
+      return { ...result, scrollY: window.scrollY, activeAction: document.activeElement?.dataset?.action || '' };
+    }
+
+    window.v243Harness = {
+      app,
+      coordinator,
+      animals,
+      records,
+      nursery,
+      mountRecords,
+      addRecords,
+      mountNursery,
+      addNursery,
+      transient,
+      mountContinuity,
+      mountMedia,
+      mountSearch,
+      search,
+      loadMoreWithContinuity,
+      recordsLimit: () => recordsWindow.limit,
+      nurseryLimit: () => nurseryWindow.limit,
+      nextFrame
+    };
+    mountRecords();
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

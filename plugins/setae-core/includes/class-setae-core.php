@@ -13,6 +13,7 @@ class Setae_Core
         $this->version = SETAE_VERSION;
 
         $this->load_dependencies();
+        Setae_Entitlements::register_hooks();
         $this->define_admin_hooks();
         $this->define_public_hooks();
         $this->define_login_hooks();
@@ -25,12 +26,20 @@ class Setae_Core
          * core plugin.
          */
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-loader.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-public-identity.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-entitlements.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-billing.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/db/class-setae-product-events.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/db/class-setae-billing-events.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-app-operations.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-claim-registration.php';
 
         /**
          * CPT Classes
          */
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-species.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-spider.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-baby-group.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-topic.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-log.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-suggestion.php';
@@ -38,26 +47,43 @@ class Setae_Core
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/cpt/class-setae-cpt-ad.php';
 
         /**
-         * DB Classes
+         * QR label, scanner, and transfer data layer.
          */
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/db/class-setae-bl-contracts.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-qr-manager.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-pwa.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-setae-icon-registry.php';
 
         /**
          * Admin Settings
          */
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-settings.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-icons.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-product-analytics.php';
 
         /**
          * API Manager
          */
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/api/class-setae-api-manager.php';
 
+        /**
+         * ChatGPT App (MCP + OAuth) integration.
+         */
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/integrations/class-setae-chatgpt-app.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/integrations/class-setae-live-url-bridge.php';
 
 
         /**
          * Dashboard Class
          */
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-dashboard.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-app-shell.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-visual.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-home.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-registration.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-care-share.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-profile.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-partner.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/frontend/class-setae-public-qr.php';
 
         // ▼▼▼ 追加: Best Shot承認用管理ページのクラスを読み込み ▼▼▼
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/admin/class-setae-admin-best-shots.php';
@@ -72,13 +98,14 @@ class Setae_Core
     private function define_login_hooks()
     {
         $this->loader->add_action('login_enqueue_scripts', $this, 'enqueue_login_styles');
+        $this->loader->add_action('login_footer', $this, 'prepare_login_form_for_password_managers');
         $this->loader->add_filter('login_headerurl', $this, 'custom_login_header_url');
         $this->loader->add_filter('login_headertext', $this, 'custom_login_header_text');
     }
 
     public function enqueue_login_styles()
     {
-        wp_enqueue_style('setae-login', SETAE_PLUGIN_URL . 'assets/css/setae-login.css', array(), '1.0.0');
+        wp_enqueue_style('setae-login', SETAE_PLUGIN_URL . 'assets/css/setae-login.css', array(), $this->version);
     }
 
     public function custom_login_header_url()
@@ -88,12 +115,49 @@ class Setae_Core
 
     public function custom_login_header_text()
     {
-        return 'Setae Platform';
+        return 'SETAE';
+    }
+
+    /**
+     * Keep the WordPress login form recognizable to browser password managers.
+     */
+    public function prepare_login_form_for_password_managers()
+    {
+        $should_remember = !isset($_SERVER['REQUEST_METHOD']) || strtoupper((string) $_SERVER['REQUEST_METHOD']) !== 'POST';
+        ?>
+        <script id="setae-login-autocomplete">
+            (function () {
+                var form = document.getElementById('loginform');
+                if (!form) return;
+
+                form.setAttribute('autocomplete', 'on');
+
+                var username = document.getElementById('user_login');
+                if (username) {
+                    username.setAttribute('autocomplete', 'username');
+                    username.setAttribute('autocapitalize', 'none');
+                    username.setAttribute('spellcheck', 'false');
+                }
+
+                var password = document.getElementById('user_pass');
+                if (password) {
+                    password.setAttribute('autocomplete', 'current-password');
+                }
+
+                var remember = document.getElementById('rememberme');
+                if (remember && <?php echo $should_remember ? 'true' : 'false'; ?>) {
+                    remember.checked = true;
+                }
+            }());
+        </script>
+        <?php
     }
 
     private function define_admin_hooks()
     {
         $plugin_admin = new Setae_Admin_Settings();
+        $admin_icons = new Setae_Admin_Icons();
+        $product_analytics = new Setae_Admin_Product_Analytics();
 
         // ▼▼▼ 追加: Best Shot管理ページをインスタンス化 ▼▼▼
         $admin_best_shots = new Setae_Admin_Best_Shots();
@@ -113,6 +177,12 @@ class Setae_Core
 
         // ユーザー一覧のカラム内容表示
         $this->loader->add_filter('manage_users_custom_column', $admin_users, 'show_last_login_column', 10, 3);
+
+        // ユーザー一覧から無料登録枠を安全に一括付与
+        $this->loader->add_filter('bulk_actions-users', $admin_users, 'register_bonus_slot_bulk_action');
+        $this->loader->add_filter('handle_bulk_actions-users', $admin_users, 'handle_bonus_slot_bulk_action', 10, 3);
+        $this->loader->add_action('admin_notices', $admin_users, 'render_bonus_slot_admin_notice');
+        $this->loader->add_action('admin_post_setae_grant_bonus_slots', $admin_users, 'handle_bonus_slot_grant');
 
 
         // ▼ 追加: 管理画面アクセス制限のフックを登録
@@ -153,7 +223,11 @@ class Setae_Core
     {
         // 管理画面へのアクセス、かつAJAX通信ではなく、管理者権限がない場合
         if (is_admin() && !wp_doing_ajax() && !current_user_can('administrator')) {
-            wp_redirect(home_url());
+            $app_url = class_exists('Setae_App_Shell')
+                ? Setae_App_Shell::app_url()
+                : home_url('/');
+
+            wp_safe_redirect($app_url);
             exit;
         }
     }
@@ -161,6 +235,55 @@ class Setae_Core
     private function define_public_hooks()
     {
         $api = new Setae_API_Manager();
+        $public_identity = new Setae_Public_Identity();
+        $pwa = new Setae_PWA($this->get_version());
+        $chatgpt_app = new Setae_ChatGPT_App();
+        $live_url_bridge = new Setae_Live_URL_Bridge($this->get_version());
+
+        $this->loader->add_action('user_register', $public_identity, 'ensure_for_user');
+
+        $this->loader->add_action('init', 'Setae_Icon_Registry', 'register_rewrite_rule', 7);
+        $this->loader->add_action('init', 'Setae_Icon_Registry', 'maybe_flush_rewrite_rules', 22);
+        $this->loader->add_filter('query_vars', 'Setae_Icon_Registry', 'register_query_var');
+        $this->loader->add_action('template_redirect', 'Setae_Icon_Registry', 'maybe_render_asset', 0);
+
+        $this->loader->add_action('init', $pwa, 'register_rewrite_rules', 8);
+        $this->loader->add_action('init', $pwa, 'maybe_flush_rewrite_rules', 21);
+        $this->loader->add_action('init', $pwa, 'ensure_schedule', 30);
+        $this->loader->add_filter('cron_schedules', $pwa, 'add_cron_schedule');
+        $this->loader->add_filter('query_vars', $pwa, 'register_query_var');
+        $this->loader->add_action('template_redirect', $pwa, 'render_asset', 0);
+        $this->loader->add_action(Setae_PWA::CRON_HOOK, $pwa, 'send_care_reminders');
+        $this->loader->add_action(Setae_PWA::TOPIC_PUSH_HOOK, $pwa, 'send_topic_reply', 10, 3);
+
+        $this->loader->add_action(
+            'rest_api_init',
+            $live_url_bridge,
+            'register_management_routes'
+        );
+        $this->loader->add_action(
+            'init',
+            $live_url_bridge,
+            'register_rewrite_rules',
+            9
+        );
+        $this->loader->add_action(
+            'init',
+            $live_url_bridge,
+            'maybe_flush_rewrite_rules',
+            20
+        );
+        $this->loader->add_filter(
+            'query_vars',
+            $live_url_bridge,
+            'register_query_vars'
+        );
+        $this->loader->add_action(
+            'template_redirect',
+            $live_url_bridge,
+            'render_bridge',
+            0
+        );
 
         // Instantiate CPTs and Register them
         $species = new Setae_CPT_Species();
@@ -169,11 +292,18 @@ class Setae_Core
         $spider = new Setae_CPT_Spider();
         $this->loader->add_action('init', $spider, 'register');
 
+        $baby_group = new Setae_CPT_Baby_Group();
+        $this->loader->add_action('init', $baby_group, 'register');
+
         $topic = new Setae_CPT_Topic();
         $this->loader->add_action('init', $topic, 'register');
 
         $log = new Setae_CPT_Log();
         $this->loader->add_action('init', $log, 'register');
+
+        $qr_manager = new Setae_QR_Manager();
+        $this->loader->add_action('init', $qr_manager, 'register_post_types', 5);
+        $this->loader->add_action('before_delete_post', $qr_manager, 'cleanup_deleted_post');
 
         // Register Suggestion CPT
         $suggestion = new Setae_CPT_Suggestion();
@@ -181,12 +311,55 @@ class Setae_Core
 
         $plugin_admin_ad = new Setae_CPT_Ad();
 
-        // Dashboard & Assets
-        $plugin_public = new Setae_Dashboard($this->get_plugin_name(), $this->get_version());
-        $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
-        $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
-        $this->loader->add_action('init', $plugin_public, 'register_shortcodes');
+        // REST-driven GUI with a constant-based legacy rollback path.
+        $app_shell = new Setae_App_Shell($this->get_version());
+        $public_home = new Setae_Public_Home($this->get_version());
+        $this->loader->add_action('wp_enqueue_scripts', $public_home, 'enqueue_styles', 20);
+        $this->loader->add_filter('body_class', $public_home, 'body_classes');
+        if ($app_shell->is_enabled()) {
+            $this->loader->add_action('init', $app_shell, 'maybe_ensure_app_page', 6);
+            $this->loader->add_action('template_redirect', $app_shell, 'prepare_request', 0);
+            $this->loader->add_action('wp_enqueue_scripts', $app_shell, 'enqueue_assets', 100);
+            $this->loader->add_action('wp_enqueue_scripts', $app_shell, 'isolate_styles', 999);
+            $this->loader->add_action('wp_print_styles', $app_shell, 'isolate_styles', 999);
+            $this->loader->add_action('init', $app_shell, 'register_shortcode', 5);
+            $this->loader->add_filter('template_include', $app_shell, 'select_template', 999);
+            $this->loader->add_filter('script_loader_tag', $app_shell, 'filter_script_tag', 10, 3);
+            $this->loader->add_filter('style_loader_tag', $app_shell, 'filter_style_tag', 999, 2);
+            $this->loader->add_filter('body_class', $app_shell, 'body_classes');
+        } else {
+            $plugin_public = new Setae_Dashboard($this->get_plugin_name(), $this->get_version());
+            $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
+            $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
+            $this->loader->add_action('init', $plugin_public, 'register_shortcodes');
+        }
 
+        // Public shared care log pages
+        $public_care_share = new Setae_Public_Care_Share($this->get_version());
+        $this->loader->add_action('init', $public_care_share, 'register_rewrite_rule');
+        $this->loader->add_action('init', $public_care_share, 'maybe_flush_rewrite_rules', 20);
+        $this->loader->add_filter('query_vars', $public_care_share, 'register_query_var');
+        $this->loader->add_action('template_redirect', $public_care_share, 'render_share_page');
+
+        // Public profile pages for referral-driven community growth
+        $public_profile = new Setae_Public_Profile($this->get_version());
+        $this->loader->add_action('init', $public_profile, 'register_rewrite_rule');
+        $this->loader->add_action('init', $public_profile, 'maybe_flush_rewrite_rules', 20);
+        $this->loader->add_filter('query_vars', $public_profile, 'register_query_var');
+        $this->loader->add_action('template_redirect', $public_profile, 'render_profile_page');
+
+        // Public partner page for shops, breeders, and event handouts
+        $public_partner = new Setae_Public_Partner($this->get_version());
+        $this->loader->add_action('init', $public_partner, 'register_rewrite_rule');
+        $this->loader->add_action('init', $public_partner, 'maybe_flush_rewrite_rules', 20);
+        $this->loader->add_filter('query_vars', $public_partner, 'register_query_var');
+        $this->loader->add_action('template_redirect', $public_partner, 'render_partner_page');
+
+        // Root-level short URLs such as setae.net/assf.
+        $public_qr = new Setae_Public_QR($this->get_version());
+        $this->loader->add_filter('query_vars', $public_qr, 'register_query_var');
+        $this->loader->add_filter('login_redirect', $public_qr, 'redirect_pending_claim', 20, 3);
+        $this->loader->add_action('template_redirect', $public_qr, 'render_page', 1);
 
         // Update Roles & Capabilities
         $this->loader->add_action('init', $this, 'update_roles');
@@ -419,25 +592,15 @@ class Setae_Core
 add_action('init', 'setae_process_email_verification');
 function setae_process_email_verification()
 {
-    // URLパラメータを検知
-    if (isset($_GET['setae_action']) && $_GET['setae_action'] === 'verify_email' && isset($_GET['uid']) && isset($_GET['token'])) {
-        $user_id = intval($_GET['uid']);
-        $token = sanitize_text_field($_GET['token']);
-
-        $saved_token = get_user_meta($user_id, '_setae_activation_token', true);
-
-        // トークンが一致するか検証 (タイミング攻撃防止のため hash_equals を使用)
-        if ($saved_token && hash_equals($saved_token, $token)) {
-            // 認証成功：本登録済みに変更し、不要なトークンを削除
-            update_user_meta($user_id, '_setae_is_verified', 1);
-            delete_user_meta($user_id, '_setae_activation_token');
-
-            // 処理完了後、ログインページ等へリダイレクト（パラメータを付けてフロント側で「認証完了」のトーストを出せるようにする）
-            wp_redirect(home_url('/?verified=1')); // Main page handles login modal usually
-            exit;
-        } else {
-            wp_die('無効な認証リンクです。URLが正しいか、すでに本登録が完了していないか確認してください。');
-        }
+    if (isset($_GET['setae_action']) && $_GET['setae_action'] === 'verify_email') {
+        // No rendered document or onward redirect retains the bearer token, including errors.
+        nocache_headers();
+        header('Referrer-Policy: no-referrer');
+        $user_id = isset($_GET['uid']) && is_scalar($_GET['uid']) ? wp_unslash($_GET['uid']) : '';
+        $token = isset($_GET['token']) && is_scalar($_GET['token']) ? wp_unslash($_GET['token']) : '';
+        $redirect = Setae_Claim_Registration::verification_redirect($user_id, $token);
+        wp_safe_redirect($redirect, 303);
+        exit;
     }
 }
 // ▲▲▲ 追加ここまで ▲▲▲
@@ -515,4 +678,3 @@ add_action('manage_setae_classification_custom_column', function ($content, $col
     }
     return $content;
 }, 10, 3);
-

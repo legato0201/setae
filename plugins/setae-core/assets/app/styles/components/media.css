@@ -1,0 +1,179 @@
+@layer components {
+  .setae-media-frame {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .setae-media-visual {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--bg-subtle);
+  }
+
+  .setae-media-frame.is-square .setae-media-visual { aspect-ratio: 1; }
+  .setae-media-frame.is-portrait .setae-media-visual { aspect-ratio: 4 / 5; }
+  .setae-media-frame.is-wide .setae-media-visual { aspect-ratio: 16 / 10; }
+  .setae-media-frame.is-exhibit .setae-media-visual { aspect-ratio: 4 / 3; }
+  .setae-media-frame.is-auto .setae-media-visual { height: 100%; }
+
+  .setae-media-frame [data-media-image] {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  .setae-media-placeholder {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--border-default);
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .setae-media-placeholder[hidden] { display: none; }
+
+  .setae-media-placeholder-icon {
+    width: min(52px, 38%);
+    height: auto;
+    opacity: .42;
+  }
+
+  .setae-media-placeholder-identity {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .setae-media-placeholder-identity em {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: var(--text-secondary);
+    font-family: var(--font-taxon);
+    font-size: var(--type-body);
+  }
+
+  .setae-media-placeholder-identity strong,
+  .setae-media-placeholder small {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-micro);
+    font-weight: var(--weight-semibold);
+  }
+
+  .setae-media-placeholder.is-compact {
+    gap: var(--space-1);
+    padding: var(--space-2);
+  }
+
+  .setae-media-placeholder.is-compact .setae-media-placeholder-icon {
+    width: min(42px, 44%);
+  }
+
+  .setae-media-placeholder.is-compact .setae-media-placeholder-identity em {
+    font-size: var(--type-micro);
+  }
+
+  .media-attribution {
+    padding-top: var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--type-micro);
+    line-height: var(--leading-ui);
+  }
+
+  .media-attribution a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .setae-specimen-placeholder {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    align-content: center;
+    place-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    overflow: hidden;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .setae-specimen-placeholder .setae-specimen-placeholder-icon {
+    display: block;
+    width: clamp(52px, 20%, 80px);
+    height: auto;
+    opacity: .42;
+  }
+
+  .setae-specimen-placeholder-taxon {
+    max-width: 100%;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-1);
+  }
+
+  .setae-specimen-placeholder-taxon em {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: var(--text-secondary);
+    font-family: var(--font-taxon);
+    font-size: var(--type-heading);
+  }
+
+  .setae-specimen-placeholder-taxon strong {
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--type-micro);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+  }
+
+  .setae-specimen-placeholder > small {
+    position: absolute;
+    right: var(--space-2);
+    bottom: var(--space-2);
+    left: var(--space-2);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-micro);
+    line-height: var(--leading-display);
+  }
+
+  .setae-specimen-placeholder.is-thumbnail {
+    min-height: 0;
+    padding: var(--space-2);
+  }
+
+  .setae-specimen-placeholder.is-thumbnail .setae-specimen-placeholder-icon {
+    width: min(50px, 42%);
+  }
+
+  .setae-specimen-placeholder.is-thumbnail > small,
+  .setae-specimen-placeholder.is-compact > small {
+    display: none;
+  }
+
+  .setae-specimen-placeholder.is-compact {
+    min-height: 76px;
+    padding: var(--space-2);
+  }
+
+  .setae-specimen-placeholder.is-compact .setae-specimen-placeholder-icon {
+    width: 40px;
+  }
+}

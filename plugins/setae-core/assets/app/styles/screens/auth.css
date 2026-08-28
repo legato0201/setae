@@ -1,0 +1,73 @@
+@layer screens {
+  .auth-layout,
+  .boot-screen {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: var(--space-5) var(--space-4);
+    background: var(--bg-app);
+  }
+
+  .auth-panel {
+    width: min(100%, 420px);
+    padding: var(--space-5);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-surface);
+    background: var(--bg-surface);
+  }
+
+  .auth-brand { width: 100%; }
+  .auth-heading { margin: var(--space-5) 0 var(--space-4); }
+  .auth-heading h1 { margin: var(--space-1) 0 0; font-size: var(--type-workbench-title); line-height: var(--leading-display); }
+  .auth-form { display: grid; gap: var(--space-3); }
+  .auth-remember { min-height: var(--touch-target); }
+  .auth-consent { align-items: flex-start; min-height: var(--touch-target); color: var(--text-secondary); font-size: var(--type-caption); line-height: var(--leading-body); }
+  .auth-consent input { flex: 0 0 auto; margin-top: var(--space-1); accent-color: var(--accent); }
+  .auth-consent a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  .auth-consent a:hover { color: var(--text-primary); }
+  .auth-submit { width: 100%; min-height: var(--touch-target); }
+
+  .auth-links,
+  .auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  .auth-links {
+    justify-content: space-between;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .auth-links .text-button:hover { color: var(--text-primary); text-decoration: underline; }
+
+  .boot-screen {
+    align-content: center;
+    justify-items: center;
+    gap: var(--space-4);
+  }
+
+  .boot-status {
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .connection-screen .auth-panel { text-align: center; }
+  .connection-screen .auth-actions { justify-content: center; }
+  .connection-error { color: var(--danger); }
+
+  @media (max-width: 767px) {
+    .auth-layout { align-items: start; padding-top: calc(var(--safe-top) + var(--space-5)); }
+    .auth-panel { padding: var(--space-4); }
+    .auth-form input { font-size: var(--type-mobile-input); }
+  }
+
+}

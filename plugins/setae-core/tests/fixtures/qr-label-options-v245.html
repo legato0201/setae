@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SETAE v1.0.245 QR Label Options Fixture</title>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <style>
+    body { min-width: 0; background: var(--bg-app); }
+    #fixture-root { width: min(100%, 1360px); min-height: 100dvh; margin: 0 auto; padding: var(--space-5); background: var(--bg-surface); }
+    @media (max-width: 767px) { #fixture-root { padding: var(--space-4); } }
+  </style>
+</head>
+<body>
+  <main id="fixture-root"></main>
+  <script type="module">
+    import { renderQrWorkspace, refreshQrLabelPreview } from '../../assets/app/features/qr/view.js';
+    import { normalizeLabelConfig } from '../../assets/app/features/qr/state.js';
+
+    const params = new URLSearchParams(location.search);
+    const root = document.querySelector('#fixture-root');
+    const animal = {
+      id: 14,
+      title: 'C014',
+      manage_code: 'C014',
+      species_name: 'Typhochlaena seladonia',
+      scientific_name: 'Typhochlaena seladonia',
+      gender: 'female',
+      instar: 8
+    };
+    const target = {
+      ...animal,
+      object_id: animal.id,
+      target_type: 'spider',
+      short_name: animal.species_name,
+      url: 'https://setae.net/c014/'
+    };
+    let qr = {
+      section: 'labels',
+      targets: { items: [target] },
+      labelConfig: normalizeLabelConfig({
+        output: params.get('output') === 'tape' ? 'tape' : 'a4',
+        format: params.get('format') === 'micro-id' ? 'micro-id' : 'field',
+        a4Size: 'standard',
+        tapeLengthMm: params.get('format') === 'micro-id' ? 18 : 70,
+        handwriting: 'large',
+        showQr: true,
+        showSpecimenId: true,
+        showScientificName: true,
+        showStageSex: true,
+        cropMarks: true,
+        outerBorder: true,
+        guideLine: true
+      })
+    };
+    let previewUpdates = 0;
+    document.documentElement.dataset.theme = params.get('theme') === 'dark' ? 'dark' : 'light';
+
+    function render() {
+      root.innerHTML = renderQrWorkspace({ qr, animals: [animal] });
+    }
+
+    root.addEventListener('click', (event) => {
+      const control = event.target.closest('[data-action="qr-label-config"]');
+      if (!control) return;
+      const key = control.dataset.configKey;
+      const rawValue = control.dataset.configValue;
+      qr = {
+        ...qr,
+        labelConfig: normalizeLabelConfig({
+          ...qr.labelConfig,
+          [key]: key === 'tapeLengthMm' ? Number(rawValue) : rawValue
+        })
+      };
+      render();
+    });
+
+    root.addEventListener('change', (event) => {
+      if (!event.target.matches('[data-role="qr-label-toggle"]')) return;
+      qr = {
+        ...qr,
+        labelConfig: normalizeLabelConfig({
+          ...qr.labelConfig,
+          [event.target.dataset.configKey]: event.target.checked
+        })
+      };
+      if (refreshQrLabelPreview(root, { qr }).updated) previewUpdates += 1;
+    });
+
+    window.__setaeQrLabels245 = {
+      state: () => ({ qr, previewUpdates }),
+      refresh: () => refreshQrLabelPreview(root, { qr })
+    };
+    render();
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

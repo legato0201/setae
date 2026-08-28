@@ -1,0 +1,851 @@
+/* =========================================
+   Setae UX Foundation
+   Shared interaction, feedback and responsive safeguards.
+   ========================================= */
+
+:root {
+    --setae-surface: #ffffff;
+    --setae-surface-subtle: #f7f9fc;
+    --setae-surface-raised: #ffffff;
+    --setae-ink: #172033;
+    --setae-ink-muted: #64748b;
+    --setae-line: #dbe5ef;
+    --setae-action: #1769aa;
+    --setae-action-hover: #12558a;
+    --setae-success: #16835d;
+    --setae-warning: #b45309;
+    --setae-danger: #c2414b;
+    --setae-focus: #0b74de;
+    --setae-radius-card: 16px;
+    --setae-radius-dialog: 16px;
+    --setae-radius-control: 10px;
+    --setae-shadow-card: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+    --setae-shadow-overlay: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.setae-visually-hidden,
+.setae-screen-reader-text {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+#setae-app button,
+#setae-app input,
+#setae-app select,
+#setae-app textarea,
+.setae-modal button,
+.setae-modal input,
+.setae-modal select,
+.setae-modal textarea,
+.setae-ux-dialog button,
+.setae-ux-dialog textarea {
+    font-family: inherit;
+    letter-spacing: 0;
+}
+
+#setae-app button:focus-visible,
+#setae-app a:focus-visible,
+#setae-app input:focus-visible,
+#setae-app select:focus-visible,
+#setae-app textarea:focus-visible,
+.setae-modal button:focus-visible,
+.setae-modal input:focus-visible,
+.setae-modal select:focus-visible,
+.setae-modal textarea:focus-visible,
+.setae-ux-dialog button:focus-visible,
+.setae-ux-dialog textarea:focus-visible {
+    outline: 3px solid rgba(11, 116, 222, 0.28);
+    outline-offset: 2px;
+}
+
+#setae-app button[disabled],
+.setae-modal button[disabled],
+.setae-ux-dialog button[disabled] {
+    cursor: not-allowed;
+}
+
+.is-busy {
+    position: relative;
+    opacity: 0.76;
+}
+
+.is-busy::after {
+    content: '';
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    margin-left: 8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: -2px;
+    animation: setae-ux-spin 0.72s linear infinite;
+}
+
+@keyframes setae-ux-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* App shell and primary navigation */
+.setae-nav-item,
+.setae-user-actions {
+    appearance: none;
+    font: inherit;
+}
+
+.setae-nav-item {
+    min-width: 0;
+    padding: 0;
+    text-align: inherit;
+}
+
+.setae-nav-item .setae-nav-icon {
+    flex: 0 0 26px;
+    line-height: 1 !important;
+}
+
+.setae-nav-item .setae-nav-label {
+    line-height: 1.2 !important;
+}
+
+.setae-nav-item .setae-nav-icon-baby {
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 20px !important;
+    font-weight: 800;
+    line-height: 24px !important;
+    transform: none !important;
+}
+
+.setae-nav-item:focus-visible {
+    outline: 3px solid rgba(11, 116, 222, 0.28);
+    outline-offset: 2px;
+}
+
+.setae-user-actions {
+    color: var(--setae-ink);
+}
+
+.setae-spider-list-row[role='button']:focus-visible {
+    outline: 3px solid rgba(11, 116, 222, 0.28);
+    outline-offset: 3px;
+    border-radius: var(--setae-radius-card);
+}
+
+.today-row-open {
+    appearance: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.today-row-open:hover {
+    color: var(--setae-action);
+}
+
+.setae-topic-title-button {
+    appearance: none;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.setae-topic-title-button:hover {
+    color: var(--setae-action);
+}
+
+.setae-toolbar-container {
+    border-radius: var(--setae-radius-card) !important;
+}
+
+@media (min-width: 768px) {
+    .setae-content {
+        border-radius: var(--setae-radius-card) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .setae-nav {
+        border-radius: 18px !important;
+    }
+
+    .setae-nav-item {
+        min-height: 52px;
+    }
+
+    .setae-user-actions {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Form containment, especially iOS date controls */
+#setae-app input,
+#setae-app select,
+#setae-app textarea,
+.setae-modal input,
+.setae-modal select,
+.setae-modal textarea {
+    max-width: 100%;
+    min-width: 0;
+}
+
+#setae-app input[type='date'],
+.setae-modal input[type='date'] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#setae-app input[type='date']::-webkit-date-and-time-value,
+.setae-modal input[type='date']::-webkit-date-and-time-value {
+    min-width: 0;
+    text-align: left;
+}
+
+@media (max-width: 767px) {
+    #setae-app input,
+    #setae-app select,
+    #setae-app textarea,
+    .setae-modal input,
+    .setae-modal select,
+    .setae-modal textarea {
+        font-size: 16px;
+    }
+
+    .setae-modal {
+        align-items: center;
+        padding:
+            max(12px, env(safe-area-inset-top))
+            12px
+            max(12px, env(safe-area-inset-bottom));
+    }
+
+    .setae-modal .setae-modal-content {
+        width: min(100%, 680px);
+        max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
+        margin: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border-radius: var(--setae-radius-card) !important;
+    }
+
+    #setae-log-modal .setae-modal-content.log-entry-modal {
+        max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom))) !important;
+    }
+}
+
+/* Toast notifications */
+#setae-toast-container {
+    top: max(16px, env(safe-area-inset-top)) !important;
+    right: max(16px, env(safe-area-inset-right)) !important;
+    width: min(390px, calc(100vw - 32px));
+    gap: 8px !important;
+    padding: 0 !important;
+}
+
+.setae-toast {
+    display: grid !important;
+    grid-template-columns: 18px minmax(0, 1fr) auto 28px;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0 !important;
+    min-height: 52px;
+    padding: 10px 10px 10px 13px !important;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    border-left-width: 3px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    color: var(--setae-ink) !important;
+    box-shadow: 0 12px 38px rgba(15, 23, 42, 0.16) !important;
+    animation: setae-toast-in 0.22s ease-out both !important;
+}
+
+.setae-toast.success {
+    border-left-color: var(--setae-success) !important;
+}
+
+.setae-toast.error {
+    border-left-color: var(--setae-danger) !important;
+}
+
+.setae-toast.warning {
+    border-left-color: var(--setae-warning) !important;
+}
+
+.setae-toast.info {
+    border-left-color: var(--setae-action) !important;
+}
+
+.setae-toast-mark {
+    width: 10px;
+    height: 10px;
+    border: 3px solid currentColor;
+    border-radius: 50%;
+    color: var(--setae-action);
+}
+
+.setae-toast.success .setae-toast-mark {
+    color: var(--setae-success);
+}
+
+.setae-toast.error .setae-toast-mark {
+    color: var(--setae-danger);
+}
+
+.setae-toast.warning .setae-toast-mark {
+    color: var(--setae-warning);
+}
+
+.setae-toast-message {
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.setae-toast-count {
+    min-width: 24px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: var(--setae-ink-muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.setae-toast-close {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #718096;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.setae-toast-close:hover {
+    background: #f1f5f9;
+    color: var(--setae-ink);
+}
+
+.setae-toast.is-leaving {
+    animation: setae-toast-out 0.2s ease-in both !important;
+}
+
+@keyframes setae-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes setae-toast-out {
+    to {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
+
+/* Shared confirmation and text-entry dialog */
+body.setae-dialog-open {
+    overflow: hidden;
+}
+
+.setae-ux-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 100100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+    background: rgba(15, 23, 42, 0.48);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+}
+
+.setae-ux-dialog.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.setae-ux-dialog-panel {
+    width: min(100%, 440px);
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: var(--setae-radius-card);
+    background: var(--setae-surface-raised);
+    box-shadow: var(--setae-shadow-overlay);
+    transform: translateY(8px) scale(0.985);
+    transition: transform 0.16s ease;
+}
+
+.setae-ux-dialog.is-open .setae-ux-dialog-panel {
+    transform: translateY(0) scale(1);
+}
+
+.setae-ux-dialog-close {
+    appearance: none;
+    float: right;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin: -4px -4px 0 12px;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.setae-ux-dialog-close:hover {
+    background: #e8eef5;
+    color: var(--setae-ink);
+}
+
+.setae-ux-dialog-heading {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 11px;
+    padding-right: 38px;
+}
+
+.setae-ux-dialog-mark {
+    position: relative;
+    display: block;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #e8f2fb;
+}
+
+.setae-ux-dialog-mark::before,
+.setae-ux-dialog-mark::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: var(--setae-action);
+    transform: translate(-50%, -50%);
+}
+
+.setae-ux-dialog-mark::before {
+    width: 14px;
+    height: 2px;
+}
+
+.setae-ux-dialog-mark::after {
+    width: 2px;
+    height: 14px;
+}
+
+.setae-ux-dialog-panel.is-danger .setae-ux-dialog-mark {
+    background: #fff0f1;
+}
+
+.setae-ux-dialog-panel.is-danger .setae-ux-dialog-mark::before {
+    background: var(--setae-danger);
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.setae-ux-dialog-panel.is-danger .setae-ux-dialog-mark::after {
+    background: var(--setae-danger);
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.setae-ux-dialog-kicker {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--setae-action);
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.setae-ux-dialog-panel.is-danger .setae-ux-dialog-kicker {
+    color: var(--setae-danger);
+}
+
+.setae-ux-dialog-heading h2 {
+    margin: 0;
+    color: var(--setae-ink);
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+.setae-ux-dialog-message {
+    margin: 15px 0 0;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-line;
+}
+
+.setae-ux-dialog-details {
+    display: grid;
+    gap: 7px;
+    margin: 13px 0 0;
+    padding: 11px 12px;
+    border: 1px solid var(--setae-line);
+    border-radius: var(--setae-radius-control);
+    background: var(--setae-surface-subtle);
+}
+
+.setae-ux-dialog-details li {
+    position: relative;
+    padding-left: 14px;
+    color: #475569;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.setae-ux-dialog-details li::before {
+    content: '';
+    position: absolute;
+    top: 0.63em;
+    left: 1px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.setae-ux-dialog-form {
+    margin: 0;
+}
+
+.setae-ux-dialog-input-wrap {
+    display: grid;
+    gap: 7px;
+    margin-top: 15px;
+}
+
+.setae-ux-dialog-input-wrap[hidden] {
+    display: none;
+}
+
+.setae-ux-dialog-input-wrap label {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.setae-ux-dialog-input-wrap textarea {
+    width: 100%;
+    min-height: 90px;
+    max-height: 220px;
+    padding: 11px 12px;
+    resize: vertical;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--setae-radius-control);
+    background: #fff;
+    color: var(--setae-ink);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.setae-ux-dialog-input-wrap textarea.is-single-line {
+    min-height: 44px;
+    max-height: 44px;
+    resize: none;
+    white-space: nowrap;
+}
+
+.setae-ux-dialog-input-wrap textarea[aria-invalid='true'] {
+    border-color: var(--setae-danger);
+    box-shadow: 0 0 0 3px rgba(194, 65, 75, 0.11);
+}
+
+.setae-ux-dialog-input-error {
+    color: var(--setae-danger);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.setae-ux-dialog-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 9px;
+    margin-top: 20px;
+}
+
+.setae-ux-dialog-actions button {
+    appearance: none;
+    min-height: 44px;
+    padding: 9px 14px;
+    border-radius: var(--setae-radius-control);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.setae-ux-dialog-cancel {
+    border: 1px solid var(--setae-line);
+    background: #fff;
+    color: #475569;
+}
+
+.setae-ux-dialog-cancel:hover {
+    background: #f8fafc;
+}
+
+.setae-ux-dialog-confirm {
+    border: 1px solid var(--setae-action);
+    background: var(--setae-action);
+    color: #fff;
+}
+
+.setae-ux-dialog-confirm:hover {
+    border-color: var(--setae-action-hover);
+    background: var(--setae-action-hover);
+}
+
+.setae-ux-dialog-panel.is-danger .setae-ux-dialog-confirm {
+    border-color: var(--setae-danger);
+    background: var(--setae-danger);
+}
+
+.setae-ux-dialog-panel.is-danger .setae-ux-dialog-confirm:hover {
+    border-color: #a9343e;
+    background: #a9343e;
+}
+
+@media (max-width: 480px) {
+    .setae-ux-dialog {
+        align-items: flex-end;
+        padding:
+            max(12px, env(safe-area-inset-top))
+            12px
+            max(12px, env(safe-area-inset-bottom));
+    }
+
+    .setae-ux-dialog-panel {
+        max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
+        padding: 18px;
+    }
+
+    .setae-ux-dialog-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .setae-ux-dialog-confirm {
+        grid-row: 1;
+    }
+}
+
+/* Accessible sort menu */
+#setae-sort-menu-v3 {
+    width: min(260px, calc(100vw - 24px)) !important;
+    max-height: calc(100dvh - 24px);
+    padding: 7px !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid rgba(15, 23, 42, 0.12) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.18) !important;
+}
+
+#setae-sort-menu-v3 .sort-group-label {
+    margin: 5px 0 3px !important;
+    padding: 5px 9px !important;
+    background: transparent !important;
+    color: #8491a3 !important;
+    font-size: 10px !important;
+    line-height: 1.2;
+}
+
+#setae-sort-menu-v3 .sort-option {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px !important;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font-size: 13px !important;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+#setae-sort-menu-v3 .sort-option:hover,
+#setae-sort-menu-v3 .sort-option:focus-visible {
+    background: #f1f6fb !important;
+}
+
+#setae-sort-menu-v3 .sort-option.active {
+    background: #e8f2fb !important;
+    color: #12558a;
+}
+
+/* Shared list loading and recoverable error states */
+.setae-view-state {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 34px 18px;
+    border: 1px solid var(--setae-line);
+    border-radius: var(--setae-radius-card);
+    background: #fff;
+    color: var(--setae-ink-muted);
+    text-align: center;
+    box-shadow: var(--setae-shadow-card);
+}
+
+.setae-view-state-mark {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    border: 3px solid #dbe7f3;
+    border-top-color: var(--setae-action);
+    border-radius: 50%;
+    animation: setae-ux-spin 0.78s linear infinite;
+}
+
+.setae-view-state.is-error .setae-view-state-mark {
+    position: relative;
+    border: 0;
+    border-radius: 8px;
+    background: #fff0f1;
+    animation: none;
+}
+
+.setae-view-state.is-error .setae-view-state-mark::before,
+.setae-view-state.is-error .setae-view-state-mark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 12px;
+    width: 14px;
+    height: 2px;
+    background: var(--setae-danger);
+    transform: rotate(45deg);
+}
+
+.setae-view-state.is-error .setae-view-state-mark::after {
+    transform: rotate(-45deg);
+}
+
+.setae-view-state strong {
+    color: var(--setae-ink);
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.setae-view-state p {
+    max-width: 430px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+.setae-view-state button {
+    min-height: 40px;
+    margin-top: 4px;
+    padding: 8px 16px;
+    border: 1px solid var(--setae-action);
+    border-radius: var(--setae-radius-control);
+    background: var(--setae-action);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* Structural surfaces share one radius; controls, badges and avatars keep their own geometry. */
+.setae-modal-content,
+.setae-modal-overlay .setae-modal-content,
+.setae-feeder-modal .setae-feeder-modal-content,
+.setae-ux-dialog-panel,
+.setae-care-media-viewer-stage,
+.setae-detail-album-viewer-stage {
+    border-radius: var(--setae-radius-dialog) !important;
+}
+
+#setae-app .setae-spider-list-row,
+#setae-app [class$='-card'],
+#setae-app [class*='-card '],
+#setae-app .species-card,
+#setae-app .setae-card,
+#setae-app .dashboard-card,
+#setae-app .timeline-card,
+#setae-app .kanban-card,
+#setae-app .detail-activity-card,
+#setae-app .setae-topic-detail-card,
+#setae-app .setae-topic-row,
+#setae-app .species-pulse-card,
+#setae-app .setae-care-feed-item,
+#setae-app .setae-care-feed-detail-card,
+#setae-app .baby-guide-card,
+#setae-app .baby-group-card,
+#setae-app .baby-detail-card,
+#setae-app .setae-feeder-stock-card,
+#setae-app .setae-feeder-egg-card {
+    border-radius: var(--setae-radius-card) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

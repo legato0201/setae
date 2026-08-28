@@ -3,139 +3,229 @@
  * Partial: Encyclopedia Detail View
  */
 ?>
-<div id="section-enc-detail" class="setae-section" style="display: none;">
-    <div class="setae-header-bar"
-        style="display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #eee; background:#fff; position:sticky; top:0; z-index:100; width: auto; margin: -16px -16px 0 -16px;">
-        <button id="btn-back-to-enc" class="setae-btn-back" type="button" aria-label="Back">
-            <svg viewBox="0 0 24 24">
-                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
+<div id="section-enc-detail" class="setae-section enc-detail-view" style="display: none;">
+    <header class="enc-detail-header">
+        <button id="btn-back-to-enc" class="enc-detail-back" type="button" aria-label="図鑑一覧へ戻る">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6"></path>
             </svg>
         </button>
-        <h4 style="margin:0; flex-grow:1; text-align:center; font-size:16px; font-weight:bold; color:#333;"
-            id="enc-detail-title">
-            <?php esc_html_e('Loading...', 'setae-core'); ?>
-        </h4>
-
-        <button id="btn-open-edit-modal" class="setae-icon-btn" type="button" aria-label="Edit Suggestion"
-            style="width:40px; border:none; background:transparent; cursor:pointer;">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        <div class="enc-detail-header-title">
+            <span>図鑑</span>
+            <strong id="enc-detail-title"><?php esc_html_e('読み込み中...', 'setae-core'); ?></strong>
+        </div>
+        <button id="btn-open-edit-modal" class="enc-detail-edit" type="button" aria-label="修正・情報提供">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
             </svg>
         </button>
+    </header>
+
+    <div id="enc-detail-loading-spinner" class="enc-detail-loader" aria-live="polite">
+        <span class="enc-loader-mark" aria-hidden="true"></span>
+        <span>図鑑情報を読み込んでいます</span>
     </div>
 
-    <div class="setae-card" style="padding:0;overflow:hidden;margin-bottom:15px;margin-top: 15px;">
-        <div style="position:relative;">
-            <img id="enc-detail-image" src="" style="width:100%; height:200px; object-fit:cover; display:block;">
+    <div class="enc-detail-content" hidden>
+        <section class="enc-detail-hero">
+            <figure class="enc-detail-figure">
+                <div class="enc-detail-image-placeholder" aria-hidden="true"></div>
+                <img id="enc-detail-image" src="" alt="">
+                <figcaption id="enc-detail-image-credit-overlay" hidden>
+                    <span id="enc-detail-credit-avatar" class="enc-credit-avatar"></span>
+                    <span>
+                        <small>写真提供</small>
+                        <strong id="enc-detail-credit-name"></strong>
+                    </span>
+                </figcaption>
+            </figure>
 
-            <div id="enc-detail-image-credit-overlay"
-                style="display: none; position: absolute; bottom: 15px; left: 15px; background: rgba(0,0,0,0.5); padding: 6px 12px 6px 6px; border-radius: 30px; backdrop-filter: blur(4px);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div id="enc-detail-credit-avatar"
-                        style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            <div class="enc-detail-identity">
+                <p id="enc-detail-genus" class="enc-detail-genus"></p>
+                <p id="enc-detail-common-name" class="enc-detail-common-name"></p>
+                <h1 id="enc-detail-name"><?php esc_html_e('種名', 'setae-core'); ?></h1>
+                <div id="enc-detail-temperament-list" class="enc-detail-tags"></div>
+
+                <dl class="enc-detail-metrics">
+                    <div>
+                        <dt>飼育者</dt>
+                        <dd id="enc-detail-metric-keepers">0</dd>
                     </div>
-                    <div style="display: flex; flex-direction: column; justify-content: center;">
-                        <span
-                            style="font-size: 9px; color: #ddd; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">Photo
-                            by</span>
-                        <span id="enc-detail-credit-name"
-                            style="font-weight: bold; font-size: 13px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1.2;"></span>
+                    <div>
+                        <dt>公開記録</dt>
+                        <dd id="enc-detail-metric-care">0</dd>
                     </div>
-                </div>
+                    <div>
+                        <dt>相談</dt>
+                        <dd id="enc-detail-metric-topics">0</dd>
+                    </div>
+                    <div>
+                        <dt>繁殖募集</dt>
+                        <dd id="enc-detail-metric-breeding">0</dd>
+                    </div>
+                </dl>
             </div>
+        </section>
+
+        <nav class="enc-detail-tabs" role="tablist" aria-label="図鑑の表示内容">
+            <button type="button" id="enc-tab-overview" class="active" role="tab" aria-selected="true" aria-controls="enc-panel-overview" tabindex="0" data-enc-panel="overview">概要</button>
+            <button type="button" id="enc-tab-care" role="tab" aria-selected="false" aria-controls="enc-panel-care" tabindex="-1" data-enc-panel="care">飼育記録</button>
+            <button type="button" id="enc-tab-topics" role="tab" aria-selected="false" aria-controls="enc-panel-topics" tabindex="-1" data-enc-panel="topics">相談</button>
+            <button type="button" id="enc-tab-breeding" role="tab" aria-selected="false" aria-controls="enc-panel-breeding" tabindex="-1" data-enc-panel="breeding">繁殖</button>
+            <button type="button" id="enc-tab-gallery" role="tab" aria-selected="false" aria-controls="enc-panel-gallery" tabindex="-1" data-enc-panel="gallery">写真</button>
+            <button type="button" id="enc-tab-shops" role="tab" aria-selected="false" aria-controls="enc-panel-shops" tabindex="-1" data-enc-panel="shops">販売</button>
+        </nav>
+
+        <div class="enc-detail-workspace">
+            <main class="enc-detail-main">
+                <section id="enc-panel-overview" class="enc-detail-panel active" role="tabpanel" aria-labelledby="enc-tab-overview" data-enc-panel-content="overview">
+                    <article class="enc-detail-article">
+                        <div class="enc-section-heading">
+                            <div>
+                                <span>SPECIES PROFILE</span>
+                                <h2>種の概要</h2>
+                            </div>
+                            <span id="enc-research-status" class="enc-research-status is-unreviewed">未調査</span>
+                        </div>
+                        <div id="enc-detail-description" class="enc-detail-description"></div>
+                        <div id="enc-detail-content-sections" class="enc-content-sections"></div>
+                    </article>
+
+                    <section id="enc-research-section" class="enc-research-section">
+                        <div class="enc-section-heading">
+                            <div>
+                                <span>RESEARCH SOURCES</span>
+                                <h2>Codex調査・出典</h2>
+                            </div>
+                            <time id="enc-research-date"></time>
+                        </div>
+                        <div id="enc-research-sources" class="enc-source-list"></div>
+                        <div id="enc-research-empty" class="enc-panel-empty" hidden>
+                            <strong>出典の登録を準備中です</strong>
+                            <p>飼育記録とは分けて、論文や学術データベースの根拠を順次追加します。</p>
+                        </div>
+                    </section>
+
+                    <section id="enc-external-links-section" class="enc-external-links-section" hidden>
+                        <div class="enc-section-heading">
+                            <div>
+                                <span>REFERENCE LINKS</span>
+                                <h2>外部資料</h2>
+                            </div>
+                        </div>
+                        <div id="enc-external-links" class="enc-external-links"></div>
+                    </section>
+                </section>
+
+                <section id="enc-panel-care" class="enc-detail-panel" role="tabpanel" aria-labelledby="enc-tab-care" data-enc-panel-content="care" hidden>
+                    <div class="enc-section-heading">
+                        <div>
+                            <span>REAL CARE DATA</span>
+                            <h2>実際の飼育記録</h2>
+                        </div>
+                    </div>
+                    <div id="enc-related-care-card">
+                        <div id="enc-related-care" class="enc-related-list"></div>
+                    </div>
+                </section>
+
+                <section id="enc-panel-topics" class="enc-detail-panel" role="tabpanel" aria-labelledby="enc-tab-topics" data-enc-panel-content="topics" hidden>
+                    <div class="enc-section-heading enc-section-heading-actions">
+                        <div>
+                            <span>COMMUNITY</span>
+                            <h2>相談記録</h2>
+                        </div>
+                        <div class="enc-related-actions">
+                            <button type="button" id="btn-open-species-topic-list" class="enc-secondary-button js-open-species-topic-list">相談一覧</button>
+                            <button type="button" id="btn-open-species-topic" class="enc-primary-button js-open-species-topic-modal">相談する</button>
+                        </div>
+                    </div>
+                    <div id="enc-related-topics-card">
+                        <div id="enc-related-topics" class="enc-related-list"></div>
+                    </div>
+                </section>
+
+                <section id="enc-panel-breeding" class="enc-detail-panel" role="tabpanel" aria-labelledby="enc-tab-breeding" data-enc-panel-content="breeding" hidden>
+                    <div class="enc-section-heading enc-section-heading-actions">
+                        <div>
+                            <span>BREEDING MATCH</span>
+                            <h2>繁殖募集</h2>
+                        </div>
+                    </div>
+                    <div id="enc-breeding-candidates" class="enc-breeding-grid"></div>
+                </section>
+
+                <section id="enc-panel-gallery" class="enc-detail-panel" role="tabpanel" aria-labelledby="enc-tab-gallery" data-enc-panel-content="gallery" hidden>
+                    <div class="enc-section-heading">
+                        <div>
+                            <span>COMMUNITY ALBUM</span>
+                            <h2>図鑑写真</h2>
+                        </div>
+                    </div>
+                    <div id="enc-gallery-grid" class="enc-gallery-grid"></div>
+                    <div id="enc-gallery-empty" class="enc-panel-empty" hidden>
+                        <strong>写真はまだありません</strong>
+                    </div>
+                </section>
+
+                <section id="enc-panel-shops" class="enc-detail-panel" role="tabpanel" aria-labelledby="enc-tab-shops" data-enc-panel-content="shops" hidden>
+                    <div class="enc-section-heading">
+                        <div>
+                            <span>APPROVED SHOPS</span>
+                            <h2>プロショップの販売情報</h2>
+                        </div>
+                        <span class="enc-approved-label">掲載審査済み</span>
+                    </div>
+                    <div id="enc-shop-links" class="enc-shop-list"></div>
+                    <div id="enc-shop-empty" class="enc-panel-empty" hidden>
+                        <strong>現在掲載中の販売情報はありません</strong>
+                        <p>販売情報は、Setaeへ掲載申請し承認されたショップのみ表示されます。</p>
+                        <a href="https://nakano2835.com/contact/" target="_blank" rel="noopener noreferrer">ショップ掲載のお問い合わせ</a>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="enc-detail-aside">
+                <section class="enc-facts-panel">
+                    <div class="enc-section-heading">
+                        <div>
+                            <span>CARE RANGE</span>
+                            <h2>飼育の目安</h2>
+                        </div>
+                    </div>
+                    <dl class="enc-facts-grid">
+                        <div><dt>生活型</dt><dd id="enc-detail-lifestyle">-</dd></div>
+                        <div><dt>温度</dt><dd id="enc-detail-temp">-</dd></div>
+                        <div><dt>湿度</dt><dd id="enc-detail-humidity">-</dd></div>
+                        <div><dt>寿命</dt><dd id="enc-detail-lifespan">-</dd></div>
+                        <div><dt>最大サイズ</dt><dd id="enc-detail-size">-</dd></div>
+                        <div><dt>難易度</dt><dd id="enc-detail-difficulty">-</dd></div>
+                    </dl>
+                    <div id="enc-care-profile" class="enc-care-profile"></div>
+                </section>
+
+                <section class="enc-taxonomy-panel">
+                    <div class="enc-section-heading">
+                        <div>
+                            <span>TAXONOMY</span>
+                            <h2>分類・分布</h2>
+                        </div>
+                    </div>
+                    <dl>
+                        <div><dt>属</dt><dd id="enc-detail-taxonomy-genus">-</dd></div>
+                        <div><dt>生息地域</dt><dd id="enc-detail-habitats">-</dd></div>
+                        <div><dt>気質</dt><dd id="enc-detail-temperaments-text">-</dd></div>
+                    </dl>
+                </section>
+
+                <a id="btn-search-inaturalist" class="enc-reference-link" href="https://www.inaturalist.org/" target="_blank" rel="noopener noreferrer">
+                    <span>iNaturalist</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 17 17 7M7 7h10v10"></path>
+                    </svg>
+                </a>
+            </aside>
         </div>
-        <div style="padding:15px;">
-            <span id="enc-detail-genus"
-                style="display:block; font-style:italic; color:#888; font-size:12px; margin-bottom:4px;"><?php esc_html_e('Genus', 'setae-core'); ?></span>
-            <div id="enc-detail-common-name" style="font-size:12px; color:#555; font-weight:bold;"></div>
-            <h3 id="enc-detail-name" style="margin:0;"><?php esc_html_e('Species Title', 'setae-core'); ?></h3>
-
-            <!-- Temperament List (Chips) -->
-            <div id="enc-detail-temperament-list" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px;">
-                <!-- JS populated -->
-            </div>
-
-            <div style="margin-top:10px; display:flex; gap:10px; font-size:12px;">
-                <span id="enc-detail-keeping"
-                    style="background:#ffcc00; color:#333; padding:3px 8px; border-radius:12px; font-weight:bold;">🔥
-                    10 Keeping</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats/Info -->
-    <div class="setae-card" style="margin-bottom:15px;">
-        <h4 style="margin-top:0;"><?php esc_html_e('Species Info', 'setae-core'); ?></h4>
-        <p id="enc-detail-description" style="font-size:13px; line-height:1.6; color:#555;">...</p>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span
-                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Lifestyle', 'setae-core'); ?></span>
-                <strong id="enc-detail-lifestyle">-</strong>
-            </div>
-            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span
-                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Temp', 'setae-core'); ?></span>
-                <strong id="enc-detail-temp">-</strong>
-            </div>
-            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span
-                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Humidity', 'setae-core'); ?></span>
-                <strong id="enc-detail-humidity">-</strong>
-            </div>
-            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span
-                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Lifespan', 'setae-core'); ?></span>
-                <strong id="enc-detail-lifespan">-</strong>
-            </div>
-            <div style="background:#f9f9f9; padding:8px; border-radius:6px;">
-                <span
-                    style="display:block; font-size:10px; color:#888;"><?php esc_html_e('Max Legspan', 'setae-core'); ?></span>
-                <strong id="enc-detail-size">-</strong>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sponsor and Search Area -->
-    <div class="setae-card" style="margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
-        <a id="btn-search-yahoo" href="#" target="_blank"
-            onclick="this.href='https://auctions.yahoo.co.jp/search/search?p=' + encodeURIComponent(document.getElementById('enc-detail-name').innerText);"
-            style="display: flex; align-items: center; justify-content: center; background: #fdcb00; color: #333; font-weight: bold; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;">
-            <span style="margin-right: 8px; font-size: 16px;">🔍</span> ヤフオクでこの種を探す
-        </a>
-
-        <a id="btn-search-inaturalist" href="#" target="_blank" rel="noopener noreferrer"
-            onclick="this.href='https://www.inaturalist.org/search?q=' + encodeURIComponent(document.getElementById('enc-detail-name').innerText);"
-            style="display: flex; align-items: center; justify-content: center; background: #74ac00; color: #fff; font-weight: bold; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;">
-            <span style="margin-right: 8px; font-size: 16px;">🌿</span> iNaturalistでこの種を調べる
-        </a>
-    </div>
-
-    <div id="enc-detail-ad-container" class="setae-card"
-        style="margin-bottom:15px; border: 2px dashed #ddd; background: #fafafa; text-align: center; padding: 20px 15px;">
-        <span
-            style="display: inline-block; font-size: 10px; background: #eee; color: #888; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px;">スポンサー枠</span>
-        <div style="font-weight: bold; font-size: 15px; color: #333; margin-bottom: 6px;">広告主募集中</div>
-        <div style="font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 12px;">
-            ここにショップのHP情報や、販売個体の値段掲載などが可能です。<br>
-            詳細をご希望のショップ様は運営までご連絡ください。
-        </div>
-        <a href="https://nakano2835.com/contact/" target="_blank" rel="noopener noreferrer"
-            style="display: inline-block; text-decoration: none; background: #fff; border: 1px solid #ccc; color: #555; padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold;">
-            お問い合わせ
-        </a>
-    </div>
-
-    <!-- Community Gallery -->
-    <div class="setae-card">
-        <h4 style="margin-top:0;"><?php esc_html_e('Best Shots Gallery', 'setae-core'); ?></h4>
-        <div id="enc-gallery-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;">
-            <!-- JS Populated -->
-        </div>
-        <p id="enc-gallery-empty" style="text-align:center; color:#ccc; font-size:12px; display:none;">
-            <?php esc_html_e('No community photos yet.', 'setae-core'); ?>
-        </p>
     </div>
 </div>

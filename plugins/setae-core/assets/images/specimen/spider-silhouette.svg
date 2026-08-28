@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Spider specimen silhouette</title>
+  <g fill="none" stroke="#555b53" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M62 51 38 31 20 27M58 58 31 51 12 57M59 67 31 74 14 91M65 73 46 94 42 112" stroke-width="6"/>
+    <path d="m98 51 24-20 18-4m-38 31 27-7 19 6m-47 10 28 7 17 17m-51-18 19 21 4 18" stroke-width="6"/>
+    <ellipse cx="80" cy="70" rx="24" ry="30" fill="#555b53" stroke-width="4"/>
+    <circle cx="80" cy="42" r="16" fill="#555b53" stroke-width="4"/>
+    <path d="M72 32 65 20m23 12 7-12" stroke-width="5"/>
+  </g>
+</svg>

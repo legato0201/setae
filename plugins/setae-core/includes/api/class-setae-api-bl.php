@@ -1,439 +1,114 @@
 <?php
 
+/**
+ * Public breeding listings. Negotiation and direct communication intentionally
+ * happen outside SETAE; this controller exposes no contracts or messages.
+ */
 class Setae_API_BL
 {
     public function register_routes()
     {
-        // BL Candidates (募集中個体一覧)
         register_rest_route('setae/v1', '/bl-candidates', array(
-            'methods' => 'GET',
+            'methods' => WP_REST_Server::READABLE,
             'callback' => array($this, 'get_bl_candidates'),
             'permission_callback' => '__return_true',
         ));
-
-        // Contracts (契約管理)
-        register_rest_route('setae/v1', '/contracts', array(
-            'methods' => array('GET', 'POST'),
-            'callback' => array($this, 'handle_contracts'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
-
-        // Contract Status Update
-        register_rest_route('setae/v1', '/contracts/(?P<id>\d+)/status', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'update_contract_status'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
-
-        // ▼▼▼ 追加: チャット用ルート ▼▼▼
-
-        // Get Messages
-        register_rest_route('setae/v1', '/contracts/(?P<id>\d+)/messages', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_contract_messages'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
-
-        // Send Message
-        register_rest_route('setae/v1', '/contracts/(?P<id>\d+)/messages', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'send_contract_message'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
-
-        // ▼ 追加: 未読数カウント取得
-        register_rest_route('setae/v1', '/bl/unread-count', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_unread_count'),
-            'permission_callback' => function () {
-                return is_user_logged_in();
-            },
-        ));
     }
 
-    // ▼▼▼ 追加: チャット用コールバック関数 ▼▼▼
-
-    public function get_contract_messages($request)
+    public function get_bl_candidates()
     {
-        $contract_id = $request['id'];
-        $db = new Setae_BL_Contracts();
-
-        // 権限チェック (自分が関わっている契約か？)
-        $contract = $db->get_contract($contract_id);
-        $user_id = get_current_user_id();
-        if (!$contract || ($contract->owner_id != $user_id && $contract->breeder_id != $user_id)) {
-            return new WP_Error('forbidden', 'Access denied', array('status' => 403));
-        }
-
-        // ▼ 追加: 相手からのメッセージを既読にする
-        global $wpdb;
-        $table_chat = $wpdb->prefix . 'setae_bl_chat';
-        $wpdb->query($wpdb->prepare(
-            "UPDATE $table_chat SET is_read = 1 WHERE contract_id = %d AND user_id != %d AND is_read = 0",
-            $contract_id,
-            $user_id
-        ));
-        // ▲ ここまで
-
-        $messages = $db->get_chat_history($contract_id);
-
-        // 整形
-        $data = array_map(function ($m) use ($user_id) {
-            return array(
-                'id' => $m->id,
-                'message' => $m->message,
-                'is_mine' => ($m->user_id == $user_id),
-                'sender_name' => get_the_author_meta('display_name', $m->user_id),
-                'avatar' => get_avatar_url($m->user_id),
-                'date' => date('m/d H:i', strtotime($m->created_at))
-            );
-        }, $messages);
-
-        return new WP_REST_Response($data, 200);
-    }
-
-    public function send_contract_message($request)
-    {
-        $contract_id = $request['id'];
-        $message = sanitize_textarea_field($request->get_param('message'));
-
-        if (empty($message)) {
-            return new WP_Error('empty_message', 'Message cannot be empty', array('status' => 400));
-        }
-
-        $db = new Setae_BL_Contracts();
-        $contract = $db->get_contract($contract_id);
-        $user_id = get_current_user_id();
-
-        if (!$contract || ($contract->owner_id != $user_id && $contract->breeder_id != $user_id)) {
-            return new WP_Error('forbidden', 'Access denied', array('status' => 403));
-        }
-
-        // ★追加: 連投・重複送信チェック
-        $last_msg = $db->get_latest_chat_from_user($contract_id, $user_id);
-        if ($last_msg) {
-            // WordPressのローカル時間との差分を秒で計算
-            $time_diff = current_time('timestamp') - strtotime($last_msg->created_at);
-
-            // 完全に同じメッセージで、かつ30秒以内の場合は重複送信とみなす
-            if ($last_msg->message === $message && $time_diff < 30) {
-                return new WP_Error('duplicate_message', '同じメッセージが連続して送信されています。', array('status' => 400));
-            }
-
-            // どんなメッセージでも2秒以内の連続送信はスパム・連打とみなして弾く
-            if ($time_diff < 2) {
-                return new WP_Error('too_fast', '送信が早すぎます。少し待ってから再度送信してください。', array('status' => 400));
-            }
-        }
-
-        $result = $db->send_chat_message($contract_id, $user_id, $message);
-
-        if ($result) {
-            return new WP_REST_Response(array('success' => true), 201);
-        }
-        return new WP_Error('db_error', 'Could not send message', array('status' => 500));
-    }
-
-    public function get_bl_candidates($request)
-    {
-        $args = array(
+        $posts = get_posts(array(
             'post_type' => 'setae_spider',
+            'post_status' => 'publish',
             'posts_per_page' => -1,
+            'orderby' => 'modified',
+            'order' => 'DESC',
             'meta_query' => array(
                 array(
                     'key' => '_setae_bl_status',
                     'value' => 'recruiting',
+                    'compare' => '=',
                 ),
             ),
-        );
-        $posts = get_posts($args);
+        ));
+
         $candidates = array();
-
         foreach ($posts as $post) {
-            $species_id = get_post_meta($post->ID, '_setae_species_id', true);
-            $species_name = $species_id ? get_the_title($species_id) : 'Unknown Species';
-
-            // ★修正: 画像取得ロジックを最適化 (優先順位を設定)
-            $img_url = null;
-
-            // 1. 個体固有のメイン画像 (_setae_spider_image)
-            $img_url = get_post_meta($post->ID, '_setae_spider_image', true);
-
-            // 2. WP標準のアイキャッチ画像
-            if (!$img_url) {
-                $img_url = get_the_post_thumbnail_url($post->ID, 'medium');
+            $contact_url = $this->https_url(get_post_meta($post->ID, '_setae_breeding_contact_url', true));
+            if (!$contact_url) {
+                continue;
             }
 
-            // 3. レガシー/ギャラリー画像 (_setae_images)
-            if (!$img_url) {
-                $meta_img = get_post_meta($post->ID, '_setae_images', true);
-
-                // JSONデコード試行
-                if (is_string($meta_img) && strpos($meta_img, '[') === 0) {
-                    $decoded = json_decode($meta_img, true);
-                    if (is_array($decoded)) {
-                        $meta_img = $decoded;
-                    }
-                }
-
-                // URL抽出
-                if (!empty($meta_img)) {
-                    if (is_array($meta_img)) {
-                        $first_img = reset($meta_img);
-                        if ($first_img)
-                            $img_url = $first_img;
-                    } elseif (is_string($meta_img)) {
-                        $img_url = $meta_img;
-                    }
-                }
+            $species_id = absint(get_post_meta($post->ID, '_setae_species_id', true));
+            $species_name = $species_id
+                ? sanitize_text_field(get_the_title($species_id))
+                : sanitize_text_field(get_post_meta($post->ID, '_setae_custom_species_name', true));
+            if (!$species_name) {
+                $species_name = '種類不明';
             }
 
-            // 4. 個体の写真がない場合、種類の写真を使用 (Fallback to Species Image)
-            if (!$img_url && $species_id) {
-                $img_url = get_the_post_thumbnail_url($species_id, 'medium');
-            }
-
-            // 5. それでもなければデフォルト画像
-            if (!$img_url) {
-                $img_url = SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
-            }
-
-            // ★追加: モーダル表示用データ
-            $last_molt = get_post_meta($post->ID, 'last_molt_date', true); // Try simple key first
-            if (!$last_molt)
-                $last_molt = get_post_meta($post->ID, '_setae_last_molt_date', true) ?: '-';
-
-            $bl_terms = get_post_meta($post->ID, '_setae_bl_terms', true) ?: 'No specific terms provided.';
+            $image = $this->representative_image($post->ID, $species_id);
+            $contact_label = sanitize_text_field(get_post_meta($post->ID, '_setae_breeding_contact_label', true));
+            $contact_label = $contact_label ? mb_substr($contact_label, 0, 80) : '外部連絡先を開く';
 
             $candidates[] = array(
-                'id' => $post->ID,
-                // タイトルなどの文字列も安全に出力するためエスケープ処理を噛ませます
+                'id' => (int) $post->ID,
+                'spider_id' => (int) $post->ID,
                 'name' => sanitize_text_field($post->post_title),
+                'spider_name' => sanitize_text_field($post->post_title),
                 'title' => sanitize_text_field($post->post_title),
-                'species' => sanitize_text_field($species_name),
-                'image' => esc_url_raw($img_url), // URLの無害化
-                'gender' => sanitize_text_field(get_post_meta($post->ID, '_setae_gender', true) ?: 'unknown'),
-                'owner_id' => $post->post_author,
+                'species' => $species_name,
+                'species_name' => $species_name,
+                'classification' => sanitize_key(get_post_meta($post->ID, '_setae_classification', true)) ?: 'tarantula',
+                'image' => $image,
+                'gender' => sanitize_key(get_post_meta($post->ID, '_setae_gender', true)) ?: 'unknown',
+                'owner_id' => (int) $post->post_author,
                 'owner_name' => sanitize_text_field(get_the_author_meta('display_name', $post->post_author)),
-                'last_molt' => sanitize_text_field($last_molt), // ★サニタイズ追加
-                'bl_terms' => sanitize_textarea_field($bl_terms) // ★サニタイズ追加（改行を許容）
+                'last_molt' => sanitize_text_field(
+                    get_post_meta($post->ID, '_setae_last_molt_date', true)
+                        ?: get_post_meta($post->ID, 'last_molt_date', true)
+                ),
+                'bl_status' => 'recruiting',
+                'bl_terms' => sanitize_textarea_field(get_post_meta($post->ID, '_setae_bl_terms', true)),
+                'contact_url' => $contact_url,
+                'contact_label' => $contact_label,
+                'can_manage' => get_current_user_id() === (int) $post->post_author,
             );
         }
 
         return new WP_REST_Response($candidates, 200);
     }
 
-    public function handle_contracts($request)
+    private function representative_image($spider_id, $species_id)
     {
-        $method = $request->get_method();
-        $db = new Setae_BL_Contracts();
-        $user_id = get_current_user_id();
-
-        if ($method === 'POST') {
-            $spider_id = $request->get_param('spider_id');
-            $message = sanitize_textarea_field($request->get_param('message'));
-
-            $spider = get_post($spider_id);
-            if (!$spider || $spider->post_type !== 'setae_spider') {
-                return new WP_Error('invalid_spider', 'Spider not found', array('status' => 404));
+        $image = get_post_meta($spider_id, '_setae_spider_image', true);
+        if (!$image) {
+            $image = get_the_post_thumbnail_url($spider_id, 'medium');
+        }
+        if (!$image) {
+            $images = get_post_meta($spider_id, '_setae_images', true);
+            if (is_string($images) && strpos(ltrim($images), '[') === 0) {
+                $images = json_decode($images, true);
             }
-
-            $owner_id = get_post_field('post_author', $spider_id);
-            if ($owner_id == $user_id) {
-                return new WP_Error('invalid_request', 'Cannot request your own spider', array('status' => 400));
+            if (is_array($images) && !empty($images[0])) {
+                $image = $images[0];
+            } elseif (is_string($images)) {
+                $image = $images;
             }
-
-            $result = $db->create_request($owner_id, $user_id, $spider_id, $message);
-            if ($result) {
-                return new WP_REST_Response(array('success' => true), 201);
-            }
-            return new WP_Error('db_error', 'Could not create contract', array('status' => 500));
-
-        } else {
-            // ▼ 変更: $wpdb を使用するためにグローバル宣言を追加
-            global $wpdb;
-            $contracts = $db->get_contracts_by_user($user_id);
-            foreach ($contracts as $c) {
-                $c->spider_name = get_the_title($c->spider_id);
-
-                // ★修正: 画像取得ロジックの強化 (Candidatesと同様の優先順位を適用)
-                $img_url = null;
-                $spider_id = $c->spider_id;
-
-                // 1. 個体固有のメイン画像
-                $img_url = get_post_meta($spider_id, '_setae_spider_image', true);
-
-                // 2. WP標準のアイキャッチ画像
-                if (!$img_url) {
-                    $img_url = get_the_post_thumbnail_url($spider_id, 'thumbnail'); // List用なのでthumbnailサイズ
-                }
-
-                // 3. レガシー/ギャラリー画像
-                if (!$img_url) {
-                    $meta_img = get_post_meta($spider_id, '_setae_images', true);
-                    if (is_string($meta_img) && strpos($meta_img, '[') === 0) {
-                        $decoded = json_decode($meta_img, true);
-                        if (is_array($decoded))
-                            $meta_img = $decoded;
-                    }
-                    if (!empty($meta_img)) {
-                        if (is_array($meta_img)) {
-                            $first_img = reset($meta_img);
-                            if ($first_img)
-                                $img_url = $first_img;
-                        } elseif (is_string($meta_img)) {
-                            $img_url = $meta_img;
-                        }
-                    }
-                }
-
-                // 4. 種類の写真 (Fallback)
-                if (!$img_url) {
-                    $species_id = get_post_meta($spider_id, '_setae_species_id', true);
-                    if ($species_id) {
-                        $img_url = get_the_post_thumbnail_url($species_id, 'thumbnail');
-                    }
-                }
-
-                // 5. デフォルト
-                if (!$img_url) {
-                    $img_url = SETAE_PLUGIN_URL . 'assets/images/default-spider.png';
-                }
-
-                $c->spider_image = $img_url;
-
-                $c->owner_name = get_the_author_meta('display_name', $c->owner_id);
-                $c->breeder_name = get_the_author_meta('display_name', $c->breeder_id);
-
-                // 自分がどちらの立場か判定フラグ
-                $c->is_owner = ($c->owner_id == $user_id);
-                $c->display_status = $this->get_status_label($c->status);
-
-                // ▼ 追加: この契約内の未読メッセージ数をカウント
-                $table_chat = $wpdb->prefix . 'setae_bl_chat';
-                $unread_count = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM $table_chat WHERE contract_id = %d AND user_id != %d AND is_read = 0",
-                    $c->id,
-                    $user_id
-                ));
-                $c->unread_count = (int) $unread_count;
-                // ▲ 追加ここまで
-
-                // ★追加: 相手からの最新チャットメッセージがあれば取得して上書き表示
-                $partner_id = $c->is_owner ? $c->breeder_id : $c->owner_id;
-                $latest_chat = $db->get_latest_chat_from_user($c->id, $partner_id);
-
-                if ($latest_chat && !empty($latest_chat->message)) {
-                    // 最新のチャットメッセージで上書き
-                    $c->message = $latest_chat->message;
-                }
-            }
-            return new WP_REST_Response($contracts, 200);
         }
+        if (!$image && $species_id) {
+            $image = get_the_post_thumbnail_url($species_id, 'medium');
+        }
+        return $image ? esc_url_raw($image) : '';
     }
 
-    private function get_status_label($status)
+    private function https_url($value)
     {
-        $labels = [
-            'REQUESTED' => '申請中',
-            'APPROVED' => '承認済',
-            'REJECTED' => '却下',
-            'PAIRED' => 'ペアリング中',
-            'SUCCESS' => '繁殖成功',
-            'FAIL' => '繁殖失敗'
-        ];
-        return isset($labels[$status]) ? $labels[$status] : $status;
-    }
-
-    public function update_contract_status($request)
-    {
-        $id = $request['id'];
-        $status = $request->get_param('status');
-        $db = new Setae_BL_Contracts();
-        $contract = $db->get_contract($id);
-
-        if (!$contract) {
-            return new WP_Error('not_found', 'Contract not found', array('status' => 404));
+        $url = esc_url_raw(trim((string) $value));
+        if (!$url) {
+            return '';
         }
-
-        $user_id = get_current_user_id();
-        if ($contract->owner_id != $user_id && $contract->breeder_id != $user_id) {
-            return new WP_Error('forbidden', 'You are not part of this contract', array('status' => 403));
-        }
-
-        $result = $db->update_status($id, $status);
-
-        // Auto-create Lineage Thread on SUCCESS
-        if ($result && $status === 'SUCCESS') {
-            $this->create_lineage_thread($contract);
-        }
-
-        return new WP_REST_Response(array('success' => !!$result), 200);
+        $parts = wp_parse_url($url);
+        return isset($parts['scheme']) && strtolower($parts['scheme']) === 'https' ? $url : '';
     }
-
-    private function create_lineage_thread($contract)
-    {
-        $spider_title = get_the_title($contract->spider_id);
-
-        // ▼ 追加: 蜘蛛のIDから学名（種類）を取得
-        $species_id = get_post_meta($contract->spider_id, '_setae_species_id', true);
-        $species_name = $species_id ? get_the_title($species_id) : '不明な種類';
-
-        $post_data = array(
-            // ▼ 変更: タイトルと本文を学名に変更（個体名も補足として残しています）
-            'post_title' => '繁殖報告: ' . $species_name,
-            'post_content' => "{$species_name}（個体名: {$spider_title}）の繁殖に成功しました！\n\n<small style=\"color: #888;\">※この報告はブリーディングローン機能により自動投稿されました。</small>",
-            'post_status' => 'publish',
-            'post_type' => 'setae_topic',
-            'post_author' => $contract->breeder_id
-        );
-
-        $topic_id = wp_insert_post($post_data);
-
-        if ($topic_id && !is_wp_error($topic_id)) {
-            // Set type to 'breeding' (assuming taxonomy or meta)
-            // For now, let's assume 'type' generic meta used in Topics API
-            update_post_meta($topic_id, '_setae_topic_type', 'breeding');
-            // Link to contract
-            update_post_meta($topic_id, '_setae_bl_contract_id', $contract->id);
-        }
-    }
-
-    // ▼▼▼ この関数を追加してください ▼▼▼
-    public function get_unread_count($request)
-    {
-        global $wpdb;
-        $user_id = get_current_user_id();
-
-        // テーブル名の定義
-        $table_contracts = $wpdb->prefix . 'setae_bl_contracts';
-        $table_chat = $wpdb->prefix . 'setae_bl_chat';
-
-        // 自分が関わっている契約(Owner or Breeder)の中で、
-        // 自分以外が送信した、未読(is_read=0)のメッセージ数をカウント
-        $sql = "
-            SELECT COUNT(m.id)
-            FROM $table_chat m
-            INNER JOIN $table_contracts c ON m.contract_id = c.id
-            WHERE (c.owner_id = %d OR c.breeder_id = %d)
-            AND m.user_id != %d
-            AND m.is_read = 0
-        ";
-
-        $count = $wpdb->get_var($wpdb->prepare($sql, $user_id, $user_id, $user_id));
-
-        return new WP_REST_Response(array(
-            'unread_count' => (int) $count
-        ), 200);
-    }
-    // ▲▲▲ 追加ここまで ▲▲▲
-
 }

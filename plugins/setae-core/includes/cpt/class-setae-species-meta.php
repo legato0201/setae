@@ -13,7 +13,7 @@ class Setae_Species_Meta
 
     public function add_meta_boxes()
     {
-        add_meta_box('setae_species_details', 'Species Details', array($this, 'render_meta_box'), 'setae_species', 'normal', 'high');
+        add_meta_box('setae_species_details', '種の詳細', array($this, 'render_meta_box'), 'setae_species', 'normal', 'high');
     }
 
     public function render_meta_box($post)
@@ -39,37 +39,37 @@ class Setae_Species_Meta
         ?>
         <table class="form-table">
             <tr>
-                <th><label for="setae_common_name_ja">Japanese Name (和名)</label></th>
+                <th><label for="setae_common_name_ja">和名</label></th>
                 <td>
                     <input type="text" name="setae_common_name_ja" id="setae_common_name_ja"
                         value="<?php echo esc_attr($common_name_ja); ?>" class="regular-text" placeholder="例: メキシカンレッドニー">
-                    <p class="description">※Title Field should be Scientific Name (e.g. Brachypelma hamorii).</p>
+                    <p class="description">※タイトル欄には学名を入力してください（例: Brachypelma hamorii）。</p>
                 </td>
             </tr>
             <tr>
-                <th><label for="setae_lifespan">Lifespan / Growth</label></th>
+                <th><label for="setae_lifespan">寿命・成長</label></th>
                 <td><input type="text" name="setae_lifespan" id="setae_lifespan" value="<?php echo esc_attr($lifespan); ?>"
                         class="regular-text"></td>
             </tr>
             <tr>
-                <th><label for="setae_size">Max Legspan (cm)</label></th>
+                <th><label for="setae_size">最大レッグスパン（cm）</label></th>
                 <td><input type="number" step="0.1" name="setae_size" id="setae_size" value="<?php echo esc_attr($size); ?>"
                         class="regular-text"></td>
             </tr>
             <tr>
-                <th><label for="setae_difficulty">Difficulty</label></th>
+                <th><label for="setae_difficulty">難易度</label></th>
                 <td>
                     <select name="setae_difficulty" id="setae_difficulty">
-                        <option value="">Select...</option>
-                        <option value="beginner" <?php selected($difficulty, 'beginner'); ?>>Beginner (初心者向け)</option>
-                        <option value="intermediate" <?php selected($difficulty, 'intermediate'); ?>>Intermediate (中級者向け)
+                        <option value="">選択してください</option>
+                        <option value="beginner" <?php selected($difficulty, 'beginner'); ?>>初心者向け</option>
+                        <option value="intermediate" <?php selected($difficulty, 'intermediate'); ?>>中級者向け
                         </option>
-                        <option value="expert" <?php selected($difficulty, 'expert'); ?>>Expert (上級者向け)</option>
+                        <option value="expert" <?php selected($difficulty, 'expert'); ?>>上級者向け</option>
                     </select>
                 </td>
             </tr>
             <tr>
-                <th><label for="setae_temperature">Temp / Humidity</label></th>
+                <th><label for="setae_temperature">温度・湿度</label></th>
                 <td>
                     <input type="text" name="setae_temperature" placeholder="24-28°C" value="<?php echo esc_attr($temp); ?>"
                         size="15">
@@ -78,7 +78,7 @@ class Setae_Species_Meta
                 </td>
             </tr>
             <tr>
-                <th><label>Image Credit (画像提供元)</label></th>
+                <th><label>画像提供元</label></th>
                 <td>
                     <div style="margin-bottom:8px;">
                         <label><input type="radio" name="setae_image_credit_type" value="user" <?php checked($credit_type, 'user'); ?>> ユーザーから選択</label>
@@ -120,7 +120,7 @@ class Setae_Species_Meta
         </table>
 
         <hr>
-        <h4>Community Gallery Approval (Best Shots)</h4>
+        <h4>コミュニティ写真の承認（図鑑候補写真）</h4>
         <div class="setae-gallery-approval" style="display:flex; flex-wrap:wrap; gap:10px;">
             <?php
             // 1. Get Spiders of this Species
@@ -171,16 +171,16 @@ class Setae_Species_Meta
                             <img src="<?php echo esc_url($img_url); ?>" style="width:100%; height:80px; object-fit:cover;">
                             <label style="display:block; font-size:11px; margin-top:5px;">
                                 <input type="checkbox" name="setae_featured_images[]" value="<?php echo esc_attr($img_url); ?>" <?php checked($is_featured); ?>>
-                                Approve
+                                承認
                             </label>
                         </div>
                         <?php
                     }
                 } else {
-                    echo '<p>No "Best Shot" candidates found.</p>';
+                    echo '<p>図鑑候補写真はありません。</p>';
                 }
             } else {
-                echo '<p>No spiders linked to this species yet.</p>';
+                echo '<p>この種に紐づく個体はまだありません。</p>';
             }
             ?>
         </div>

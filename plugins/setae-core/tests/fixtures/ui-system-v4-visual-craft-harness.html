@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE UI System v4 Visual Craft Harness</title>
+  <script>
+    const fixtureParams = new URLSearchParams(location.search);
+    document.documentElement.dataset.theme = fixtureParams.get('theme') === 'dark' ? 'dark' : 'light';
+    window.SETAE_CONFIG = { siteOrigin: location.origin };
+  </script>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/combobox.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/property-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/activity-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/identity-panel.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/data-visualization.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media-grid.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/form-safety.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/feedback.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/ledger.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/care-plan.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/specimen-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/discussion.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/task-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/onboarding.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/auth.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection-editor.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen-intake.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/quick-record.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/today.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/husbandry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/community.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/settings.css">
+  <style>
+    .craft-page { width: min(100%, var(--content-workspace-width)); min-height: 100dvh; margin-inline: auto; padding: var(--space-6) var(--page-gutter-desktop); }
+    .craft-stack { display: grid; gap: var(--space-5); }
+    .craft-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+    .craft-section { min-width: 0; padding-block: var(--space-4); border-top: 1px solid var(--border-strong); }
+    .craft-section h2 { margin: 0 0 var(--space-3); font-size: var(--type-section); }
+    .craft-photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+    .craft-photo { min-width: 0; }
+    .craft-photo-media { aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-surface); background: var(--bg-subtle); }
+    .craft-photo-media img { width: 100%; height: 100%; object-fit: cover; }
+    .craft-photo figcaption { display: grid; gap: var(--space-1); padding: var(--space-3) var(--row-inset-compact) 0; }
+    .craft-photo figcaption strong { font-family: var(--font-mono); }
+    .craft-photo figcaption em { color: var(--text-secondary); font-family: var(--font-taxon); }
+    .craft-inspector { width: min(100%, var(--collection-inspector-width)); padding: var(--space-5); border-left: 1px solid var(--border-default); background: var(--bg-surface); }
+    .craft-error-stack { display: grid; gap: var(--space-3); }
+    .craft-overlay-background { min-height: 100dvh; }
+    .craft-toast-stage { min-height: 60dvh; }
+    .craft-update-stage .app-update-notice { position: static; width: min(100%, 430px); margin: var(--space-6) auto; }
+    @media (max-width: 767px) {
+      .craft-page { padding: var(--space-5) var(--page-gutter-mobile) calc(var(--bottom-nav-height) + var(--space-5)); }
+      .craft-photo-grid { grid-template-columns: minmax(0, 1fr); }
+      .craft-inspector { width: 100%; border-left: 0; border-top: 1px solid var(--border-default); }
+    }
+    @media (min-width: 768px) and (max-width: 1199px) { .craft-page { padding-inline: var(--page-gutter-tablet); } }
+  </style>
+</head>
+<body class="setae-app-document">
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
+  <script type="module">
+    import { renderAppFrame } from '../../assets/app/components/app-frame.js';
+    import { renderBrand } from '../../assets/app/components/brand.js';
+    import { loadingBlock } from '../../assets/app/components/content.js';
+    import { recordIcon } from '../../assets/app/components/icons.js';
+    import {
+      actionRow, button, checkboxControl, emptyState, iconButton, modal,
+      segmentedControl, selectField, sheet, tabs, textField, textareaField, toast
+    } from '../../assets/app/components/primitives.js';
+    import { workspaceHeader } from '../../assets/app/components/patterns.js';
+    import { renderAuthPage } from '../../assets/app/pages/auth.js';
+    import { renderTaskWorkQueue } from '../../assets/app/features/tasks/view.js';
+
+    const state = fixtureParams.get('state') || 'app-frame';
+    const app = document.querySelector('#app');
+    const specimenImage = new URL('../../assets/images/specimen/spider.svg', location.href).href;
+    const page = (title, content, eyebrow = 'VISUAL CRAFT') => `<main class="craft-page"><header class="page-header"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></div></header>${content}</main>`;
+    const background = page('コレクション', '<section class="craft-section"><h2>背面の台帳</h2><p class="secondary">Overlayの階層と移動量を確認します。</p></section>');
+    const task = { id: 'animal:12:feed:2026-08-26', targetType: 'animal', targetId: 12, title: 'C012', subtitle: 'Typhochlaena seladonia', reason: '給餌予定を2日超過', priority: 'overdue', type: 'feed', action: { recordType: 'feed' } };
+    const ledgerRows = Array.from({ length: 4 }, (_, index) => `<article class="workbench-ledger-row" role="listitem"><time class="workbench-ledger-date" datetime="2026-08-${26 - index}">8月${26 - index}日</time><span class="workbench-ledger-marker" aria-hidden="true">${recordIcon(index % 2 ? 'observation' : 'feed')}</span><div class="workbench-ledger-content"><strong>${index % 2 ? '観察' : '給餌'}</strong><span class="workbench-ledger-target-code">C0${12 + index}</span><p class="workbench-ledger-summary">${index % 2 ? '状態に変化なし' : 'レッドローチ M ×2'}</p></div>${iconButton('more', { label: '記録の操作' })}</article>`).join('');
+    const registryRows = Array.from({ length: 4 }, (_, index) => `<tr class="${index === 1 ? 'is-focused' : ''}"><td><span class="registry-thumbnail"><img src="${specimenImage}" alt=""></span></td><td><strong class="animal-code">C0${12 + index}</strong></td><td><em class="scientific-name">${index % 2 ? 'Caribena versicolor' : 'Typhochlaena seladonia'}</em></td><td>${index === 1 ? '脱皮前' : '通常'}</td><td><time datetime="2026-08-26">2026/08/${26 - index}</time></td></tr>`).join('');
+
+    const states = {
+      'app-frame': () => renderAppFrame({ content: page('今日', '<section class="craft-section"><h2>今日の作業</h2><p class="secondary">静かなNavigation Railと作業領域の比率を確認します。</p></section>', 'FIELD NOTEBOOK'), page: 'today', pageTitle: '今日', authenticated: true, userName: 'K. Setae' }),
+      'page-header': () => `<div class="collection-screen-v4">${workspaceHeader('コレクション', { meta: '24 specimens', navigationHtml: tabs([{ id: 'animals', label: '個体' }, { id: 'babies', label: 'ベビー群' }], { activeId: 'animals', label: 'コレクション種別' }), actionsHtml: button('個体を登録', { primary: true }) })}<div class="collection-secondary-content"><p class="secondary">Header、navigation、bodyの左基準線。</p></div></div>`,
+      buttons: () => page('ボタン', `<div class="craft-stack"><section class="craft-section"><h2>Hierarchy</h2><div class="craft-row">${button('主要操作', { primary: true })}${button('通常操作')}${button('静かな操作', { className: 'text-button' })}${iconButton('more', { label: 'その他' })}</div></section><section class="craft-section"><h2>States</h2><div class="craft-row">${button('無効', { disabled: true })}${button('保存中…', { primary: true, loading: true, disabled: true })}${button('削除', { className: 'danger-button' })}</div></section></div>`),
+      forms: () => page('フォーム', `<form class="craft-stack"><section class="craft-section"><div class="craft-stack">${textField({ label: '個体番号', name: 'code', value: 'C012', required: true, hint: 'コレクション内で重複しない番号です。' })}${selectField({ label: '状態', name: 'status', value: 'pre_molt', options: [{ value: 'normal', label: '通常' }, { value: 'pre_molt', label: '脱皮前' }] })}${textField({ label: '入力エラー', name: 'invalid', value: 'C 012', invalid: true, error: '空白を含めず入力してください。' })}${textareaField({ label: 'メモ', name: 'note', placeholder: '観察内容を記録' })}${checkboxControl({ label: 'お気に入りに追加', name: 'favorite', checked: true })}</div></section></form>`),
+      tabs: () => page('Tabs / Segmented', `<div class="craft-stack">${tabs([{ id: 'overview', label: '概要' }, { id: 'timeline', label: '生活史' }, { id: 'growth', label: '成長' }, { id: 'photos', label: '写真' }], { activeId: 'timeline', label: '個体詳細' })}${segmentedControl([{ id: 'photo', label: '写真' }, { id: 'registry', label: '台帳' }], { activeId: 'registry', label: '表示形式' })}</div>`),
+      registry: () => page('コレクション台帳', `<div class="registry-frame"><table class="registry-table"><caption class="visually-hidden">個体台帳</caption><thead><tr><th>写真</th><th>番号</th><th>学名</th><th>状態</th><th>更新日</th></tr></thead><tbody>${registryRows}</tbody></table></div>`),
+      ledger: () => page('記録履歴', `<div class="workbench-ledger" role="list">${ledgerRows}</div>`, 'LABORATORY JOURNAL'),
+      'photo-index': () => page('写真台帳', `<div class="craft-photo-grid">${Array.from({ length: 3 }, (_, index) => `<figure class="craft-photo"><div class="craft-photo-media"><img src="${specimenImage}" alt="C0${12 + index}"></div><figcaption><strong>C0${12 + index}</strong><em>${index % 2 ? 'Caribena versicolor' : 'Typhochlaena seladonia'}</em><span class="status-chip">${index === 1 ? 'PRE-MOLT' : 'NORMAL'}</span></figcaption></figure>`).join('')}</div>`),
+      inspector: () => page('Inspector', `<aside class="craft-inspector"><div class="identity-panel-heading"><strong>C012</strong><h2>Typhochlaena seladonia</h2><p>メス · 8齢 · 脱皮前</p></div><dl class="identity-panel-facts"><div><dt>最終給餌</dt><dd class="is-mono">9日前</dd></div><div><dt>最終脱皮</dt><dd class="is-mono">22日前</dd></div><div><dt>飼育容器</dt><dd class="is-mono">E004</dd></div></dl><div class="identity-panel-actions">${button('記録する', { primary: true })}${button('詳細を開く')}</div></aside>`),
+      task: () => page('今日の作業', renderTaskWorkQueue({ progress: { completed: 3, required: 7, percent: 43 }, overdue: [task], today: [{ ...task, id: 'animal:13:observation:2026-08-26', title: 'C013', type: 'observation', priority: 'today', reason: '本日の状態確認', action: { recordType: 'observation' } }], upcoming: [{ ...task, id: 'animal:14:feed:2026-08-27', title: 'C014', priority: 'upcoming', daysUntilDue: 1 }], handled: [{ title: 'C011', type: 'feed', outcome: 'completed' }] }), 'FIELD NOTEBOOK'),
+      toast: () => `${page('Toast', '<div class="craft-toast-stage"><p class="secondary">同時に表示するToastは1件です。</p></div>')}${toast('記録を保存しました。', { type: 'success' })}`,
+      empty: () => page('Empty State', emptyState('まだ記録がありません。', { actionLabel: '最初の記録を追加', primary: true })),
+      loading: () => page('Loading States', `<div class="craft-stack">${loadingBlock('台帳を読み込み中…', 'registry')}${loadingBlock('記録を読み込み中…', 'ledger')}${loadingBlock('写真を読み込み中…', 'photo')}${loadingBlock('個体情報を読み込み中…', 'property')}${loadingBlock('フォームを準備中…', 'form')}</div>`),
+      error: () => page('Feedback', '<div class="craft-error-stack"><div class="error-banner" role="alert">保存できませんでした。入力内容を確認してください。</div><div class="success-banner" role="status">記録を保存しました。</div><div class="inline-error" role="alert">個体番号を入力してください。</div></div>'),
+      modal: () => `${background}${modal(`<header class="modal-header"><h2 id="craft-modal-title">記録を削除</h2>${iconButton('close', { label: '閉じる' })}</header><div class="modal-body"><p>この記録を削除しますか？</p><div class="modal-actions"><span></span>${button('キャンセル')}${button('削除する', { className: 'danger-button' })}</div></div>`, { labelledBy: 'craft-modal-title' })}`,
+      sheet: () => `${background}${sheet(`<div class="sheet-handle"></div><div class="sheet-title-row"><h2 id="craft-sheet-title">表示を絞り込む</h2>${iconButton('close', { label: '閉じる' })}</div>${selectField({ label: '状態', name: 'status', options: ['すべて', '通常', '脱皮前'] })}<div class="form-actions">${button('閉じる')}${button('適用', { primary: true })}</div>`, { labelledBy: 'craft-sheet-title' })}`,
+      auth: () => renderAuthPage({ view: fixtureParams.get('view') || 'login', error: fixtureParams.get('error') === '1' ? 'ログイン情報を確認してください。' : '' }),
+      'update-notice': () => `<main class="craft-page craft-update-stage"><header class="page-header"><div><div class="eyebrow">PWA UPDATE</div><h1>更新通知</h1></div></header><aside class="app-update-notice" role="status" aria-live="polite">${renderBrand({ className: 'app-update-brand', size: 'compact', subtitle: '' })}<div class="app-update-copy"><strong>新しいバージョンがあります</strong><span>更新すると最新の画面へ切り替わります。</span></div>${button('更新', { primary: true })}</aside></main>`
+    };
+
+    app.innerHTML = (states[state] || states['app-frame'])();
+    requestAnimationFrame(() => {
+      document.body.dataset.state = state;
+      document.body.dataset.overflow = String(document.documentElement.scrollWidth > innerWidth + 1);
+      document.body.dataset.pageTitleCount = String(document.querySelectorAll('h1').length);
+      document.body.dataset.nestedInteractive = String(document.querySelectorAll('button button, button a, a button').length);
+    });
+  </script>
+</body>
+</html>

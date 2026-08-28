@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>SETAE v1.0.245 Mobile Gesture Fixture</title>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/form-safety.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/mobile-gestures.css">
+  <style>
+    #fixture-root { min-height: 100dvh; }
+    [data-app-main] { min-height: 100dvh; padding: var(--space-4); }
+    [data-specimen-tab-content] { min-height: 360px; padding-block: var(--space-5); border-top: 1px solid var(--border-default); }
+    .fixture-horizontal-scroll { width: 180px; overflow-x: auto; white-space: nowrap; }
+    .fixture-horizontal-scroll > span { display: inline-block; width: 420px; }
+  </style>
+</head>
+<body>
+  <div id="fixture-root"></div>
+  <script type="module">
+    import { button, modal, sheet, tabs, textField } from '../../assets/app/components/primitives.js';
+    import { createOverlayController, resolveActionInvocation } from '../../assets/app/components/overlay-controller.js';
+    import { createFormSafetyController } from '../../assets/app/components/form-safety-controller.js';
+    import { createMobileGestureController } from '../../assets/app/runtime/mobile-gesture-controller.js';
+
+    const root = document.querySelector('#fixture-root');
+    const tabOrder = ['overview', 'timeline', 'growth', 'photos', 'breeding'];
+    const tabLabels = ['概要', '生活史', '成長', '写真', '繁殖'];
+    let activeTab = 0;
+    let sheetOpen = false;
+    let sheetBusy = false;
+    let keyboard = false;
+    let standalone = true;
+    let reduceMotion = false;
+    let backCount = 0;
+    const overlay = createOverlayController(root);
+    const safety = createFormSafetyController(root, {
+      ownerId: () => 'gesture-fixture-245',
+      onOverlayChange: () => overlay.sync()
+    });
+
+    function sheetHtml() {
+      return sheet(`<div class="sheet-handle" aria-hidden="true"></div>
+        <header class="quick-record-header"><h2 id="gesture-sheet-title">Quick Record</h2>${button('閉じる', { action: 'close-quick-record', disabled: sheetBusy })}</header>
+        <form data-role="gesture-sheet-form" data-draft-policy="guard" data-draft-type="gesture-sheet" data-draft-entity="primary">
+          ${textField({ label: 'メモ', name: 'note', id: 'gesture-sheet-input', disabled: sheetBusy })}
+        </form>`, {
+        labelledBy: 'gesture-sheet-title',
+        backdropAction: 'close-sheet',
+        panelData: true,
+        busy: sheetBusy
+      });
+    }
+
+    function pageHtml() {
+      const items = tabOrder.map((id, index) => ({ id, label: tabLabels[index] }));
+      return `<main data-app-main>
+        <div>${button('Sheetを開く', { action: 'open-sheet' })}${button('Busy Sheetを開く', { action: 'open-busy-sheet' })}</div>
+        <form data-role="page-form" data-draft-policy="guard" data-draft-type="gesture-page" data-draft-entity="route">${textField({ label: '画面メモ', name: 'page_note', id: 'gesture-page-input' })}</form>
+        ${tabs(items, { activeId: tabOrder[activeTab], action: 'fixture-tab', dataKey: 'tab', label: '個体タブ', idPrefix: 'gesture-tabs', panelId: 'gesture-panel' })}
+        <section id="gesture-panel" role="tabpanel" data-specimen-tab-content data-active-tab="${tabOrder[activeTab]}">
+          <h2>${tabLabels[activeTab]}</h2>
+          <p>左右へスワイプして隣のタブへ移動します。</p>
+          <div class="fixture-horizontal-scroll" data-horizontal-scroll><span>横スクロール領域</span></div>
+        </section>
+      </main>`;
+    }
+
+    function render() {
+      overlay.beforeRender();
+      root.innerHTML = `${pageHtml()}${sheetOpen ? sheetHtml() : ''}`;
+      safety.sync();
+      overlay.sync();
+    }
+
+    function closeSheet() {
+      sheetOpen = false;
+      sheetBusy = false;
+      render();
+    }
+
+    function requestBack() {
+      const commit = () => {
+        backCount += 1;
+        document.body.dataset.backCount = String(backCount);
+      };
+      if (safety.guard(commit, { scope: root, mode: 'navigation' })) return false;
+      commit();
+      return true;
+    }
+
+    function dismissSheet(panel) {
+      const close = panel.querySelector('[data-action="close-quick-record"], [data-action="close-sheet"]');
+      if (!close || close.disabled) return false;
+      close.click();
+      return true;
+    }
+
+    const gestures = createMobileGestureController(root, {
+      isStandalone: () => standalone,
+      isBusy: () => sheetBusy,
+      isEdgeAllowed: () => !sheetOpen,
+      keyboardOpen: () => keyboard,
+      reducedMotion: () => reduceMotion,
+      onRequestBack: requestBack,
+      onSheetDismiss: dismissSheet,
+      onSpecimenTabChange(direction) {
+        const next = activeTab + (direction === 'next' ? 1 : -1);
+        if (next < 0 || next >= tabOrder.length) return false;
+        activeTab = next;
+        render();
+        return true;
+      }
+    });
+
+    root.addEventListener('click', (event) => {
+      const invocation = resolveActionInvocation(event);
+      if (!invocation?.action) return;
+      const { action, element } = invocation;
+      if (action === 'open-sheet' || action === 'open-busy-sheet') {
+        sheetOpen = true;
+        sheetBusy = action === 'open-busy-sheet';
+        render();
+        return;
+      }
+      if (action === 'fixture-tab') {
+        activeTab = Math.max(0, tabOrder.indexOf(element.dataset.tab));
+        render();
+        return;
+      }
+      if (action !== 'close-quick-record' && action !== 'close-sheet') return;
+      const scope = element.closest('[data-overlay-backdrop]');
+      if (safety.guard(closeSheet, { scope, mode: 'overlay' })) return;
+      closeSheet();
+    });
+
+    window.__setaeGestures245 = {
+      gestures,
+      state: () => ({ activeTab: tabOrder[activeTab], sheetOpen, sheetBusy, keyboard, standalone, reduceMotion, backCount }),
+      setKeyboard(value) { keyboard = Boolean(value); },
+      setStandalone(value) { standalone = Boolean(value); },
+      setReducedMotion(value) { reduceMotion = Boolean(value); },
+      setTab(value) { activeTab = Math.max(0, tabOrder.indexOf(value)); render(); },
+      closeSheet
+    };
+    render();
+    gestures.start();
+    document.body.dataset.fixtureReady = 'true';
+  </script>
+</body>
+</html>

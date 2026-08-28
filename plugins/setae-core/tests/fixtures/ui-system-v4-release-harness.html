@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SETAE UI System v4 Release Harness</title>
+  <link rel="stylesheet" href="../../assets/app/styles/tokens.css">
+  <link rel="stylesheet" href="../../assets/app/styles/reset.css">
+  <link rel="stylesheet" href="../../assets/app/styles/foundation.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/combobox.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/action-menu.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/property-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/activity-list.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/identity-panel.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/data-visualization.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media-grid.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/media.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/specimen-card.css">
+  <link rel="stylesheet" href="../../assets/app/styles/components/update-notice.css">
+  <link rel="stylesheet" href="../../assets/app/styles/app-frame.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/ledger.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/care-plan.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/specimen-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/discussion.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/task-workspace.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/auth.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/collection-editor.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/specimen-intake.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/quick-record.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/today.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/husbandry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/qr.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/community.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/settings.css">
+</head>
+<body>
+  <div id="setae-gui-root" class="setae-gui-host">
+    <nav class="release-harness-navigation" aria-label="Release states">
+      <a href="?state=auth">Auth</a>
+      <a href="?state=connection">Connection</a>
+      <a href="?state=modal">Modal</a>
+      <a href="?state=sheet">Sheet</a>
+      <a href="?state=task">Task</a>
+      <a href="?state=widget">Widget</a>
+      <a href="?state=saved-view">Saved View</a>
+      <a href="?state=card-editor">Card Editor</a>
+      <a href="?state=update-notice">Update</a>
+    </nav>
+    <div id="app"></div>
+  </div>
+  <script type="module">
+    import { renderAuthPage, renderConnectionErrorPage } from '../../assets/app/pages/auth.js';
+    import { renderModal } from '../../assets/app/components/modals.js';
+    import { createOverlayController } from '../../assets/app/components/overlay-controller.js';
+    import { button, sheet, textField } from '../../assets/app/components/primitives.js';
+    import { renderTaskWorkQueue } from '../../assets/app/features/tasks/view.js';
+    import { renderSavedViewEditor } from '../../assets/app/features/animals/view-editor.js';
+    import { renderAnimalCardEditor } from '../../assets/app/features/collection/card-editor.js';
+    import { defaultAnimalCardConfig } from '../../assets/app/features/collection/card-config.js';
+    import { renderWidgetContent } from '../../assets/app/widgets/registry.js';
+    import '../../assets/app/widgets/core.js';
+
+    const params = new URLSearchParams(location.search);
+    const state = params.get('state') || 'auth';
+    const busy = params.get('busy') === '1';
+    const error = params.get('error') === '1' ? '保存できませんでした。入力内容を確認してください。' : '';
+    document.documentElement.dataset.theme = params.get('theme') === 'dark' ? 'dark' : 'light';
+    document.body.dataset.releaseState = state;
+    const app = document.querySelector('#app');
+    const background = `<main class="page"><header class="page-header"><div><div class="eyebrow">RELEASE HARNESS</div><h1>Interaction quality gate</h1></div></header><section class="surface section"><div class="section-title">背面コンテンツ</div><p class="secondary">Overlayのfocus、inert、scroll lockを検証します。</p>${button('オーバーレイを開く', { action: 'open-release-overlay' })}</section></main>`;
+    const task = {
+      id: 'animal:12:feed:2026-08-26',
+      targetType: 'animal',
+      targetId: 12,
+      animalId: 12,
+      title: 'C012',
+      subtitle: 'Typhochlaena seladonia',
+      reason: '最終給餌から9日',
+      priority: 'overdue',
+      type: 'feed',
+      action: { recordType: 'feed' }
+    };
+    const animal = {
+      id: 12,
+      title: 'C012',
+      species_name: 'Typhochlaena seladonia',
+      gender: 'female',
+      instar: 8,
+      status: 'pre_molt',
+      last_feed: '2026-08-17',
+      last_molt: '2026-07-04',
+      last_observation: '2026-08-25',
+      origin: 'CB'
+    };
+
+    const states = {
+      auth: () => renderAuthPage({ view: params.get('view') || 'login', submitting: busy, error }),
+      connection: () => renderConnectionErrorPage({ error: 'SETAEへ接続できませんでした。', mockEnabled: true }),
+      modal: () => `${background}${renderModal({ type: 'confirm', title: '記録を削除', message: 'この記録を削除しますか？', confirmLabel: '削除する', danger: true, submitting: busy, error })}`,
+      sheet: () => `${background}${sheet(`<div class="sheet-handle"></div><div class="sheet-title-row"><h2 id="release-sheet-title">記録を絞り込む</h2></div>${textField({ label: '検索', name: 'query', value: 'C012' })}<div class="form-actions">${button('閉じる', { action: 'close-sheet' })}${button('適用', { primary: true })}</div>`, { labelledBy: 'release-sheet-title', backdropAction: 'close-sheet', presentation: 'full-screen-mobile' })}`,
+      task: () => `<main class="page today-workbench"><header class="page-header"><div><div class="eyebrow">FIELD NOTEBOOK</div><h1>今日</h1></div></header>${renderTaskWorkQueue({ progress: { completed: 3, required: 5, percent: 60 }, overdue: [task], today: [{ ...task, id: 'animal:14:observation:2026-08-26', title: 'C014', type: 'observation', reason: '観察予定日', priority: 'today', action: { recordType: 'observation' } }], upcoming: [], handled: [] })}</main>`,
+      widget: () => `<main class="page today-workbench"><header class="page-header"><div><div class="eyebrow">WIDGET</div><h1>クイック操作</h1></div></header><section class="dashboard-widget widget-size-large"><div class="widget-body">${renderWidgetContent({ id: 'quick-actions', type: 'quick_actions', config: {} }, { animals: [animal], care: { tasks: [task] }, records: [] })}</div></section></main>`,
+      'saved-view': () => `${background}${renderSavedViewEditor({ view: { id: '', title: '給餌対象', query: { filters: [{ field: 'days_since_feed', operator: '>=', value: 7 }], sort: { field: 'days_since_feed', direction: 'desc' } } } })}`,
+      'card-editor': () => `${background}${renderAnimalCardEditor(defaultAnimalCardConfig, animal)}`,
+      'update-notice': () => `${background}<aside class="app-update-notice" role="status" aria-live="polite"><div class="app-update-copy"><strong>新しいバージョンがあります</strong><span>更新すると最新の画面へ切り替わります。</span></div>${button(busy ? '更新中…' : '更新', { primary: true, loading: busy, disabled: busy, action: 'apply-app-update' })}</aside>`
+    };
+
+    const overlayController = createOverlayController(app);
+    if (['modal', 'sheet', 'saved-view', 'card-editor'].includes(state)) {
+      app.innerHTML = background;
+      app.querySelector('[data-action="open-release-overlay"]')?.focus();
+    }
+    overlayController.beforeRender();
+    app.innerHTML = (states[state] || states.auth)();
+    overlayController.sync();
+    app.addEventListener('click', (event) => {
+      const closeControl = event.target.closest('[data-action="close-modal"], [data-action="close-sheet"]');
+      if (!closeControl) return;
+      overlayController.beforeRender();
+      app.innerHTML = background;
+      overlayController.sync();
+    });
+    requestAnimationFrame(() => {
+      document.body.dataset.overflow = String(document.documentElement.scrollWidth > innerWidth + 1);
+      document.body.dataset.nestedInteractive = String(Boolean(document.querySelector('button button, button a, a button')));
+      const panel = document.querySelector('.modal, .sheet, .saved-view-sheet, .animal-card-editor-sheet');
+      document.body.dataset.panelOverflow = String(Boolean(panel && panel.scrollWidth > panel.clientWidth + 1));
+    });
+  </script>
+</body>
+</html>

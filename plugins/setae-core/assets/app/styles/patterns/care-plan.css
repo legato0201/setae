@@ -1,0 +1,98 @@
+@layer patterns {
+  .care-plan-stack {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .care-plan-heading,
+  .care-plan-form-heading,
+  .care-plan-override-heading {
+    min-width: 0;
+  }
+
+  .care-plan-heading h2,
+  .care-plan-form-heading h3 {
+    margin: var(--space-1) 0 0;
+  }
+
+  .care-plan-heading h2 {
+    font-size: var(--type-section);
+  }
+
+  .care-plan-form-heading h3 {
+    font-size: var(--type-heading);
+  }
+
+  .care-plan-heading p,
+  .care-plan-form-heading p {
+    margin: var(--space-1) 0 0;
+    color: var(--text-secondary);
+    font-size: var(--type-caption);
+  }
+
+  .care-plan-form,
+  .care-plan-overrides,
+  .care-plan-override-form {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .care-plan-rule-grid {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .care-plan-form > .button,
+  .care-plan-override-form > .button {
+    justify-self: end;
+  }
+
+  .care-plan-override-heading {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .care-plan-override-heading strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .care-plan-order {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--type-caption);
+  }
+
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .care-plan-rule-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .care-plan-stack {
+      padding-block: var(--space-5);
+    }
+
+    .care-plan-rule-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .care-plan-form > .button,
+    .care-plan-override-form > .button {
+      width: 100%;
+      justify-self: stretch;
+    }
+  }
+}

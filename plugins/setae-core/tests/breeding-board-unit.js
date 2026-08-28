@@ -1,0 +1,41 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const root = path.resolve(__dirname, '..');
+const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
+const api = read('includes/api/class-setae-api-bl.php');
+const services = read('assets/app/api/services.js');
+const app = read('assets/app/app.js');
+const community = read('assets/app/pages/community.js');
+const settings = read('assets/app/pages/settings.js');
+const modals = read('assets/app/components/modals.js');
+const spiders = read('includes/api/class-setae-api-spiders.php');
+const activator = read('includes/class-setae-activator.php');
+const core = read('includes/class-setae-core.php');
+const legacyDashboard = read('includes/frontend/class-setae-dashboard.php');
+
+assert.match(api, /'\/bl-candidates'/);
+assert.match(api, /_setae_breeding_contact_url/);
+assert.doesNotMatch(api, /'\/contracts|\/messages|unread-count|Setae_BL_Contracts/);
+assert.match(services, /class BreedingBoardService/);
+assert.match(services, /listings\(\).*\/bl-candidates/);
+assert.doesNotMatch(services, /sendMessage|updateStatus|\/contracts/);
+assert.match(app, /breedingListings/);
+assert.doesNotMatch(app, /services\.contracts|openContract|submitContract/);
+assert.match(community, /繁殖募集/);
+assert.match(community, /外部連絡先を開く/);
+assert.match(community, /new URL\(url\)\.protocol === 'https:'/);
+assert.doesNotMatch(community, /申請する|興味があります/);
+assert.doesNotMatch(settings, /繁殖貸与|open-contract|apply-contract/);
+assert.doesNotMatch(modals, /contract-apply|contract-message|contract-status/);
+assert.match(spiders, /breeding_contact_url/);
+assert.match(spiders, /strtolower\(\$url_parts\['scheme'\]\) !== 'https'/);
+assert.doesNotMatch(activator, /setae_bl_contracts|setae_bl_chat/);
+assert.doesNotMatch(core, /class-setae-bl-contracts\.php/);
+assert.doesNotMatch(legacyDashboard, /setae-ui-breeding-loan|breeding_loan\.css/);
+assert.ok(fs.existsSync(path.join(root, 'includes/db/class-setae-bl-contracts.php')), 'Existing DB code should be retained for a later migration.');
+assert.equal(fs.existsSync(path.join(root, 'assets/js/modules/ui/breeding_loan.js')), false, 'Legacy matching and chat UI must not ship.');
+assert.equal(fs.existsSync(path.join(root, 'templates/partials/section-bl.php')), false, 'Legacy contract view must not ship.');
+
+console.log('Breeding board tests passed');

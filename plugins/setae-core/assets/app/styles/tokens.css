@@ -1,0 +1,206 @@
+@layer reset, foundation, components, app-frame, patterns, screens, utilities;
+
+:root {
+  color-scheme: light;
+  --setae-visual-viewport-height: 100dvh;
+  --setae-visual-viewport-offset-top: 0px;
+  --setae-keyboard-inset: 0px;
+  --setae-layout-viewport-height: 100dvh;
+  --bg-app: #f3f2ed;
+  --bg-surface: #faf9f6;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #eeede8;
+  --bg-hover: #e9e8e2;
+  --bg-label: #ebe8db;
+
+  --text-primary: #20231f;
+  --text-secondary: #656a63;
+  --text-muted: #6b7068;
+  --text-placeholder: var(--text-muted);
+
+  --border-default: #deddd7;
+  --border-strong: #c8c7c0;
+
+  --accent: #48604d;
+  --accent-soft: #e8ece7;
+  --bg-selected: color-mix(in srgb, var(--accent) 10%, var(--bg-surface));
+  --border-selected: color-mix(in srgb, var(--accent) 52%, var(--border-default));
+  --focus-ring: var(--accent);
+
+  --button-default-bg: var(--bg-surface);
+  --button-default-fg: var(--text-primary);
+  --button-default-hover-bg: var(--bg-hover);
+  --button-primary-bg: #20231f;
+  --button-primary-fg: #f7f7f3;
+  --button-primary-hover-bg: #30342f;
+
+  --danger: #9b5149;
+  --warning: #87602b;
+  --success: #5d735b;
+  --favorite: #9a7738;
+  --favorite-soft: #f0eadc;
+  --label-paper: #ebe8db;
+  --label-ink: #262721;
+  --label-line: #d1cdbc;
+  --print-paper: #ffffff;
+  --print-ink: #050505;
+  --print-line: #666666;
+  --print-muted: #aaaaaa;
+  --camera-bg: #171a17;
+  --camera-ink: #d8dbd5;
+  --camera-muted: #979d95;
+  --overlay-backdrop: rgba(21, 23, 20, .66);
+  --overlay-backdrop-soft: rgba(21, 23, 20, .38);
+  --shadow-ambient: rgba(21, 23, 20, .08);
+  --shadow-popover: 0 8px 24px var(--shadow-ambient);
+  --shadow-overlay: 0 20px 56px var(--shadow-ambient);
+  --shadow-toast: 0 8px 24px var(--shadow-ambient);
+  --skeleton-highlight: rgba(255, 255, 255, .28);
+  --media-caption-bg: rgba(0, 0, 0, .72);
+  --media-caption-fg: #ffffff;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  --radius-control: 5px;
+  --radius-surface: 8px;
+  --radius-overlay: 12px;
+  --radius-round: 999px;
+
+  /* Compatibility aliases. New styles use the role-based names above. */
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-surface);
+  --radius-lg: var(--radius-overlay);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --row-inset: var(--space-4);
+  --row-inset-compact: var(--space-3);
+  --page-gutter-mobile: var(--space-4);
+  --page-gutter-tablet: var(--space-5);
+  --page-gutter-desktop: var(--space-6);
+
+  --type-micro: .6875rem;
+  --type-caption: .75rem;
+  --type-body: .875rem;
+  --type-heading: 1rem;
+  --type-mobile-input: 1rem;
+  --type-section: 1.25rem;
+  --type-page: 1.75rem;
+  --type-hero: 2.5rem;
+
+  --type-workbench-meta: .6875rem;
+  --type-workbench-caption: .75rem;
+  --type-workbench-body: .8125rem;
+  --type-workbench-section: .9375rem;
+  --type-workbench-title: 1.5rem;
+  --type-specimen-display: 2rem;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-display: 1.15;
+  --leading-ui: 1.4;
+  --leading-body: 1.6;
+  --leading-tight: var(--leading-display);
+
+  --tracking-eyebrow: .08em;
+  --tracking-code: .02em;
+
+  --icon-size-sm: 16px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 20px;
+  --icon-size-nav: 24px;
+
+  --control-height: 40px;
+  --touch-target: 44px;
+  --motion-fast: 140ms;
+  --motion-standard: 160ms;
+  --motion-enter: 180ms;
+  --motion-exit: 120ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(.2, .8, .2, 1);
+
+  --app-rail-width: 216px;
+  --collection-inspector-width: 300px;
+  --registry-thumbnail-size: 48px;
+  --status-indicator-size: 8px;
+  --active-indicator-width: 2px;
+  --collection-card-min-width: 240px;
+  --collection-photo-card-min-width: 200px;
+  --collection-photo-card-min-width-mobile: 160px;
+  --dialog-width: 640px;
+  --dialog-compact-width: 440px;
+  --control-height-compact: 36px;
+  --z-confirm: 160;
+  --quick-record-panel-width: 420px;
+  --specimen-intake-width: 960px;
+  --specimen-intake-section-width: 176px;
+  --specimen-intake-section-width-medium: 152px;
+  --specimen-intake-max-height: 960px;
+  --specimen-identity-width: 320px;
+  --specimen-activity-date-width: 72px;
+  --specimen-media-min-width: 160px;
+  --action-menu-width: 220px;
+  --combobox-list-max-height: 320px;
+  --ledger-date-width: 72px;
+
+  --sidebar-width: var(--app-rail-width);
+  --sidebar-collapsed-width: 64px;
+  --topbar-height: 52px;
+  --bottom-nav-height: 68px;
+  --content-max-width: 1440px;
+  --content-reading-width: 960px;
+  --content-workspace-width: 1180px;
+  --content-collection-width: 1360px;
+
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-taxon: Georgia, "Times New Roman", serif;
+  --font-editorial: Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-app: #151714;
+  --bg-surface: #1b1d1a;
+  --bg-elevated: #222420;
+  --bg-subtle: #22241f;
+  --bg-hover: #292c27;
+  --bg-label: #302f29;
+
+  --text-primary: #f1f3f0;
+  --text-secondary: #aeb5ae;
+  --text-muted: #7e867f;
+
+  --border-default: #292e2a;
+  --border-strong: #39403a;
+
+  --accent: #77aa98;
+  --accent-soft: #1e362e;
+
+  --button-default-bg: var(--bg-surface);
+  --button-default-fg: var(--text-primary);
+  --button-default-hover-bg: var(--bg-hover);
+  --button-primary-bg: #f1f3f0;
+  --button-primary-fg: #151714;
+  --button-primary-hover-bg: #d9ddd8;
+
+  --danger: #d98278;
+  --warning: #d1a15c;
+  --success: #8fa98c;
+  --favorite: #d2b36f;
+  --favorite-soft: #3a3222;
+  --shadow-ambient: rgba(0, 0, 0, .28);
+  --skeleton-highlight: rgba(255, 255, 255, .08);
+}
