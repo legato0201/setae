@@ -306,6 +306,70 @@ class BootstrapFlowTests(unittest.TestCase):
                 self.assertTrue(argv[-1] == bootstrap.WRAPPER or argv[-1] == bootstrap.FORCED_COMMAND)
         self.assert_wordpress_unchanged()
 
+    def test_unrelated_denyusers_allows_setup_without_any_ssh_configuration_change(self):
+        self.host.ssh_settings["denyusers"] = ["mail"]
+        self.make_file("/etc/ssh/sshd_config", b"Include /etc/ssh/sshd_config.d/*.conf\nDenyUsers mail\n")
+        self.make_file("/etc/ssh/sshd_config.d/10-existing.conf", b"# Existing administrator configuration\n")
+        ssh_root = self.paths.at("/etc/ssh")
+        before = {path.relative_to(ssh_root): path.read_bytes()
+                  for path in ssh_root.rglob("*") if path.is_file()}
+        settings_before = json.dumps(self.host.ssh_settings, sort_keys=True)
+
+        result = self.install(True)
+
+        self.assertEqual(result["status"], "success")
+        self.assertIs(result["updates_enabled"], True)
+        self.assertIs(result["sshd_configuration_modified"], False)
+        self.assertEqual(self.host.preflight_states, [("direct", False), ("forced", False), ("enabled", True)])
+        self.assertEqual({path.relative_to(ssh_root): path.read_bytes()
+                          for path in ssh_root.rglob("*") if path.is_file()}, before)
+        self.assertEqual(json.dumps(self.host.ssh_settings, sort_keys=True), settings_before)
+        self.assertFalse(any(path == ssh_root or ssh_root in path.parents
+                             for path, _, _, _ in self.host.ownership_calls))
+        self.assertEqual(sum(argv[0] == "/usr/sbin/useradd" for argv, _ in self.host.commands), 1)
+        self.assert_wordpress_unchanged()
+
+    def test_denied_or_unsupported_access_rules_stop_before_managed_writes_or_accounts(self):
+        cases = [
+            {"denyusers": [bootstrap.DEPLOY_USER]},
+            {"denyusers": ["mail", "backup " + bootstrap.DEPLOY_USER]},
+            {"denyusers": ["mail", "backup*"]},
+            {"denyusers": ["!mail"]},
+            {"denyusers": ["mail@localhost"]},
+            {"denyusers": ["1000"]},
+            {"denyusers": [""]},
+            {"denyusers": ["mail"], "allowusers": ["owner"]},
+            {"denyusers": ["mail"], "allowgroups": ["ssh-users"]},
+            {"denyusers": ["mail"], "denygroups": ["mail"]},
+        ]
+        directive_names = {"denyusers": "DenyUsers", "allowusers": "AllowUsers",
+                           "allowgroups": "AllowGroups", "denygroups": "DenyGroups"}
+        for rules in cases:
+            with self.subTest(rules=rules):
+                self.host.ssh_settings = {**sshd_settings(), "hostkey": ["/etc/ssh/ssh_host_ed25519_key"], **rules}
+                self.host.commands.clear()
+                content = "Include /etc/ssh/sshd_config.d/*.conf\n" + "".join(
+                    directive_names[key] + " " + line + "\n" for key, lines in rules.items() for line in lines)
+                self.make_file("/etc/ssh/sshd_config", content.encode("ascii"))
+                before = {path.relative_to(self.paths.root): None if path.is_dir() else path.read_bytes()
+                          for path in self.paths.root.rglob("*")}
+
+                with self.assertRaises(bootstrap.BootstrapError) as caught:
+                    self.install(True)
+
+                self.assertEqual(caught.exception.code, "sshd_access_rules")
+                self.assertEqual({path.relative_to(self.paths.root): None if path.is_dir() else path.read_bytes()
+                                  for path in self.paths.root.rglob("*")}, before)
+                for fixed in (bootstrap.WRAPPER, bootstrap.MODULE, bootstrap.CONFIG, bootstrap.RECEIPT,
+                              bootstrap.SUDOERS, bootstrap.STATE, bootstrap.SSH_HOME):
+                    self.assertFalse(self.paths.at(fixed).exists(), fixed)
+                self.assertIsNone(self.host.deploy_user)
+                self.assertEqual(self.host.ownership_calls, [])
+                self.assertEqual(self.host.preflight_states, [])
+                self.assertEqual([argv for argv, _ in self.host.commands],
+                                 [["/usr/sbin/visudo", "-c"], ["/usr/sbin/sshd", "-T"]])
+                self.assert_wordpress_unchanged()
+
     def test_unknown_existing_account_is_not_adopted_or_modified(self):
         self.host.make_account()
         original = vars(self.host.deploy_user).copy()
@@ -496,6 +560,76 @@ class BootstrapSshPolicyTests(unittest.TestCase):
         before = json.dumps(settings, sort_keys=True)
         bootstrap.validate_sshd_settings(settings)
         self.assertEqual(json.dumps(settings, sort_keys=True), before)
+
+    def test_unrelated_denyusers_mail_is_accepted_without_changing_settings(self):
+        settings = {**sshd_settings(), "denyusers": ["mail"]}
+        before = json.dumps(settings, sort_keys=True)
+        bootstrap.validate_sshd_settings(settings)
+        self.assertEqual(json.dumps(settings, sort_keys=True), before)
+
+    def test_unrelated_literal_denyusers_support_multiple_tokens_and_lines(self):
+        cases = [
+            ["mail backup"],
+            ["mail", "backup", "_service"],
+            ["  mail\tbackup  ", "legacy.user old-service Service_2 machine$"],
+            ["a" * 64, "b" * 64 + "$"],
+        ]
+        for lines in cases:
+            settings = {**sshd_settings(), "denyusers": lines}
+            before = json.dumps(settings, sort_keys=True)
+            with self.subTest(lines=lines):
+                bootstrap.validate_sshd_settings(settings)
+                self.assertEqual(json.dumps(settings, sort_keys=True), before)
+
+    def test_deployment_account_is_rejected_in_any_denyusers_position(self):
+        cases = [
+            [bootstrap.DEPLOY_USER],
+            [bootstrap.DEPLOY_USER + " mail"],
+            ["mail " + bootstrap.DEPLOY_USER + " backup"],
+            ["mail backup " + bootstrap.DEPLOY_USER],
+            ["mail", "backup", "\t" + bootstrap.DEPLOY_USER + "  "],
+        ]
+        for lines in cases:
+            settings = {**sshd_settings(), "denyusers": lines}
+            before = json.dumps(settings, sort_keys=True)
+            with self.subTest(lines=lines):
+                with self.assertRaises(bootstrap.BootstrapError) as caught:
+                    bootstrap.validate_sshd_settings(settings)
+                self.assertEqual(caught.exception.code, "sshd_access_rules")
+                self.assertEqual(json.dumps(settings, sort_keys=True), before)
+
+    def test_denyusers_patterns_and_unsupported_literals_are_rejected(self):
+        names = [
+            "*", "setae-*", "backup*", "setae-deplo?", "[s]etae-deploy",
+            "!mail", "mail@localhost", "setae-deploy@*", "1000", "1mail",
+            "-mail", ".mail", "$", "mail$$", "mail,backup", "mail/backup",
+            "mail:backup", "mail;backup", '"mail"', "mail\\backup", "mail#comment",
+            "m\u00e4il", "\u30e1\u30fc\u30eb", "mail\x00", "a" * 65,
+        ]
+        for name in names:
+            settings = {**sshd_settings(), "denyusers": ["mail", name]}
+            with self.subTest(name=name):
+                with self.assertRaises(bootstrap.BootstrapError) as caught:
+                    bootstrap.validate_sshd_settings(settings)
+                self.assertEqual(caught.exception.code, "sshd_access_rules")
+
+    def test_empty_denyusers_entries_are_not_treated_as_absent_rules(self):
+        for lines in ([""], [" \t "], ["mail", ""], ["", "mail"]):
+            with self.subTest(lines=lines):
+                with self.assertRaises(bootstrap.BootstrapError) as caught:
+                    bootstrap.validate_sshd_settings({**sshd_settings(), "denyusers": lines})
+                self.assertEqual(caught.exception.code, "sshd_access_rules")
+
+    def test_other_access_rules_still_require_review_with_unrelated_denyusers(self):
+        for rule in ("allowusers", "allowgroups", "denygroups"):
+            for value in ("mail", bootstrap.DEPLOY_USER + " mail"):
+                settings = {**sshd_settings(), "denyusers": ["mail"], rule: [value]}
+                before = json.dumps(settings, sort_keys=True)
+                with self.subTest(rule=rule, value=value):
+                    with self.assertRaises(bootstrap.BootstrapError) as caught:
+                        bootstrap.validate_sshd_settings(settings)
+                    self.assertEqual(caught.exception.code, "sshd_access_rules")
+                    self.assertEqual(json.dumps(settings, sort_keys=True), before)
 
     def test_existing_mfa_access_rules_and_key_commands_are_not_weakened(self):
         overrides = {

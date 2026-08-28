@@ -301,8 +301,16 @@ def validate_sshd_settings(settings: dict[str, list[str]]) -> None:
             fail("sshd_policy", "Existing SSH authentication or command policy is incompatible; review sshd manually without replacing it.")
     if one("authenticationmethods") not in ("any", "publickey"):
         fail("sshd_authentication", "Existing SSH multi-factor requirements need manual review; they will not be weakened.")
-    if any(settings.get(key) for key in ("allowusers", "denyusers", "allowgroups", "denygroups")):
+    if any(settings.get(key) for key in ("allowusers", "allowgroups", "denygroups")):
         fail("sshd_access_rules", "Existing SSH user/group access restrictions require manual approval for the new account.")
+    # sshd appends repeated DenyUsers directives. Unrelated literal names (for
+    # example, mail) do not block this account; retain the policy unchanged.
+    # Do not approximate OpenSSH wildcard, negation, or USER@HOST semantics.
+    for line in settings.get("denyusers", []):
+        names = line.split()
+        if not names or any(not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]{0,63}\$?", name)
+                            or name == DEPLOY_USER for name in names):
+            fail("sshd_access_rules", "An SSH DenyUsers rule blocks the deployment account or uses unsupported patterns; review it without replacing existing policy.")
     environment = [word for line in settings.get("acceptenv", []) for word in line.split()]
     if settings.get("setenv") or any(word not in ("LANG", "TERM", "LC_*") and not re.fullmatch(r"LC_[A-Z_]+", word) for word in environment):
         fail("sshd_environment", "Existing SSH environment overrides require manual review; shell or loader variables must not bypass the forced command.")

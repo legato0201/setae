@@ -22,6 +22,19 @@
 
 PHP-FPMとCLI PHPは別です。この手順はCLIの互換性を確認し、Web PHP設定は変更しません。
 
+### 既存のSSHアクセス制限
+
+`DenyUsers mail` のように、専用ユーザー `setae-deploy` 以外のリテラルなユーザー名だけを
+拒否するルールは、そのまま維持してセットアップを続けます。空白区切りの複数名と
+繰り返しの `DenyUsers` 行は、すべて確認します。既存の拒否ルールを削除・変更しません。
+この判定はアカウント作成前と作成後の両方で行います。
+
+`setae-deploy` 自身の拒否、ワイルドカード、否定、`USER@HOST`、その他の未対応表記は
+`sshd_access_rules` で停止します。`AllowUsers`・`AllowGroups`・`DenyGroups` がある場合も、
+従来どおり管理者による確認が必要です。OpenSSHのパターン照合全体を独自に代用しません。
+この検査の成功だけでは、外部からSSH認証できることは証明されません。
+[Ubuntu sshd_config(5)](https://manpages.ubuntu.com/manpages/noble/man5/sshd_config.5.html)
+
 ## 取得と実行
 
 配布担当が指定した完全なコミットSHAに固定して、bootstrap_ubuntu.py、setae-deploy、
