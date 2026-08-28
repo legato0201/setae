@@ -631,8 +631,13 @@ def verify_sudo_policy(paths: Paths, host: Host):
     sections = text.split("Sudoers entry:")
     if len(sections) != 2:
         fail("sudo_policy", "The new account must have exactly one sudo rule; inherited or unknown privileges require manual review.")
+    entry_lines = sections[1].splitlines()
+    # sudo may name the source file on the entry header. Accept only our fixed
+    # file or the legacy unnamed header; never discard an arbitrary first line.
+    if not entry_lines or entry_lines[0].strip() not in ("", SUDOERS):
+        fail("sudo_policy", "The sudo rule header names an unexpected source or has an unsupported format.")
     fields = {}; commands = []; reading_commands = False
-    for line in sections[1].splitlines():
+    for line in entry_lines[1:]:
         value = line.strip()
         if not value:
             continue

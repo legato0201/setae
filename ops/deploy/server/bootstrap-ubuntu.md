@@ -106,6 +106,17 @@ visudoで確認します。
 setae-deploy ALL=(www-data) NOPASSWD:NOSETENV: /usr/local/sbin/setae-deploy ""
 ~~~
 
+`sudo -ll` の見出しは、従来の `Sudoers entry:` と、設定ファイル名が付く
+`Sudoers entry: /etc/sudoers.d/setae-deploy` の両方に対応します。
+ファイル名が付く場合は、この固定パスだけを受け付けます。別ファイル・未知の追記・
+複数ルールは認めず、RunAsUsers、Options、Commandsの厳密な照合と、引数付き実行・
+root実行・シェル実行の拒否確認も維持します。sudoers自体を緩和する修正ではありません。
+[sudo 1.9.15p5の表示実装](https://raw.githubusercontent.com/sudo-project/sudo/SUDO_1_9_15p5/plugins/sudoers/display.c)
+
+旧版の見出し解析で `sudo_policy` になった場合、専用ユーザーや設定ファイルは
+作成済みの可能性があります。同じ鍵・同じ配布ヘルパー・一致する記録なら、
+修正版は既存設定を照合して続行します。ユーザーやsudoersを削除してやり直す必要はありません。
+
 ## 有効化までの順序
 
 1. Ubuntu・固定Python・root実行・既存バイナリと親ディレクトリを確認します。

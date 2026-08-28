@@ -30,6 +30,25 @@ KEY_WIRE = ssh_string(b"ssh-ed25519") + ssh_string(bytes(range(32)))
 KEY = "ssh-ed25519 " + base64.b64encode(KEY_WIRE).decode("ascii")
 
 
+def sudo_listing(header="", *, defaults=True):
+    prefix = ("Matching Defaults entries for setae-deploy on example.invalid:\n"
+              "    env_reset, use_pty\n\n") if defaults else ""
+    return (prefix + "Sudoers entry:" + (" " + header if header else "") + "\n"
+            "    RunAsUsers: www-data\n"
+            "    Options: !setenv, !authenticate\n"
+            "    Commands:\n\t" + bootstrap.WRAPPER + ' ""\n').encode("utf-8")
+
+
+def sudo_probe_suffixes():
+    return [
+        ["-u", bootstrap.SERVICE_USER, "--", bootstrap.WRAPPER],
+        ["-u", bootstrap.SERVICE_USER, "--", bootstrap.WRAPPER, "unexpected-argument"],
+        ["-u", "root", "--", bootstrap.WRAPPER],
+        ["-u", bootstrap.SERVICE_USER, "--", "/bin/sh"],
+        ["-u", "root", "--", "/bin/sh"],
+    ]
+
+
 class FakeHost(bootstrap.Host):
     """Real temporary files with synthetic Linux ownership and command results."""
     def __init__(self, paths):
@@ -46,6 +65,8 @@ class FakeHost(bootstrap.Host):
         self.fail_preflight = None
         self.preflight_states = []
         self.fail_rest = False
+        self.sudo_listing = None
+        self.sudo_probe_results = {}
         self.allow_unsafe_sudo = False
         self.allow_preserved_environment = False
         self.busy = False
@@ -124,13 +145,15 @@ class FakeHost(bootstrap.Host):
             assert self.deploy_user is None
             self.make_account()
         elif argv == ["/usr/bin/sudo", "-n", "-ll", "-U", bootstrap.DEPLOY_USER]:
-            output = ('Sudoers entry:\n RunAsUsers: www-data\n Options: !authenticate, !setenv\n Commands:\n ' + bootstrap.WRAPPER + ' ""\n').encode()
+            output = self.sudo_listing if self.sudo_listing is not None else (
+                'Sudoers entry:\n RunAsUsers: www-data\n Options: !authenticate, !setenv\n Commands:\n ' + bootstrap.WRAPPER + ' ""\n').encode()
         elif argv[:5] == ["/usr/bin/sudo", "-n", "-l", "-U", bootstrap.DEPLOY_USER]:
             positive = ["-u", bootstrap.SERVICE_USER, "--", bootstrap.WRAPPER]
             negatives = [positive + ["unexpected-argument"], ["-u", "root", "--", bootstrap.WRAPPER],
                          ["-u", bootstrap.SERVICE_USER, "--", "/bin/sh"], ["-u", "root", "--", "/bin/sh"]]
             assert argv[5:] == positive or argv[5:] in negatives
-            code = 0 if argv[5:] == positive or self.allow_unsafe_sudo else 1
+            code = self.sudo_probe_results.get(tuple(argv[5:]),
+                0 if argv[5:] == positive or self.allow_unsafe_sudo else 1)
         else:
             return self.run_service_command(argv, input)
         return subprocess.CompletedProcess(argv, code, output, error)
@@ -466,6 +489,61 @@ class BootstrapFlowTests(unittest.TestCase):
         self.assertEqual(sum(argv[0] == "/usr/sbin/useradd" for argv, _ in self.host.commands), 1)
         self.assert_wordpress_unchanged()
 
+    def test_partial_setup_resumes_after_prior_sudo_header_failure_without_replacing_identity(self):
+        self.host.sudo_listing = sudo_listing(bootstrap.SUDOERS)
+
+        def previous_header_parser_failure(paths, host):
+            # Inject the historical gate failure only. The real bootstrap creates
+            # its disabled configuration, receipt, account, key and sudoers first.
+            raw = bootstrap.checked_run(host, ["/usr/bin/sudo", "-n", "-ll", "-U", bootstrap.DEPLOY_USER],
+                                        code="sudo_policy")
+            self.assertEqual(raw, self.host.sudo_listing)
+            raise bootstrap.BootstrapError("sudo_policy", "Simulated prior sudo listing header parser failure.")
+
+        with mock.patch.object(bootstrap, "verify_sudo_policy", side_effect=previous_header_parser_failure):
+            with self.assertRaises(bootstrap.BootstrapError) as caught:
+                self.install(True)
+        self.assertEqual(caught.exception.code, "sudo_policy")
+        self.assertIs(self.config()["enabled"], False)
+        self.assertIs(self.config()["auth_ready"], False)
+        self.assertEqual(self.host.preflight_states, [])
+        self.assertIsNotNone(self.host.deploy_user)
+        account_before = vars(self.host.deploy_user).copy()
+        receipt_before = json.loads(self.paths.at(bootstrap.RECEIPT).read_bytes())
+        self.assertEqual(receipt_before["phase"], "account_created")
+        self.assertEqual(receipt_before["user_uid"], account_before["pw_uid"])
+        self.assertFalse(self.paths.at("/etc/setae-deploy/sudoers.candidate").exists())
+        preserved = {}
+        for fixed in (bootstrap.WRAPPER, bootstrap.MODULE, bootstrap.SUDOERS,
+                      bootstrap.SSH_HOME + "/.ssh/authorized_keys"):
+            path = self.paths.at(fixed)
+            preserved[path] = (path.read_bytes(), path.stat().st_mtime_ns, vars(self.host.info(path)))
+        ownership_start = len(self.host.ownership_calls)
+        command_start = len(self.host.commands)
+        self.assert_wordpress_unchanged()
+
+        # No gate is mocked during the resume: parse the same path-header bytes.
+        result = self.install(True)
+
+        self.assertEqual(result["status"], "success")
+        self.assertIs(result["updates_enabled"], True)
+        self.assertIs(result["existing_user_modified"], False)
+        self.assertIs(result["plugin_update_performed"], False)
+        self.assertEqual(vars(self.host.deploy_user), account_before)
+        self.assertEqual(sum(argv[0] == "/usr/sbin/useradd" for argv, _ in self.host.commands), 1)
+        for path, before in preserved.items():
+            self.assertEqual((path.read_bytes(), path.stat().st_mtime_ns, vars(self.host.info(path))), before)
+        self.assertFalse(any(path in preserved for path, _, _, _ in self.host.ownership_calls[ownership_start:]))
+        self.assertEqual(self.host.preflight_states, [("direct", False), ("forced", False), ("enabled", True)])
+        receipt_after = json.loads(self.paths.at(bootstrap.RECEIPT).read_bytes())
+        self.assertEqual(receipt_after["phase"], "enabled")
+        for key in ("user_uid", "user_gid"):
+            self.assertEqual(receipt_after[key], receipt_before[key])
+        probe_base = ["/usr/bin/sudo", "-n", "-l", "-U", bootstrap.DEPLOY_USER]
+        actual_probes = [argv for argv, _ in self.host.commands[command_start:] if argv[:5] == probe_base]
+        self.assertEqual(actual_probes, [probe_base + suffix for suffix in sudo_probe_suffixes()])
+        self.assert_wordpress_unchanged()
+
     def test_unsupported_os_or_conditional_sshd_rules_stop_before_managed_writes(self):
         self.make_file("/etc/os-release", b'ID=ubuntu\nVERSION_ID="22.04"\n')
         with self.assertRaises(bootstrap.BootstrapError) as caught:
@@ -646,6 +724,102 @@ class BootstrapSshPolicyTests(unittest.TestCase):
             settings = {**sshd_settings(), key: value}
             with self.subTest(key=key), self.assertRaises(bootstrap.BootstrapError):
                 bootstrap.validate_sshd_settings(settings)
+
+
+class BootstrapSudoPolicyTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory(prefix="setae-bootstrap-sudo-")
+        self.addCleanup(self.directory.cleanup)
+        self.paths = bootstrap.Paths(Path(self.directory.name).resolve())
+        self.host = FakeHost(self.paths)
+        self.list_command = ["/usr/bin/sudo", "-n", "-ll", "-U", bootstrap.DEPLOY_USER]
+        self.probe_base = ["/usr/bin/sudo", "-n", "-l", "-U", bootstrap.DEPLOY_USER]
+
+    def assert_listing_rejected_before_probes(self, listing):
+        self.host.sudo_listing = listing
+        self.host.commands.clear()
+        with self.assertRaises(bootstrap.BootstrapError) as caught:
+            bootstrap.verify_sudo_policy(self.paths, self.host)
+        self.assertEqual(caught.exception.code, "sudo_policy")
+        self.assertNotIn("example.invalid", str(caught.exception))
+        self.assertEqual(self.host.commands, [(self.list_command, b"")])
+        self.assertEqual(self.host.ownership_calls, [])
+
+    def test_legacy_and_path_headers_allow_exact_policy_and_all_five_probes(self):
+        for header in ("", bootstrap.SUDOERS):
+            for defaults in (False, True):
+                with self.subTest(header=header, defaults=defaults):
+                    self.host.sudo_listing = sudo_listing(header, defaults=defaults)
+                    before = self.host.sudo_listing
+                    self.host.commands.clear()
+                    bootstrap.verify_sudo_policy(self.paths, self.host)
+                    expected = [self.list_command] + [self.probe_base + suffix for suffix in sudo_probe_suffixes()]
+                    self.assertEqual(self.host.commands, [(argv, b"") for argv in expected])
+                    self.assertEqual(self.host.sudo_listing, before)
+                    self.assertEqual(self.host.ownership_calls, [])
+
+    def test_unknown_source_headers_fail_before_permission_probes(self):
+        headers = ["/etc/sudoers", "/etc/sudoers.d/other", "unknown",
+                   bootstrap.SUDOERS + " extra", bootstrap.SUDOERS + ":1",
+                   bootstrap.SUDOERS + "/../setae-deploy", "RunAsUsers: www-data"]
+        for header in headers:
+            with self.subTest(header=header):
+                self.assert_listing_rejected_before_probes(sudo_listing(header))
+
+    def test_multiple_or_missing_sudo_rules_are_rejected(self):
+        listings = [b"", b"Matching Defaults entries for setae-deploy on example.invalid:\n    env_reset\n",
+                    sudo_listing() + sudo_listing(bootstrap.SUDOERS, defaults=False)]
+        for listing in listings:
+            with self.subTest(listing=listing):
+                self.assert_listing_rejected_before_probes(listing)
+
+    def test_extra_permissions_arguments_targets_or_unknown_body_lines_are_rejected(self):
+        valid = sudo_listing(bootstrap.SUDOERS).decode("utf-8")
+        command = bootstrap.WRAPPER + ' ""'
+        changes = [
+            ("RunAsUsers: www-data", "RunAsUsers: root"),
+            ("RunAsUsers: www-data", "RunAsUsers: www-data, root"),
+            ("Options: !setenv, !authenticate", "Options: setenv, !authenticate"),
+            ("Options: !setenv, !authenticate", "Options: !authenticate"),
+            ("Options: !setenv, !authenticate", "Options: !setenv"),
+            ("Options: !setenv, !authenticate", "Options: !setenv, !authenticate, log_input"),
+            ("    Commands:", "    RunAsGroups: root\n    Commands:"),
+            ("    Commands:", "    RunAsUsers: www-data\n    Commands:"),
+            ("    Commands:", "    Unknown body line\n    Commands:"),
+            ("    Commands:", "    UnknownField: value\n    Commands:"),
+            (command, command + "\n\t/bin/sh"),
+            (command, bootstrap.WRAPPER),
+            (command, bootstrap.WRAPPER + " unexpected-argument"),
+            (command, bootstrap.WRAPPER + " *"),
+            (command, "/bin/sh"),
+            (command, command + "\nUnknown trailing body line"),
+        ]
+        for old, new in changes:
+            with self.subTest(change=(old, new)):
+                self.assertIn(old, valid)
+                self.assert_listing_rejected_before_probes(valid.replace(old, new, 1).encode("utf-8"))
+
+    def test_a_denied_positive_probe_stops_before_negative_probes(self):
+        self.host.sudo_listing = sudo_listing(bootstrap.SUDOERS)
+        positive = sudo_probe_suffixes()[0]
+        self.host.sudo_probe_results[tuple(positive)] = 1
+        with self.assertRaises(bootstrap.BootstrapError) as caught:
+            bootstrap.verify_sudo_policy(self.paths, self.host)
+        self.assertEqual(caught.exception.code, "sudo_policy")
+        self.assertEqual(self.host.commands, [(self.list_command, b""), (self.probe_base + positive, b"")])
+
+    def test_each_negative_probe_must_deny_even_when_the_listing_is_exact(self):
+        suffixes = sudo_probe_suffixes()
+        for index, negative in enumerate(suffixes[1:], start=1):
+            with self.subTest(negative=negative):
+                self.host.sudo_listing = sudo_listing(bootstrap.SUDOERS)
+                self.host.commands.clear()
+                self.host.sudo_probe_results = {tuple(negative): 0}
+                with self.assertRaises(bootstrap.BootstrapError) as caught:
+                    bootstrap.verify_sudo_policy(self.paths, self.host)
+                self.assertEqual(caught.exception.code, "sudo_policy")
+                expected = [self.list_command] + [self.probe_base + suffix for suffix in suffixes[:index + 1]]
+                self.assertEqual(self.host.commands, [(argv, b"") for argv in expected])
 
 
 class BootstrapHostBoundaryTests(unittest.TestCase):
