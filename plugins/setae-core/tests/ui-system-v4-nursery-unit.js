@@ -168,7 +168,7 @@ assert.match(fixture, /dataset\.overflow/);
 assert.match(fixture, /dataset\.renderMs/);
 assert.match(fixture, /styles\/screens\/nursery\.css/);
 
-assert.match(plugin, /Version:\s*1\.0\.251/);
-assert.match(plugin, /define\('SETAE_VERSION', '1\.0\.251\.1'\)/);
+assert.match(plugin, /Version:\s*1\.0\.252(?:\s|$)/);
+assert.match(plugin, /define\('SETAE_VERSION', '1\.0\.252'\)/);
 
 console.log('UI System v4 Nursery Workbench tests passed');

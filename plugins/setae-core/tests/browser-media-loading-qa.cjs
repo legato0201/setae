@@ -49,6 +49,8 @@ const { openRuntime, round, writeEvidence } = require('./browser-v243-helpers.cj
       };
     });
     const geometryAfter = await page.locator('[data-media-index="0"] .setae-media-frame').boundingBox();
+    const sharedFrameDisplay = await page.locator('[data-media-index="0"] .setae-media-frame')
+      .evaluate((frame) => getComputedStyle(frame).display);
     const initialRequestCount = requests.length;
 
     assert.equal(result.imageCount, 101);
@@ -61,6 +63,7 @@ const { openRuntime, round, writeEvidence } = require('./browser-v243-helpers.cj
     assert.ok(initialRequestCount < 100, `all media requested eagerly: ${initialRequestCount}`);
     assert.ok(result.cls < 0.1, `CLS ${result.cls}`);
     assert.ok(Math.abs(geometryBefore.height - geometryAfter.height) < 1, 'media frame height shifted');
+    assert.equal(sharedFrameDisplay, 'grid', 'Shared media frames outside Collection thumbnails retain their grid layout');
 
     const print = await page.evaluate(() => {
       window.dispatchEvent(new Event('beforeprint'));
@@ -69,6 +72,97 @@ const { openRuntime, round, writeEvidence } = require('./browser-v243-helpers.cj
     assert.equal(print, true);
     await page.waitForTimeout(300);
     const requestsAfterPrint = requests.length;
+
+    const mountedCollectionRows = await page.evaluate(async () => {
+      const viewUrl = new URL('../../assets/app/features/collection/view.js', location.href).href;
+      const { renderCollectionSearchResults } = await import(viewUrl);
+      const asset = new URL('../../assets/app/icons/setae-icon-192.png?runtime-media=collection-success', location.href).href;
+      const missing = new URL('./missing-collection-thumbnail.png?runtime-media=collection-broken', location.href).href;
+      const animals = [
+        { id: 9001, individual_code: 'MEDIA-OK', species_name: 'Typhochlaena seladonia', classification: 'tarantula', image_url: asset, status: 'normal' },
+        { id: 9002, individual_code: 'MEDIA-ERROR', species_name: 'Typhochlaena seladonia', classification: 'tarantula', image_url: missing, status: 'normal' },
+        { id: 9003, individual_code: 'MEDIA-EMPTY', species_name: 'Typhochlaena seladonia', classification: 'tarantula', status: 'normal' }
+      ];
+      document.querySelector('[data-app-page-root]').innerHTML = `<main class="page"><div data-collection-search-media>${renderCollectionSearchResults({
+        animals,
+        mode: 'table',
+        search: 'seladonia',
+        activeView: { id: 'all', title: 'すべて', query: {} },
+        selection: { selectedId: null, selectedIds: [], selectionMode: false }
+      })}</div></main>`;
+      return document.querySelectorAll('[data-collection-search-media] [data-collection-animal]').length;
+    });
+    assert.equal(mountedCollectionRows, 3, 'The real Collection search renderer must retain every matching media case');
+    await page.waitForFunction(() => {
+      const success = document.querySelector('[data-animal-id="9001"] [data-media-image]');
+      const broken = document.querySelector('[data-animal-id="9002"] [data-setae-media]');
+      return success?.complete && success.naturalWidth > 0 && broken?.classList.contains('is-media-error');
+    }, null, { timeout: 5000 });
+    const collection = await page.evaluate(() => ({
+      resultCount: document.querySelector('[data-collection-search-media] [data-role="collection-result-count"] strong')?.textContent || '',
+      items: [...document.querySelectorAll('[data-collection-search-media] [data-collection-animal]')].map((row) => {
+        const thumbnail = row.querySelector('.registry-thumbnail');
+        const frame = thumbnail.querySelector('.setae-media-frame');
+        const visual = frame.querySelector('.setae-media-visual');
+        const image = frame.querySelector('[data-media-image]');
+        const fallback = frame.querySelector('[data-media-fallback]');
+        const rect = (node) => {
+          const bounds = node.getBoundingClientRect();
+          return { width: bounds.width, height: bounds.height };
+        };
+        return {
+          id: row.dataset.animalId,
+          rowIndex: row.getAttribute('aria-rowindex'),
+          selected: row.getAttribute('aria-selected'),
+          tabIndex: row.tabIndex,
+          frameDisplay: getComputedStyle(frame).display,
+          captions: frame.querySelectorAll('figcaption').length,
+          thumbnail: rect(thumbnail),
+          frame: rect(frame),
+          visual: rect(visual),
+          imagePresent: Boolean(image),
+          imageHidden: image?.hidden ?? null,
+          imageAlt: image?.alt || '',
+          imageState: image?.dataset.mediaLoadState || '',
+          loading: image?.loading || '',
+          decoding: image?.decoding || '',
+          fetchPriority: image?.fetchPriority || '',
+          fallbackHidden: fallback.hidden,
+          fallbackRole: fallback.getAttribute('role'),
+          fallbackLabel: fallback.getAttribute('aria-label')
+        };
+      })
+    }));
+    assert.equal(collection.resultCount, '3');
+    assert.deepEqual(collection.items.map((item) => item.id), ['9001', '9002', '9003']);
+    for (const [index, item] of collection.items.entries()) {
+      assert.equal(item.rowIndex, String(index + 2));
+      assert.equal(item.selected, 'false');
+      assert.equal(item.tabIndex, 0);
+      assert.equal(item.frameDisplay, 'block');
+      assert.equal(item.captions, 0);
+      assert.ok(item.thumbnail.width >= 44 && item.thumbnail.height >= 44);
+      assert.ok(Math.abs(item.thumbnail.width - item.frame.width) < 0.5 && Math.abs(item.thumbnail.height - item.frame.height) < 0.5);
+      assert.ok(Math.abs(item.thumbnail.width - item.visual.width) < 0.5 && Math.abs(item.thumbnail.height - item.visual.height) < 0.5);
+      assert.equal(item.fallbackRole, 'img');
+      assert.equal(item.fallbackLabel, '標本写真は未登録です');
+    }
+    assert.deepEqual(collection.items.slice(1).map((item) => item.thumbnail),
+      [collection.items[0].thumbnail, collection.items[0].thumbnail], 'Success, error and empty thumbnails retain identical dimensions');
+    assert.deepEqual({ present: collection.items[0].imagePresent, hidden: collection.items[0].imageHidden,
+      alt: collection.items[0].imageAlt, state: collection.items[0].imageState, loading: collection.items[0].loading,
+      decoding: collection.items[0].decoding, priority: collection.items[0].fetchPriority,
+      fallbackHidden: collection.items[0].fallbackHidden },
+    { present: true, hidden: false, alt: 'MEDIA-OK', state: 'loaded', loading: 'lazy', decoding: 'async',
+      priority: 'low', fallbackHidden: true });
+    assert.equal(collection.items[1].imagePresent, true);
+    assert.equal(collection.items[1].imageHidden, true);
+    assert.ok(['error', 'timeout'].includes(collection.items[1].imageState));
+    assert.equal(collection.items[1].fallbackHidden, false);
+    assert.deepEqual({ present: collection.items[2].imagePresent, hidden: collection.items[2].imageHidden,
+      alt: collection.items[2].imageAlt, state: collection.items[2].imageState },
+    { present: false, hidden: null, alt: '', state: '' });
+    assert.equal(collection.items[2].fallbackHidden, false);
 
     writeEvidence('browser-media-loading-qa.json', {
       initialRequestedImages: initialRequestCount,
@@ -80,7 +174,9 @@ const { openRuntime, round, writeEvidence } = require('./browser-v243-helpers.cj
       cls: round(result.cls),
       frameHeightBefore: round(geometryBefore.height),
       frameHeightAfter: round(geometryAfter.height),
-      printPromotedLazyImages: print
+      sharedFrameDisplay,
+      printPromotedLazyImages: print,
+      collectionSearchThumbnails: collection
     });
     console.log(`Media loading browser QA passed (${initialRequestCount}/${result.imageCount} initial requests)`);
   } finally {

@@ -91,13 +91,9 @@
     margin-inline: auto;
   }
 
-  .collection-registry-table td {
-    height: calc(var(--registry-thumbnail-size) + var(--space-3));
-  }
-
-  .collection-registry-table tbody tr.is-selected {
-    background: transparent;
-  }
+  .collection-registry-table td { height: calc(var(--registry-thumbnail-size) + var(--space-3)); }
+  @media (min-width: 768px) { @supports (content-visibility: auto) { .collection-registry-table tbody tr { content-visibility: auto; contain-intrinsic-size: auto 61px; } .collection-registry-table tbody tr:is(.is-selected, .is-focused, :focus-within) { content-visibility: visible; contain: none; } } }
+  .collection-registry-table tbody tr.is-selected { background: transparent; }
 
   .collection-registry-table tbody tr.is-focused,
   .collection-registry-table tbody tr.is-focused:hover {
@@ -130,7 +126,7 @@
     background: var(--bg-subtle);
   }
 
-  .registry-thumbnail .setae-media-frame,
+  .collection-registry-table .registry-thumbnail > .setae-media-frame { display: block; }
   .registry-thumbnail .setae-media-visual,
   .registry-thumbnail img,
   .collection-inspector-photo-v4 .setae-media-frame,

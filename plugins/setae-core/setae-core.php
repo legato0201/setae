@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Setae Core Platform
  * Description: 図鑑、生体管理、繁殖募集、コミュニティを統合するSETAEの中核システム。
- * Version: 1.0.251.1
+ * Version: 1.0.252
  * Author: Antigravity
  * Text Domain: setae-core
  */
@@ -29,7 +29,7 @@ if (file_exists($composer_autoload)) {
 
 // Define Plugin Constants
 // Define Plugin Constants
-define('SETAE_VERSION', '1.0.251.1');
+define('SETAE_VERSION', '1.0.252');
 define('SETAE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SETAE_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SETAE_DEFAULT_FREE_SPIDER_LIMIT', 8);

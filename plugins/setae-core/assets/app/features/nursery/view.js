@@ -32,6 +32,8 @@ const addDays = (value, days) => {
   return date.toLocaleDateString('sv-SE');
 };
 
+const nurseryRegisterRows = new WeakMap();
+
 export function renderNurseryRegistry(data) {
   const items = list(data, ['items']);
   const archived = list(data, ['archived_items']);
@@ -202,12 +204,20 @@ function renderResponsiveRegister(items) {
 }
 
 export function renderNurseryRegisterRow(item) {
-  return `<tr data-nursery-item-code="${escapeHtml(item.code)}">
+  // Keep the prefix and newly appended rows reusable by the page-cache render,
+  // but never reuse a row after an in-place status, date, code or note change.
+  const inputs = [item.code, item.status, item.last_molt, item.note]
+    .map((value) => value !== null && typeof value === 'object' ? String(value) : value);
+  const cached = nurseryRegisterRows.get(item);
+  if (cached && inputs.every((value, index) => Object.is(value, cached.inputs[index]))) return cached.html;
+  const html = `<tr data-nursery-item-code="${escapeHtml(item.code)}">
     <td data-label="番号"><strong class="nursery-specimen-code">${escapeHtml(item.code)}</strong></td>
     <td data-label="状態"><span class="nursery-specimen-status ${babyStatusClass(item.status)}">${escapeHtml(babyStatus(item.status))}</span></td>
     <td data-label="最終脱皮"><time datetime="${escapeHtml(item.last_molt || '')}">${formatDate(item.last_molt)}</time></td>
     <td data-label="メモ" class="nursery-specimen-note" title="${escapeHtml(item.note || '')}">${escapeHtml(item.note || '—')}</td>
   </tr>`;
+  if (item && typeof item === 'object') nurseryRegisterRows.set(item, { inputs, html });
+  return html;
 }
 
 function babyStatus(status) {

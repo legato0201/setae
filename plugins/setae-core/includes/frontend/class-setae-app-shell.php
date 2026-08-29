@@ -343,11 +343,45 @@ class Setae_App_Shell
         return self::render_mount();
     }
 
+    public static function render_initial_theme_script()
+    {
+        $user_id = (int) get_current_user_id();
+        $stored = $user_id > 0
+            ? get_user_meta($user_id, '_setae_theme_preference', true)
+            : 'system';
+        $preference = is_string($stored) ? sanitize_key($stored) : 'system';
+        if (!in_array($preference, array('light', 'dark', 'system'), true)) {
+            $preference = 'system';
+        }
+
+        // Resolve only the existing current-user preference before styles load.
+        // Keep the initial mount independent of authentication and account data.
+        return '<script id="setae-app-initial-theme">(function(){var p='
+            . wp_json_encode($preference) . ';'
+            . 'var dark=p==="dark"||(p==="system"&&typeof window.matchMedia==="function"'
+            . '&&window.matchMedia("(prefers-color-scheme: dark)").matches);'
+            . 'document.documentElement.dataset.theme=dark?"dark":"light";})();</script>';
+    }
+
     public static function render_mount()
     {
+        // Mirror renderBootPage() without another live region or any account data.
+        // The existing client mount replaces this view when its modules are ready.
         return '<div id="setae-gui-root" class="setae-gui-host">'
             . '<div id="app">'
-            . '<noscript>SETAEを利用するにはJavaScriptを有効にしてください。</noscript>'
+            . '<main class="boot-screen" aria-busy="true" data-app-startup>'
+            . '<div class="setae-brand is-prominent boot-brand">'
+            . '<span class="setae-brand-icon" aria-hidden="true"></span>'
+            . '<span class="setae-brand-copy">'
+            . '<strong class="setae-brand-title">SETAE</strong>'
+            . '<span class="setae-brand-subtitle">Living Collection Workbench</span>'
+            . '</span></div>'
+            . '<div class="boot-status"><div class="spinner" aria-hidden="true"></div>'
+            . '<span>コレクションを準備しています</span></div>'
+            . '</main>'
+            . '<noscript><div class="boot-screen" data-app-noscript>'
+            . '<p>SETAEを利用するにはJavaScriptを有効にしてください。</p>'
+            . '</div></noscript>'
             . '</div></div>';
     }
 }

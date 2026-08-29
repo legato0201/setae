@@ -21,15 +21,29 @@ export const excerpt = (html = '', max = 180) => {
   return value.length > max ? `${value.slice(0, max)}…` : value;
 };
 
+const dateFormatters = [];
+
+const twoDigits = (value) => String(value).padStart(2, '0');
+
+const formatModernJapaneseDate = (date, includeTime) => {
+  const year = date.getFullYear();
+  if (year < 1 || year > 9999) return '';
+  const day = `${year}/${date.getMonth() + 1}/${date.getDate()}`;
+  return includeTime ? `${day} ${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}` : day;
+};
+
 export const formatDate = (value, includeTime = false) => {
   if (!value) return '—';
   const normalized = String(value).replace(' ', 'T');
   const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) return escapeHtml(value);
-  return new Intl.DateTimeFormat('ja-JP', includeTime
+  const modern = formatModernJapaneseDate(date, includeTime);
+  if (modern) return modern;
+  const index = includeTime ? 1 : 0;
+  dateFormatters[index] ||= new Intl.DateTimeFormat('ja-JP', includeTime
     ? { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }
-    : { year: 'numeric', month: 'numeric', day: 'numeric' }
-  ).format(date);
+    : { year: 'numeric', month: 'numeric', day: 'numeric' });
+  return dateFormatters[index].format(date);
 };
 
 export const segmentedTabs = (items, active, action, label) => tabs(

@@ -44,6 +44,7 @@
   <div id="setae-gui-root" class="setae-gui-host"><div id="app"></div></div>
   <script type="module">
     import { renderRecords } from '../../assets/app/pages/records.js';
+    import { hydrateActionMenu } from '../../assets/app/components/primitives.js';
 
     const animals = [
       { id: 14, code: 'C014', species_name: 'Typhochlaena seladonia' },
@@ -85,7 +86,7 @@
 
     if (fixtureParams.get('menu') === 'open') {
       const menu = app.querySelector('.records-action-menu');
-      if (menu) menu.open = true;
+      if (menu) { hydrateActionMenu(menu); menu.open = true; }
     }
 
     requestAnimationFrame(() => {

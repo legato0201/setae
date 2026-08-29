@@ -115,6 +115,44 @@ async function backgroundState(page) {
   });
 }
 
+async function runMobileGuardReturnRegression(browser, results) {
+  for (const method of ['Escape', 'history']) {
+    await withFullApp(browser, { viewport: { width: method === 'Escape' ? 320 : 390, height: 844 } }, async (page) => {
+      await page.locator('[name="name"]').fill('LOCAL-MOBILE-UNSAVED');
+      await setOptionalOpen(page, 'records');
+      await page.locator('[name="notes"]').fill('戻る操作の後も入力を残す');
+      await page.locator('[name="image"]').setInputFiles(fixturePhoto);
+      await page.evaluate(() => {
+        window.__mobileGuardForm = document.querySelector('[data-specimen-intake-root]');
+      });
+      const before = await backgroundState(page);
+      const queryKey = await page.evaluate(() => window.__setaeIntakeApp.snapshot().collectionWindow.queryKey);
+      const historyLength = await page.evaluate(() => history.length);
+      await page.getByRole('dialog', { name: '個体を登録', exact: true }).getByRole('button', { name: '閉じる', exact: true }).click();
+      await page.getByRole('alertdialog').waitFor();
+      if (method === 'Escape') await page.keyboard.press('Escape');
+      else await page.goBack();
+      await page.getByRole('alertdialog').waitFor({ state: 'detached' });
+      assert.equal(await page.locator('[name="name"]').inputValue(), 'LOCAL-MOBILE-UNSAVED');
+      assert.equal(await page.locator('[name="notes"]').inputValue(), '戻る操作の後も入力を残す');
+      assert.equal(await page.locator('[name="image"]').evaluate((node) => node.files[0]?.name), fixturePhoto.name);
+      assert.equal(await page.evaluate(() => window.__mobileGuardForm === document.querySelector('[data-specimen-intake-root]')), true);
+      const after = await backgroundState(page);
+      // Initial navigation commits before the first render derives queryKey.
+      // Restoring a route may fill that cache, but not change user state.
+      assert.ok([before.history.context.collectionWindow.queryKey, queryKey].includes(after.history.context.collectionWindow.queryKey));
+      const normalizedBefore = structuredClone(before);
+      normalizedBefore.history.context.collectionWindow.queryKey = after.history.context.collectionWindow.queryKey;
+      assert.deepEqual(after, normalizedBefore);
+      assert.equal(await page.evaluate(() => history.length), historyLength, 'Cancelling a discard guard must not duplicate route history');
+      assert.equal((await specimenSaves(page)).length, 0);
+      const screenshot = screenshotPath('mobile-discard-guard-' + method + '.png');
+      await page.screenshot({ path: screenshot, fullPage: false });
+      results.push({ check: 'mobile-discard-guard-' + method + '-keeps-form-photo-and-route', status: 'PASS', screenshot: path.relative(evidenceDir, screenshot) });
+    });
+  }
+}
+
 async function runFullApplicationRegression(browser, results) {
   for (const edit of [false, true]) {
     const opened = await openFixture('specimen-intake-app.html', { browser,
@@ -998,6 +1036,7 @@ async function runPublicQrRegression(browser, results) {
   const browser = await launchBrowser();
   const results = [];
   try {
+    await runMobileGuardReturnRegression(browser, results);
     await runFullApplicationRegression(browser, results);
     await runOptionalIntakeRegression(browser, results);
     await runPublicSettingsRegression(browser, results);

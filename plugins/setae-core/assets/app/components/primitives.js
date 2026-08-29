@@ -389,14 +389,24 @@ export function actionMenu(label, items = [], {
   iconName = 'chevronDown',
   iconOnly = false,
   className = '',
-  align = 'end'
+  align = 'end',
+  lazy = false
 } = {}) {
   const safeAlign = align === 'start' ? 'start' : 'end';
   const triggerClass = iconOnly ? 'icon-button action-menu-trigger is-icon-only' : 'button action-menu-trigger';
   const content = items.map((item) => item?.separator
     ? '<div class="action-menu-separator" role="separator"></div>'
     : menuItem(item.label, item)).join('');
-  return `<details class="action-menu is-${safeAlign} ${escapeHtml(className)}"><summary class="${triggerClass}" aria-label="${escapeHtml(label)}" aria-haspopup="menu" title="${escapeHtml(label)}">${iconName ? icon(iconName) : ''}<span class="${iconOnly ? 'visually-hidden' : ''}">${escapeHtml(label)}</span>${iconOnly ? '' : icon('chevronDown')}</summary><div class="action-menu-popover" role="menu" aria-label="${escapeHtml(label)}">${content}</div></details>`;
+  const popover = `<div class="action-menu-popover" role="menu" aria-label="${escapeHtml(label)}">${content}</div>`;
+  return `<details class="action-menu is-${safeAlign} ${escapeHtml(className)}"${lazy ? ' data-lazy-action-menu' : ''}><summary class="${triggerClass}" aria-label="${escapeHtml(label)}" aria-haspopup="menu" title="${escapeHtml(label)}">${iconName ? icon(iconName) : ''}<span class="${iconOnly ? 'visually-hidden' : ''}">${escapeHtml(label)}</span>${iconOnly ? '' : icon('chevronDown')}</summary>${lazy ? `<template data-action-menu-template>${popover}</template>` : popover}</details>`;
+}
+
+export function hydrateActionMenu(menu) {
+  const template = menu?.querySelector?.(':scope > template[data-action-menu-template]');
+  if (!template?.content) return false;
+  template.before(template.content);
+  template.remove();
+  return true;
 }
 
 export function statusIndicator(label, { tone = 'neutral', className = '' } = {}) {

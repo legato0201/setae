@@ -14,6 +14,7 @@ SETAE includes or derives portions from the open-source projects listed below. T
 - QRCode.js, MIT License. License text: `licenses/qrcodejs.txt`.
 - Chart.js, MIT License. License text: `licenses/chartjs.txt`.
 - jsPDF, MIT License. License text: `licenses/jspdf.txt`.
+- The distributed jsPDF 4.0.0 bundle also includes Pako 2.1.0 (MIT and Zlib). Additional notices: `licenses/pako.txt`.
 
 ## PHP Dependencies
 

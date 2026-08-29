@@ -9,8 +9,27 @@ const iterations = Number(process.env.SETAE_PERF_ITERATIONS || 15);
   try {
     await page.evaluate(() => {
       window.__v243LongTasks = [];
+      window.__v243LongTaskDetails = [];
+      window.__v243Phases = [];
+      window.__v243ObserverAttachedAt = performance.now();
+      window.__v243MeasurePhase = (name, callback) => {
+        const startTime = performance.now();
+        try { return callback(); }
+        finally {
+          const endTime = performance.now();
+          window.__v243Phases.push({ name, startTime, endTime, duration: endTime - startTime });
+        }
+      };
       if (typeof PerformanceObserver === 'function' && PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
-        new PerformanceObserver((list) => window.__v243LongTasks.push(...list.getEntries().map((entry) => entry.duration)))
+        new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          window.__v243LongTasks.push(...entries.map((entry) => entry.duration));
+          window.__v243LongTaskDetails.push(...entries.map((entry) => ({
+            name: entry.name, startTime: entry.startTime, duration: entry.duration,
+            endTime: entry.startTime + entry.duration,
+            attribution: Array.from(entry.attribution || [], (item) => ({ name: item.name, containerType: item.containerType }))
+          })));
+        })
           .observe({ type: 'longtask', buffered: true });
       }
     });
@@ -18,42 +37,42 @@ const iterations = Number(process.env.SETAE_PERF_ITERATIONS || 15);
     const samples = { recordsInitial: [], recordsAdd: [], nurseryInitial: [], nurseryAdd: [], search: [] };
     const identity = { recordsIdentity: true, nurseryIdentity: true };
     for (let index = 0; index < iterations; index += 1) {
-      samples.recordsInitial.push(await page.evaluate(() => {
+      samples.recordsInitial.push(await page.evaluate(() => window.__v243MeasurePhase('records-initial', () => {
         const startedAt = performance.now();
         window.v243Harness.mountRecords(100);
         document.querySelector('[data-app-page-root]').offsetHeight;
         return performance.now() - startedAt;
-      }));
-      const recordAdd = await page.evaluate(() => {
+      })));
+      const recordAdd = await page.evaluate(() => window.__v243MeasurePhase('records-add', () => {
         const first = document.querySelector('[data-record-id]');
         const result = window.v243Harness.addRecords();
         return { ...result, identity: first === document.querySelector('[data-record-id]') };
-      });
+      }));
       samples.recordsAdd.push(recordAdd.duration);
       identity.recordsIdentity &&= recordAdd.identity;
 
-      samples.nurseryInitial.push(await page.evaluate(() => {
+      samples.nurseryInitial.push(await page.evaluate(() => window.__v243MeasurePhase('nursery-initial', () => {
         const startedAt = performance.now();
         window.v243Harness.mountNursery(100);
         document.querySelector('[data-app-page-root]').offsetHeight;
         return performance.now() - startedAt;
-      }));
-      const nurseryAdd = await page.evaluate(() => {
+      })));
+      const nurseryAdd = await page.evaluate(() => window.__v243MeasurePhase('nursery-add', () => {
         const first = document.querySelector('[data-nursery-item-code]');
         const result = window.v243Harness.addNursery();
         return { ...result, identity: first === document.querySelector('[data-nursery-item-code]') };
-      });
+      }));
       samples.nurseryAdd.push(nurseryAdd.duration);
       identity.nurseryIdentity &&= nurseryAdd.identity;
       await page.evaluate(() => window.v243Harness.nextFrame());
     }
-    await page.evaluate(() => window.v243Harness.mountSearch());
+    await page.evaluate(() => window.__v243MeasurePhase('search-mount', () => window.v243Harness.mountSearch()));
     for (let index = 0; index < iterations; index += 1) {
-      samples.search.push(await page.evaluate(() => window.v243Harness.search('seladonia').duration));
+      samples.search.push(await page.evaluate(() => window.__v243MeasurePhase('search', () => window.v243Harness.search('seladonia').duration)));
       await page.evaluate(() => window.v243Harness.nextFrame());
     }
 
-    const summary = await page.evaluate(() => {
+    const summary = await page.evaluate(() => window.__v243MeasurePhase('structural-summary', () => {
       const h = window.v243Harness;
       h.mountRecords(100);
       const recordsInitialRows = document.querySelectorAll('[data-record-id]').length;
@@ -75,11 +94,24 @@ const iterations = Number(process.env.SETAE_PERF_ITERATIONS || 15);
         },
         bulkTargetsWholeGroup: Boolean(document.querySelector('[data-action="baby-bulk"][data-group-id="3"]'))
       };
-    });
+    }));
     const measurement = { samples, identity, ...summary };
 
     await page.waitForTimeout(150);
     const longTasks = await page.evaluate(() => window.__v243LongTasks || []);
+    const diagnostics = await page.evaluate(() => ({
+      note: 'Additional timing only. The original gate still includes every observed long task, including buffered tasks.',
+      observerSupported: typeof PerformanceObserver === 'function'
+        && Boolean(PerformanceObserver.supportedEntryTypes?.includes('longtask')),
+      observerAttachedAt: window.__v243ObserverAttachedAt,
+      phases: window.__v243Phases.map((phase, index) => ({ index, ...phase })),
+      longTasks: window.__v243LongTaskDetails.map((entry) => ({
+        ...entry,
+        endedBeforeObserverAttached: entry.endTime <= window.__v243ObserverAttachedAt,
+        overlappingPhaseNames: window.__v243Phases.filter((phase) =>
+          phase.startTime < entry.endTime && phase.endTime > entry.startTime).map((phase) => phase.name)
+      }))
+    }));
     const performance = {
       recordsInitialMedianMs: round(median(measurement.samples.recordsInitial)),
       recordsInitialMaxMs: round(Math.max(...measurement.samples.recordsInitial)),
@@ -97,7 +129,8 @@ const iterations = Number(process.env.SETAE_PERF_ITERATIONS || 15);
     writeEvidence('browser-data-scale-v243-measurements.json', {
       iterations,
       ...measurement,
-      performance
+      performance,
+      diagnostics
     });
 
     assert.deepEqual(measurement.counts, {
@@ -142,6 +175,7 @@ const iterations = Number(process.env.SETAE_PERF_ITERATIONS || 15);
       identity: measurement.identity,
       bulkTargetsWholeGroup: measurement.bulkTargetsWholeGroup,
       performance,
+      diagnostics,
       responsive
     });
     console.log(`Data scale browser QA passed (${iterations} samples)`);

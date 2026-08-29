@@ -1,6 +1,9 @@
 const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
+const { pathToFileURL } = require('node:url');
 
 const pluginRoot = path.resolve(__dirname, '..');
 const read = (relativePath) => fs.readFileSync(path.join(pluginRoot, relativePath), 'utf8');
@@ -134,4 +137,201 @@ assert.equal(fs.existsSync(path.join(pluginRoot, 'assets/app/styles/app.css')), 
 assert.equal(fs.existsSync(path.join(pluginRoot, 'assets/app/styles/wordpress.css')), false);
 assert.equal(fs.existsSync(path.join(pluginRoot, 'assets/app/styles/layouts.css')), false);
 
-console.log('App Shell tests passed');
+function phpBinary() {
+    const workspacePhp = path.resolve(pluginRoot, '../../../tmp/runtime-php-8.4.25/php.exe');
+    return process.env.SETAE_PHP || process.env.PHP_BINARY || process.env.PHP_BIN
+        || (fs.existsSync(workspacePhp) ? workspacePhp : 'php');
+}
+
+function verifyInitialThemeScript() {
+    const cases = [
+        { userId: 0, stored: 'dark', expected: 'system' },
+        { userId: 17, stored: 'light', expected: 'light' },
+        { userId: 17, stored: 'dark', expected: 'dark' },
+        { userId: 17, stored: 'system', expected: 'system' },
+        { userId: 29, stored: 'DARK', expected: 'dark' },
+        { userId: 17, stored: '', expected: 'system' },
+        { userId: 17, stored: 'unknown', expected: 'system' },
+        { userId: 17, stored: null, expected: 'system' },
+        { userId: 17, stored: ['dark'], expected: 'system' },
+        { userId: 17, stored: 'dark"></script><script>alert(1)</script>', expected: 'system' }
+    ];
+    // Execute the actual PHP helper and template. Only WordPress read/encode
+    // and document-hook boundaries are stubbed; this is not an integration test.
+    const phpSource = [
+        'function get_current_user_id() { return $GLOBALS["theme_case"]["userId"]; }',
+        'function get_user_meta($id, $key, $single) {',
+        '  $GLOBALS["theme_reads"][] = array($id, $key, $single);',
+        '  return $GLOBALS["theme_case"]["stored"];',
+        '}',
+        'function sanitize_key($key) {',
+        '  if (!is_string($key)) { throw new RuntimeException("sanitize_key expects a string"); }',
+        '  return preg_replace("/[^a-z0-9_\\-]/", "", strtolower($key));',
+        '}',
+        'function wp_json_encode($value) { return json_encode($value); }',
+        'function language_attributes() { echo "lang=\\"ja\\""; }',
+        'function bloginfo($field) { if ($field === "charset") { echo "UTF-8"; } }',
+        'function home_url($path = "") { return "https://example.invalid" . $path; }',
+        'function add_query_arg($key, $value, $url) {',
+        '  return $url . "?" . rawurlencode($key) . "=" . rawurlencode($value);',
+        '}',
+        'function esc_url($url) { return $url; }',
+        'function wp_head() { echo "<style id=\\"unit-style\\"></style>"; }',
+        'function wp_footer() { echo "<footer data-unit-footer></footer>"; }',
+        'define("ABSPATH", __DIR__ . "/");',
+        'define("SETAE_VERSION", "unit");',
+        'define("SETAE_PLUGIN_URL", "https://example.invalid/plugin/");',
+        'require $argv[1];',
+        '$results = array();',
+        'foreach (json_decode($argv[2], true) as $case) {',
+        '  $GLOBALS["theme_case"] = $case;',
+        '  $GLOBALS["theme_reads"] = array();',
+        '  $script = Setae_App_Shell::render_initial_theme_script();',
+        '  $results[] = array("script" => $script, "reads" => $GLOBALS["theme_reads"]);',
+        '}',
+        '$GLOBALS["theme_case"] = array("userId" => 17, "stored" => "dark");',
+        '$GLOBALS["theme_reads"] = array();',
+        '$expected_script = Setae_App_Shell::render_initial_theme_script();',
+        '$GLOBALS["theme_reads"] = array();',
+        'ob_start();',
+        'require $argv[3];',
+        '$document = ob_get_clean();',
+        '$document_reads = $GLOBALS["theme_reads"];',
+        'echo json_encode(array(',
+        '  "results" => $results,',
+        '  "document" => $document,',
+        '  "expectedScript" => $expected_script,',
+        '  "documentReads" => $document_reads',
+        '), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);'
+    ].join('\n');
+    const rendered = JSON.parse(execFileSync(phpBinary(), [
+        '-r',
+        phpSource,
+        path.join(pluginRoot, 'includes/frontend/class-setae-app-shell.php'),
+        JSON.stringify(cases),
+        path.join(pluginRoot, 'templates/app-shell.php')
+    ], { cwd: pluginRoot, encoding: 'utf8', windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 }));
+    const results = rendered.results;
+    assert.equal(results.length, cases.length);
+    results.forEach(({ script, reads }, index) => {
+        const entry = cases[index];
+        assert.deepEqual(reads, entry.userId > 0 ? [[entry.userId, '_setae_theme_preference', true]] : [],
+            'Read only the current user preference; guests must not read another account.');
+        assert.equal((script.match(/<script\b/g) || []).length, 1);
+        const body = script.match(/^<script id="setae-app-initial-theme">([\s\S]+)<\/script>$/)?.[1];
+        assert.ok(body, 'Render one complete initial-theme script.');
+        for (const systemDark of [false, true]) {
+            const html = { dataset: {} };
+            let mediaCalls = 0;
+            vm.runInNewContext(body, {
+                document: { documentElement: html },
+                window: { matchMedia(query) {
+                    assert.equal(query, '(prefers-color-scheme: dark)');
+                    mediaCalls += 1;
+                    return { matches: systemDark };
+                } }
+            });
+            assert.equal(html.dataset.theme,
+                entry.expected === 'dark' || (entry.expected === 'system' && systemDark) ? 'dark' : 'light');
+            assert.equal(mediaCalls, entry.expected === 'system' ? 1 : 0,
+                'System appearance must not override an explicit saved preference.');
+        }
+        const html = { dataset: {} };
+        vm.runInNewContext(body, { document: { documentElement: html }, window: {} });
+        assert.equal(html.dataset.theme, entry.expected === 'dark' ? 'dark' : 'light',
+            'A missing matchMedia API must not prevent startup.');
+    });
+    assert.deepEqual(rendered.documentReads, [[17, '_setae_theme_preference', true]],
+        'The real app template must read only the current user theme once.');
+    assert.equal((rendered.document.match(/id="setae-app-initial-theme"/g) || []).length, 1);
+    const emittedTheme = rendered.document.indexOf(rendered.expectedScript);
+    assert.ok(emittedTheme > rendered.document.indexOf('<meta charset="UTF-8">')
+        && emittedTheme < rendered.document.indexOf('<style id="unit-style"></style>'),
+        'The real app template must emit the exact helper output before wp_head styles.');
+    const template = read('templates/app-shell.php');
+    const earlyTheme = template.indexOf('Setae_App_Shell::render_initial_theme_script()');
+    assert.equal((template.match(/Setae_App_Shell::render_initial_theme_script\(\)/g) || []).length, 1);
+    assert.ok(earlyTheme > template.indexOf('<meta charset') && earlyTheme < template.indexOf('wp_head()'),
+        'Set initial appearance before WordPress prints the application styles.');
+}
+
+async function verifyInitialMount() {
+    const php = phpBinary();
+    // Execute the real PHP class without WordPress, authentication, or API stubs.
+    // The initial mount must not need any of them.
+    const phpSource = [
+        'require $argv[1];',
+        "$shell = new Setae_App_Shell('unit');",
+        'echo json_encode(array(',
+        "'mount' => Setae_App_Shell::render_mount(),",
+        "'shortcode' => $shell->render(),",
+        "'uncached' => defined('DONOTCACHEPAGE') && DONOTCACHEPAGE",
+        '), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);',
+    ].join('\n');
+    const rendered = JSON.parse(execFileSync(php, [
+        '-r', phpSource, path.join(pluginRoot, 'includes/frontend/class-setae-app-shell.php'),
+    ], { cwd: pluginRoot, encoding: 'utf8', windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 }));
+    const normalize = (html) => String(html).replace(/>\s+</g, '><').trim();
+    const mountInner = rendered.mount.match(/^<div id="setae-gui-root" class="setae-gui-host"><div id="app">([\s\S]*)<\/div><\/div>$/)?.[1];
+    assert.ok(mountInner, 'Keep the existing host and application mount wrappers.');
+    assert.equal(rendered.shortcode, rendered.mount);
+    assert.equal(rendered.uncached, true);
+    for (const id of ['setae-gui-root', 'app']) {
+        assert.equal((rendered.mount.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1);
+    }
+    assert.doesNotMatch(rendered.mount, /<(?:script|form|button|input|select|textarea|a)(?:\s|>)/i);
+    assert.doesNotMatch(rendered.mount, /aria-live|role="(?:alert|status)"|autofocus|tabindex|data-action/);
+    const noScriptMessage = 'SETAEを利用するにはJavaScriptを有効にしてください。';
+    assert.ok(rendered.mount.includes('<noscript><div class="boot-screen" data-app-noscript><p>' + noScriptMessage + '</p></div></noscript>'));
+
+    const { renderBootPage, renderAuthPage } = await import(pathToFileURL(path.join(pluginRoot, 'assets/app/pages/auth.js')).href);
+    const { createRenderCoordinator } = await import(pathToFileURL(path.join(pluginRoot, 'assets/app/runtime/render-coordinator.js')).href);
+    const clientBoot = renderBootPage();
+    const serverBoot = mountInner.match(/^<main[\s\S]*?<\/main>/)?.[0];
+    assert.match(serverBoot || '', /^<main class="boot-screen" aria-busy="true" data-app-startup>/);
+    assert.match(clientBoot, /aria-live="polite"/);
+    // The server marker and absence of a duplicate live region are intentional.
+    assert.equal(
+        normalize(serverBoot.replace(' data-app-startup', '')),
+        normalize(clientBoot.replace(' aria-live="polite"', '')),
+        'Render the actual client boot view, including its current brand and status copy.',
+    );
+
+    const fixture = read('tests/fixtures/runtime-v243.html');
+    const fixtureMount = fixture.match(/<!-- SETAE_APP_MOUNT_START -->([\s\S]*?)<!-- SETAE_APP_MOUNT_END -->/)?.[1];
+    assert.ok(fixtureMount, 'Runtime fixture must expose its production mount for comparison.');
+    assert.equal(normalize(fixtureMount), normalize(rendered.mount), 'Fixture markup must match the real PHP output.');
+    assert.equal((fixture.match(/href="\.\.\/\.\.\/assets\/app\/styles\/screens\/auth\.css"/g) || []).length, 1);
+    assert.match(shell, /'setae-gui-auth-screen', \$base \. 'styles\/screens\/auth\.css'/);
+    assert.match(read('assets/app/styles/screens/auth.css'), /#app:has\(> noscript > \[data-app-noscript\]\) > \[data-app-startup\]\s*\{\s*display:\s*none;\s*\}/);
+
+    // Exercise the real replacement operation for both server and legacy mounts.
+    // DOM accessibility and the scripting-disabled cascade are browser checks.
+    const finalView = renderAuthPage({ registrationEnabled: false });
+    for (const initialHtml of [mountInner, '<noscript>' + noScriptMessage + '</noscript>']) {
+        const root = { innerHTML: initialHtml, querySelector: () => null };
+        const coordinator = createRenderCoordinator(root);
+        coordinator.mount(clientBoot, { view: 'boot' });
+        assert.equal(root.innerHTML, clientBoot);
+        coordinator.mount(finalView, { view: 'auth' });
+        assert.equal(root.innerHTML, finalView);
+        assert.doesNotMatch(root.innerHTML, /data-app-startup|data-app-noscript|<noscript>/);
+    }
+    assert.match(app, /if \(state\.loading\) return standalone\(renderBootPage\(\)\)/,
+        'Legacy empty mounts must still render the client boot view synchronously.');
+    assert.match(app, /if \(app\.querySelector\('\[data-app-startup\]'\)\) await waitForInitialPaint\(\); else render\(\)/,
+        'The real server startup view must paint before bootstrap work.');
+    assert.match(app, /renderAppPagePreparation\(\)[\s\S]*?stagedPage: content[\s\S]*?await commitPreparedAppContent\(prepared\)/,
+        'Show the app chrome first, then commit the guarded page content through the shared staging path.');
+    assert.match(app, /await waitForInitialPaint\(\)[\s\S]*?renderCoordinator\.page\(prepared\.stagedPage, \{ force: true \}\)/,
+        'The final page region must wait for the app chrome paint.');
+    assert.match(app, /renderCoordinator\.(?:mount|prepareMount)\(/);
+}
+
+verifyInitialMount().then(() => {
+    verifyInitialThemeScript();
+    console.log('App Shell tests passed');
+}).catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

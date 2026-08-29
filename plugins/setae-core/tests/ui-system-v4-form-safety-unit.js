@@ -27,6 +27,7 @@ const context = vm.createContext({
 });
 vm.runInContext(`${disclosureSource}\n${source}\nthis.exports = { FORM_DRAFT_STORAGE_PREFIX, FORM_DRAFT_TTL_MS, FORM_DRAFT_DEBOUNCE_MS, FORM_DRAFT_VERSION, formDraftKey, serializeFormDraft, restoreFormDraft, formDraftHasRestorableChanges, draftIsExpired, purgeExpiredDrafts, revealFormControl };`, context);
 const safety = context.exports;
+vm.runInContext('this.createSafetyController = createFormSafetyController;', context);
 
 const text = { name: 'title', type: 'text', value: 'C014', dispatchEvent() {} };
 const password = { name: 'password', type: 'password', value: 'never-store', dispatchEvent() {} };
@@ -172,5 +173,101 @@ assert.match(app, /formSafety\.guard\(\s*\(\) => navigateRoute/);
 assert.match(app, /if \(action === 'apply-app-update'\) formSafety\.flush\(\)/);
 assert.match(app, /formSafety\.markSubmitted/);
 assert.match(app, /mutationError[\s\S]*?applyServerFieldErrors/);
+
+// Exercise the real controller's confirmation lifecycle. The small DOM boundary
+// keeps the same input/file objects; no render or submit is simulated by cancel.
+const rootListeners = new Map();
+const documentListeners = new Map();
+const guardStorage = new Map();
+const focusFrames = [];
+let lastGuard = null;
+let resumed = 0;
+let focusOptions = null;
+const selectedFile = { name: 'kept-photo.jpg' };
+const guardedInput = {
+  nodeType: 1, isConnected: true, name: 'name', type: 'text', value: 'Original',
+  matches: (selector) => selector !== '[aria-invalid="true"]',
+  closest: () => guardedForm,
+  focus(options) { guardDocument.activeElement = this; focusOptions = options; }
+};
+const guardedForm = {
+  dataset: { draftPolicy: 'persist', draftType: 'animal', draftEntity: 'new' },
+  isConnected: true,
+  elements: [guardedInput, { name: 'image', type: 'file', files: [selectedFile] }],
+  contains: (element) => element === guardedInput,
+  matches: () => guardedForm.dataset.formDirty === 'true',
+  closest: () => null,
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+const guardRoot = {
+  querySelectorAll: (selector) => selector.includes('data-form-dirty') && guardedForm.dataset.formDirty !== 'true' ? [] : [guardedForm],
+  querySelector: () => guardedForm,
+  addEventListener: (type, handler) => rootListeners.set(type, handler),
+  removeEventListener() {},
+  append(element) { lastGuard = element; }
+};
+const guardDocument = {
+  activeElement: guardedInput,
+  addEventListener: (type, handler) => documentListeners.set(type, handler),
+  removeEventListener() {},
+  createElement() {
+    return {
+      dataset: {}, removed: false, setAttribute() {},
+      remove() { this.removed = true; },
+      querySelector: () => ({ focus() { guardDocument.activeElement = this; } })
+    };
+  }
+};
+const guardController = context.createSafetyController(guardRoot, {
+  documentRef: guardDocument, ownerId: 'test',
+  storage: {
+    get length() { return guardStorage.size; }, key: (index) => [...guardStorage.keys()][index],
+    getItem: (key) => guardStorage.get(key) ?? null,
+    setItem: (key, value) => guardStorage.set(key, value),
+    removeItem: (key) => guardStorage.delete(key)
+  },
+  windowRef: {
+    addEventListener() {}, removeEventListener() {}, setTimeout: () => 1, clearTimeout() {},
+    requestAnimationFrame: (callback) => focusFrames.push(callback)
+  }
+});
+guardController.sync();
+guardedInput.value = 'Unsaved input';
+rootListeners.get('input')({ target: guardedInput });
+guardController.flush();
+const storedBeforeCancel = [...guardStorage.entries()];
+assert.equal(guardController.dirtyCount(), 1);
+assert.equal(guardController.cancelGuard(), false, 'No confirmation is a no-op');
+assert.equal(guardController.guard(() => { resumed += 1; }, { scope: guardedForm }), true);
+assert.equal(guardController.cancelGuard(), true);
+assert.equal(lastGuard.removed, true);
+focusFrames.splice(0).forEach((callback) => callback());
+assert.equal(guardDocument.activeElement, guardedInput);
+assert.equal(focusOptions.preventScroll, true);
+assert.equal(guardedInput.value, 'Unsaved input');
+assert.equal(guardedForm.elements[1].files[0], selectedFile, 'Selected photo stays on the original file control');
+assert.equal(guardController.dirtyCount(), 1);
+assert.deepEqual([...guardStorage.entries()], storedBeforeCancel, 'Cancel must not discard the persisted draft');
+assert.equal(resumed, 0);
+
+guardController.guard(() => { resumed += 1; }, { scope: guardedForm });
+const escape = { key: 'Escape', preventDefault() {}, stopImmediatePropagation() {} };
+documentListeners.get('keydown')(escape);
+focusFrames.splice(0).forEach((callback) => callback());
+assert.equal(lastGuard.removed, true);
+assert.equal(guardDocument.activeElement, guardedInput, 'The controller-only Escape path also restores editing focus');
+assert.equal(guardController.dirtyCount(), 1);
+assert.equal(resumed, 0);
+
+guardController.guard(() => { resumed += 1; }, { scope: guardedForm });
+rootListeners.get('click')({
+  target: { closest: () => ({ dataset: { action: 'confirm-discard-form' } }) },
+  preventDefault() {}, stopImmediatePropagation() {}
+});
+assert.equal(resumed, 1, 'Only explicit discard runs the pending close/navigation');
+assert.equal(guardController.dirtyCount(), 0);
+assert.equal(guardStorage.size, 0);
+guardController.destroy();
 
 console.log('UI System v4 form safety tests passed');

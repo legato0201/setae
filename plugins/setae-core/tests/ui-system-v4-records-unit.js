@@ -31,10 +31,13 @@ assert.doesNotMatch(records, rawControl, 'Records must compose controls from pri
 });
 assert.match(primitives, /export function textButton/);
 assert.match(primitives, /item\?\.separator[\s\S]*?action-menu-separator/);
+assert.match(primitives, /export function hydrateActionMenu/);
 assert.match(actionMenuCss, /\.action-menu-separator/);
 assert.match(actionMenuCss, /\.action-menu \.menu-item\.danger/);
 
 assert.match(records, /workbench-ledger records-ledger/);
+assert.match(records, /export async function hydrateRecordsWindow/);
+assert.match(records, /await nextPaint\(\)[\s\S]*?if \(!guard\(\)\) return false[\s\S]*?appendRecordsWindow/);
 assert.match(records, /workbench-ledger-row records-ledger-row/);
 assert.doesNotMatch(records, /class="[^"]*(?:surface|record-card|card-grid)/);
 assert.match(ledgerCss, /grid-template-columns:\s*var\(--ledger-date-width\) var\(--space-5\) minmax\(0, 1fr\) var\(--touch-target\)/);
@@ -58,8 +61,16 @@ assert.match(records, /renderQrWorkspace\(\{ qr, animals \}\)/);
 ['toggle-refused', 'share-record', 'delete-record'].forEach((action) => assert.match(records, new RegExp(`action: '${action}'`)));
 assert.match(records, /items\.push\(\{ separator:\s*true \}\)/);
 assert.match(records, /className:\s*'danger'/);
-assert.match(records, /iconName:\s*'more'/);
+assert.match(records, /iconName:\s*''/);
 assert.match(records, /iconOnly:\s*true/);
+assert.match(records, /lazy:\s*true/);
+assert.match(recordsCss, /\.records-action-menu \.action-menu-trigger::before\s*\{[^}]*content:\s*"•••"/s);
+assert.match(recordsCss, /contain-intrinsic-size:\s*auto 131px/);
+assert.match(recordsCss, /\.records-ledger-row:nth-child\(-n \+ 5\)[^}]*content-visibility:\s*visible[^}]*contain:\s*none/);
+assert.match(records, /deferRows \? \[\] : visibleListItems/);
+assert.match(records, /aria-busy="true"/);
+assert.match(records, /renderedLimit = null/);
+assert.match(recordsCss, /@media \(max-width:\s*767px\)[\s\S]*?contain-intrinsic-size:\s*auto 191px/);
 assert.match(records, /item\.targetType === 'enclosure' \|\| item\.targetType === 'nursery'/);
 
 assert.equal(fs.existsSync(path.join(root, 'assets/app/styles/layouts.css')), false);

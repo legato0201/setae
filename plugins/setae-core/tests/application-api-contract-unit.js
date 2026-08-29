@@ -171,7 +171,7 @@ assert.match(offlineApi, /case 'create_qr_records'/);
     'docs/api/frontend-shell.md',
 ].forEach((file) => assert.ok(fs.existsSync(path.join(pluginRoot, file)), `Missing API document: ${file}`));
 
-assert.match(plugin, /Version: 1\.0\.251/);
-assert.match(plugin, /define\('SETAE_VERSION', '1\.0\.251\.1'\)/);
+assert.match(plugin, /Version: 1\.0\.252(?:\s|$)/);
+assert.match(plugin, /define\('SETAE_VERSION', '1\.0\.252'\)/);
 
 console.log('Application API contract tests passed');

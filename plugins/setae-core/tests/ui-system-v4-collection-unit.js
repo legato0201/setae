@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
@@ -70,6 +71,8 @@ assert.match(collectionCss, /inset-block:\s*0/);
 assert.match(collectionCss, /width:\s*var\(--active-indicator-width\)/);
 assert.match(collectionCss, /\.animal-card\.card-mode-photo\.is-focused::before\s*\{[^}]*content:\s*none/s);
 assert.match(collectionCss, /\.collection-gallery-v4 \.animal-card:focus-visible/);
+assert.match(collectionCss, /@media \(min-width:\s*768px\)[\s\S]*?\.collection-registry-table tbody tr\s*\{[^}]*content-visibility:\s*auto[^}]*contain-intrinsic-size:\s*auto 61px/s);
+assert.match(collectionCss, /tbody tr:is\(\.is-selected, \.is-focused, :focus-within\)[^}]*content-visibility:\s*visible[^}]*contain:\s*none/s);
 assert.doesNotMatch(collectionCss, /\.animal-card\.is-focused\s*\{[^}]*border-color:\s*var\(--accent\)/s);
 assert.equal(fs.existsSync(path.join(root, 'assets/app/styles/layouts.css')), false);
 
@@ -118,7 +121,12 @@ async function verifyRegistryRendering() {
   assert.deepEqual(rows(normal).map((match) => match[1]), animals.slice(0, 50).map((animal) => String(animal.id)));
   assert.equal((normal.match(/data-collection-animal\b/g) || []).length, 50);
   assert.equal((normal.match(/<table\b/g) || []).length, 1);
-  assert.match(normal, /role="table" aria-label="個体台帳"/);
+  assert.match(normal, /<table class="registry-table collection-registry-table" aria-label="個体台帳"/);
+  assert.doesNotMatch(normal, /<(?:table|thead|tbody|tr|td)\b[^>]*\srole="(?:table|rowgroup|row|cell)"/,
+    'Use the native table accessibility tree without hundreds of redundant ARIA role attributes.');
+  const registryMarkup = normal.match(/<div class="registry-frame collection-registry-frame">[\s\S]*?<\/table><\/div>/)?.[0] || '';
+  assert.ok(registryMarkup);
+  assert.doesNotMatch(registryMarkup, />\s+</, 'Do not create inert whitespace text nodes in the 50-row table.');
   assert.doesNotMatch(normal, /registry-mobile-list|registry-mobile-row|type="checkbox"/,
     'Hidden mobile rows and inactive selection controls must not be generated.');
   assert.doesNotMatch(normal, /setae-media-placeholder-identity/,
@@ -261,6 +269,211 @@ async function verifyRegistryRendering() {
     assert.match(html, /data-media-fallback hidden/);
     assert.equal((html.match(/data-collection-animal\b/g) || []).length, 1);
   }
+
+  const firstRegistryRow = (html) => html.match(/<tr\b(?=[^>]*data-collection-animal)[^>]*>[\s\S]*?<\/tr>/)?.[0] || '';
+  const registryRowFor = (html, id) => [...html.matchAll(/<tr\b(?=[^>]*data-collection-animal)[^>]*>[\s\S]*?<\/tr>/g)]
+    .map((match) => match[0]).find((row) => row.includes(`data-animal-id="${id}"`)) || '';
+  let nextCacheProbeId = 9000;
+  const createCacheProbe = (overrides = {}) => {
+    let imageUrl = Object.prototype.hasOwnProperty.call(overrides, 'image_url')
+      ? overrides.image_url
+      : 'https://fixture.test/cache-primary.jpg';
+    let imageReads = 0;
+    const animal = {
+      id: nextCacheProbeId++,
+      individual_code: 'CACHE-PROBE',
+      species_name: 'Cache species',
+      gender: 'female',
+      instar: 'L4',
+      origin: 'CB',
+      status: 'normal',
+      last_feed: 2,
+      last_molt: 4,
+      image: { url: 'https://fixture.test/cache-nested.jpg' },
+      thumbnail_url: 'https://fixture.test/cache-thumbnail.jpg',
+      thumb: 'https://fixture.test/cache-thumb.jpg',
+      classification: 'spider',
+      classification_key: 'scorpion',
+      species: { classification: 'insect' },
+      ...overrides
+    };
+    delete animal.image_url;
+    Object.defineProperty(animal, 'image_url', {
+      configurable: true,
+      enumerable: true,
+      get() { imageReads += 1; return imageUrl; },
+      set(value) { imageUrl = value; }
+    });
+    return {
+      animal,
+      imageReads: () => imageReads,
+      resetImageReads: () => { imageReads = 0; },
+      setImageUrl: (value) => { imageUrl = value; }
+    };
+  };
+  const renderProbe = (probe, context = {}) => {
+    const probeAnimals = typeof context.animals === 'function'
+      ? context.animals(probe.animal)
+      : [probe.animal];
+    const html = renderCollectionSearchResults({
+      animals: probeAnimals,
+      search: context.search || '',
+      activeView: context.activeView || null,
+      selection: context.selection || {}
+    });
+    return {
+      html,
+      row: context.targetId
+        ? registryRowFor(html, context.targetId)
+        : firstRegistryRow(html)
+    };
+  };
+  const warmProbe = (probe, context = {}) => {
+    probe.resetImageReads();
+    const first = renderProbe(probe, context);
+    assert.ok(probe.imageReads() >= 2, 'An uncached row must render its media after reading the signature.');
+    probe.resetImageReads();
+    const second = renderProbe(probe, context);
+    assert.equal(probe.imageReads(), 1, 'An identical row must read the media signature without regenerating media markup.');
+    assert.equal(second.row, first.row, 'A cache hit must return byte-identical escaped row markup.');
+    return second;
+  };
+  const assertProbeMiss = (probe, context, before, label, expected = null) => {
+    probe.resetImageReads();
+    const after = renderProbe(probe, context);
+    assert.ok(probe.imageReads() >= 2, `${label} must invalidate the row and regenerate media markup.`);
+    assert.notEqual(after.row, before.row, `${label} must refresh visible row markup.`);
+    if (expected) assert.match(after.row, expected, `${label} must render the updated escaped value.`);
+    return after;
+  };
+
+  const originalWindow = globalThis.window;
+  globalThis.window = { SETAE_CONFIG: {
+    siteOrigin: 'https://fixture.test/',
+    specimenAssets: {
+      specimen: 'https://fixture.test/specimen.svg',
+      spider: 'https://fixture.test/spider.svg',
+      scorpion: 'https://fixture.test/scorpion.svg',
+      insect: 'https://fixture.test/insect.svg',
+      plant: 'https://fixture.test/plant.svg'
+    }
+  } };
+  const mutationCases = [
+    { label: 'id mutation', mutate: (probe) => { probe.animal.id = '9100<&"'; }, expected: /data-animal-id="9100&lt;&amp;&quot;"/ },
+    { label: 'code mutation', mutate: (probe) => { probe.animal.individual_code = 'CODE<&"'; }, expected: /CODE&lt;&amp;&quot;/ },
+    { label: 'scientific-name mutation', mutate: (probe) => { probe.animal.species_name = 'Species <&"'; }, expected: /Species &lt;&amp;&quot;/ },
+    { label: 'gender mutation', mutate: (probe) => { probe.animal.gender = 'male'; }, expected: />オス</ },
+    { label: 'instar mutation', mutate: (probe) => { probe.animal.instar = 'L5<&"'; }, expected: /L5&lt;&amp;&quot;/ },
+    { label: 'origin mutation', mutate: (probe) => { probe.animal.origin = 'WC<&"'; }, expected: /WC&lt;&amp;&quot;/ },
+    { label: 'status mutation', mutate: (probe) => { probe.animal.status = 'fasting'; }, expected: /status-fasting/ },
+    { label: 'formatted feed mutation', mutate: (probe) => { probe.animal.last_feed = 3; }, expected: /3日前/ },
+    { label: 'formatted molt mutation', mutate: (probe) => { probe.animal.last_molt = 5; }, expected: /5日前/ },
+    { label: 'primary image mutation', mutate: (probe) => { probe.setImageUrl('https://fixture.test/cache-primary-next.jpg'); }, expected: /cache-primary-next\.jpg/ },
+    { label: 'primary image deletion', mutate: (probe) => { probe.setImageUrl(''); }, expected: /cache-nested\.jpg/ },
+    { label: 'nested image URL mutation', setup: (probe) => { probe.setImageUrl(''); }, mutate: (probe) => { probe.animal.image.url = 'https://fixture.test/cache-nested-next.jpg'; }, expected: /cache-nested-next\.jpg/ },
+    { label: 'thumbnail URL mutation', setup: (probe) => { probe.setImageUrl(''); probe.animal.image.url = ''; }, mutate: (probe) => { probe.animal.thumbnail_url = 'https://fixture.test/cache-thumbnail-next.jpg'; }, expected: /cache-thumbnail-next\.jpg/ },
+    { label: 'thumb URL mutation', setup: (probe) => { probe.setImageUrl(''); probe.animal.image.url = ''; probe.animal.thumbnail_url = ''; }, mutate: (probe) => { probe.animal.thumb = 'https://fixture.test/cache-thumb-next.jpg'; }, expected: /cache-thumb-next\.jpg/ },
+    { label: 'classification mutation', mutate: (probe) => { probe.animal.classification = 'scorpion'; }, expected: /scorpion\.svg/ },
+    { label: 'classification-key mutation', setup: (probe) => { probe.animal.classification = ''; }, mutate: (probe) => { probe.animal.classification_key = 'plant'; }, expected: /plant\.svg/ },
+    { label: 'nested classification mutation', setup: (probe) => { probe.animal.classification = ''; probe.animal.classification_key = ''; }, mutate: (probe) => { probe.animal.species.classification = 'plant'; }, expected: /plant\.svg/ }
+  ];
+  for (const testCase of mutationCases) {
+    const probe = createCacheProbe();
+    testCase.setup?.(probe);
+    const context = {};
+    const before = warmProbe(probe, context);
+    testCase.mutate(probe);
+    assertProbeMiss(probe, context, before, testCase.label, testCase.expected);
+  }
+
+  for (const contextCase of [
+    {
+      label: 'selection-mode mutation',
+      before: { selection: {} },
+      after: (probe) => ({ selection: { selectionMode: true }, targetId: String(probe.animal.id) }),
+      expected: /data-action="toggle-collection-selection"/
+    },
+    {
+      label: 'selected-state mutation',
+      before: { selection: { selectionMode: true, selectedIds: [] } },
+      after: (probe) => ({ selection: { selectionMode: true, selectedIds: [String(probe.animal.id)] }, targetId: String(probe.animal.id) }),
+      expected: /class="is-selected [^"]*"[^>]*aria-selected="true"/
+    },
+    {
+      label: 'focused-state mutation',
+      before: { selection: {} },
+      after: (probe) => ({ selection: { selectedId: String(probe.animal.id) }, targetId: String(probe.animal.id) }),
+      expected: /is-focused[^>]*data-focused="true"/
+    }
+  ]) {
+    const probe = createCacheProbe();
+    const before = warmProbe(probe, contextCase.before);
+    assertProbeMiss(probe, contextCase.after(probe), before, contextCase.label, contextCase.expected);
+  }
+
+  {
+    const probe = createCacheProbe({ individual_code: 'CACHE-ORDER' });
+    const other = { id: 9991, individual_code: 'OTHER-ORDER', species_name: 'Other species', status: 'normal' };
+    const beforeContext = { animals: (animal) => [animal, other], targetId: String(probe.animal.id) };
+    const before = warmProbe(probe, beforeContext);
+    assertProbeMiss(probe, { animals: (animal) => [other, animal], targetId: String(probe.animal.id) }, before,
+      'row-order mutation', /aria-rowindex="3"/);
+  }
+  {
+    const probe = createCacheProbe({ individual_code: 'CACHE-FILTER' });
+    const other = { id: 9992, individual_code: 'OTHER-FILTER', species_name: 'Other species', status: 'normal' };
+    const beforeContext = { animals: (animal) => [other, animal], targetId: String(probe.animal.id) };
+    const before = warmProbe(probe, beforeContext);
+    assertProbeMiss(probe, { ...beforeContext, search: 'cache-filter' }, before,
+      'filter row-index mutation', /aria-rowindex="2"/);
+  }
+
+  {
+    const firstProbe = createCacheProbe({ id: 9993, individual_code: 'CACHE-SAME' });
+    const first = warmProbe(firstProbe, { search: 'cache-same' });
+    const equalProbe = createCacheProbe({ id: 9993, individual_code: 'CACHE-SAME' });
+    equalProbe.resetImageReads();
+    const equal = renderProbe(equalProbe, { search: 'cache-same' });
+    assert.ok(equalProbe.imageReads() >= 2,
+      'A different object with equal values must get its own WeakMap entry and render once.');
+    assert.equal(equal.row, first.row);
+    equalProbe.resetImageReads();
+    const repeated = renderProbe(equalProbe, { search: 'cache-same' });
+    assert.equal(equalProbe.imageReads(), 1,
+      'Consecutive identical searches must reuse media and row markup for the same object.');
+    assert.equal(repeated.row, equal.row);
+  }
+
+  try {
+    globalThis.window = { SETAE_CONFIG: {
+      siteOrigin: 'https://one.fixture.test/base/',
+      specimenAssets: { spider: 'icons/spider-a.svg' },
+      iconOverrides: { 'ui.check': '<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>' }
+    } };
+    const probe = createCacheProbe({ image_url: '', classification: 'spider' });
+    const context = { selection: { selectionMode: true } };
+    let before = warmProbe(probe, context);
+    globalThis.window.SETAE_CONFIG.siteOrigin = 'https://two.fixture.test/base/';
+    before = assertProbeMiss(probe, context, before, 'site-origin mutation', /two\.fixture\.test\/base\/icons\/spider-a\.svg/);
+    probe.resetImageReads();
+    assert.equal(renderProbe(probe, context).row, before.row);
+    assert.equal(probe.imageReads(), 1);
+    globalThis.window.SETAE_CONFIG.specimenAssets.spider = 'icons/spider-b.svg';
+    before = assertProbeMiss(probe, context, before, 'specimen-asset mutation', /spider-b\.svg/);
+    probe.resetImageReads();
+    assert.equal(renderProbe(probe, context).row, before.row);
+    assert.equal(probe.imageReads(), 1);
+    globalThis.window.SETAE_CONFIG.iconOverrides['ui.check'] = '<svg viewBox="0 0 1 1"><path d="M1 1"/></svg>';
+    assertProbeMiss(probe, context, before, 'selection-icon mutation', /M1 1/);
+  } finally {
+    if (originalWindow === undefined) delete globalThis.window;
+    else globalThis.window = originalWindow;
+  }
+
+  assert.match(collectionView, /const registryRowCache = new WeakMap\(\)/,
+    'The row cache must be weakly keyed by the source animal object.');
+  assert.match(collectionView, /sameRegistryRowSignature\(cached\.signature, signature\)\) return cached\.html;[\s\S]*renderAnimalMedia\(/,
+    'The cache hit must return before media and row markup generation.');
   assert.match(collectionCss, /\.collection-registry-frame \{ display: block; overflow: visible; \}/);
   assert.match(collectionCss, /grid-template-areas: 'identity status' 'taxon status' 'metadata status'/);
   assert.match(collectionCss, /grid-template-areas: 'check identity status' 'check taxon status' 'check metadata status'/);
@@ -268,6 +481,95 @@ async function verifyRegistryRendering() {
     'The clipped mobile header must not contain an invisible tab stop.');
 }
 
-verifyRegistryRendering().then(() => {
-  console.log('UI System v4 Collection tests passed (50-row window, 500 reachable results, retained DOM, selection, saved views, photos)');
+async function verifyRelativeDateBatch() {
+  const { renderCollectionSearchResults } = await import(pathToFileURL(path.join(collectionDirectory, 'view.js')).href);
+  const { formatRelativeDays } = await import(pathToFileURL(path.join(root, 'assets/app/components/ui.js')).href);
+  const NativeDate = globalThis.Date;
+  let now = new NativeDate(2026, 7, 29, 23, 59, 30).getTime();
+  let clockReads = 0;
+  let parsed = [];
+  class TestDate extends NativeDate {
+    constructor(...args) {
+      super(...(args.length ? args : [now]));
+      if (args.length) parsed.push(args[0]);
+      else clockReads += 1;
+    }
+    static now() { return now; }
+  }
+  const legacy = (value, at = now) => {
+    if (!value) return '—';
+    if (typeof value === 'number') return `${value}日前`;
+    const date = new NativeDate(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    const today = new NativeDate(at);
+    const days = Math.floor((today.setHours(0, 0, 0, 0) - date.setHours(0, 0, 0, 0)) / 86400000);
+    return days < 0 ? `${Math.abs(days)}日後` : days === 0 ? '今日' : `${days}日前`;
+  };
+  const escaped = (value) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character]);
+  const cells = (html) => [...html.matchAll(/<td class="registry-date registry-desktop-cell">([^<]*)<\/td>/g)].map((match) => match[1]);
+  const values = [undefined, null, '', false, 0, 2, -3, 'invalid<&"', '2026-08-29',
+    '2026-08-29T00:30:00+14:00', '2026-08-28T23:30:00-12:00', '2026-08-31T09:00:00',
+    '2026-03-08T05:30:00Z', '2026-11-01T05:30:00Z'];
+  const animal = (id, feed, molt) => ({ id, individual_code: `DATE-${id}`, species_name: 'Test species',
+    last_feed: feed, last_molt: molt, status: 'normal' });
+  try {
+    assert.equal(new Intl.DateTimeFormat().resolvedOptions().timeZone, process.env.TZ,
+      'Each child must actually use its requested timezone, not silently test the host timezone.');
+    globalThis.Date = TestDate;
+    // The original one-argument API and the shared baseline must retain local
+    // midnight/DST, timezone offsets, future, unset, numeric and invalid inputs.
+    for (const at of [now, new NativeDate(2026, 2, 9, 0, 15).getTime(), new NativeDate(2026, 10, 2, 0, 15).getTime()]) {
+      now = at;
+      const start = new NativeDate(now).setHours(0, 0, 0, 0);
+      for (const value of values) {
+        assert.equal(formatRelativeDays(value), legacy(value));
+        assert.equal(formatRelativeDays(value, start), legacy(value));
+      }
+    }
+    assert.equal(formatRelativeDays('1970-01-01T12:00:00', 0), legacy('1970-01-01T12:00:00', 0),
+      'A zero timestamp must not fall back to the current date.');
+    now = new NativeDate(2026, 7, 29, 23, 59, 30).getTime();
+    const animals = Array.from({ length: 50 }, (_, index) => animal(index + 1,
+      '2026-08-27T22:30:00Z', '2026-08-29T04:30:00+09:00'));
+    const render = () => {
+      clockReads = 0;
+      parsed = [];
+      const html = renderCollectionSearchResults({ animals });
+      assert.equal(clockReads, 1, 'One render computes today once for every visible row.');
+      assert.deepEqual(cells(html), animals.flatMap((item) => [item.last_feed, item.last_molt].map((value) => escaped(legacy(value)))));
+      assert.equal((html.match(/data-collection-animal\b/g) || []).length, 50);
+      return html;
+    };
+    const first = render();
+    assert.deepEqual(parsed, [animals[0].last_feed, animals[0].last_molt],
+      'Repeated input dates are parsed once per render, not once per animal.');
+    now = new NativeDate(2026, 7, 30, 0, 0, 30).getTime();
+    const nextDay = render();
+    assert.notDeepEqual(cells(nextDay), cells(first), 'The same animals must show the next day after midnight.');
+    animals[0].last_feed = '2026-09-05T10:00:00+09:00';
+    animals[0].last_molt = 'invalid<&"';
+    const changed = render();
+    assert.match(cells(changed)[0], /日後$/);
+    assert.equal(cells(changed)[1], 'invalid&lt;&amp;&quot;');
+    assert.equal(parsed.filter((value) => value === animals[0].last_feed).length, 1);
+    assert.deepEqual(cells(changed).slice(2), cells(nextDay).slice(2),
+      'Mutating one animal invalidates its labels without changing the other rows.');
+    const varied = values.map((value, index) => animal(index + 1, value, value));
+    assert.deepEqual(cells(renderCollectionSearchResults({ animals: varied })),
+      varied.flatMap((item) => [item.last_feed, item.last_molt].map((value) => escaped(legacy(value)))));
+  } finally { globalThis.Date = NativeDate; }
+}
+
+const isDateChild = process.argv.includes('--relative-date-child');
+const verification = isDateChild ? verifyRelativeDateBatch() : verifyRegistryRendering().then(() => {
+  for (const zone of ['UTC', 'Asia/Tokyo', 'America/New_York']) {
+    const result = spawnSync(process.execPath, [__filename, '--relative-date-child'], {
+      env: { ...process.env, TZ: zone }, encoding: 'utf8', timeout: 60000
+    });
+    assert.equal(result.status, 0, `Relative-date behavior failed in ${zone}: ${result.error || ''}\n${result.stdout}\n${result.stderr}`);
+  }
+});
+verification.then(() => {
+  console.log(isDateChild ? `Relative-date render tests passed (${process.env.TZ})`
+    : 'UI System v4 Collection tests passed (50-row window, 500 reachable results, retained DOM, WeakMap row cache invalidation, selection, saved views, photos, fresh date labels in 3 timezones)');
 }).catch((error) => { console.error(error); process.exitCode = 1; });

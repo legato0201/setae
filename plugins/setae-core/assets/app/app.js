@@ -22,21 +22,21 @@ import { renderToday } from './pages/today.js';
 import { normalizeSpecimenTab, renderAnimalDetail, renderSpecimenTabContent, renderSpecimenTabNavigation } from './pages/animal-detail.js';
 import { renderCollection } from './pages/collection.js';
 import { renderHusbandry } from './pages/husbandry.js';
-import { appendRecordsWindow, filterRecords, renderRecords } from './pages/records.js';
+import { appendRecordsWindow, filterRecords, hydrateRecordsWindow, renderRecords } from './pages/records.js';
 import { renderCommunity } from './pages/community.js';
 import { renderSettings } from './pages/settings.js';
 import { renderAuthPage, renderBootPage, renderConnectionErrorPage } from './pages/auth.js';
 import { renderModal } from './components/modals.js';
-import { renderAppFeedback, renderAppFrame, renderAppFrameRegions } from './components/app-frame.js';
+import { renderAppFeedback, renderAppFrame, renderAppFrameRegions, renderAppPagePreparation } from './components/app-frame.js';
 import { renderBrand } from './components/brand.js';
-import { button, nextTabIndex, tabId } from './components/primitives.js';
+import { button, hydrateActionMenu, nextTabIndex, tabId } from './components/primitives.js';
 import { syncDateFieldDisplay } from './components/date-field.js';
 import { createOverlayController, resolveActionInvocation } from './components/overlay-controller.js';
 import { applyServerFieldErrors, createFormSafetyController, serverFieldErrors, validateForm } from './components/form-safety-controller.js';
 import { createFeedbackController } from './components/feedback-controller.js';
 import { animalCode, escapeHtml, safeHttpUrl, safeSameOriginHttpUrl } from './components/ui.js';
 import { registerMediaFallbacks } from './components/media.js';
-import { createRenderCoordinator } from './runtime/render-coordinator.js';
+import { createRenderCoordinator, waitForInitialPaint } from './runtime/render-coordinator.js';
 import { applyPageMetadata, focusAppMain, pageMetadata } from './runtime/page-metadata.js';
 import { createNativeViewportController } from './runtime/native-viewport-controller.js';
 import { createMobileGestureController } from './runtime/mobile-gesture-controller.js';
@@ -193,7 +193,6 @@ import {
   resolveBackPriority,
   sameRoute
 } from './features/navigation/controller.js';
-
 const appConfig = window.SETAE_CONFIG || {};
 const mockEnabled = appConfig.enableMock === true;
 let waitingServiceWorker = null;
@@ -218,7 +217,6 @@ const services = {
   tasks: new TaskService(api),
   topics: new TopicService(api)
 };
-
 const defaultWidgetOrder = ['pre_molt', 'babies', 'feeders', 'collection'];
 const defaultWidgetPreferences = {
   pre_molt: { visible: true, size: 'normal' },
@@ -228,6 +226,7 @@ const defaultWidgetPreferences = {
 };
 const app = document.querySelector('#app, #setae-gui-root');
 const renderCoordinator = createRenderCoordinator(app);
+let initialRenderGeneration = 0;
 const nativeViewportController = createNativeViewportController();
 nativeViewportController.start();
 const overlayController = createOverlayController(app, {
@@ -269,7 +268,6 @@ const publicCommunityRoutes = new Map([
   ['/species/', 'species'],
   ['/breeding/', 'breeding']
 ]);
-
 function appHomePath() {
   try {
     const url = new URL(appConfig.appUrl || '/', location.origin);
@@ -278,16 +276,13 @@ function appHomePath() {
     return '/';
   }
 }
-
 function cleanAppPath() {
   return appConfig.embedded === true ? appHomePath() : location.pathname;
 }
-
 function consumeRequestedReturnUrl() {
   const currentUrl = new URL(location.href);
   const rawReturnUrl = currentUrl.searchParams.get('setae_return') || '';
   if (!rawReturnUrl) return '';
-
   // setae_return is a one-shot post-authentication destination. Remove it
   // before any navigation so a return target can never survive the next boot
   // and trigger a self-redirect loop on the root application route.
@@ -295,34 +290,28 @@ function consumeRequestedReturnUrl() {
   currentUrl.searchParams.delete('setae_auth');
   const cleanCurrentUrl = currentUrl.href;
   history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}` || '/');
-
   const safeReturnUrl = safeSameOriginHttpUrl(rawReturnUrl || '');
   if (!safeReturnUrl) return '';
-
   try {
     const targetUrl = new URL(safeReturnUrl, location.origin);
     // Do not allow nested return parameters to recreate the redirect on the
     // destination itself.
     targetUrl.searchParams.delete('setae_return');
-
     // In the root-app architecture the normal login return target is often
     // the current application URL itself. Staying on the current document is
     // intentional and avoids a pointless full page reload.
     if (targetUrl.href === cleanCurrentUrl) return '';
-
     return targetUrl.href;
   } catch {
     return '';
   }
 }
-
 function publicCommunityTabFromPath(pathname = location.pathname, search = location.search) {
   const queryTab = new URLSearchParams(search).get('setae_public');
   if (['topics', 'species', 'breeding'].includes(queryTab)) return queryTab;
   const normalized = `/${String(pathname || '/').split('/').filter(Boolean).join('/')}/`;
   return publicCommunityRoutes.get(normalized) || null;
 }
-
 function setPublicCommunityPath(tab, { replace = false } = {}) {
   let path;
   if (appConfig.embedded === true) {
@@ -748,22 +737,30 @@ function appUpdateNotice() {
 }
 
 function renderUpdateNoticeIsland() {
-  if (renderCoordinator.frameMounted) {
-    renderCoordinator.updateNotice(appUpdateNotice());
-  } else {
-    render();
-  }
+  if (renderCoordinator.frameMounted) renderCoordinator.updateNotice(appUpdateNotice());
+  else render();
 }
 
+function syncMountedContent() { syncBusyDialogControls(app); overlayController.sync(); formSafety.sync(); hydrateQrCodes(app); }
 function setAppContent(content, { view = 'standalone' } = {}) {
-  overlayController.beforeRender();
-  renderCoordinator.mount(`${content}${view === 'app' ? '' : appUpdateNotice()}`, { view });
-  syncBusyDialogControls(app);
-  overlayController.sync();
-  formSafety.sync();
-  hydrateQrCodes(app);
+  overlayController.beforeRender(); renderCoordinator.mount(`${content}${view === 'app' ? '' : appUpdateNotice()}`, { view });
+  syncMountedContent();
 }
-
+function prepareAppContent(content, { view = 'standalone', generation, afterCommit = null, afterPageCommit = null, stagedPage = null } = {}) { return { generation, afterCommit, afterPageCommit, stagedPage, mount: renderCoordinator.prepareMount(`${content}${view === 'app' ? '' : appUpdateNotice()}`, { view }) }; }
+async function commitPreparedAppContent(prepared) {
+  if (!prepared || prepared.generation !== initialRenderGeneration) return false;
+  overlayController.beforeRender();
+  if (!prepared.mount.commit({ guard: () => prepared.generation === initialRenderGeneration })) return false;
+  syncMountedContent();
+  if (prepared.stagedPage !== null) {
+    await waitForInitialPaint();
+    if (prepared.generation !== initialRenderGeneration || !renderCoordinator.page(prepared.stagedPage, { force: true })) return false;
+    syncMountedContent();
+  }
+  if (prepared.afterPageCommit && !await prepared.afterPageCommit()) return false;
+  prepared.afterCommit?.();
+  return true;
+}
 function renderAppIslands(content, { preservePage = false } = {}) {
   const options = frameOptions(content);
   if (!renderCoordinator.frameMounted) {
@@ -814,16 +811,12 @@ function syncPagePresentation() {
 }
 
 function render(options = {}) {
-  if (state.loading) {
-    setAppContent(renderBootPage());
-    return;
-  }
-  if (state.connectionError && !state.mockMode && !state.publicMode) {
-    setAppContent(renderConnectionErrorPage({ error: state.connectionError, mockEnabled }));
-    return;
-  }
+  const generation = ++initialRenderGeneration;
+  const standalone = (content) => options.prepare ? prepareAppContent(content, { generation }) : setAppContent(content);
+  if (state.loading) return standalone(renderBootPage());
+  if (state.connectionError && !state.mockMode && !state.publicMode) return standalone(renderConnectionErrorPage({ error: state.connectionError, mockEnabled }));
   if (state.authenticated === false && !state.publicMode && !state.mockMode) {
-    setAppContent(renderAuthPage({
+    return standalone(renderAuthPage({
       view: state.authView,
       registrationEnabled: state.bootstrap?.registration_enabled !== false,
       termsUrl: state.bootstrap?.links?.terms || '/terms/',
@@ -833,10 +826,10 @@ function render(options = {}) {
       message: state.authMessage,
       mockEnabled
     }));
-    return;
   }
 
   let content = '';
+  let preparedRecordsWindow = null;
   const careModel = currentCareModel();
   if (state.page === 'today') {
     const onboardingProgress = deriveOnboardingProgress({
@@ -908,8 +901,10 @@ function render(options = {}) {
       loadingEvents: state.loadingEvents
     });
   } else if (state.page === 'records') {
+    preparedRecordsWindow = options.prepare && state.recordsView === 'history' && filterRecords(state.records, state.recordFilter).length > 5
+      ? { ...state.recordsWindow, initial: Math.min(5, state.recordsWindow.limit), limit: Math.min(5, state.recordsWindow.limit) } : null;
     content = renderRecords({ records: state.records, animals: state.animals, filter: state.recordFilter,
-      view: state.recordsView, qr: state.qr, loading: state.viewLoading, listWindow: state.recordsWindow });
+      view: state.recordsView, qr: state.qr, loading: state.viewLoading, listWindow: preparedRecordsWindow || state.recordsWindow, deferRows: Boolean(preparedRecordsWindow) });
   } else if (state.page === 'community') {
     content = renderCommunity({
       tab: state.communityTab,
@@ -951,6 +946,20 @@ function render(options = {}) {
         termsUrl: state.bootstrap?.links?.terms || '/terms/',
         privacyUrl: state.bootstrap?.links?.privacy || '/privacy-policy/'
       }
+    });
+  }
+  if (options.prepare) {
+    const preparedFrame = frameOptions(content);
+    return prepareAppContent(renderAppFrame({ ...preparedFrame, content: renderAppPagePreparation() }), {
+      view: 'app', generation, stagedPage: content,
+      afterPageCommit: preparedRecordsWindow ? async () => {
+        const hydrated = await hydrateRecordsWindow(app, { records: state.records, filter: state.recordFilter, initialWindow: preparedRecordsWindow, renderedLimit: 0,
+          targetWindow: state.recordsWindow, nextPaint: waitForInitialPaint, guard: () => generation === initialRenderGeneration && state.page === 'records' && state.recordsView === 'history' });
+        if (!hydrated) return false;
+        renderCoordinator.accept('page', renderRecords({ records: state.records, animals: state.animals, filter: state.recordFilter,
+          view: state.recordsView, qr: state.qr, loading: state.viewLoading, listWindow: state.recordsWindow }));
+        return true;
+      } : null, afterCommit: () => { syncSpecimenIntakeController(); syncPagePresentation(); }
     });
   }
   renderAppIslands(content, options);
@@ -1077,7 +1086,7 @@ async function boot() {
   state.loading = true;
   state.connectionError = null;
   state.error = null;
-  render();
+  if (app.querySelector('[data-app-startup]')) await waitForInitialPaint(); else render();
   try {
     state.bootstrap = await services.app.bootstrap();
     state.bootstrapped = true;
@@ -1145,7 +1154,9 @@ async function boot() {
     state.authenticated = null;
   } finally {
     state.loading = false;
-    render();
+    const prepared = render({ prepare: true }); await waitForInitialPaint();
+    const committed = prepared ? await commitPreparedAppContent(prepared) : false;
+    if (!committed && navigationInitialized) return;
     if (!state.connectionError && (state.authenticated || state.mockMode || state.publicMode)) {
       const priorRoute = isRouteState(history.state) ? createRouteState(history.state) : null;
       navigationIndex = priorRoute?.index || 0;
@@ -1777,6 +1788,13 @@ function isNestedRoute() {
 }
 
 async function requestBack({ fromPopstate = false, poppedState = null, bypassFormSafety = false } = {}) {
+  const retainCurrentRoute = () => {
+    if (fromPopstate) history.pushState(captureRoute(window.scrollY), '', currentHistoryUrl());
+  };
+  if (formSafety.cancelGuard()) {
+    retainCurrentRoute();
+    return 'continue-editing';
+  }
   const openMenu = app.querySelector('.action-menu[open]');
   const action = resolveBackPriority({
     menuOpen: Boolean(openMenu),
@@ -1787,40 +1805,42 @@ async function requestBack({ fromPopstate = false, poppedState = null, bypassFor
   });
 
   if (action === 'close-menu') {
-    openMenu.removeAttribute('open');
+    const menuTrigger = openMenu.querySelector?.(':scope > summary'); openMenu.removeAttribute('open'); menuTrigger?.focus({ preventScroll: true });
+    retainCurrentRoute();
     return action;
   }
   if (action === 'exit-selection') {
     state.collectionSelection = clearCollectionSelection(state.collectionSelection);
     render();
+    retainCurrentRoute();
     return action;
   }
   if (['close-modal', 'close-sheet'].includes(action)) {
     if (isDialogMutationBusy()) {
-      if (fromPopstate) history.pushState(captureRoute(window.scrollY), '', currentHistoryUrl());
+      retainCurrentRoute();
       return 'busy';
     }
     const scope = overlayController.activePanel?.closest?.('[data-overlay-backdrop]')
       || overlayController.activePanel
       || app;
     if (!bypassFormSafety && formSafety.guard(
-      () => requestBack({ fromPopstate, poppedState, bypassFormSafety: true }),
+      () => requestBack({ bypassFormSafety: true }),
       { scope, mode: 'overlay' }
     )) {
-      if (fromPopstate) history.pushState(captureRoute(window.scrollY), '', currentHistoryUrl());
+      retainCurrentRoute();
       return 'guarded';
     }
     if (action === 'close-modal') closeModalForBack();
     else closeSheetForBack();
     render();
-    if (fromPopstate) history.pushState(captureRoute(window.scrollY), '', currentHistoryUrl());
+    retainCurrentRoute();
     return action;
   }
   if (!bypassFormSafety && formSafety.guard(
-    () => requestBack({ fromPopstate, poppedState, bypassFormSafety: true }),
+    () => requestBack({ bypassFormSafety: true }),
     { scope: app, mode: 'navigation' }
   )) {
-    if (fromPopstate) history.pushState(captureRoute(window.scrollY), '', currentHistoryUrl());
+    retainCurrentRoute();
     return 'guarded';
   }
   if (fromPopstate) {
@@ -2694,6 +2714,7 @@ function openConfirm({ title, message, confirmLabel = '実行する', action, pa
 
 app.addEventListener('click', async (event) => {
   const clickedActionMenu = event.target.closest('.action-menu');
+  if (clickedActionMenu && event.target.closest('summary')) hydrateActionMenu(clickedActionMenu);
   app.querySelectorAll('.action-menu[open]').forEach((menu) => {
     if (menu !== clickedActionMenu) menu.removeAttribute('open');
   });

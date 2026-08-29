@@ -93,12 +93,15 @@
   .records-action-menu .action-menu-trigger {
     color: var(--text-secondary);
   }
-
+  .records-action-menu .action-menu-trigger::before { content: "•••"; font-size: var(--type-body); letter-spacing: 0.08em; line-height: var(--leading-ui); }
+  @supports (content-visibility: auto) { .records-ledger-row { contain-intrinsic-size: auto 131px; } }
+  @supports (content-visibility: auto) { .records-ledger-row:nth-child(-n + 5) { content-visibility: visible; contain: none; } }
   .records-empty {
     margin-top: var(--space-2);
   }
 
   @media (max-width: 767px) {
+    @supports (content-visibility: auto) { .records-ledger-row { contain-intrinsic-size: auto 191px; } }
     .records-header {
       gap: var(--space-3);
     }

@@ -11,6 +11,7 @@ const files = [
   'licenses/qrcodejs.txt',
   'licenses/chartjs.txt',
   'licenses/jspdf.txt',
+  'licenses/pako.txt',
   'licenses/php-dependencies.txt'
 ];
 
@@ -25,6 +26,9 @@ assert.match(read('licenses/jsqr.txt'), /Apache License[\s\S]*Version 2\.0/);
 assert.match(read('licenses/qrcodejs.txt'), /MIT License/);
 assert.match(read('licenses/chartjs.txt'), /MIT License/);
 assert.match(read('licenses/jspdf.txt'), /Permission is hereby granted, free of charge/);
+assert.match(read('THIRD_PARTY_NOTICES.md'), /Pako 2\.1\.0 \(MIT and Zlib\).*licenses\/pako\.txt/);
+assert.match(read('licenses/pako.txt'), /MIT License[\s\S]*Vitaly Puzrin and Andrei Tuputcyn[\s\S]*Permission is hereby granted/);
+assert.match(read('licenses/pako.txt'), /Zlib notice source:[\s\S]*Jean-loup Gailly and Mark Adler[\s\S]*This notice may not be removed or altered/);
 assert.match(read('licenses/php-dependencies.txt'), /minishlink\/web-push[\s\S]*stripe\/stripe-php/);
 
 const about = read('assets/app/features/settings/about.js');

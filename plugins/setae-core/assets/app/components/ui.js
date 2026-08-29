@@ -115,13 +115,13 @@ export const statusChip = (status) => {
   </span>`;
 };
 
-export const formatRelativeDays = (value) => {
+export const formatRelativeDays = (value, todayStartMs = null) => {
   if (!value) return '—';
   if (typeof value === 'number') return `${value}日前`;
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
-  const today = new Date();
-  const days = Math.floor((today.setHours(0,0,0,0) - d.setHours(0,0,0,0)) / 86400000);
+  const today = todayStartMs ?? new Date().setHours(0,0,0,0);
+  const days = Math.floor((today - d.setHours(0,0,0,0)) / 86400000);
   if (days < 0) return `${Math.abs(days)}日後`;
   if (days === 0) return '今日';
   return `${days}日前`;

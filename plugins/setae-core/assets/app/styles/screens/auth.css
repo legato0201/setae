@@ -51,6 +51,7 @@
     gap: var(--space-4);
   }
 
+  #app:has(> noscript > [data-app-noscript]) > [data-app-startup] { display: none; }
   .boot-status {
     min-height: var(--touch-target);
     display: inline-flex;

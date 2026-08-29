@@ -25,6 +25,8 @@ import { normalizeAnimalSearchValue, searchAnimalIds } from '../../queries/anima
 import { renderProgressiveListFooter, visibleListItems } from '../../components/progressive-list.js';
 import { createCollectionWindow } from './list-window.js';
 
+const registryRowCache = new WeakMap();
+
 export function filterCollectionAnimals({ animals = [], search = '', activeView = null, careTasks = [], searchIndex = null } = {}) {
   let queried;
   if (activeView?.query?.careTaskType) {
@@ -209,7 +211,17 @@ function collectionItemOptions({ selection = {}, cardConfig = {}, mode = 'table'
   const focusedId = selection.selectedId === null || selection.selectedId === undefined
     ? ''
     : String(selection.selectedId);
-  return { selectedIds, selecting, focusedId, mode, config: mode === 'table' ? null : normalizeAnimalCardConfig(cardConfig) };
+  // A new render (including append) gets a fresh day and labels. Do not retain
+  // these across midnight, animal updates, or later filter/selection changes.
+  const todayStartMs = new Date().setHours(0, 0, 0, 0);
+  const relativeDates = new Map();
+  const relativeDate = (value) => {
+    if (!relativeDates.has(value)) relativeDates.set(value, formatRelativeDays(value, todayStartMs));
+    return relativeDates.get(value);
+  };
+  const registryRuntimeValues = mode === 'table' ? collectionRegistryRuntimeValues(selecting) : [];
+  return { selectedIds, selecting, focusedId, mode, relativeDate, registryRuntimeValues,
+    config: mode === 'table' ? null : normalizeAnimalCardConfig(cardConfig) };
 }
 
 function renderCollectionItems(animals, options, offset = 0) {
@@ -276,9 +288,9 @@ function renderRegistry(animals, options) {
   const { selecting, allSelected, total } = options;
   const rows = renderCollectionItems(animals, options);
 
-  return `<div class="registry-frame collection-registry-frame"><table class="registry-table collection-registry-table" role="table" aria-label="個体台帳" aria-rowcount="${total + 1}">
+  const registry = `<div class="registry-frame collection-registry-frame"><table class="registry-table collection-registry-table" aria-label="個体台帳" aria-rowcount="${total + 1}">
     <colgroup><col class="registry-col-select"><col class="registry-col-photo"><col class="registry-col-id"><col class="registry-col-taxon"><col class="registry-col-sex"><col class="registry-col-instar"><col class="registry-col-origin"><col class="registry-col-status"><col class="registry-col-date"><col class="registry-col-date"></colgroup>
-    <thead role="rowgroup"><tr role="row">
+    <thead><tr>
       <th class="registry-select-cell" scope="col">${selecting ? checkboxControl({
         checked: allSelected,
         action: 'toggle-collection-select-all',
@@ -289,18 +301,83 @@ function renderRegistry(animals, options) {
       <th scope="col"><span class="visually-hidden">写真</span></th>
       <th scope="col">管理番号</th><th scope="col">分類</th><th scope="col">性別</th><th scope="col">齢期</th><th scope="col">由来</th><th scope="col">状態</th><th scope="col">最終給餌</th><th scope="col">最終脱皮</th>
     </tr></thead>
-    <tbody role="rowgroup" data-role="collection-items" data-collection-total="${total}" data-selection-mode="${selecting}">${rows}</tbody>
+    <tbody data-role="collection-items" data-collection-total="${total}" data-selection-mode="${selecting}">${rows}</tbody>
   </table></div>`;
+  // Whitespace between table elements creates hundreds of inert DOM text nodes.
+  return registry.replace(/>\s+</g, '><');
 }
 
-function renderRegistryRow(animal, { selectedIds, focusedId, selecting }, rowIndex) {
+function registrySignatureValue(value) {
+  return value === null || value === undefined ? '' : String(value);
+}
+
+function collectionRegistryRuntimeValues(selecting) {
+  const windowConfig = globalThis.window?.SETAE_CONFIG || {};
+  const iconConfig = globalThis.window?.SETAE_CONFIG || globalThis.SETAE_CONFIG || {};
+  const specimenAssets = windowConfig.specimenAssets && typeof windowConfig.specimenAssets === 'object'
+    ? windowConfig.specimenAssets
+    : {};
+  const iconOverrides = iconConfig.iconOverrides && typeof iconConfig.iconOverrides === 'object'
+    ? iconConfig.iconOverrides
+    : {};
+  return [
+    windowConfig.siteOrigin,
+    globalThis.location?.origin,
+    specimenAssets.specimen,
+    specimenAssets.spider,
+    specimenAssets.scorpion,
+    specimenAssets.insect,
+    specimenAssets.plant,
+    selecting ? iconOverrides['ui.check'] : ''
+  ].map(registrySignatureValue);
+}
+
+function sameRegistryRowSignature(left, right) {
+  return left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+}
+
+function renderRegistryRow(animal, { selectedIds, focusedId, selecting, relativeDate, registryRuntimeValues }, rowIndex) {
   const id = String(animal.id);
-  const code = animalCode(animal);
-  const lastFeed = escapeHtml(formatRelativeDays(animal.last_feed ?? animal.last_feed_date));
+  const code = String(animalCode(animal));
+  const taxon = String(scientificName(animal));
+  const gender = String(genderLabel(animal.gender));
+  const instar = String(animal.instar || '—');
+  const origin = String(animal.origin || '—');
+  const status = registrySignatureValue(animal.status);
+  const lastFeedValue = String(relativeDate(animal.last_feed ?? animal.last_feed_date));
+  const lastMoltValue = String(relativeDate(animal.last_molt ?? animal.last_molt_date));
   const selected = selectedIds.has(id);
   const focused = focusedId === id;
-  return `<tr class="${selected ? 'is-selected' : ''} ${focused ? 'is-focused' : ''}" role="row" aria-rowindex="${rowIndex}" data-animal-id="${escapeHtml(id)}" data-collection-animal tabindex="0" aria-selected="${selected ? 'true' : 'false'}" ${focused ? 'data-focused="true"' : ''}>
-    <td class="registry-select-cell" role="cell">${selecting ? checkboxControl({
+  const signature = [
+    id,
+    code,
+    taxon,
+    gender,
+    instar,
+    origin,
+    status,
+    lastFeedValue,
+    lastMoltValue,
+    registrySignatureValue(animal.image_url),
+    registrySignatureValue(animal.image?.url),
+    registrySignatureValue(animal.thumbnail_url),
+    registrySignatureValue(animal.thumb),
+    registrySignatureValue(animal.classification),
+    registrySignatureValue(animal.classification_key),
+    registrySignatureValue(animal.species?.classification),
+    selecting,
+    selected,
+    focused,
+    rowIndex,
+    ...registryRuntimeValues
+  ];
+  const cacheable = animal !== null && (typeof animal === 'object' || typeof animal === 'function');
+  const cached = cacheable ? registryRowCache.get(animal) : null;
+  if (cached && sameRegistryRowSignature(cached.signature, signature)) return cached.html;
+
+  const lastFeed = escapeHtml(lastFeedValue);
+  const html = `<tr class="${selected ? 'is-selected' : ''} ${focused ? 'is-focused' : ''}" aria-rowindex="${rowIndex}" data-animal-id="${escapeHtml(id)}" data-collection-animal tabindex="0" aria-selected="${selected ? 'true' : 'false'}" ${focused ? 'data-focused="true"' : ''}>
+    <td class="registry-select-cell">${selecting ? checkboxControl({
       checked: selected,
       action: 'toggle-collection-selection',
       label: `${code}を選択`,
@@ -308,14 +385,16 @@ function renderRegistryRow(animal, { selectedIds, focusedId, selecting }, rowInd
       labelMode: 'sr-only',
       data: { 'animal-id': id }
     }) : ''}</td>
-    <td class="registry-photo-cell registry-desktop-cell" role="cell"><div class="registry-thumbnail">${renderAnimalMedia(animal, { ratio: 'square', compact: true, code: '', scientificName: '' })}</div></td>
-    <td class="registry-id-cell" role="cell"><strong class="animal-code">${escapeHtml(code)}</strong></td>
-    <td class="registry-taxon-cell" role="cell"><span class="scientific-name">${escapeHtml(scientificName(animal))}</span></td>
-    <td class="registry-sex-cell" role="cell">${escapeHtml(genderLabel(animal.gender))}<span class="registry-mobile-feed"> · ${lastFeed}</span></td>
-    <td class="registry-desktop-cell" role="cell">${escapeHtml(animal.instar || '—')}</td>
-    <td class="registry-desktop-cell" role="cell">${escapeHtml(animal.origin || '—')}</td>
-    <td class="registry-status-cell" role="cell">${statusChip(animal.status)}</td>
-    <td class="registry-date registry-desktop-cell" role="cell">${lastFeed}</td>
-    <td class="registry-date registry-desktop-cell" role="cell">${escapeHtml(formatRelativeDays(animal.last_molt ?? animal.last_molt_date))}</td>
+    <td class="registry-photo-cell registry-desktop-cell"><div class="registry-thumbnail">${renderAnimalMedia(animal, { ratio: 'square', compact: true, code: '', scientificName: '' })}</div></td>
+    <td class="registry-id-cell"><strong class="animal-code">${escapeHtml(code)}</strong></td>
+    <td class="registry-taxon-cell"><span class="scientific-name">${escapeHtml(taxon)}</span></td>
+    <td class="registry-sex-cell">${escapeHtml(gender)}<span class="registry-mobile-feed"> · ${lastFeed}</span></td>
+    <td class="registry-desktop-cell">${escapeHtml(instar)}</td>
+    <td class="registry-desktop-cell">${escapeHtml(origin)}</td>
+    <td class="registry-status-cell">${statusChip(status)}</td>
+    <td class="registry-date registry-desktop-cell">${lastFeed}</td>
+    <td class="registry-date registry-desktop-cell">${escapeHtml(lastMoltValue)}</td>
   </tr>`;
+  if (cacheable) registryRowCache.set(animal, { signature, html });
+  return html;
 }

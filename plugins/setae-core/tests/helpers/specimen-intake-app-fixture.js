@@ -79,6 +79,15 @@ for (let id = 3; id <= requestedCount; id += 1) {
     status: id % 5 === 0 ? 'pre_molt' : 'normal', origin: 'CB',
     acquired_date: '2026-01-10', notes: '段階表示のローカル合成データです。', ...publicDefaults });
 }
+const requestedRecordCount = params.has('records') ? Number(params.get('records')) : 0;
+if (!Number.isInteger(requestedRecordCount) || requestedRecordCount < 0 || requestedRecordCount > 100) {
+  throw new Error('Local fixture records must be an integer between 0 and 100.');
+}
+const journalRecords = Array.from({ length: requestedRecordCount }, (_, index) => ({
+  id: 7000 + index, spider_id: animals[index % animals.length].id, type: index % 2 ? 'observation' : 'feed',
+  date: new Date(Date.UTC(2026, 7, 29 - index, 9, 0, 0)).toISOString(),
+  data: index % 2 ? { note: `ローカル観察 ${index + 1}` } : { prey_type: 'レッドローチ', quantity: 1 }
+}));
 if (params.get('variant') === 'zero-photo') Object.assign(animals[0], {
   gender: 'unknown', instar: 0, status: 'normal', origin: '', acquired_date: '', notes: '',
   temperature: 0, humidity: 0,
@@ -243,7 +252,8 @@ window.fetch = async (input, init = {}) => {
   }
   if (path === '/my-spiders') return jsonResponse({ items: clone(animals), total_pages: 1, total: animals.length });
   if (path === '/care-summary') return jsonResponse(summary());
-  if (['/journal-events', '/care-events', '/task-actions'].includes(path)) return jsonResponse({ items: [] });
+  if (path === '/journal-events') return jsonResponse({ items: clone(journalRecords) });
+  if (['/care-events', '/task-actions'].includes(path)) return jsonResponse({ items: [] });
   if (path === '/baby-groups') return jsonResponse({ items: [], archived_items: [], summary: { currently_managed: 0, active_groups: 0 } });
   if (path === '/feeders') return jsonResponse({ types: [], inventory: [], egg_batches: [], events: [], summary: {} });
   if (path === '/enclosures') return jsonResponse({ items: [{ id: 4, code: 'E004', name: 'Local fixture enclosure', occupants: [] }], summary: {} });

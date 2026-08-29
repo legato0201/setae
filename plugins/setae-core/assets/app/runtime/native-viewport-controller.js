@@ -49,23 +49,47 @@ export function createNativeViewportController({
 } = {}) {
   let active = false;
   let frame = 0;
+  let focusFrame = 0;
+  let focusOutTimer = 0;
+  let focusedElement = null;
   let firstMeasurement = true;
   let snapshot = createViewportSnapshot({ windowRef, documentRef });
   const viewport = windowRef.visualViewport;
 
-  const ensureFocusedFieldVisible = (next) => {
+  const ensureFocusedFieldVisible = (expectedField) => {
     const field = documentRef.activeElement;
-    if (!next.keyboardOpen || !isEditableElement(field) || typeof field.getBoundingClientRect !== 'function') return;
+    const next = createViewportSnapshot({ windowRef, documentRef });
+    if (!active || field !== expectedField || !next.keyboardOpen || !isEditableElement(field) || typeof field.getBoundingClientRect !== 'function') return;
     const rect = field.getBoundingClientRect();
-    const top = next.offsetTop + 8;
-    const bottom = next.offsetTop + next.visualHeight - 8;
+    let top = next.offsetTop + 8;
+    let bottom = next.offsetTop + next.visualHeight - 8;
+    // A dialog's scrolling body is smaller than the viewport: its title and
+    // save footer must not cover the field even when the keyboard stays open.
+    for (let parent = field.parentElement; parent && parent !== documentRef.body; parent = parent.parentElement) {
+      const style = windowRef.getComputedStyle?.(parent);
+      if (!/(auto|scroll|hidden|clip)/.test(style?.overflowY || '') || typeof parent.getBoundingClientRect !== 'function') continue;
+      const bounds = parent.getBoundingClientRect();
+      top = Math.max(top, bounds.top + 8);
+      bottom = Math.min(bottom, bounds.bottom - 8);
+    }
     if (rect.top < top || rect.bottom > bottom) field.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  };
+
+  const cancelFrame = (id) => {
+    if (!id) return;
+    if (windowRef.requestAnimationFrame) windowRef.cancelAnimationFrame?.(id);
+    else windowRef.clearTimeout?.(id);
   };
 
   const apply = () => {
     frame = 0;
     const previous = snapshot;
     const next = createViewportSnapshot({ windowRef, documentRef });
+    const nextField = documentRef.activeElement;
+    const fieldChanged = nextField !== focusedElement;
+    const viewportResized = previous.visualHeight !== next.visualHeight
+      || previous.visualWidth !== next.visualWidth || previous.layoutHeight !== next.layoutHeight;
+    focusedElement = nextField;
     snapshot = next;
     const root = documentRef.documentElement;
     root?.style?.setProperty('--setae-visual-viewport-height', `${next.visualHeight}px`);
@@ -73,19 +97,27 @@ export function createNativeViewportController({
     root?.style?.setProperty('--setae-keyboard-inset', `${next.keyboardInset}px`);
     root?.style?.setProperty('--setae-layout-viewport-height', `${next.layoutHeight}px`);
     if (root?.dataset) root.dataset.setaeKeyboardOpen = next.keyboardOpen ? 'true' : 'false';
-    if (next.keyboardOpen && (firstMeasurement || !previous.keyboardOpen || previous.editableFocused !== next.editableFocused)) {
-      windowRef.requestAnimationFrame?.(() => ensureFocusedFieldVisible(next));
+    if (next.keyboardOpen && (firstMeasurement || !previous.keyboardOpen || fieldChanged || viewportResized)) {
+      cancelFrame(focusFrame);
+      const reveal = () => { focusFrame = 0; ensureFocusedFieldVisible(nextField); };
+      focusFrame = windowRef.requestAnimationFrame ? windowRef.requestAnimationFrame(reveal) : windowRef.setTimeout(reveal, 0);
+    } else if (!next.keyboardOpen) {
+      cancelFrame(focusFrame);
+      focusFrame = 0;
     }
     firstMeasurement = false;
     onChange({ ...next });
   };
 
   const schedule = () => {
-    if (frame) return;
+    if (!active || frame) return;
     frame = windowRef.requestAnimationFrame?.(apply) || windowRef.setTimeout(apply, 0);
   };
 
-  const focusOut = () => windowRef.setTimeout(schedule, 0);
+  const focusOut = () => {
+    if (focusOutTimer) windowRef.clearTimeout(focusOutTimer);
+    focusOutTimer = windowRef.setTimeout(() => { focusOutTimer = 0; schedule(); }, 0);
+  };
 
   return {
     start() {
@@ -109,8 +141,14 @@ export function createNativeViewportController({
       windowRef.removeEventListener?.('orientationchange', schedule);
       documentRef.removeEventListener?.('focusin', schedule, true);
       documentRef.removeEventListener?.('focusout', focusOut, true);
-      if (frame) (windowRef.cancelAnimationFrame || windowRef.clearTimeout)?.(frame);
+      cancelFrame(frame);
+      cancelFrame(focusFrame);
+      if (focusOutTimer) windowRef.clearTimeout(focusOutTimer);
       frame = 0;
+      focusFrame = 0;
+      focusOutTimer = 0;
+      focusedElement = null;
+      firstMeasurement = true;
     },
     measure: apply,
     snapshot: () => ({ ...snapshot })

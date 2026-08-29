@@ -6,6 +6,9 @@ const positiveInteger = (value, fallback) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
+const formatCount = (value) => String(Math.max(0, Math.trunc(Number(value) || 0)))
+  .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
 export function createListWindow(options = {}) {
   const settings = typeof options === 'number' ? { limit: options } : options || {};
   const initial = positiveInteger(settings.initial, 100);
@@ -59,7 +62,7 @@ export function renderProgressiveListFooter({
   const count = Math.max(0, Number(total) || 0);
   const remaining = Math.max(0, count - shown);
   return `<footer class="progressive-list-footer ${escapeHtml(className)}"${role ? ` data-role="${escapeHtml(role)}"` : ''}>
-    <output class="progressive-list-count" tabindex="-1">${shown.toLocaleString('ja-JP')} / ${count.toLocaleString('ja-JP')}${escapeHtml(noun)}を表示</output>
+    <output class="progressive-list-count" tabindex="-1">${formatCount(shown)} / ${formatCount(count)}${escapeHtml(noun)}を表示</output>
     <span class="visually-hidden" aria-live="polite">${escapeHtml(announcement)}</span>
     ${remaining && action ? button(label, {
       action,

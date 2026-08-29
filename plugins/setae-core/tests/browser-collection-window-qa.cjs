@@ -253,6 +253,47 @@ async function assertMobileGeometry(page) {
       });
     }
 
+    await runCase('records-lazy-menu-keyboard-back-and-offscreen-row', {
+      query: { records: '8' }, viewport: { width: 390, height: 844 }
+    }, async (page) => {
+      await page.evaluate(() => window.__setaeIntakeApp.navigate('records', { recordsTab: 'history' }));
+      await page.getByRole('heading', { level: 1, name: '記録履歴', exact: true }).waitFor();
+      assert.equal(await page.locator('[data-record-id]').count(), 8);
+      const menu = page.locator('.records-action-menu').nth(5);
+      const trigger = menu.locator(':scope > summary');
+      await trigger.scrollIntoViewIfNeeded();
+      assert.equal(await menu.locator(':scope > template[data-action-menu-template]').count(), 1);
+      assert.equal(await menu.getByRole('menu').count(), 0);
+      await trigger.click();
+      await menu.getByRole('menuitem').first().waitFor();
+      assert.equal(await menu.locator(':scope > template[data-action-menu-template]').count(), 0);
+      assert.equal(await menu.getByRole('menu').count(), 1);
+      await page.getByRole('heading', { level: 1, name: '記録履歴', exact: true }).click();
+      assert.equal(await menu.evaluate((node) => node.open), false, 'An outside tap closes only the action menu.');
+
+      await trigger.focus();
+      await page.keyboard.press('Enter');
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('role')), 'menuitem');
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelectorAll('.records-action-menu')[5]?.open);
+      assert.equal(await trigger.evaluate((node) => node === document.activeElement), true,
+        'Escape must restore focus to the menu trigger.');
+
+      await page.keyboard.press('Enter');
+      const routeBeforeBack = await snapshot(page);
+      await page.evaluate(() => history.back());
+      await page.waitForFunction(() => !document.querySelectorAll('.records-action-menu')[5]?.open);
+      const routeAfterBack = await snapshot(page);
+      assert.equal(routeAfterBack.page, 'records');
+      assert.equal(routeAfterBack.historyState.page, routeBeforeBack.historyState.page,
+        'Browser Back closes the local menu without changing the application route.');
+      assert.equal(await menu.locator(':scope > .action-menu-popover').count(), 1, 'Lazy menu content hydrates exactly once.');
+      assert.equal(await menu.locator(':scope > template[data-action-menu-template]').count(), 0);
+      return { row: 6, records: 8, clickHydrated: true, keyboardMenuitem: true,
+        escapeFocusRestored: true, outsideTapClosed: true, browserBackClosedOnlyMenu: true };
+    });
+
     await runCase('collection-table-500-all-items-once', { query: { count: '500' } }, async (page) => {
       const expected = idsThrough(500);
       await assertWindow(page, expected.slice(0, 50), 500, 50);
@@ -399,7 +440,23 @@ async function assertMobileGeometry(page) {
           && Number(window.__setaeIntakeApp.snapshot().selectedAnimalId) === 76 && !window.__setaeIntakeApp.snapshot().loadingEvents);
         assert.equal((await snapshot(page)).selectedAnimal.id, 76);
         assert.equal((await snapshot(page)).historyState.index, before.historyState.index + 1);
-        await page.goBack();
+        const mobileBack = page.locator('.mobile-app-bar').getByRole('button', { name: '前の画面に戻る', exact: true });
+        await mobileBack.waitFor();
+        assert.equal(await page.locator('[data-action="back-animals"]:visible').count(), 1,
+          'Mobile detail must offer one visible back action.');
+        const backGeometry = await mobileBack.evaluate((button) => {
+          const bounds = button.getBoundingClientRect();
+          const header = button.closest('.mobile-app-bar').getBoundingClientRect();
+          return { width: bounds.width, height: bounds.height, top: bounds.top, bottom: bounds.bottom,
+            left: bounds.left, right: bounds.right, headerTop: header.top, headerBottom: header.bottom, viewport: innerWidth };
+        });
+        assert.ok(backGeometry.width >= 44 && backGeometry.height >= 44, 'Back must have a touch-sized target.');
+        assert.ok(backGeometry.top >= backGeometry.headerTop && backGeometry.bottom <= backGeometry.headerBottom);
+        assert.ok(backGeometry.left >= 0 && backGeometry.right <= backGeometry.viewport);
+        const detailFile = screenshotPath('collection-window-' + width + '-detail-back.png');
+        await page.screenshot({ path: detailFile, fullPage: false });
+        if (width === 320) await mobileBack.click();
+        else await page.goBack();
         const after = await assertWindow(page, expected.slice(0, 100), 123, 100);
         await page.waitForFunction((expectedScroll) => Math.abs(window.scrollY - expectedScroll) <= 2, scrollY);
         assert.equal(after.historyState.index, before.historyState.index);
@@ -411,7 +468,9 @@ async function assertMobileGeometry(page) {
         assert.deepEqual(after.collectionSelection, before.collectionSelection);
         assert.equal(after.error, null);
         return { width, selectionPreserved: true, geometry, detailId: 76, restoredLimit: 100, scrollY,
-          restoredScrollY: await page.evaluate(() => window.scrollY), screenshot: path.relative(evidenceDir, file) };
+          backGeometry, returnMethod: width === 320 ? 'mobile-header-back' : 'browser-history-back',
+          restoredScrollY: await page.evaluate(() => window.scrollY), screenshot: path.relative(evidenceDir, file),
+          detailScreenshot: path.relative(evidenceDir, detailFile) };
       });
     }
     await runCase('collection-history-restored-query-accepts-previously-committed-text', { viewport: { width: 375, height: 844 } }, async (page) => {

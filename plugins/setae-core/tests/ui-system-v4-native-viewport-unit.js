@@ -67,6 +67,101 @@ assert.ok(scrolled >= 1, 'hidden focused field must be brought into the visual v
 assert.equal(controller.snapshot().visualWidth, 390);
 controller.stop();
 
+// Use queued frames to model focus/layout ordering, including callbacks that
+// must not run after a controller is stopped or a different field is focused.
+const pendingFrames = new Map();
+const pendingTimers = new Map();
+let nextHandle = 0;
+const eventHandlers = new Map();
+const scrollBody = { parentElement: null, getBoundingClientRect: () => ({ top: 100, bottom: 420 }) };
+const makeField = (top, bottom, parentElement = null) => ({
+  matches: () => true, parentElement, reveals: 0,
+  getBoundingClientRect: () => ({ top, bottom }),
+  scrollIntoView(options) { this.reveals += 1; assert.equal(options.block, 'nearest'); }
+});
+const firstField = makeField(620, 664);
+const secondField = makeField(550, 594);
+const footerCoveredField = makeField(430, 474, scrollBody);
+const visibleField = makeField(200, 244, scrollBody);
+const asyncDocument = {
+  ...documentRef, activeElement: firstField,
+  addEventListener(type, callback) { eventHandlers.set(`document:${type}`, callback); },
+  removeEventListener(type) { eventHandlers.delete(`document:${type}`); }
+};
+const asyncViewport = {
+  ...viewport, height: 500, offsetTop: 0,
+  addEventListener(type, callback) { eventHandlers.set(`viewport:${type}`, callback); },
+  removeEventListener(type) { eventHandlers.delete(`viewport:${type}`); }
+};
+const asyncWindow = {
+  ...windowRef, visualViewport: asyncViewport,
+  getComputedStyle: (element) => ({ overflowY: element === scrollBody ? 'auto' : 'visible' }),
+  addEventListener(type, callback) { eventHandlers.set(`window:${type}`, callback); },
+  removeEventListener(type) { eventHandlers.delete(`window:${type}`); },
+  requestAnimationFrame(callback) { const id = ++nextHandle; pendingFrames.set(id, callback); return id; },
+  cancelAnimationFrame(id) { pendingFrames.delete(id); },
+  setTimeout(callback) { const id = ++nextHandle; pendingTimers.set(id, callback); return id; },
+  clearTimeout(id) { pendingTimers.delete(id); }
+};
+const nextFrame = () => {
+  const callbacks = [...pendingFrames.values()];
+  pendingFrames.clear();
+  callbacks.forEach((callback) => callback());
+};
+const settleFrames = () => { nextFrame(); nextFrame(); };
+const asyncController = createNativeViewportController({ windowRef: asyncWindow, documentRef: asyncDocument }).start();
+settleFrames();
+assert.equal(firstField.reveals, 1);
+asyncDocument.activeElement = secondField;
+eventHandlers.get('document:focusin')();
+settleFrames();
+assert.equal(secondField.reveals, 1, 'Next input must be revealed even though the keyboard remains open');
+asyncDocument.activeElement = footerCoveredField;
+eventHandlers.get('document:focusin')();
+settleFrames();
+assert.equal(footerCoveredField.reveals, 1, 'A save footer can cover an input inside the visual viewport');
+asyncViewport.height = 440;
+eventHandlers.get('viewport:resize')();
+settleFrames();
+assert.equal(footerCoveredField.reveals, 2, 'Keyboard height changes must recheck the current input');
+asyncViewport.offsetTop = 10;
+eventHandlers.get('viewport:scroll')();
+settleFrames();
+assert.equal(footerCoveredField.reveals, 2, 'Viewport scrolling alone must not fight deliberate scrolling');
+asyncDocument.activeElement = visibleField;
+eventHandlers.get('document:focusin')();
+settleFrames();
+assert.equal(visibleField.reveals, 0, 'An already visible field must stay still');
+
+asyncDocument.activeElement = secondField;
+eventHandlers.get('document:focusin')();
+nextFrame(); // Measurement has queued a reveal for secondField.
+asyncDocument.activeElement = visibleField;
+nextFrame();
+assert.equal(secondField.reveals, 1, 'A stale focus callback must not scroll the previous field');
+asyncController.measure();
+eventHandlers.get('document:focusout')();
+asyncController.stop();
+assert.equal(pendingFrames.size, 0);
+assert.equal(pendingTimers.size, 0);
+assert.equal(eventHandlers.size, 0);
+settleFrames();
+assert.equal(visibleField.reveals, 0);
+
+asyncDocument.activeElement = firstField;
+asyncController.start();
+settleFrames();
+assert.equal(firstField.reveals, 2, 'Restarting the controller must measure and reveal again');
+asyncDocument.activeElement = secondField;
+eventHandlers.get('document:focusin')();
+nextFrame();
+asyncViewport.height = 800; // Keyboard closes before the queued reveal runs.
+eventHandlers.get('viewport:resize')();
+settleFrames();
+assert.equal(secondField.reveals, 1, 'A pending reveal must use the live viewport after the keyboard closes');
+assert.equal(asyncController.snapshot().keyboardOpen, false);
+asyncController.stop();
+
 const tokens = fs.readFileSync(path.join(root, 'assets/app/styles/tokens.css'), 'utf8');
 const frameCss = fs.readFileSync(path.join(root, 'assets/app/styles/app-frame.css'), 'utf8');
 ['--setae-visual-viewport-height', '--setae-visual-viewport-offset-top', '--setae-keyboard-inset', '--setae-layout-viewport-height'].forEach((token) => assert.match(tokens, new RegExp(token)));

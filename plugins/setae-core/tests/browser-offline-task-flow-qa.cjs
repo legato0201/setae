@@ -39,12 +39,35 @@ const fixture = `${baseUrl}/tests/fixtures/product-ux-v242.html?mode=offline`;
     await desktop.getByText('1件未同期').first().waitFor();
     results.push({ check: 'partial-failure-visible', status: 'PASS' });
 
-    const mobile = await context.newPage();
-    await mobile.setViewportSize({ width: 390, height: 844 });
-    await mobile.goto(fixture);
-    await mobile.getByText(/オフラインです。操作はこの端末に保存し/).waitFor();
-    assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
-    results.push({ check: 'mobile-status-no-overflow', status: 'PASS' });
+    for (const width of [320, 390]) {
+      const mobile = await context.newPage();
+      await mobile.setViewportSize({ width, height: 844 });
+      await mobile.goto(fixture);
+      const sync = mobile.locator('.mobile-app-sync');
+      await sync.getByRole('button', { name: /オフライン/ }).waitFor();
+      assert.equal(await sync.isVisible(), true);
+      assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+      await mobile.getByRole('button', { name: 'オンラインへ戻す' }).click();
+      await mobile.locator('body[data-sync-status="idle"]').waitFor();
+      await mobile.getByRole('button', { name: '一部失敗を再現' }).click();
+      const failure = sync.getByRole('button', { name: /1件未同期/ });
+      await failure.waitFor();
+      assert.equal(await failure.isVisible(), true, 'Online sync failure must remain visible on mobile');
+      const geometry = await mobile.evaluate(() => {
+        const bar = document.querySelector('.mobile-app-bar').getBoundingClientRect();
+        const status = document.querySelector('.mobile-sync-button').getBoundingClientRect();
+        const heading = document.querySelector('[data-app-main] h1').getBoundingClientRect();
+        return { barBottom: bar.bottom, top: status.top, bottom: status.bottom, width: status.width,
+          height: status.height, headingTop: heading.top, overflow: document.documentElement.scrollWidth > innerWidth + 1 };
+      });
+      assert.ok(geometry.height >= 44 && geometry.width >= 44);
+      assert.ok(geometry.bottom <= geometry.barBottom + 1);
+      assert.ok(geometry.headingTop >= geometry.barBottom - 1, 'Status row must not cover page content');
+      assert.equal(geometry.overflow, false);
+      await mobile.screenshot({ path: path.join(evidenceDir, 'mobile-sync-failure-' + width + '.png'), fullPage: false });
+      results.push({ check: 'mobile-offline-and-sync-failure-' + width, status: 'PASS', geometry });
+      await mobile.close();
+    }
 
     fs.writeFileSync(path.join(evidenceDir, 'browser-offline-task-flow-qa.json'), `${JSON.stringify({ generatedAt: new Date().toISOString(), results }, null, 2)}\n`);
     console.log(`Offline task-flow browser QA passed (${results.length} checks)`);

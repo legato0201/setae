@@ -18,6 +18,7 @@ const classificationKinds = {
 };
 
 const allowedKinds = new Set(['specimen', 'spider', 'scorpion', 'insect', 'plant']);
+const bundledSpecimenAssetUrls = new Map();
 const mediaTimers = new WeakMap();
 const ratioDimensions = Object.freeze({
   square: [800, 800],
@@ -34,20 +35,26 @@ export function mediaKind(classification, fallback = 'specimen') {
 }
 
 function bundledSpecimenAssetUrl(kind) {
-  const files = {
-    spider: 'spider-silhouette.svg',
-    scorpion: 'scorpion.svg',
-    insect: 'insect.svg',
-    plant: 'plant.svg',
-    specimen: 'specimen.svg'
-  };
-  return safeHttpUrl(new URL(`../../images/specimen/${files[kind] || files.specimen}`, import.meta.url).href);
+  const resolvedKind = allowedKinds.has(kind) ? kind : 'specimen';
+  if (!bundledSpecimenAssetUrls.has(resolvedKind)) {
+    const files = {
+      spider: 'spider-silhouette.svg',
+      scorpion: 'scorpion.svg',
+      insect: 'insect.svg',
+      plant: 'plant.svg',
+      specimen: 'specimen.svg'
+    };
+    bundledSpecimenAssetUrls.set(resolvedKind, new URL(`../../images/specimen/${files[resolvedKind]}`, import.meta.url).href);
+  }
+  // Cache the module-relative URL only; site-origin validation must stay live.
+  return safeHttpUrl(bundledSpecimenAssetUrls.get(resolvedKind));
 }
 
 function specimenAssetSources(kind) {
   const assets = globalThis.window?.SETAE_CONFIG?.specimenAssets || {};
   const fallback = bundledSpecimenAssetUrl(kind);
-  const primary = safeHttpUrl(assets[kind] || fallback);
+  const override = assets[kind];
+  const primary = override ? safeHttpUrl(override) : fallback;
   return {
     primary,
     fallback: primary && fallback && primary !== fallback ? fallback : ''

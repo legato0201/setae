@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { parseCss, splitSelectors } = require('./ui-system-v4-public-surface-ownership-unit.js');
 
 const pluginRoot = path.resolve(__dirname, '..');
 
@@ -17,6 +18,7 @@ const modalTemplate = read('templates/partials/modals.php');
 const appTokens = read('assets/app/styles/tokens.css');
 const appComponents = read('assets/app/styles/components.css');
 const appFrame = read('assets/app/styles/app-frame.css');
+const appWorkbench = read('assets/app/styles/components/workbench.css');
 
 function rgb(hex) {
     return hex.match(/[0-9a-f]{2}/gi).map((part) => parseInt(part, 16));
@@ -54,6 +56,22 @@ function token(block, name) {
     const match = block.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, 'i'));
     assert.ok(match, `Missing color token --${name}`);
     return match[1];
+}
+
+function selectorAlternatives(selector) {
+    const group = selector.match(/:(?:is|where)\(([^()]+)\)/);
+    return group
+        ? splitSelectors(group[1]).flatMap((part) => selectorAlternatives(selector.replace(group[0], part)))
+        : [selector];
+}
+
+function declarationValues(css, selector, property) {
+    const values = parseCss(css)
+        .filter((rule) => rule.selectors.flatMap(selectorAlternatives).includes(selector))
+        .flatMap((rule) => [...rule.body.replace(/\/\*[\s\S]*?\*\//g, '')
+            .matchAll(new RegExp(`(?:^|;)\\s*${property}:\\s*([^;]+)(?=;)`, 'g'))]
+            .map((match) => match[1].trim()));
+    return [...new Set(values)];
 }
 
 const lightTheme = themeBlock('');
@@ -100,7 +118,12 @@ for (const colors of [lightColors, darkColors]) {
 assert.match(appComponents, /\.text-button\s*\{[\s\S]*?color:\s*var\(--text-secondary\)/);
 assert.match(appComponents, /\.field > span:first-child,[\s\S]*?color:\s*var\(--text-secondary\)/);
 assert.match(appComponents, /::placeholder[\s\S]*?color:\s*var\(--text-placeholder\)/);
-assert.match(appFrame, /\.app-rail-link\.is-active,[\s\S]*?background:\s*var\(--bg-selected\);[\s\S]*?color:\s*var\(--text-primary\)/);
+for (const selector of ['.app-rail-link.is-active', '.app-rail-sublink.is-active']) {
+    assert.deepEqual(declarationValues(appFrame, selector, 'background'), ['var(--bg-selected)'],
+        `${selector} must retain the selected background regardless of selector grouping.`);
+}
+assert.deepEqual(declarationValues(appWorkbench, '.navigation-item.is-active', 'color'), ['var(--text-primary)'],
+    'Active rail items retain their foreground through the shared navigation primitive.');
 
 [
     '.species-names',

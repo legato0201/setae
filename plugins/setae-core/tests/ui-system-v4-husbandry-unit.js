@@ -185,7 +185,7 @@ assert.match(fixture, /dataset\.overflow/);
 assert.match(fixture, /styles\/screens\/husbandry\.css/);
 assert.match(fixture, /styles\/patterns\/care-plan\.css/);
 
-assert.match(plugin, /Version:\s*1\.0\.251/);
-assert.match(plugin, /define\('SETAE_VERSION', '1\.0\.251\.1'\)/);
+assert.match(plugin, /Version:\s*1\.0\.252(?:\s|$)/);
+assert.match(plugin, /define\('SETAE_VERSION', '1\.0\.252'\)/);
 
 console.log('UI System v4 Husbandry Workbench tests passed');

@@ -34,16 +34,22 @@ const collectionViewLink = (page, activeViewId, id, label) => navigationItem(lab
 });
 
 const syncPresentation = ({ online = true, pendingSyncCount = 0, syncStatus = 'idle', syncFailedCount = 0 } = {}) => {
+  const count = syncStatus === 'error' ? syncFailedCount || pendingSyncCount : pendingSyncCount;
+  const compactCount = `${Number(count) > 99 ? '99+' : count}件`;
   const label = syncStatus === 'syncing'
     ? `${pendingSyncCount}件を同期中`
     : syncStatus === 'error'
-      ? `${syncFailedCount || pendingSyncCount}件未同期`
+      ? count ? `${count}件未同期` : '同期に失敗しました'
       : !online || syncStatus === 'offline'
         ? pendingSyncCount ? `オフライン · 同期待ち ${pendingSyncCount}件` : 'オフライン'
         : pendingSyncCount
           ? `同期待ち ${pendingSyncCount}件`
           : '';
-  return { label, tone: syncStatus === 'error' ? 'danger' : 'warning' };
+  const compactLabel = syncStatus === 'syncing' ? `同期中 ${compactCount}`
+    : syncStatus === 'error' ? count ? `未同期 ${compactCount}` : '同期失敗'
+      : !online || syncStatus === 'offline' ? count ? `オフライン · ${compactCount}待ち` : 'オフライン'
+        : label ? `同期待ち ${compactCount}` : '';
+  return { label, compactLabel, tone: syncStatus === 'error' ? 'danger' : 'warning' };
 };
 
 export function renderAppRail(options = {}) {
@@ -81,23 +87,31 @@ export function renderAppRail(options = {}) {
 }
 
 export function renderMobileAppBar(options = {}) {
-  const { pageTitle = 'SETAE', mockMode = false, online = true, syncStatus = 'idle' } = options;
+  const { page = 'today', pageTitle = 'SETAE', mockMode = false, syncStatus = 'idle' } = options;
   const publicNavigation = publicNavigationEnabled(options);
   const sync = syncPresentation(options);
-  const mobileStatus = [
-    sync.label && (!online || syncStatus === 'offline') ? statusIndicator(sync.label, { tone: sync.tone, className: 'mobile-app-status' }) : '',
-    sync.label && online && syncStatus !== 'offline' ? button(sync.label, { nav: 'settings', className: 'mobile-sync-button', data: { 'settings-tab': 'integrations' }, disabled: syncStatus === 'syncing' }) : '',
-    mockMode ? statusIndicator('モック', { className: 'mobile-app-status' }) : ''
-  ].join('');
+  const context = !publicNavigation && page === 'animal-detail'
+    ? `<div class="setae-brand is-compact mobile-app-brand">
+      ${button('戻る', { action: 'back-animals', iconName: 'chevronLeft', className: 'mobile-app-back', aria: { 'aria-label': '前の画面に戻る' } })}
+      <div class="setae-brand-copy"><h2 class="setae-brand-title">個体詳細</h2><span class="setae-brand-subtitle" title="${escapeHtml(pageTitle)}">${escapeHtml(pageTitle)}</span></div>
+    </div>`
+    : renderBrand({ subtitle: pageTitle, className: 'mobile-app-brand', size: 'compact' });
+  const mobileSync = !publicNavigation && sync.label
+    ? `<div class="mobile-app-sync" role="status" aria-live="polite" aria-atomic="true">${button(`${sync.compactLabel}${syncStatus === 'syncing' ? '' : ' · 確認'}`, {
+      nav: 'settings', className: `mobile-sync-button${syncStatus === 'error' ? ' is-error' : ''}`,
+      data: { 'settings-tab': 'integrations' }, disabled: syncStatus === 'syncing',
+      aria: { 'aria-label': syncStatus === 'syncing' ? sync.label : `${sync.label}。同期状況を確認` }
+    })}</div>` : '';
 
   return `<header class="mobile-app-bar">
-    ${renderBrand({ subtitle: pageTitle, className: 'mobile-app-brand', size: 'compact' })}
+    ${context}
     <div class="mobile-app-actions">
-      ${mobileStatus}
+      ${mockMode ? statusIndicator('モック', { className: 'mobile-app-status' }) : ''}
       ${publicNavigation
         ? button('ログイン', { action: 'show-login', primary: true, className: 'compact-button' })
         : iconButton('settings', { action: '', label: '設定', className: 'mobile-app-icon', data: { nav: 'settings' } })}
     </div>
+    ${mobileSync}
   </header>`;
 }
 
@@ -152,6 +166,10 @@ export function renderAppFrameRegions(options = {}) {
     feedback: renderAppFeedback(options.toastMessage),
     updateNotice: String(options.updateNoticeHtml || '')
   };
+}
+
+export function renderAppPagePreparation() {
+  return '<div class="boot-status" aria-busy="true" data-app-page-preparing><span class="spinner" aria-hidden="true"></span><span>画面を準備しています</span></div>';
 }
 
 export function renderAppFrame(options = {}) {

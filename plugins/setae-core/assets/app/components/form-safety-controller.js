@@ -421,6 +421,12 @@ export function createFormSafetyController(root, {
     }
   };
 
+  const cancelGuard = () => {
+    if (!guardDialog) return false;
+    closeGuard({ restoreFocus: true });
+    return true;
+  };
+
   const showGuard = (forms, continuation) => {
     if (guardDialog) return true;
     guardedAction = continuation;
@@ -527,7 +533,7 @@ export function createFormSafetyController(root, {
       event.preventDefault();
       event.stopImmediatePropagation();
       if (action === 'continue-form-editing') {
-        closeGuard({ restoreFocus: true });
+        cancelGuard();
         return;
       }
       const continuation = guardedAction;
@@ -549,7 +555,7 @@ export function createFormSafetyController(root, {
     if (event.key !== 'Escape' || !guardDialog) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    closeGuard();
+    cancelGuard();
   };
 
   root?.addEventListener?.('input', onInput, true);
@@ -560,6 +566,7 @@ export function createFormSafetyController(root, {
   return {
     sync,
     guard,
+    cancelGuard,
     flush,
     markSubmitted,
     discardByKey,

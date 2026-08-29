@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 <html <?php language_attributes(); ?> class="setae-app-document">
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
+    <?php echo Setae_App_Shell::render_initial_theme_script(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#20231f">
     <meta name="mobile-web-app-capable" content="yes">

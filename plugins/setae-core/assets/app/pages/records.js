@@ -29,7 +29,9 @@ const eventData = (event) => {
   return {};
 };
 
-export function renderRecords({ records = [], animals = [], filter = 'all', view = 'history', qr = {}, loading = false, listWindow = createListWindow() }) {
+const recordRows = new WeakMap();
+
+export function renderRecords({ records = [], animals = [], filter = 'all', view = 'history', qr = {}, loading = false, listWindow = createListWindow(), deferRows = false }) {
   const navigation = tabs([
     { id: 'history', label: '記録履歴' },
     { id: 'qr', label: 'QR記録' }
@@ -54,7 +56,7 @@ export function renderRecords({ records = [], animals = [], filter = 'all', view
       ${navigation}
       ${view === 'qr'
         ? renderQrWorkspace({ qr, animals })
-        : renderHistory({ records, filter, loading, listWindow })}
+        : renderHistory({ records, filter, loading, listWindow, deferRows })}
   `, {
     id: 'records-tabpanel',
     idPrefix: 'records',
@@ -63,9 +65,9 @@ export function renderRecords({ records = [], animals = [], filter = 'all', view
   });
 }
 
-function renderHistory({ records, filter, loading, listWindow }) {
+function renderHistory({ records, filter, loading, listWindow, deferRows = false }) {
   const filtered = filterRecords(records, filter);
-  const visible = visibleListItems(filtered, listWindow);
+  const visible = deferRows ? [] : visibleListItems(filtered, listWindow);
   const activeFilterLabel = filter === 'all' ? '' : recordTypeLabel(filter);
   const filterControl = selectControl({
     value: filter,
@@ -88,8 +90,8 @@ function renderHistory({ records, filter, loading, listWindow }) {
     ${loading
       ? loadingBlock('記録を読み込み中…', 'ledger')
       : filtered.length
-        ? `<div class="workbench-ledger records-ledger" role="list" data-role="records-ledger">${visible.map(renderRecord).join('')}</div>
-          ${renderRecordsProgressiveFooter(visible.length, filtered.length)}`
+        ? `<div class="workbench-ledger records-ledger" role="list" data-role="records-ledger"${deferRows ? ' aria-busy="true"' : ''}>${visible.map(renderRecord).join('')}</div>
+          ${renderRecordsProgressiveFooter(visible.length, filtered.length, deferRows ? '記録を準備しています。' : '', deferRows)}`
         : records.length === 0
           ? emptyState('', {
               title: 'まだ記録がありません',
@@ -117,12 +119,12 @@ export function filterRecords(records = [], filter = 'all') {
   return filter === 'all' ? records : records.filter((item) => item.event?.type === filter);
 }
 
-function renderRecordsProgressiveFooter(visible, total, announcement = '') {
-  return renderProgressiveListFooter({ visible, total, action: 'show-more-records', label: 'さらに100件表示', noun: '件',
+function renderRecordsProgressiveFooter(visible, total, announcement = '', pending = false) {
+  return renderProgressiveListFooter({ visible, total, action: pending ? '' : 'show-more-records', label: 'さらに100件表示', noun: '件',
     role: 'records-progressive-footer', className: 'records-progressive-footer', announcement });
 }
 
-export function appendRecordsWindow(root, { records = [], filter = 'all', listWindow = createListWindow() } = {}) {
+export function appendRecordsWindow(root, { records = [], filter = 'all', listWindow = createListWindow(), pending = false, automatic = false } = {}) {
   const ledger = root?.querySelector?.('[data-role="records-ledger"]');
   const footer = root?.querySelector?.('[data-role="records-progressive-footer"]');
   if (!ledger || !footer) return false;
@@ -131,9 +133,31 @@ export function appendRecordsWindow(root, { records = [], filter = 'all', listWi
   const existing = ledger.querySelectorAll('[data-record-id]').length;
   const added = visible.slice(existing);
   if (added.length) ledger.insertAdjacentHTML('beforeend', added.map(renderRecord).join(''));
+  ledger.toggleAttribute?.('aria-busy', pending);
   footer.outerHTML = renderRecordsProgressiveFooter(visible.length, filtered.length,
-    `${added.length}件を追加しました。${visible.length} / ${filtered.length}件を表示しています。`);
+    automatic ? pending ? '' : `記録の準備が完了しました。${visible.length}件を表示しています。`
+      : `${added.length}件を追加しました。${visible.length} / ${filtered.length}件を表示しています。`, pending);
   return true;
+}
+
+export async function hydrateRecordsWindow(root, {
+  records = [], filter = 'all', initialWindow = createListWindow({ initial: 5, limit: 5 }), renderedLimit = null,
+  targetWindow = createListWindow(), batchSize = 25,
+  nextPaint = () => Promise.resolve(), guard = () => true
+} = {}) {
+  let current = createListWindow(initialWindow);
+  const target = createListWindow(targetWindow);
+  const step = Math.max(1, Math.trunc(Number(batchSize) || 25));
+  let rendered = renderedLimit === null ? current.limit : Math.max(0, Math.min(current.limit, Math.trunc(Number(renderedLimit) || 0)));
+  while (rendered < target.limit) {
+    await nextPaint();
+    if (!guard()) return false;
+    const nextLimit = rendered < current.limit ? current.limit : Math.min(target.limit, rendered + step);
+    current = { ...current, limit: nextLimit };
+    if (!appendRecordsWindow(root, { records, filter, listWindow: current, pending: nextLimit < target.limit, automatic: true })) return false;
+    rendered = nextLimit;
+  }
+  return current;
 }
 
 export function renderRecord(item) {
@@ -142,18 +166,28 @@ export function renderRecord(item) {
   const refused = Boolean(data.refused || event.refused);
   const target = recordTarget(item);
   const summary = recordSummary(item, event, data);
+  const targetButton = textButton(target.code, target.button);
+  const marker = recordIcon(event.type);
+  // Append is followed by a page-cache render. Reuse rows only while every
+  // displayed value and action target still matches; API objects may mutate.
+  const inputs = [event.id || '', event.date || '', event.type, refused, targetButton,
+    target.description, target.taxon, summary, item.targetType, event.id,
+    item.animal?.id ?? item.targetId, marker]
+    .map((value) => value !== null && typeof value === 'object' ? String(value) : value);
+  const cached = recordRows.get(item);
+  if (cached && inputs.every((value, index) => Object.is(value, cached.inputs[index]))) return cached.html;
   const actions = recordActions(item, event, refused);
-  return `
+  const html = `
     <article class="workbench-ledger-row records-ledger-row" role="listitem" data-record-id="${escapeHtml(event.id || '')}">
       <time class="workbench-ledger-date" datetime="${escapeHtml(event.date || '')}">${formatDate(event.date)}</time>
-      <span class="workbench-ledger-marker records-ledger-marker" aria-hidden="true">${recordIcon(event.type)}</span>
+      <span class="workbench-ledger-marker records-ledger-marker" aria-hidden="true">${marker}</span>
       <div class="workbench-ledger-content records-ledger-content">
         <div class="records-event-heading">
           <strong class="records-event-type">${escapeHtml(recordTypeLabel(event.type))}</strong>
           ${refused ? statusIndicator('拒食', { tone: 'warning', className: 'records-status' }) : ''}
         </div>
         <div class="workbench-ledger-identity records-target-identity">
-          ${textButton(target.code, target.button)}
+          ${targetButton}
           ${target.description ? `<span class="records-target-description ${target.taxon ? 'is-taxon' : ''}">${escapeHtml(target.description)}</span>` : ''}
         </div>
         ${summary ? `<p class="workbench-ledger-summary">${escapeHtml(summary)}</p>` : ''}
@@ -161,6 +195,8 @@ export function renderRecord(item) {
       ${actions ? `<div class="workbench-ledger-actions">${actions}</div>` : ''}
     </article>
   `;
+  if (item && typeof item === 'object') recordRows.set(item, { inputs, html });
+  return html;
 }
 
 function recordTarget(item) {
@@ -259,8 +295,9 @@ function recordActions(item, event, refused) {
     data: { 'log-id': event.id, 'animal-id': item.animal?.id ?? item.targetId }
   });
   return actionMenu('記録操作', items, {
-    iconName: 'more',
+    iconName: '',
     iconOnly: true,
-    className: 'records-action-menu'
+    className: 'records-action-menu',
+    lazy: true
   });
 }

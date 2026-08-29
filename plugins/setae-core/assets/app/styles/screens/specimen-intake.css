@@ -3,7 +3,7 @@
     width: min(100%, var(--specimen-intake-width));
     min-inline-size: 0;
     max-inline-size: 100%;
-    max-height: min(94dvh, var(--specimen-intake-max-height));
+    max-height: min(94dvh, var(--specimen-intake-max-height), var(--setae-visual-viewport-height));
   }
 
   .specimen-intake-form,
@@ -65,7 +65,13 @@
     min-height: 0;
     overflow-x: clip;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-padding-block: var(--space-3);
     padding: 0 var(--space-5);
+  }
+
+  .specimen-intake-body :is(input, textarea, select, [contenteditable="true"]) {
+    scroll-margin-block: var(--space-2);
   }
 
   .specimen-intake-section {
@@ -267,8 +273,8 @@
 
   @media (max-width: 767px) {
     .specimen-intake-dialog {
-      height: 100dvh;
-      max-height: 100dvh;
+      height: var(--setae-visual-viewport-height, 100dvh);
+      max-height: var(--setae-visual-viewport-height, 100dvh);
       border-radius: 0;
     }
 

@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="../../assets/app/styles/components/workbench.css">
   <link rel="stylesheet" href="../../assets/app/styles/patterns/workspace.css">
   <link rel="stylesheet" href="../../assets/app/styles/patterns/registry.css">
+  <link rel="stylesheet" href="../../assets/app/styles/patterns/ledger.css">
+  <link rel="stylesheet" href="../../assets/app/styles/screens/auth.css">
   <link rel="stylesheet" href="../../assets/app/styles/screens/collection.css">
   <link rel="stylesheet" href="../../assets/app/styles/screens/records.css">
   <link rel="stylesheet" href="../../assets/app/styles/screens/nursery.css">
@@ -29,16 +31,30 @@
   </style>
 </head>
 <body data-fixture-ready="false">
-  <div id="app"></div>
+  <!-- SETAE_APP_MOUNT_START -->
+  <div id="setae-gui-root" class="setae-gui-host"><div id="app">
+    <main class="boot-screen" aria-busy="true" data-app-startup>
+      <div class="setae-brand is-prominent boot-brand">
+        <span class="setae-brand-icon" aria-hidden="true"></span>
+        <span class="setae-brand-copy">
+          <strong class="setae-brand-title">SETAE</strong>
+          <span class="setae-brand-subtitle">Living Collection Workbench</span>
+        </span>
+      </div>
+      <div class="boot-status"><div class="spinner" aria-hidden="true"></div><span>コレクションを準備しています</span></div>
+    </main>
+    <noscript><div class="boot-screen" data-app-noscript><p>SETAEを利用するにはJavaScriptを有効にしてください。</p></div></noscript>
+  </div></div>
+  <!-- SETAE_APP_MOUNT_END -->
   <script type="module">
-    import { renderAppFeedback, renderAppFrame } from '../../assets/app/components/app-frame.js';
-    import { createRenderCoordinator } from '../../assets/app/runtime/render-coordinator.js';
+    import { renderAppFeedback, renderAppFrame, renderAppPagePreparation } from '../../assets/app/components/app-frame.js';
+    import { createRenderCoordinator, waitForInitialPaint } from '../../assets/app/runtime/render-coordinator.js';
     import {
       createListWindow,
       extendListWindow,
       restoreProgressiveListFocus
     } from '../../assets/app/components/progressive-list.js';
-    import { appendRecordsWindow, renderRecords } from '../../assets/app/pages/records.js';
+    import { appendRecordsWindow, hydrateRecordsWindow, renderRecords } from '../../assets/app/pages/records.js';
     import { appendNurseryRegisterWindow, renderNurseryWorkspace } from '../../assets/app/features/nursery/view.js';
     import { renderMediaFrame, registerMediaFallbacks } from '../../assets/app/components/media.js';
     import { createAnimalSearchIndex, searchAnimalIndex } from '../../assets/app/queries/animal-search-index.js';
@@ -47,6 +63,7 @@
     const app = document.querySelector('#app');
     const coordinator = createRenderCoordinator(app);
     registerMediaFallbacks(app, { timeoutMs: 120 });
+    await waitForInitialPaint();
     const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const day = (offset = 0) => new Date(Date.UTC(2026, 7, 27 - offset, 9, 0, 0)).toISOString();
     const animals = Array.from({ length: 500 }, (_, index) => ({
@@ -234,7 +251,18 @@
       nurseryLimit: () => nurseryWindow.limit,
       nextFrame
     };
-    mountRecords();
+    const targetRecordsWindow = createListWindow({ limit: 100 });
+    recordsWindow = createListWindow({ initial: 5, limit: 5 });
+    const initialRecordsMount = coordinator.prepareMount(frame(renderAppPagePreparation()), { view: 'app' });
+    await waitForInitialPaint();
+    if (!initialRecordsMount.commit()) throw new Error('Initial records mount became stale.');
+    await waitForInitialPaint();
+    if (!coordinator.page(renderRecords({ records, animals, filter: 'all', view: 'history', listWindow: recordsWindow, deferRows: true }), { force: true })) throw new Error('Initial records page could not be mounted.');
+    const hydratedRecordsWindow = await hydrateRecordsWindow(app, { records, filter: 'all', initialWindow: recordsWindow,
+      renderedLimit: 0, targetWindow: targetRecordsWindow, nextPaint: waitForInitialPaint });
+    if (!hydratedRecordsWindow) throw new Error('Initial records page hydration became stale.');
+    recordsWindow = targetRecordsWindow;
+    coordinator.accept('page', recordsHtml());
     document.body.dataset.fixtureReady = 'true';
   </script>
 </body>

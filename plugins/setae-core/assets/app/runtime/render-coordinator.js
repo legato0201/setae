@@ -15,6 +15,43 @@ const allRoots = [...chromeRoots, 'error', 'page', 'overlays', 'feedback', 'upda
 
 const asHtml = (value) => String(value ?? '');
 
+export function waitForInitialPaint({
+  requestFrame = globalThis.requestAnimationFrame?.bind(globalThis),
+  cancelFrame = globalThis.cancelAnimationFrame?.bind(globalThis) || (() => {}),
+  scheduleTimeout = globalThis.setTimeout?.bind(globalThis),
+  cancelTimeout = globalThis.clearTimeout?.bind(globalThis) || (() => {}),
+  timeoutMs = 100
+} = {}) {
+  return new Promise((resolve, reject) => {
+    let firstFrame = null;
+    let secondFrame = null;
+    let timeoutHandle = null;
+    let finished = false;
+    const finish = (reason) => {
+      if (finished) return;
+      finished = true;
+      if (firstFrame !== null) cancelFrame(firstFrame);
+      if (secondFrame !== null) cancelFrame(secondFrame);
+      if (timeoutHandle !== null) cancelTimeout(timeoutHandle);
+      resolve(reason);
+    };
+    try {
+      const delay = Math.min(100, Math.max(0, Number(timeoutMs) || 0));
+      timeoutHandle = scheduleTimeout(() => { timeoutHandle = null; finish('timeout'); }, delay);
+      if (typeof requestFrame !== 'function') return;
+      firstFrame = requestFrame(() => {
+        firstFrame = null;
+        try {
+          secondFrame = requestFrame(() => { secondFrame = null; finish('paint'); });
+        } catch { finish('frame-error'); }
+      });
+    } catch (error) {
+      if (timeoutHandle !== null || firstFrame !== null || secondFrame !== null) finish('frame-error');
+      else reject(error);
+    }
+  });
+}
+
 export function createRenderCoordinator(appRoot, {
   requestFrame = globalThis.requestAnimationFrame?.bind(globalThis) || ((callback) => globalThis.setTimeout(callback, 0))
 } = {}) {
@@ -24,6 +61,7 @@ export function createRenderCoordinator(appRoot, {
   let mode = '';
   let scheduled = null;
   let scheduledFrame = 0;
+  let mountGeneration = 0;
 
   const root = (name) => {
     const selector = appRenderRoots[name];
@@ -56,11 +94,40 @@ export function createRenderCoordinator(appRoot, {
     .filter((name) => Object.hasOwn(regions, name))
     .filter((name) => update(name, regions[name], options));
 
-  const mount = (html, { view = 'app' } = {}) => {
+  const commitMount = (html, view, { deferredCacheGeneration = null } = {}) => {
     appRoot.innerHTML = asHtml(html);
     mode = view;
-    rememberMountedRoots();
+    if (deferredCacheGeneration === null) {
+      rememberMountedRoots();
+    } else {
+      cache.clear();
+      requestFrame(() => {
+        if (deferredCacheGeneration === mountGeneration) rememberMountedRoots();
+      });
+    }
     return root('page');
+  };
+
+  const mount = (html, { view = 'app' } = {}) => {
+    mountGeneration += 1;
+    return commitMount(html, view);
+  };
+
+  const prepareMount = (html, { view = 'app' } = {}) => {
+    const preparedHtml = asHtml(html);
+    const generation = ++mountGeneration;
+    let finished = false;
+    return Object.freeze({
+      generation,
+      html: preparedHtml,
+      commit({ guard = () => true } = {}) {
+        if (finished) return false;
+        finished = true;
+        if (generation !== mountGeneration || !guard()) return false;
+        commitMount(preparedHtml, view, { deferredCacheGeneration: generation });
+        return true;
+      }
+    });
   };
 
   const all = (regions = {}, options = {}) => updateMany(allRoots, regions, options);
@@ -80,6 +147,7 @@ export function createRenderCoordinator(appRoot, {
 
   return {
     mount,
+    prepareMount,
     page: (html, options) => update('page', html, options),
     chrome,
     overlays: (html, options) => update('overlays', html, options),
